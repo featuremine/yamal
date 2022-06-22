@@ -1,0 +1,2 @@
+option('install_samples', type: 'boolean', value: true, yield: true)
+option('py_version', type : 'string', value: 'python3.8', yield: true)

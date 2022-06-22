@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""
+
+    COPYRIGHT (c) 2017 by FeatureMine Corporation.
+    This software has been provided pursuant to a License Agreement
+    containing restrictions on its use.  This software contains
+    valuable trade secrets and proprietary information of
+    FeatureMine Corporation and is protected by law.  It may not be
+    copied or distributed in any form or medium, disclosed to third
+    parties, reverse engineered or used in any manner not provided
+    for in said License Agreement except with the prior written
+    authorization from FeatureMine Corporation.
+
+"""
+
+"""
+@package ytp_tail.py
+@author Andres Rangel
+@date 26 Oct 2018
+@brief File contains mp_column_log reading tool
+"""
+
+import msgpack
+from ytp import transactions
+import sys
+from collections import deque
+
+def print_txs(file_path):
+    
+    t = transactions(file_path)
+    i = 0
+    for msg in t:
+        if msg:
+            i+=1
+            m = msgpack.unpackb(msg[3])
+            print(i,msg[0],msg[1],msg[2],m)
+
+def main():
+    if (len(sys.argv) < 2 or len(sys.argv) > 2) or (len(sys.argv) == 2 and sys.argv[1]) == "--help":
+        print("MessagePack YTP tail.")
+        print("Usage: python3",sys.argv[0],"file_path")
+        return
+    print_txs(sys.argv[1])
+
+if __name__ == "__main__":
+    main()
