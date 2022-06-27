@@ -158,15 +158,4 @@ if not is_subproject
   install_subdir('doc', install_dir : '.')
   install_data('README', install_dir : '.')
   install_data('LICENSE', install_dir : '.')
-  if is_unix
-    common_scripts_sp = subproject('scripts')
-    setup_script = common_scripts_sp.get_variable('setup_script')
-    conda_pkg_gen = common_scripts_sp.get_variable('conda_pkg_gen')
-    doc = common_scripts_sp.get_variable('doc')
-    meson.add_install_script(setup_script, meson.project_name(), meson.project_version())
-    run_target('doc', command : [doc, meson.project_version(), meson.source_root()])
-    run_target('style', command : style)
-    run_target('conda-package', command:[conda_pkg_gen, python3.path()])
-  endif
-  run_target('package',command:pkg_cmd)
 endif
