@@ -111,12 +111,15 @@ int main(int argc, char **argv) {
                                   "number of messages to publish in one second",
                                   false, 1000000, "messages");
 
+  TCLAP::ValueArg<int64_t> timeArg("i", "interval", "statistics interval in ms",
+                                   false, 1000, "time_ms");
+
   TCLAP::ValueArg<int> affinityArg("a", "affinity",
                                    "set the CPU affinity of the main process",
                                    false, 0, "cpuid");
 
   TCLAP::ValueArg<int> priorityArg(
-      "x", "priority", "set the priority of the main process (0-100)", false, 0,
+      "x", "priority", "set the priority of the main process (1-99)", false, 1,
       "priority");
 
   cmd.add(fileArg);
@@ -126,6 +129,7 @@ int main(int argc, char **argv) {
     cmd.add(sizeArg);
     cmd.add(rateArg);
   }
+  cmd.add(timeArg);
   cmd.add(affinityArg);
   cmd.add(priorityArg);
 
@@ -205,6 +209,10 @@ int main(int argc, char **argv) {
     }
   }
 
+  auto interval =
+      std::chrono::nanoseconds(std::chrono::milliseconds(timeArg.getValue()))
+          .count();
+
   if (is_source) {
     auto sleep_ms = std::chrono::microseconds(0);
     if (rateArg.isSet()) {
@@ -248,14 +256,12 @@ int main(int argc, char **argv) {
       }
 
       if (next_timer <= now) {
-        constexpr auto one_sec =
-            std::chrono::nanoseconds(std::chrono::seconds(1)).count();
-        auto timer_delayed = next_timer - now;
-        next_timer = now + one_sec;
+        auto timer_delayed = now - next_timer;
+        next_timer = now + interval;
         std::cout << msg_count - prev_messages_count
                   << " messages sent in the last "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(
-                         std::chrono::nanoseconds(timer_delayed + one_sec))
+                         std::chrono::nanoseconds(timer_delayed + interval))
                          .count()
                   << "ms" << std::endl;
         prev_messages_count = msg_count;
@@ -400,10 +406,7 @@ int main(int argc, char **argv) {
         ;
       auto now = fmc_cur_time_ns();
       if (next_timer <= now) {
-        constexpr auto one_sec =
-            std::chrono::nanoseconds(std::chrono::seconds(1)).count();
-        auto timer_delayed = next_timer - now;
-        next_timer = now + one_sec;
+        next_timer = now + interval;
         closure.print();
         closure.reset();
       }

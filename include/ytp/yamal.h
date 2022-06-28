@@ -30,6 +30,9 @@
 
 #include <fmc/error.h>
 
+#define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
+#define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -220,6 +223,26 @@ FMMODFUNC ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
  */
 FMMODFUNC size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                                 fmc_error_t **error);
+
+/**
+ * @brief Allocates a specific page
+ *
+ * @param[in] yamal
+ * @param[in] page
+ * @param[out] error
+ */
+FMMODFUNC void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
+                                       fmc_error_t **error);
+
+/**
+ * @brief Returns the reserved size
+ *
+ * @param[in] yamal
+ * @param[out] error
+ * @return yamal size
+ */
+FMMODFUNC size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal,
+                                         fmc_error_t **error);
 
 #ifdef __cplusplus
 }

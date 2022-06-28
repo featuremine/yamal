@@ -42,8 +42,7 @@ static_assert(sizeof(mmnode) == 24);
 
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '0'};
 
-static const size_t fm_mmlist_page_sz = 1024 * 1024 * 8;
-static const size_t BYTES_PER_PERIOD = 1024 * 1024 * 2;
+static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
 
 template <typename T>
 static bool atomic_expect_or_init(std::atomic<T> &data, T desired) {
@@ -89,6 +88,20 @@ static void *allocate_page(ytp_yamal_t *yamal, size_t page,
     }
   }
   return page_ptr;
+}
+
+void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
+                             fmc_error_t **error) {
+  allocate_page(yamal, page, error);
+}
+
+size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal, fmc_error_t **error) {
+  auto *hdr = yamal->header(error);
+  if (*error) {
+    return 0;
+  }
+
+  return ye64toh(hdr->size.load());
 }
 
 static void *get_mapped_memory(ytp_yamal_t *yamal, mmnode_offs offs,
@@ -138,7 +151,7 @@ static bool mmlist_pages_allocation1(ytp_yamal_t *yamal, fmc_error_t **error) {
     return false;
   }
   auto yamal_size = ye64toh(last_node_off) + ye64toh(node->size.load());
-  auto pred_yamal_size = yamal_size + BYTES_PER_PERIOD;
+  auto pred_yamal_size = yamal_size + YTP_MMLIST_PREALLOC_SIZE;
   auto pred_page_idx = pred_yamal_size / fm_mmlist_page_sz;
 
   if (!fmc_fview_data(&yamal->pages[pred_page_idx])) {
