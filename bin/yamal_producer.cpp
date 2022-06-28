@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
   cout << "yamal_producer" << endl;
 
-  const int priority = 100;
+  const int priority = 99;
 
   if (cpuid >= 0) {
     auto cur_thread = fmc_tid_cur(&error);

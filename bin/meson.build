@@ -38,7 +38,23 @@ ytp_reader = executable('ytp_reader', 'ytp_reader.cpp',
                               install_rpath: '$ORIGIN:$ORIGIN/../../lib',
 							  link_args: link_args)
 
-ytp_perf = executable('ytp_perf', 'ytp_perf.cpp',
+ytp_perf = executable('ytp-perf', 'ytp_perf.cpp',
+							  dependencies : [fmc_dep, shared_dep, tclap_dep],
+							  install: true,
+							  install_dir: 'tools/ytp',
+                              build_rpath: '$ORIGIN:$ORIGIN/../lib',
+                              install_rpath: '$ORIGIN:$ORIGIN/../../lib',
+							  link_args: link_args)
+
+ytp_stats = executable('ytp-stats', 'ytp_stats.cpp',
+							  dependencies : [fmc_dep, shared_dep, tclap_dep],
+							  install: true,
+							  install_dir: 'tools/ytp',
+                              build_rpath: '$ORIGIN:$ORIGIN/../lib',
+                              install_rpath: '$ORIGIN:$ORIGIN/../../lib',
+							  link_args: link_args)
+
+ytp_daemon = executable('ytp-daemon', 'ytp-daemon.cpp',
 							  dependencies : [fmc_dep, shared_dep, tclap_dep],
 							  install: true,
 							  install_dir: 'tools/ytp',
