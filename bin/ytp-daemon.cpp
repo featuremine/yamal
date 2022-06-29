@@ -28,7 +28,8 @@
 
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
-  yamal_t(std::string name, double rate, size_t initial_sz) : name_(std::move(name)), rate_(rate), initial_sz_(initial_sz) {
+  yamal_t(std::string name, double rate, size_t initial_sz)
+      : name_(std::move(name)), rate_(rate), initial_sz_(initial_sz) {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
     fmc_runtime_error_unless(!error_)
         << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
@@ -135,7 +136,10 @@ int main(int argc, char **argv) {
     auto initial_rate =
         ytp_cfg.has("rate") ? ytp_cfg["rate"].get(fmc::typify<double>()) : 0.0;
     auto initial_size =
-        ytp_cfg.has("initial_size") ? size_t(ytp_cfg["initial_size"].get(fmc::typify<unsigned>())) * 1024ull * 1024ull : size_t(0);
+        ytp_cfg.has("initial_size")
+            ? size_t(ytp_cfg["initial_size"].get(fmc::typify<unsigned>())) *
+                  1024ull * 1024ull
+            : size_t(0);
     ytps.emplace_back(path.c_str(), initial_rate, initial_size);
   }
 
