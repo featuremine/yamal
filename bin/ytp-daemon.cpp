@@ -28,7 +28,8 @@
 
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
-  yamal_t(std::string name, double rate) : name_(std::move(name)), rate_(rate) {
+  yamal_t(std::string name, double rate, size_t initial_sz)
+      : name_(std::move(name)), rate_(rate), initial_sz_(initial_sz) {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
     fmc_runtime_error_unless(!error_)
         << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
@@ -85,6 +86,7 @@ struct yamal_t {
   fmc_fd fd_ = -1;
   ytp_yamal_t *yamal_ = nullptr;
 
+  size_t initial_sz_ = 0;
   size_t file_size_ = 0;
   size_t prev_time_ = 0;
   size_t prev_sz_ = 0;
@@ -133,13 +135,19 @@ int main(int argc, char **argv) {
     auto path = ytp_cfg["path"].to_s();
     auto initial_rate =
         ytp_cfg.has("rate") ? ytp_cfg["rate"].get(fmc::typify<double>()) : 0.0;
-    ytps.emplace_back(path.c_str(), initial_rate);
+    auto initial_size =
+        ytp_cfg.has("initial_size")
+            ? size_t(ytp_cfg["initial_size"].get(fmc::typify<unsigned>())) *
+                  1024ull * 1024ull
+            : size_t(0);
+    ytps.emplace_back(path.c_str(), initial_rate, initial_size);
   }
 
   for (auto &ytp : ytps) {
     ytp.prev_sz_ = ytp.size();
     ytp.prev_time_ = fmc_cur_time_ns();
-    ytp.allocate(ytp.prev_sz_);
+    ytp.allocate(std::max(ytp.prev_sz_, ytp.initial_sz_));
+    ytp.file_size_ = ytp.fsize();
   }
 
   alloc_time_model_t alloc_time_model(3000000);
