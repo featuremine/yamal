@@ -2,4 +2,4 @@
 directory=common
 url=https://github.com/featuremine/common.git
 push-url=https://github.com/featuremine/common.git
-revision=main
+revision=v6.5.2
