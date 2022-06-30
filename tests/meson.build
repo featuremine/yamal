@@ -32,9 +32,3 @@ ytp_common = executable(
     'ytp_common', 'common.cpp',
     dependencies : [shared_dep, gtest])
 test('ytp_common', ytp_common, is_parallel: false)
-
-if install_samples
-    install_data('transport_writer_ids.base', install_dir : join_paths([get_option('prefix') + '/test/yamal']))
-    install_data('transport_writer_transactions.base', install_dir : join_paths([get_option('prefix') + '/test/yamal']))
-    install_data('transport_writer_test', install_dir: join_paths([get_option('prefix') + '/test/yamal']))
-endif
