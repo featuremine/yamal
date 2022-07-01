@@ -14,7 +14,7 @@ project(
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive -fno-use-cxa-atexit")
+  string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive")
   string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libgcc -static-libstdc++")
   string(APPEND CMAKE_SHARED_LINKER_FLAGS " -static-libgcc -static-libstdc++")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

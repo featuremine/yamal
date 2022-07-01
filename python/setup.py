@@ -14,7 +14,7 @@ from setuptools.command.build_ext import build_ext
 
 class build_ext_custom(build_ext):
     def build_extensions(self):
-        self.compiler.linker_so[0] = 'ld'
+#        self.compiler.linker_so[0] = self.compiler.compiler_so[0]
         super().build_extensions()
 
 
@@ -41,18 +41,16 @@ setuptools.setup (
             extra_compile_args=[
                 '-std=c++17',
                 '-O3',
-                '-fno-use-cxa-atexit',
                 '-fvisibility-inlines-hidden',
                 '-fvisibility=hidden',
             ],
             extra_link_args=[
                 '-Wl,--exclude-libs,ALL',
-                '-Wl,-Bdynamic',
-                '-lgcc_s',
+                '-nostdlib',
                 '-Wl,-static',
                 '-lstdc++',
             ] + os.getenv('YTP_PACKAGE_LIBS').split(':'),
-            language='c',
+            language='c++',
         )
     ],
     packages=['ytp'],
@@ -61,7 +59,7 @@ setuptools.setup (
             'ytp.pyi',
         ]
     },
-    cmdclass = {
-        'build_ext': build_ext_custom,
-    }
+    #cmdclass = {
+    #    'build_ext': build_ext_custom,
+    #}
 )
