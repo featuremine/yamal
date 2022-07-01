@@ -1,19 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-if (NOT DEFINED CMAKE_C_COMPILER)
-    if (EXISTS "/opt/featuremine/tools/bin/x86_64-linux-musl-gcc")
-        set(CMAKE_PREFIX_PATH "/opt/featuremine/tools")
-        set(CMAKE_C_COMPILER "${CMAKE_PREFIX_PATH}/bin/x86_64-linux-musl-gcc")
-        set(CMAKE_CXX_COMPILER "${CMAKE_PREFIX_PATH}/bin/x86_64-linux-musl-g++")
-        set(CMAKE_FIND_ROOT_PATH "${CMAKE_PREFIX_PATH}")
-        set(BUILD_SHARED_LIBS OFF)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-        message("using featuremine musl gcc compiler")
-    else ()
-        message("featuremine musl gcc not found")
-    endif ()
-endif ()
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -28,7 +14,7 @@ project(
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive")
+  string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive -fno-use-cxa-atexit")
   string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libgcc -static-libstdc++")
   string(APPEND CMAKE_SHARED_LINKER_FLAGS " -static-libgcc -static-libstdc++")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -86,18 +72,18 @@ set(
 )
 
 add_library(
-    ytp
-    STATIC
+    ytp_obj
+    OBJECT
     ${YTP_SRC}
 )
 target_include_directories(
-    ytp
+    ytp_obj
     PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
 target_link_libraries(
-    ytp
+    ytp_obj
     PUBLIC
     fmc
     PRIVATE
@@ -105,9 +91,26 @@ target_link_libraries(
 )
 
 add_library(
+    ytp
+    STATIC
+    $<TARGET_OBJECTS:ytp_obj>
+)
+target_include_directories(
+    ytp
+    PUBLIC
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}/include"
+)
+target_link_libraries(
+    ytp
+    PUBLIC
+    fmc
+)
+
+add_library(
     ytp_shared
     SHARED
-    ${YTP_SRC}
+    $<TARGET_OBJECTS:ytp_obj>
 )
 target_include_directories(
     ytp_shared
@@ -119,8 +122,6 @@ target_link_libraries(
     ytp_shared
     PUBLIC
     fmc
-    PRIVATE
-    fmc++
 )
 set_target_properties(
     ytp_shared
@@ -132,6 +133,7 @@ set_target_properties(
 enable_testing()
 
 add_subdirectory(tests)
+add_subdirectory(python)
 
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -144,7 +146,11 @@ configure_file(
     @ONLY
 )
 
-install(TARGETS ytp_shared ytp)
+install(
+    TARGETS
+    ytp_shared
+    ytp
+)
 
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include"

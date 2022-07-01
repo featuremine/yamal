@@ -14,9 +14,13 @@
 
 #include <Python.h>
 
+#pragma GCC visibility push(hidden)
+
 #include <fmc/platform.h>
 
 PyMODINIT_FUNC fm_ytp_py_init(void) FMMODFUNC FMPYMODPUB;
 PyMODINIT_FUNC PyInit_ytp(void) FMMODFUNC FMPYMODPUB;
 
 PyMODINIT_FUNC PyInit_ytp(void) { return fm_ytp_py_init(); }
+
+#pragma GCC visibility pop

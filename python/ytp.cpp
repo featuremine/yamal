@@ -1,5 +1,3 @@
-
-#pragma GCC visibility push(default)
 #define PY_SSIZE_T_CLEAN
 
 #include <Python.h>
@@ -410,7 +408,7 @@ ytp_channel_t PyYTPStream_ChannelId(PyObject *obj) {
   return reinterpret_cast<YTPStream *>(obj)->channel_id;
 }
 
-void ytp_sequence_peer_cb_wrapper(void *closure_, ytp_peer_t peer_id, size_t sz,
+static void ytp_sequence_peer_cb_wrapper(void *closure_, ytp_peer_t peer_id, size_t sz,
                                   const char *name) {
   if (PyErr_Occurred()) {
     return;
@@ -431,7 +429,7 @@ void ytp_sequence_peer_cb_wrapper(void *closure_, ytp_peer_t peer_id, size_t sz,
   PyObject_CallFunction(callback, "Os#", py_peer, name, Py_ssize_t(sz));
 }
 
-void ytp_sequence_channel_cb_wrapper(void *closure_, ytp_peer_t peer_id,
+static void ytp_sequence_channel_cb_wrapper(void *closure_, ytp_peer_t peer_id,
                                      ytp_channel_t channel_id, uint64_t time,
                                      size_t sz, const char *name) {
   if (PyErr_Occurred()) {
@@ -465,7 +463,7 @@ void ytp_sequence_channel_cb_wrapper(void *closure_, ytp_peer_t peer_id,
                         Py_ssize_t(sz));
 }
 
-void ytp_sequence_data_cb_wrapper(void *closure_, ytp_peer_t peer_id,
+static void ytp_sequence_data_cb_wrapper(void *closure_, ytp_peer_t peer_id,
                                   ytp_channel_t channel_id, uint64_t time,
                                   size_t sz, const char *data) {
   if (PyErr_Occurred()) {
@@ -498,7 +496,7 @@ void ytp_sequence_data_cb_wrapper(void *closure_, ytp_peer_t peer_id,
                         Py_ssize_t(sz));
 }
 
-void ytp_sequence_data_cb_transactions_wrapper(void *closure_,
+static void ytp_sequence_data_cb_transactions_wrapper(void *closure_,
                                                ytp_peer_t peer_id,
                                                ytp_channel_t channel_id,
                                                uint64_t time, size_t sz,
@@ -511,7 +509,7 @@ void ytp_sequence_data_cb_transactions_wrapper(void *closure_,
       YTPTransaction{peer_id, channel_id, time, std::string_view(data, sz)});
 }
 
-void ytp_sequence_prfx_cb_wrapper(void *closure_, ytp_peer_t peer_id,
+static void ytp_sequence_prfx_cb_wrapper(void *closure_, ytp_peer_t peer_id,
                                   ytp_channel_t channel_id, uint64_t time,
                                   size_t sz, const char *data) {
   auto &closure = *(decltype(YTPSequenceBase::prfx_cb)::value_type *)closure_;
