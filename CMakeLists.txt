@@ -13,6 +13,9 @@ project(
     HOMEPAGE_URL "https://www.featuremine.com"
 )
 
+option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
+option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive")
   string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libgcc -static-libstdc++")
@@ -112,27 +115,30 @@ add_library(
     SHARED
     $<TARGET_OBJECTS:ytp_obj>
 )
-target_include_directories(
-    ytp_shared
-    PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
-    "${PROJECT_BINARY_DIR}/include"
-)
-target_link_libraries(
-    ytp_shared
-    PUBLIC
-    fmc
-)
-set_target_properties(
-    ytp_shared
-    PROPERTIES
-    OUTPUT_NAME "ytp"
-    LINKER_LANGUAGE "C"
-)
+if(BUILD_SHARED_LIBS)
+    target_include_directories(
+        ytp_shared
+        PUBLIC
+        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_BINARY_DIR}/include"
+    )
+    target_link_libraries(
+        ytp_shared
+        PUBLIC
+        fmc
+    )
+    set_target_properties(
+        ytp_shared
+        PROPERTIES
+        OUTPUT_NAME "ytp"
+        LINKER_LANGUAGE "C"
+    )
+endif()
 
-enable_testing()
-
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -145,9 +151,15 @@ configure_file(
     @ONLY
 )
 
+if(BUILD_SHARED_LIBS)
+    install(
+        TARGETS
+        ytp_shared
+    )
+endif()
+
 install(
     TARGETS
-    ytp_shared
     ytp
 )
 
