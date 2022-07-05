@@ -133,7 +133,6 @@ set_target_properties(
 enable_testing()
 
 add_subdirectory(tests)
-add_subdirectory(python)
 
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})

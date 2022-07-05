@@ -1,1 +1,0 @@
-pyinc = include_directories('.')
