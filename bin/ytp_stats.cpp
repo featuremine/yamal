@@ -12,10 +12,11 @@
 
 #include <tclap/CmdLine.h>
 
-#include <fmc++/time.hpp>
-#include <fmc/signals.h>
-#include <fmc/time.h>
-
+#include <apr.h> // apr_size_t APR_DECLARE
+#include <apr_signal.h> // apr_signal()
+#include <apr_file_io.h> // apr_file_t
+#include <apr_pools.h> // apr_pool_t
+#include <ytp/errno.h> // ytp_status_t ytp_strerror()
 #include <ytp/sequence.h>
 #include <ytp/version.h>
 
@@ -23,6 +24,25 @@
 #include <deque>
 #include <string_view>
 #include <unordered_set>
+#include <chrono>
+#include <sstream>
+#include <iostream>
+#include <iomanip> // std::setfill
+#include <time.h>
+
+#include "utils.hpp"
+
+std::string time_to_string(uint64_t nanosecs) {
+    time_t secs = nanosecs/1000000000;
+    char       buf[64];
+
+    // Format time, "yyyy-mm-dd hh:mm:ss.nnnnnnnnn"
+    struct tm ts = *localtime(&secs);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S.", &ts);
+    std::ostringstream os;
+    os << buf << std::setfill('0') << std::setw(9) << nanosecs % 1000000000;
+    return os.str();
+}
 
 struct channel_stats_t {
   std::string_view name_;
@@ -33,17 +53,32 @@ struct channel_stats_t {
 struct context_t {
   context_t(const char *filename, bool peer, bool channel, bool data)
       : channel_(channel), data_(data) {
-    fd_ = fmc_fopen(filename, fmc_fmode::READ, &error_);
-    if (error_) {
-      std::cerr << "Unable to open file " << filename << ": "
-                << fmc_error_msg(error_) << std::endl;
+    rv_ = ytp_initialize(); // also calls apr_initialize(), apr_pool_initialize(), apr_signal_init()
+    if(rv_) {
+      char error_str[128];
+      std::cerr << ytp_strerror(rv_, error_str, sizeof(error_str)) << std::endl;
       return;
     }
-
-    seq_ = ytp_sequence_new(fd_, &error_);
-    if (error_) {
-      std::cerr << "Unable to create the ytp sequence: "
-                << fmc_error_msg(error_) << std::endl;
+    rv_ = apr_pool_create(&pool_, NULL);
+    if(rv_) {
+      char error_str[128];
+      std::cerr << ytp_strerror(rv_, error_str, sizeof(error_str)) << std::endl;
+      return;
+    }
+    rv_ = apr_file_open(&f_, filename,
+                      APR_FOPEN_CREATE | APR_FOPEN_READ,
+                      APR_FPROT_OS_DEFAULT, pool_);
+    if(rv_) {
+      std::cerr << "Unable to open file: " << filename << std::endl;
+      char error_str[128];
+      std::cerr << ytp_strerror(rv_, error_str, sizeof(error_str)) << std::endl;
+      return;
+    }
+    rv_ = ytp_sequence_new(&seq_, f_);
+    if(rv_) {
+      std::cerr << "Unable to create the ytp sequence: " << std::endl;
+      char error_str[128];
+      std::cerr << ytp_strerror(rv_, error_str, sizeof(error_str)) << std::endl;
       return;
     }
 
@@ -76,7 +111,7 @@ struct context_t {
                     self.on_data(closure_pair.first, peer, channel, msg_time,
                                  std::string_view(data, sz));
                   },
-                  &stats, &self.error_);
+                  &stats);
             }
 
             if (self.channel_) {
@@ -84,7 +119,7 @@ struct context_t {
                               std::string_view(name, sz));
             }
           },
-          this, &error_);
+          this);
     }
 
     if (peer) {
@@ -94,50 +129,49 @@ struct context_t {
             context_t &self = *reinterpret_cast<context_t *>(closure);
             self.on_peer(peer, std::string_view(name, sz));
           },
-          this, &error_);
+          this);
     }
   }
 
   ~context_t() {
-    if (seq_) {
-      ytp_sequence_del(seq_, &error_);
-      if (error_) {
-        std::cerr << "Unable to delete the ytp sequence: "
-                  << fmc_error_msg(error_) << std::endl;
-        std::exit(-1);
+    if(seq_) {
+      rv_ = ytp_sequence_del(seq_);
+      if(rv_) {
+        char error_str[128];
+        std::cerr << ytp_strerror(rv_, error_str, sizeof(error_str)) << std::endl;
+        return;
       }
     }
-
-    if (fd_ != -1) {
-      fmc_fclose(fd_, &error_);
-      if (error_) {
-        std::cerr << "Unable to close the file descriptor: "
-                  << fmc_error_msg(error_) << std::endl;
-        std::exit(-1);
+    if(f_) {
+      rv_ = apr_file_close(f_);
+      if(rv_) {
+        char error_str[128];
+        std::cerr << ytp_strerror(rv_, error_str, sizeof(error_str)) << std::endl;
+        return;
       }
     }
+    if(pool_) {
+      apr_pool_destroy(pool_);
+    }
+    ytp_terminate();
   }
 
   void poll() {
-    while (ytp_sequence_poll(seq_, &error_)) {
+    bool new_data;
+    while ( !(rv_ = ytp_sequence_poll(seq_, &new_data)) && new_data) {
       ++count_;
     }
-  }
-
-  std::ostream &log_ts() {
-    return std::cout << std::chrono::system_clock::now().time_since_epoch();
   }
 
   std::ostream &log() { return std::cout; }
 
   void on_channel(ytp_peer_t peer, ytp_channel_t channel, uint64_t msg_time,
                   std::string_view name) {
-    log_ts() << " CHNL " << std::to_string(fmc::time(msg_time)) << " " << name
-             << std::endl;
+    std::cout << " CHNL " << time_to_string(msg_time) << " " << name << std::endl;
   }
 
   void on_peer(ytp_peer_t peer, std::string_view name) {
-    log_ts() << " PEER " << name << std::endl;
+    std::cout << " PEER " << name << std::endl;
   }
 
   void on_data(channel_stats_t &stats, ytp_peer_t peer, ytp_channel_t channel,
@@ -150,8 +184,7 @@ struct context_t {
   void print_stats() {
     if (!current_data_.empty()) {
       for (auto *stats : current_data_) {
-        log_ts() << " DATA " << std::to_string(fmc::time(stats->last_ts)) << " "
-                 << stats->name_ << " " << stats->count_ << std::endl;
+        std::cout << " DATA " << time_to_string(stats->last_ts) << " " << stats->name_ << " " << stats->count_ << std::endl;
       }
     }
   }
@@ -163,8 +196,9 @@ struct context_t {
     current_data_.clear();
   }
 
-  fmc_error_t *error_;
-  fmc_fd fd_ = -1;
+  ytp_status_t rv_ = YTP_STATUS_OK;
+  apr_pool_t *pool_ = nullptr;
+  apr_file_t *f_ = nullptr;
   ytp_sequence_t *seq_ = nullptr;
   size_t count_ = 0;
   std::deque<std::pair<channel_stats_t, void *>> channels_;
@@ -177,7 +211,16 @@ static std::atomic<bool> run = true;
 static void sig_handler(int s) { run = false; }
 
 int main(int argc, char **argv) {
-  fmc_set_signal_handler(sig_handler);
+  ytp_status_t rv = ytp_initialize(); // also calls apr_initialize(), apr_pool_initialize(), apr_signal_init()
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
+  }
+  apr_signal(SIGQUIT, sig_handler);
+  apr_signal(SIGABRT, sig_handler);
+  apr_signal(SIGTERM, sig_handler);
+  apr_signal(SIGINT, sig_handler);
 
   TCLAP::CmdLine cmd("ytp statistics tool", ' ', YTP_VERSION);
 
@@ -203,22 +246,24 @@ int main(int argc, char **argv) {
 
   context_t context(ytpArg.getValue().c_str(), peerArg.getValue(),
                     channelArg.getValue(), dataArg.getValue());
-  if (context.error_) {
+  if (context.rv_) {
+    ytp_terminate();
     return -1;
   }
 
   if (followArg.getValue()) {
-    int64_t next_timer = fmc_cur_time_ns();
+    int64_t next_timer = cur_time_ns();
     constexpr auto stats_interval =
         std::chrono::nanoseconds(std::chrono::seconds(1)).count();
 
     while (run) {
       context.poll();
-      if (context.error_) {
+      if (context.rv_) {
+        ytp_terminate();
         return -1;
       }
 
-      auto now = fmc_cur_time_ns();
+      auto now = cur_time_ns();
       if (next_timer <= now) {
         next_timer = now + stats_interval;
         context.print_stats();
@@ -229,4 +274,6 @@ int main(int argc, char **argv) {
     context.poll();
     context.print_stats();
   }
+  ytp_terminate();
+  return 0;
 }

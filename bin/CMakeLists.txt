@@ -15,22 +15,22 @@ target_link_libraries(
     ytp
 )
 
-# add_executable(
-#     ytp-stats
-#     "${PROJECT_SOURCE_DIR}/bin/ytp_stats.cpp"
-# )
-# target_include_directories(
-#     ytp-stats
-#     PUBLIC
-#     "${TCLAP_INCLUDEDIR}"
-#     PRIVATE
-#     "${PROJECT_SOURCE_DIR}/src"
-# )
-# target_link_libraries(
-#     ytp-stats
-#     PUBLIC
-#     ytp
-# )
+add_executable(
+    ytp-stats
+    "${PROJECT_SOURCE_DIR}/bin/ytp_stats.cpp"
+)
+target_include_directories(
+    ytp-stats
+    PUBLIC
+    "${TCLAP_INCLUDEDIR}"
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/src"
+)
+target_link_libraries(
+    ytp-stats
+    PUBLIC
+    ytp
+)
 
 # add_executable(
 #     ytp-daemon
