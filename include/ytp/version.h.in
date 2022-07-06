@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -14,11 +14,11 @@
 
 /**
  * @file version.h
- * @author Federico Ravchina
+ * @author Featuremine Corporation
  * @date 23 Apr 2021
- * @brief File contains C declaration of version API of YTP
+ * @brief File contains C declaration of version API of Yamal
  *
- * This file contains C declaration of version API of YTP.
+ * This file contains C declaration of version API of Yamal.
  * @see http://www.featuremine.com
  */
 
@@ -26,21 +26,21 @@
 #define __FM_YTP_VERSION_H__
 
 /**
- * @brief Major YTP version
+ * @brief Major Yamal version
  * 
  * Major version change represents a change to protocol
  */
 #define YTP_VERSION_MAJOR @YTP_VERSION_MAJOR@
 
 /**
- * @brief Minor YTP version
+ * @brief Minor Yamal version
  * 
  * Minor version change represents a change to an API
  */
 #define YTP_VERSION_MINOR @YTP_VERSION_MINOR@
 
 /**
- * @brief Patch YTP version
+ * @brief Patch Yamal version
  * 
  * Patch version represents fixes and additons that are
  * backwards compatible with previous API
@@ -48,9 +48,9 @@
 #define YTP_VERSION_PATCH @YTP_VERSION_PATCH@
 
 /**
- * @brief YTP version string
+ * @brief Yamal version string
  *
- * YTP version encoded string "MAJOR.MINOR.PATCH"
+ * Yamal version encoded string "MAJOR.MINOR.PATCH"
  */
 #define YTP_VERSION @YTP_VERSION@
 

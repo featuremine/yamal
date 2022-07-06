@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2018 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -14,7 +14,7 @@
 
 #include "../src/timeline.hpp"
 
-#include <fmc++/gtestwrap.hpp>
+#include "gtestwrap.hpp"
 
 TEST(stable_map, test_1) {
   std::vector<int *> values(8192);

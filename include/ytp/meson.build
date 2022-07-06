@@ -15,6 +15,7 @@ configure_file(
 )
 
 ytp_incs = [
+	'errno.h',
 	'yamal.h',
 	'peer.h',
 	'channel.h',

@@ -1,18 +1,36 @@
-#pragma once
+/******************************************************************************
 
-#include "yamal.hpp"
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
+ *****************************************************************************/
+
+#ifndef __FM_YTP_TIMELINE_HPP__
+#define __FM_YTP_TIMELINE_HPP__
+
+#include <apr.h> // apr_size_t APR_DECLARE
 #include <ytp/channel.h>
 #include <ytp/control.h>
 #include <ytp/peer.h>
 #include <ytp/timeline.h>
 #include <ytp/yamal.h>
 
+#include <stdbool.h> 
 #include <algorithm>
-#include <map>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <memory> // std::unique_ptr
+#include <utility> // std::pair
 
 typedef std::pair<ytp_timeline_peer_cb_t, void *> ytp_timeline_peer_cb_cl_t;
 typedef std::pair<ytp_timeline_ch_cb_t, void *> ytp_timeline_ch_cb_cl_t;
@@ -162,8 +180,8 @@ struct lazy_rem_vector : private std::vector<std::pair<T, bool>> {
     }
   }
 
-  size_t lock_count = 0;
-  size_t removed_count = 0;
+  apr_size_t lock_count = 0;
+  apr_size_t removed_count = 0;
 };
 
 struct ytp_timeline {
@@ -180,3 +198,5 @@ struct ytp_timeline {
   std::vector<uint8_t> peer_announced;
   std::unordered_set<std::string_view> sub_announced;
 };
+
+#endif // __FM_YTP_TIMELINE_HPP__

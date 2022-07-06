@@ -1,17 +1,30 @@
+/******************************************************************************
+
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
+ *****************************************************************************/
+
+#include <stdbool.h> 
+#include <apr.h> // apr_size_t APR_DECLARE
+#include <apr_file_io.h> // apr_file_t
+#include <apr_pools.h> // apr_pool_t
+#include <ytp/timeline.h> // ytp_timeline_t
+#include <ytp/control.h> // ytp_control_t
+#include <ytp/channel.h> // ytp_channel_t
+#include <ytp/peer.h> // ytp_peer_t
+#include <ytp/sequence.h>
+#include <ytp/yamal.h> // ytp_yamal_term
+#include <ytp/errno.h> // ytp_status_t
 #include "control.hpp"
 #include "timeline.hpp"
-#include "yamal.hpp"
-#include <algorithm>
-#include <cstring>
-#include <fmc/alignment.h>
-#include <set>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
-#include <ytp/control.h>
-#include <ytp/peer.h>
-#include <ytp/sequence.h>
-#include <ytp/yamal.h>
 
 struct ytp_sequence {
   ytp_control_t ctrl;
@@ -20,217 +33,206 @@ struct ytp_sequence {
 
 struct ytp_sequence_shared {
   uint64_t ref_counter = 1;
-  fmc_fd fd;
+  apr_pool_t *pool;
+  apr_file_t *f;
   ytp_sequence_t seq;
 };
 
-ytp_sequence_t *ytp_sequence_new(fmc_fd fd, fmc_error_t **error) {
-  return ytp_sequence_new_2(fd, true, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_new(ytp_sequence_t **seq, apr_file_t *f) {
+  return ytp_sequence_new2(seq, f, true);
 }
 
-void ytp_sequence_init(ytp_sequence_t *seq, fmc_fd fd, fmc_error_t **error) {
-  ytp_sequence_init_2(seq, fd, true, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_init(ytp_sequence_t *seq, apr_file_t *f) {
+  return ytp_sequence_init2(seq, f, true);
 }
 
-ytp_sequence_t *ytp_sequence_new_2(fmc_fd fd, bool enable_thread,
-                                   fmc_error_t **error) {
-  auto *seq = new ytp_sequence_t;
-  ytp_sequence_init_2(seq, fd, enable_thread, error);
-  if (*error) {
+APR_DECLARE(ytp_status_t) ytp_sequence_new2(ytp_sequence_t **seq, apr_file_t *f, bool enable_thread) {
+  *seq = new ytp_sequence_t;
+  ytp_status_t rv = ytp_sequence_init2(*seq, f, enable_thread);
+  if(rv) {
+    delete *seq;
+    *seq = nullptr;
+  }
+  return rv;
+}
+
+APR_DECLARE(ytp_status_t) ytp_sequence_init2(ytp_sequence_t *seq, apr_file_t *f, bool enable_thread) {
+  ytp_status_t rv = ytp_control_init2(&seq->ctrl, f, enable_thread);
+  if (rv) {
+    return rv;
+  }
+
+  rv = ytp_timeline_init(&seq->timeline, &seq->ctrl);
+  if(rv) {
+    (void)ytp_control_destroy(&seq->ctrl);
+  }
+  return rv;
+}
+
+APR_DECLARE(ytp_status_t) ytp_sequence_del(ytp_sequence_t *seq) {
+  ytp_status_t rv = ytp_sequence_destroy(seq);
+  if(!rv) {
     delete seq;
-    return nullptr;
   }
-
-  return seq;
+  return rv;
 }
 
-void ytp_sequence_init_2(ytp_sequence_t *seq, fmc_fd fd, bool enable_thread,
-                         fmc_error_t **error) {
-  ytp_control_init_2(&seq->ctrl, fd, enable_thread, error);
-  if (*error) {
-    return;
-  }
-
-  ytp_timeline_init(&seq->timeline, &seq->ctrl, error);
-  if (*error) {
-    std::string err1_msg{fmc_error_msg(*error)};
-    ytp_control_destroy(&seq->ctrl, error);
-    if (*error) {
-      fmc_error_set(error, "%s. %s", err1_msg.c_str(), fmc_error_msg(*error));
-    } else {
-      fmc_error_set(error, "%s", err1_msg.c_str());
-    }
-  }
+APR_DECLARE(ytp_status_t) ytp_sequence_destroy(ytp_sequence_t *seq) {
+  ytp_timeline_destroy(&seq->timeline);
+  return ytp_control_destroy(&seq->ctrl);
 }
 
-void ytp_sequence_del(ytp_sequence_t *seq, fmc_error_t **error) {
-  ytp_sequence_destroy(seq, error);
-  delete seq;
+APR_DECLARE(ytp_status_t) ytp_sequence_peer_name(ytp_sequence_t *seq, ytp_peer_t peer, apr_size_t *sz, const char **name) {
+  return ytp_control_peer_name(&seq->ctrl, peer, sz, name);
 }
 
-void ytp_sequence_destroy(ytp_sequence_t *seq, fmc_error_t **error) {
-  ytp_timeline_destroy(&seq->timeline, error);
-  ytp_control_destroy(&seq->ctrl, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_peer_decl(ytp_sequence_t *seq, ytp_peer_t *peer, apr_size_t sz, const char *name) {
+  return ytp_control_peer_decl(&seq->ctrl, peer, sz, name);
 }
 
-void ytp_sequence_peer_name(ytp_sequence_t *seq, ytp_peer_t peer, size_t *sz,
-                            const char **name, fmc_error_t **error) {
-  return ytp_control_peer_name(&seq->ctrl, peer, sz, name, error);
+APR_DECLARE(void) ytp_sequence_peer_cb(ytp_sequence_t *seq, ytp_sequence_peer_cb_t cb, void *closure) {
+  ytp_timeline_peer_cb(&seq->timeline, cb, closure);
 }
 
-ytp_peer_t ytp_sequence_peer_decl(ytp_sequence_t *seq, size_t sz,
-                                  const char *name, fmc_error_t **error) {
-  return ytp_control_peer_decl(&seq->ctrl, sz, name, error);
+APR_DECLARE(void) ytp_sequence_peer_cb_rm(ytp_sequence_t *seq, ytp_sequence_peer_cb_t cb, void *closure) {
+  ytp_timeline_peer_cb_rm(&seq->timeline, cb, closure);
 }
 
-void ytp_sequence_peer_cb(ytp_sequence_t *seq, ytp_sequence_peer_cb_t cb,
-                          void *closure, fmc_error_t **error) {
-  ytp_timeline_peer_cb(&seq->timeline, cb, closure, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_ch_name(ytp_sequence_t *seq, ytp_channel_t channel, apr_size_t *sz, const char **name) {
+  return ytp_control_ch_name(&seq->ctrl, channel, sz, name);
 }
 
-void ytp_sequence_peer_cb_rm(ytp_sequence_t *seq, ytp_sequence_peer_cb_t cb,
-                             void *closure, fmc_error_t **error) {
-  ytp_timeline_peer_cb_rm(&seq->timeline, cb, closure, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_ch_decl(ytp_sequence_t *seq, ytp_channel_t *channel, ytp_peer_t peer,
+                                               uint64_t time, apr_size_t sz, const char *name) {
+  return ytp_control_ch_decl(&seq->ctrl, channel, peer, time, sz, name);
 }
 
-void ytp_sequence_ch_name(ytp_sequence_t *seq, ytp_channel_t channel,
-                          size_t *sz, const char **name, fmc_error_t **error) {
-  ytp_control_ch_name(&seq->ctrl, channel, sz, name, error);
+APR_DECLARE(void) ytp_sequence_ch_cb(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb, void *closure) {
+  ytp_timeline_ch_cb(&seq->timeline, cb, closure);
 }
 
-ytp_channel_t ytp_sequence_ch_decl(ytp_sequence_t *seq, ytp_peer_t peer,
-                                   uint64_t time, size_t sz, const char *name,
-                                   fmc_error_t **error) {
-  return ytp_control_ch_decl(&seq->ctrl, peer, time, sz, name, error);
+APR_DECLARE(void) ytp_sequence_ch_cb_rm(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb, void *closure) {
+  ytp_timeline_ch_cb_rm(&seq->timeline, cb, closure);
 }
 
-void ytp_sequence_ch_cb(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb,
-                        void *closure, fmc_error_t **error) {
-  ytp_timeline_ch_cb(&seq->timeline, cb, closure, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
+                                           apr_size_t sz, const char *payload) {
+  return ytp_control_sub(&seq->ctrl, peer, time, sz, payload);
 }
 
-void ytp_sequence_ch_cb_rm(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb,
-                           void *closure, fmc_error_t **error) {
-  ytp_timeline_ch_cb_rm(&seq->timeline, cb, closure, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
+                                           apr_size_t sz, const char *payload) {
+  return ytp_control_dir(&seq->ctrl, peer, time, sz, payload);
 }
 
-void ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
-                      size_t sz, const char *payload, fmc_error_t **error) {
-  ytp_control_sub(&seq->ctrl, peer, time, sz, payload, error);
+APR_DECLARE(void) ytp_sequence_prfx_cb(ytp_sequence_t *seq, apr_size_t sz, const char *prfx,
+                                       ytp_sequence_data_cb_t cb, void *closure) {
+  ytp_timeline_prfx_cb(&seq->timeline, sz, prfx, cb, closure);
 }
 
-void ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
-                      size_t sz, const char *payload, fmc_error_t **error) {
-  ytp_control_dir(&seq->ctrl, peer, time, sz, payload, error);
+APR_DECLARE(void) ytp_sequence_prfx_cb_rm(ytp_sequence_t *seq, apr_size_t sz, const char *prfx,
+                                          ytp_sequence_data_cb_t cb, void *closure) {
+  ytp_timeline_prfx_cb_rm(&seq->timeline, sz, prfx, cb, closure);
 }
 
-void ytp_sequence_prfx_cb(ytp_sequence_t *seq, size_t sz, const char *prfx,
-                          ytp_sequence_data_cb_t cb, void *closure,
-                          fmc_error_t **error) {
-  ytp_timeline_prfx_cb(&seq->timeline, sz, prfx, cb, closure, error);
+APR_DECLARE(void) ytp_sequence_indx_cb(ytp_sequence_t *seq, ytp_channel_t channel,
+                                       ytp_sequence_data_cb_t cb, void *closure) {
+  ytp_timeline_indx_cb(&seq->timeline, channel, cb, closure);
 }
 
-void ytp_sequence_prfx_cb_rm(ytp_sequence_t *seq, size_t sz, const char *prfx,
-                             ytp_sequence_data_cb_t cb, void *closure,
-                             fmc_error_t **error) {
-  ytp_timeline_prfx_cb_rm(&seq->timeline, sz, prfx, cb, closure, error);
+APR_DECLARE(void) ytp_sequence_indx_cb_rm(ytp_sequence_t *seq, ytp_channel_t channel,
+                                          ytp_sequence_data_cb_t cb, void *closure) {
+  ytp_timeline_indx_cb_rm(&seq->timeline, channel, cb, closure);
 }
 
-void ytp_sequence_indx_cb(ytp_sequence_t *seq, ytp_channel_t channel,
-                          ytp_sequence_data_cb_t cb, void *closure,
-                          fmc_error_t **error) {
-  ytp_timeline_indx_cb(&seq->timeline, channel, cb, closure, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_reserve(ytp_sequence_t *seq, char **buf, apr_size_t size) {
+  return ytp_control_reserve(&seq->ctrl, buf, size);
 }
 
-void ytp_sequence_indx_cb_rm(ytp_sequence_t *seq, ytp_channel_t channel,
-                             ytp_sequence_data_cb_t cb, void *closure,
-                             fmc_error_t **error) {
-  ytp_timeline_indx_cb_rm(&seq->timeline, channel, cb, closure, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_commit(ytp_sequence_t *seq, ytp_iterator_t *it, ytp_peer_t peer,
+                                   ytp_channel_t channel, uint64_t time, void *data) {
+  return ytp_control_commit(&seq->ctrl, it, peer, channel, time, data);
 }
 
-char *ytp_sequence_reserve(ytp_sequence_t *seq, size_t size,
-                           fmc_error_t **error) {
-  return ytp_control_reserve(&seq->ctrl, size, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_poll(ytp_sequence_t *seq, bool *new_data) {
+  return ytp_timeline_poll(&seq->timeline, new_data);
 }
 
-ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq, ytp_peer_t peer,
-                                   ytp_channel_t channel, uint64_t time,
-                                   void *data, fmc_error_t **error) {
-  return ytp_control_commit(&seq->ctrl, peer, channel, time, data, error);
-}
-
-bool ytp_sequence_poll(ytp_sequence_t *seq, fmc_error_t **error) {
-  return ytp_timeline_poll(&seq->timeline, error);
-}
-
-bool ytp_sequence_term(ytp_sequence_t *seq) {
+APR_DECLARE(bool) ytp_sequence_term(ytp_sequence_t *seq) {
   return ytp_timeline_term(&seq->timeline);
 }
 
-ytp_iterator_t ytp_sequence_end(ytp_sequence_t *seq, fmc_error_t **error) {
-  return ytp_control_end(&seq->ctrl, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_end(ytp_sequence_t *seq, ytp_iterator_t *iterator) {
+  return ytp_control_end(&seq->ctrl, iterator);
 }
 
-ytp_iterator_t ytp_sequence_cur(ytp_sequence_t *seq) {
+APR_DECLARE(ytp_iterator_t) ytp_sequence_get_it(ytp_sequence_t *seq) {
   return ytp_timeline_iter_get(&seq->timeline);
 }
 
-ytp_iterator_t ytp_sequence_get_it(ytp_sequence_t *seq) {
-  return ytp_timeline_iter_get(&seq->timeline);
-}
-
-void ytp_sequence_set_it(ytp_sequence_t *seq, ytp_iterator_t iterator) {
+APR_DECLARE(void) ytp_sequence_set_it(ytp_sequence_t *seq, ytp_iterator_t iterator) {
   ytp_timeline_iter_set(&seq->timeline, iterator);
 }
 
-ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, size_t off,
-                                 fmc_error_t **error) {
-  return ytp_timeline_seek(&seq->timeline, off, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_seek(ytp_sequence_t *seq, ytp_iterator_t *it_ptr, apr_size_t ptr) {
+  return ytp_timeline_seek(&seq->timeline, it_ptr, ptr);
 }
 
-size_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
-                         fmc_error_t **error) {
-  return ytp_timeline_tell(&seq->timeline, iterator, error);
+APR_DECLARE(ytp_status_t) ytp_sequence_tell(ytp_sequence_t *seq, apr_size_t *ptr, ytp_iterator_t iterator) {
+  return ytp_timeline_tell(&seq->timeline, ptr, iterator);
 }
 
-ytp_sequence_shared_t *ytp_sequence_shared_new(const char *filename,
-                                               fmc_fmode mode,
-                                               fmc_error_t **error) {
-  fmc_error_clear(error);
-
-  auto fd = fmc_fopen(filename, mode, error);
-  if (*error) {
-    return nullptr;
+APR_DECLARE(ytp_status_t) ytp_sequence_shared_new(ytp_sequence_shared_t **shared_seq, const char *filename, apr_int32_t flag) {
+  ytp_status_t rv = ytp_initialize();
+  if (rv) {
+    return rv;
   }
 
-  auto *shared_seq = new ytp_sequence_shared_t;
-  ytp_sequence_init(&shared_seq->seq, fd, error);
-  if (*error) {
-    delete shared_seq;
-    std::string tmp_error = fmc_error_msg(*error);
-    fmc_fclose(fd, error);
-    FMC_ERROR_REPORT(error, tmp_error.c_str());
-    return nullptr;
+  *shared_seq = new ytp_sequence_shared_t;
+  rv = apr_pool_create(&((*shared_seq)->pool), NULL);
+  if (rv) {
+    delete *shared_seq;
+    *shared_seq = nullptr;
+    ytp_terminate();
+    return rv;
+  }
+  
+  rv = apr_file_open(&((*shared_seq)->f), filename, flag, APR_UREAD | APR_UWRITE | APR_GREAD | APR_WREAD, (*shared_seq)->pool);
+  if (rv) {
+    apr_pool_destroy((*shared_seq)->pool);
+    delete *shared_seq;
+    *shared_seq = nullptr;
+    ytp_terminate();
+    return rv;
   }
 
-  shared_seq->fd = fd;
-  return shared_seq;
+  rv = ytp_sequence_init(&((*shared_seq)->seq), (*shared_seq)->f);
+  if (rv) {
+    (void)apr_file_close((*shared_seq)->f);
+    apr_pool_destroy((*shared_seq)->pool);
+    delete *shared_seq;
+    *shared_seq = nullptr;
+    ytp_terminate();
+    return rv;
+  }
+
+  return rv;
 }
 
-void ytp_sequence_shared_inc(ytp_sequence_shared_t *shared_seq) {
+APR_DECLARE(void) ytp_sequence_shared_inc(ytp_sequence_shared_t *shared_seq) {
   ++shared_seq->ref_counter;
 }
 
-void ytp_sequence_shared_dec(ytp_sequence_shared_t *shared_seq,
-                             fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_sequence_shared_dec(ytp_sequence_shared_t *shared_seq) {
   if (--shared_seq->ref_counter == 0) {
-    ytp_sequence_destroy(&shared_seq->seq, error);
-    fmc_fclose(shared_seq->fd, error);
+    (void)ytp_sequence_destroy(&(shared_seq->seq));
+    (void)apr_file_close(shared_seq->f);
+    apr_pool_destroy(shared_seq->pool);
     delete shared_seq;
+    ytp_terminate();
   }
 }
 
-ytp_sequence_t *ytp_sequence_shared_get(ytp_sequence_shared_t *shared_seq) {
+APR_DECLARE(ytp_sequence_t *) ytp_sequence_shared_get(ytp_sequence_shared_t *shared_seq) {
   return &shared_seq->seq;
 }

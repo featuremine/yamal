@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -14,12 +14,13 @@
 
 /**
  * @file channel.h
- * @author Federico Ravchina
+ * @author Featuremine Corporation
  * @date 23 Apr 2021
- * @brief File contains C declaration of channel layer of YTP
- *
+ * @brief File contains C declaration of channel layer of YTP.\n
  * A channel uniquely identifies a logical partition of a set of messages.
  *
+ * @par Description
+ * - Channel data message\n
  * <table>
  * <caption id="multi_row">Channel message</caption>
  * <tr><th colspan="3">peer/channel
@@ -35,10 +36,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
-#include <fmc/error.h>
+#include <apr.h> // apr_size_t APR_DECLARE
 #include <ytp/peer.h>
 #include <ytp/yamal.h>
+#include <ytp/errno.h> // ytp_status_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,44 +49,43 @@ typedef uint64_t ytp_channel_t;
 
 /**
  * @brief Reserves memory for data in the memory mapped list
+ * to be used to write to the file, on the channel level.
  *
- * @param[in] yamal
- * @param[in] sz the size of the data payload
- * @param[out] error
- * @return a writable pointer for data
+ * @param[out] yamal ytp_yamal_t object
+ * @param[out] buf a buffer to hold the reserved memory.
+ * @param[in] size size of the buffer to hold the memory.
+ * @return ytp_status_t with the outcome of the function
  */
-FMMODFUNC char *ytp_channel_reserve(ytp_yamal_t *yamal, size_t sz,
-                                    fmc_error_t **error);
+APR_DECLARE(ytp_status_t) ytp_channel_reserve(ytp_yamal_t *yamal, char **buf, apr_size_t size);
 
 /**
- * @brief Commits the data to the memory mapped list
- *
- * @param[in] yamal
+ * @brief Commits the data to the memory mapped node to write
+ * it to the file, on the channel level.
+ * 
+ * @param[out] yamal ytp_yamal_t object
+ * @param[out] it iterator to the next memory mapped node
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
  * @param[in] data the value returned by ytp_channel_reserve
- * @param[out] error
- * @return ytp_iterator_t for the message
+ * @return ytp_status_t with the outcome of the function
  */
-FMMODFUNC ytp_iterator_t ytp_channel_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
-                                            ytp_channel_t channel, void *data,
-                                            fmc_error_t **error);
+APR_DECLARE(ytp_status_t) ytp_channel_commit(ytp_yamal_t *yamal, ytp_iterator_t *it, ytp_peer_t peer,
+                                             ytp_channel_t channel, void *data);
 
 /**
- * @brief Reads a message on channel level
+ * @brief Reads a message of the memory mapped node, on the channel level.
  *
- * @param[in] yamal
- * @param[in] iterator
- * @param[out] peer
- * @param[out] channel
- * @param[out] sz
- * @param[out] data
- * @param[out] error
+ * @param[in] yamal ytp_yamal_t object
+ * @param[in] iterator iterator that points to the memory mapped node to read from
+ * @param[out] peer the peer that wrote the data
+ * @param[out] channel the channel that wrote the data
+ * @param[out] size size of the read data
+ * @param[out] data pointer to the read data
+ * @return ytp_status_t with the outcome of the function
  */
-FMMODFUNC void ytp_channel_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                                ytp_peer_t *peer, ytp_channel_t *channel,
-                                size_t *sz, const char **data,
-                                fmc_error_t **error);
+APR_DECLARE(ytp_status_t) ytp_channel_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
+                                           ytp_peer_t *peer, ytp_channel_t *channel,
+                                           apr_size_t *size, const char **data);
 
 #ifdef __cplusplus
 }

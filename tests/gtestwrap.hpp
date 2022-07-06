@@ -13,38 +13,24 @@
  *****************************************************************************/
 
 /**
- * @file yamal.hpp
+ * @file gtestwrap.hpp
  * @author Featuremine Corporation
- * @date 29 Apr 2021
- * @brief File contains C declaration of the mmlist
+ * @date 11 Aug 2017
+ * @brief Wrapper for clean compilation of gtest
  *
- * This file contains declarations of the memory mapped list.
  * @see http://www.featuremine.com
  */
 
-#ifndef __FM_YTP_YAMAL_HPP__
-#define __FM_YTP_YAMAL_HPP__
+#ifndef __FM_YTP_GTESTWRAP_HPP__
+#define __FM_YTP_GTESTWRAP_HPP__
 
-#include <stdbool.h>
-#include <apr_pools.h> // apr_pool_t
-#include <apr_file_io.h> // apr_file_t
-#include <apr_mmap.h> // apr_mmap_t
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
+#endif
+#include <gtest/gtest.h>
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
-#include <condition_variable>
-#include <mutex>
-#include <thread>
-#include <ytp/yamal.h>
-
-struct ytp_yamal {
-  apr_file_t * f;
-  std::condition_variable cv_;
-  std::mutex m_;
-  std::mutex pa_mutex_;
-  std::thread thread_;
-  bool done_ = false;
-  bool readonly_ = false;
-  apr_mmap_t *pages[YAMAL_PAGES] = {0};
-  apr_pool_t *pool_;
-};
-
-#endif // __FM_YTP_YAMAL_HPP__
+#endif // __FM_YTP_GTESTWRAP_HPP__

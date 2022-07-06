@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -12,11 +12,18 @@
 
  *****************************************************************************/
 
+#include <apr.h> // apr_size_t APR_DECLARE
+#include <stdbool.h> 
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 #include <ytp/timeline.h>
 
+#include <ytp/control.h>
+#include <ytp/channel.h> // ytp_channel_t
+#include <ytp/peer.h> // ytp_peer_t
+#include <ytp/yamal.h> // ytp_yamal_term
 #include "control.hpp"
 #include "timeline.hpp"
 
@@ -44,8 +51,7 @@ static void prfx_for_each(ytp_timeline_t *timeline, const std::string &namestr,
 
 static void channel_announcement(ytp_timeline_t *timeline, ytp_peer_t peer,
                                  ytp_channel_t channel, uint64_t read_time,
-                                 size_t name_sz, const char *name_ptr,
-                                 fmc_error_t **error) {
+                                 apr_size_t name_sz, const char *name_ptr) {
   auto &dest = timeline->idx_cb[channel];
   auto current_name_key = std::string(name_ptr, name_sz);
   if (auto it = timeline->prfx_cb.find("/"); it != timeline->prfx_cb.end()) {
@@ -73,145 +79,110 @@ static void channel_announcement(ytp_timeline_t *timeline, ytp_peer_t peer,
 
 static void channel_announcement_wrapper(void *closure, ytp_peer_t peer,
                                          ytp_channel_t channel, uint64_t time,
-                                         size_t sz, const char *name) {
+                                         apr_size_t sz, const char *name) {
   auto *seq = (ytp_timeline_t *)closure;
-  fmc_error_t *error;
-  channel_announcement(seq, peer, channel, time, sz, name, &error);
+  channel_announcement(seq, peer, channel, time, sz, name);
 }
 
 static void channel_announcement_msg(void *closure, ytp_peer_t peer,
                                      ytp_channel_t channel, uint64_t time,
-                                     size_t sz, const char *data) {
-  auto *timeline = (ytp_timeline_t *)closure;
-  fmc_error_t *error;
-  channel = ytp_control_ch_decl(timeline->ctrl, peer, time, sz, data, &error);
+                                     apr_size_t sz, const char *data) {
+  ytp_timeline_t *timeline = (ytp_timeline_t *)closure;
+  std::string_view channel_name{data, sz};
+  auto it = timeline->ctrl->name_to_channel.find(channel_name);
+  if(it == timeline->ctrl->name_to_channel.end()) {
+    return;
+  }
+  ytp_channel_t ch = it->second;
   timeline->cb_ch.lock();
   for (auto it = timeline->cb_ch.begin(); it != timeline->cb_ch.end(); ++it) {
     if (it.was_removed()) {
       continue;
     }
     auto &c = *it;
-    c.first(c.second, peer, channel, time, sz, data);
+    c.first(c.second, peer, ch, time, sz, data);
   }
   timeline->cb_ch.release();
 }
 
-ytp_timeline_t *ytp_timeline_new(ytp_control_t *ctrl, fmc_error_t **error) {
-  auto *timeline = new ytp_timeline_t;
-  ytp_timeline_init(timeline, ctrl, error);
-  if (*error) {
-    delete timeline;
-    return nullptr;
+APR_DECLARE(ytp_status_t) ytp_timeline_new(ytp_timeline_t **timeline, ytp_control_t *ctrl) {
+  *timeline = new ytp_timeline_t;
+  ytp_status_t rv = ytp_timeline_init(*timeline, ctrl);
+  if(rv) {
+    delete *timeline;
+    *timeline = nullptr;
   }
-  return timeline;
+  return rv;
 }
 
-void ytp_timeline_init(ytp_timeline_t *timeline, ytp_control_t *ctrl,
-                       fmc_error_t **error) {
+APR_DECLARE(ytp_status_t) ytp_timeline_init(ytp_timeline_t *timeline, ytp_control_t *ctrl) {
   timeline->ctrl = ctrl;
-
-  timeline->read = ytp_control_begin(ctrl, error);
-  if (*error) {
-    return;
+  ytp_status_t rv = ytp_control_begin(ctrl, &(timeline->read));
+  if(rv) {
+    return rv;
   }
-
-  ytp_timeline_ch_cb(timeline, channel_announcement_wrapper, timeline, error);
-  if (*error) {
-    return;
-  }
-
+  ytp_timeline_ch_cb(timeline, channel_announcement_wrapper, timeline);
   ytp_timeline_indx_cb(timeline, YTP_CHANNEL_ANN, channel_announcement_msg,
-                       timeline, error);
-  if (*error) {
-    return;
-  }
+                       timeline);
+  return rv;
 }
 
-void ytp_timeline_destroy(ytp_timeline_t *timeline, fmc_error_t **error) {
+APR_DECLARE(void) ytp_timeline_destroy(ytp_timeline_t *timeline) {
   ytp_timeline_indx_cb_rm(timeline, YTP_CHANNEL_ANN, channel_announcement_msg,
-                          timeline, error);
-  ytp_timeline_ch_cb_rm(timeline, channel_announcement_wrapper, timeline,
-                        error);
+                          timeline);
+  ytp_timeline_ch_cb_rm(timeline, channel_announcement_wrapper, timeline);
 }
 
-void ytp_timeline_del(ytp_timeline_t *timeline, fmc_error_t **error) {
-  ytp_timeline_destroy(timeline, error);
+APR_DECLARE(void) ytp_timeline_del(ytp_timeline_t *timeline) {
+  ytp_timeline_destroy(timeline);
   delete timeline;
 }
 
-void ytp_timeline_ch_cb(ytp_timeline_t *timeline, ytp_timeline_ch_cb_t cb,
-                        void *closure, fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_ch_cb(ytp_timeline_t *timeline, ytp_timeline_ch_cb_t cb, void *closure) {
   timeline->cb_ch.push_unique(ytp_timeline_ch_cb_cl_t(cb, closure));
 }
 
-void ytp_timeline_ch_cb_rm(ytp_timeline_t *timeline, ytp_timeline_ch_cb_t cb,
-                           void *closure, fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_ch_cb_rm(ytp_timeline_t *timeline, ytp_timeline_ch_cb_t cb, void *closure) {
   auto p = ytp_timeline_ch_cb_cl_t(cb, closure);
   auto &v = timeline->cb_ch;
   v.erase_if([&](const decltype(p) &item) { return p == item; });
 }
 
-void ytp_timeline_peer_cb(ytp_timeline_t *timeline, ytp_timeline_peer_cb_t cb,
-                          void *closure, fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_peer_cb(ytp_timeline_t *timeline, ytp_timeline_peer_cb_t cb, void *closure) {
   timeline->cb_peer.push_unique(ytp_timeline_peer_cb_cl_t(cb, closure));
 }
 
-void ytp_timeline_peer_cb_rm(ytp_timeline_t *timeline,
-                             ytp_timeline_peer_cb_t cb, void *closure,
-                             fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_peer_cb_rm(ytp_timeline_t *timeline, ytp_timeline_peer_cb_t cb, void *closure) {
   auto p = ytp_timeline_peer_cb_cl_t(cb, closure);
   auto &v = timeline->cb_peer;
   v.erase_if([&](const decltype(p) &item) { return p == item; });
 }
 
-void ytp_timeline_prfx_cb(ytp_timeline_t *timeline, size_t sz, const char *prfx,
-                          ytp_timeline_data_cb_t cb, void *closure,
-                          fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_prfx_cb(ytp_timeline_t *timeline, apr_size_t sz, const char *prfx, ytp_timeline_data_cb_t cb, void *closure) {
   std::string namestr(prfx, sz);
-
   auto c = ytp_timeline_data_cb_cl_t(cb, closure);
-
   timeline->prfx_cb[namestr].emplace_back(c);
-
   using V = decltype(timeline->idx_cb)::value_type;
   prfx_for_each(timeline, namestr, [&c](V &v) { v.push_unique(c); });
 }
 
-void ytp_timeline_prfx_cb_rm(ytp_timeline_t *timeline, size_t sz,
-                             const char *prfx, ytp_timeline_data_cb_t cb,
-                             void *closure, fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_prfx_cb_rm(ytp_timeline_t *timeline, apr_size_t sz, const char *prfx, ytp_timeline_data_cb_t cb, void *closure) {
   std::string namestr(prfx, sz);
-
   auto c = ytp_timeline_data_cb_cl_t(cb, closure);
-
   timeline->prfx_cb.erase(namestr);
-
   using V = decltype(timeline->idx_cb)::value_type;
   prfx_for_each(timeline, namestr, [&c](V &v) {
     v.erase_if([&](const decltype(c) &item) { return c == item; });
   });
 }
 
-void ytp_timeline_indx_cb(ytp_timeline_t *timeline, ytp_channel_t channel,
-                          ytp_timeline_data_cb_t cb, void *closure,
-                          fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_indx_cb(ytp_timeline_t *timeline, ytp_channel_t channel, ytp_timeline_data_cb_t cb, void *closure) {
   auto c = ytp_timeline_data_cb_cl_t(cb, closure);
   timeline->idx_cb[channel].push_unique(c);
 }
 
-void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel,
-                             ytp_timeline_data_cb_t cb, void *closure,
-                             fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel, ytp_timeline_data_cb_t cb, void *closure) {
   auto p = ytp_timeline_data_cb_cl_t(cb, closure);
-
   if (auto it_data = timeline->idx_cb.find(channel);
       it_data != timeline->idx_cb.end()) {
     auto &v = it_data->second;
@@ -219,47 +190,41 @@ void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel,
   }
 }
 
-bool ytp_timeline_term(ytp_timeline_t *timeline) {
+APR_DECLARE(bool) ytp_timeline_term(ytp_timeline_t *timeline) {
   return ytp_yamal_term(timeline->read);
 }
 
-ytp_iterator_t ytp_timeline_iter_get(ytp_timeline_t *timeline) {
+APR_DECLARE(ytp_iterator_t) ytp_timeline_iter_get(ytp_timeline_t *timeline) {
   return timeline->read;
 }
 
-void ytp_timeline_iter_set(ytp_timeline_t *timeline, ytp_iterator_t iterator) {
+APR_DECLARE(void) ytp_timeline_iter_set(ytp_timeline_t *timeline, ytp_iterator_t iterator) {
   timeline->read = iterator;
 }
 
-ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline, size_t ptr,
-                                 fmc_error_t **error) {
-  auto it = ytp_control_seek(timeline->ctrl, ptr, error);
-  timeline->read = it;
-  return it;
+APR_DECLARE(ytp_status_t) ytp_timeline_seek(ytp_timeline_t *timeline, ytp_iterator_t *it_ptr, apr_size_t ptr) {
+  ytp_status_t rv = ytp_control_seek(timeline->ctrl, it_ptr, ptr);
+  timeline->read = *it_ptr;
+  return rv;
 }
 
-size_t ytp_timeline_tell(ytp_timeline_t *timeline, ytp_iterator_t iterator,
-                         fmc_error_t **error) {
-  return ytp_control_tell(timeline->ctrl, iterator, error);
+APR_DECLARE(ytp_status_t) ytp_timeline_tell(ytp_timeline_t *timeline, apr_size_t *ptr, ytp_iterator_t iterator) {
+  return ytp_control_tell(timeline->ctrl, ptr, iterator);
 }
 
-void ytp_timeline_idle_cb(ytp_timeline_t *timeline, ytp_timeline_idle_cb_t cb,
-                          void *closure, fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_idle_cb(ytp_timeline_t *timeline, ytp_timeline_idle_cb_t cb, void *closure) {
   auto c = ytp_timeline_idle_cb_cl_t(cb, closure);
   timeline->cb_idle.push_unique(c);
 }
 
-void ytp_timeline_idle_cb_rm(ytp_timeline_t *timeline,
-                             ytp_timeline_idle_cb_t cb, void *closure,
-                             fmc_error_t **error) {
-  fmc_error_clear(error);
+APR_DECLARE(void) ytp_timeline_idle_cb_rm(ytp_timeline_t *timeline,
+                             ytp_timeline_idle_cb_t cb, void *closure) {
   auto p = ytp_timeline_idle_cb_cl_t(cb, closure);
   auto &v = timeline->cb_idle;
   v.erase_if([&](const decltype(p) &item) { return p == item; });
 }
 
-bool was_announced(std::vector<uint8_t> &announced_vec, size_t id) {
+static bool was_announced(std::vector<uint8_t> &announced_vec, apr_size_t id) {
   if (id >= announced_vec.size()) {
     announced_vec.resize(id + 1);
   }
@@ -273,7 +238,7 @@ bool was_announced(std::vector<uint8_t> &announced_vec, size_t id) {
   return false;
 }
 
-bool was_announced(std::unordered_set<std::string_view> &announced_set,
+static bool was_announced(std::unordered_set<std::string_view> &announced_set,
                    std::string_view id) {
   if (auto it = announced_set.find(id); it != announced_set.end()) {
     return true;
@@ -282,23 +247,23 @@ bool was_announced(std::unordered_set<std::string_view> &announced_set,
   return false;
 }
 
-static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
-                                   fmc_error_t **error) {
-  fmc_error_clear(error);
-
+APR_DECLARE(ytp_status_t) ytp_timeline_poll(ytp_timeline_t *timeline, bool *new_data) {
+  ytp_status_t rv = YTP_STATUS_OK;
   if (!ytp_timeline_term(timeline)) {
     ytp_peer_t read_peer;
     ytp_channel_t read_channel;
     uint64_t read_time;
-    size_t read_sz;
+    apr_size_t read_sz;
     const char *read_data;
 
-    ytp_control_read(timeline->ctrl, timeline->read, &read_peer, &read_channel,
-                     &read_time, &read_sz, &read_data, error);
-    if (!*error) {
-      auto next_it = ytp_control_next(timeline->ctrl, timeline->read, error);
-      if (*error) {
-        return false;
+    rv = ytp_control_read(timeline->ctrl, timeline->read, &read_peer, &read_channel,
+                                       &read_time, &read_sz, &read_data);
+    if (!rv) {
+      ytp_iterator_t next_it;
+      rv = ytp_control_next(timeline->ctrl, &next_it, timeline->read);
+      if (rv) {
+        *new_data = false;
+        return rv;
       }
       timeline->read = next_it;
       if (ytp_peer_ann(read_peer)) {
@@ -309,12 +274,13 @@ static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
             it != timeline->ctrl->name_to_peer.end()) {
           peer = it->second;
         } else {
-          fmc_error_set(error, "invalid peer announcement");
-          return true;
+          *new_data = false;
+          return YTP_STATUS_EPEERANN;
         }
 
         if (was_announced(timeline->peer_announced, peer - YTP_PEER_OFF)) {
-          return true;
+          *new_data = true;
+          return rv;
         }
 
         timeline->cb_peer.lock();
@@ -336,20 +302,22 @@ static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
                 it != timeline->ctrl->name_to_channel.end()) {
               channel = it->second;
             } else {
-              fmc_error_set(error, "invalid channel announcement");
-              return true;
+              *new_data = false;
+              return YTP_STATUS_ECHANN;
             }
 
             if (was_announced(timeline->ch_announced,
                               channel - YTP_CHANNEL_OFF)) {
-              return true;
+              *new_data = true;
+              return rv;
             }
           }
 
           else if (read_channel == YTP_CHANNEL_SUB) {
             std::string_view prefix_name{read_data, read_sz};
             if (was_announced(timeline->sub_announced, prefix_name)) {
-              return true;
+              *new_data = true;
+              return rv;
             }
           }
         }
@@ -368,7 +336,8 @@ static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
           it->second.release();
         }
       }
-      return true;
+      *new_data = true;
+      return rv;
     }
   }
 
@@ -383,14 +352,11 @@ static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
   }
   timeline->cb_idle.release();
 
-  return false;
+  *new_data = false;
+  return rv;
 }
 
-bool ytp_timeline_poll(ytp_timeline_t *timeline, fmc_error_t **error) {
-  return ytp_timeline_poll_impl(timeline, error);
-}
-
-bool ytp_timeline_consume(ytp_timeline_t *dest, ytp_timeline_t *src) {
+APR_DECLARE(bool) ytp_timeline_consume(ytp_timeline_t *dest, ytp_timeline_t *src) {
   if (dest->read != src->read) {
     return false;
   }
@@ -442,7 +408,7 @@ bool ytp_timeline_consume(ytp_timeline_t *dest, ytp_timeline_t *src) {
   return true;
 }
 
-void ytp_timeline_cb_rm(ytp_timeline_t *timeline) {
+APR_DECLARE(void) ytp_timeline_cb_rm(ytp_timeline_t *timeline) {
   for (auto &&[channel, v] : timeline->idx_cb) {
     v.erase_if([&](const ytp_timeline_data_cb_cl_t &item) {
       return item.first != channel_announcement_msg;
