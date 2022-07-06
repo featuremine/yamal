@@ -24,6 +24,16 @@
 #include <time.h> // clock_gettime() timespec CLOCK_REALTIME
 #endif
 
+#include <sstream>
+#include <string>
+
+#if defined(__linux__) || defined(DARWIN)
+#include <errno.h>
+#include <pthread.h>
+#include <sched.h>
+#include <string.h>
+#endif
+
 int64_t cur_time_ns(void) {
 #if defined(__linux__) || defined(DARWIN)
   timespec ts;
@@ -58,4 +68,73 @@ ytp_status_t mmap_sync(apr_mmap_t *map, apr_size_t size) {
   }
 #endif
   return rv;
+}
+
+_tid _tid_cur() {
+#if defined(__linux__) || defined(DARWIN)
+  return pthread_self();
+#elif defined(WIN32)
+  return GetCurrentThread();
+#else
+#error "Unsupported operating system"
+#endif
+}
+
+ytp_status_t _set_sched_normal(_tid tid) {
+#if defined(__linux__) || defined(DARWIN)
+  const struct sched_param normal_sp = {.sched_priority = 0};
+  int r = pthread_setschedparam(tid, SCHED_OTHER, &normal_sp);
+  if (r) {
+    errno = r;
+    return errno;
+  }
+  return YTP_STATUS_OK;
+#else
+#error "Unsupported operating system"
+#endif
+}
+
+ytp_status_t _set_sched_fifo(_tid tid, int priority) {
+#if defined(__linux__) || defined(DARWIN)
+  const struct sched_param fifo_sp = {.sched_priority = priority};
+  int r = pthread_setschedparam(tid, SCHED_FIFO, &fifo_sp);
+  if (r) {
+    errno = r;
+    return errno;
+  }
+  return YTP_STATUS_OK;
+#else
+#error "Unsupported operating system"
+#endif
+}
+
+ytp_status_t _set_affinity(_tid tid, int cpuid) {
+#if defined(__linux__)
+  cpu_set_t my_set;
+  CPU_ZERO(&my_set);
+  CPU_SET(cpuid, &my_set);
+  int r = pthread_setaffinity_np(tid, sizeof(cpu_set_t), &my_set);
+  if (r) {
+    errno = r;
+    return errno;
+  }
+  return YTP_STATUS_OK;
+#elif defined(DARWIN)
+#elif defined(WIN32)
+  if (!SetProcessAffinityMask(GetCurrentProcess(), 1 << cpuid)) {
+    return APR_EPROC_UNKNOWN;
+  }
+
+  if (!SetThreadPriority(tid, THREAD_PRIORITY_HIGHEST)) {
+    return APR_EPROC_UNKNOWN;
+  }
+  return YTP_STATUS_OK;
+#else
+#error "Unsupported operating system"
+#endif
+}
+
+ytp_status_t _set_cur_affinity(int cpuid) {
+  auto tid = _tid_cur();
+  return _set_affinity(tid, cpuid);
 }

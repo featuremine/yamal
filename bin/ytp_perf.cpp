@@ -1,5 +1,5 @@
 /******************************************************************************
-    COPYRIGHT (c) 2020 by Featuremine Corporation.
+    COPYRIGHT (c) 2022 by Featuremine Corporation.
     This software has been provided pursuant to a License Agreement
     containing restrictions on its use.  This software contains
     valuable trade secrets and proprietary information of
@@ -13,21 +13,24 @@
 #define FM_COUNTER_ENABLE
 
 #include <atomic>
+#include <string>
+#include <string_view>
+#include <thread>
 #include <chrono>
 #include <cmath>
 #include <cstring>
 #include <tclap/CmdLine.h>
 
-#include <fmc++/counters.hpp>
-#include <fmc++/ordered_map.hpp>
-
-#include <fmc/endianness.h>
-#include <fmc/process.h>
-#include <fmc/signals.h>
-#include <fmc/time.h>
-
+#include <apr.h> // apr_size_t APR_DECLARE
+#include <apr_signal.h> // apr_signal()
+#include <apr_file_io.h> // apr_file_t
+#include <apr_pools.h> // apr_pool_t
+#include <ytp/errno.h> // ytp_status_t ytp_strerror()
 #include <ytp/sequence.h>
 #include <ytp/version.h>
+
+#include "utils.hpp"
+#include "endianness.h"
 
 using namespace std::chrono_literals;
 
@@ -36,7 +39,7 @@ static void sig_handler(int s) { run = false; }
 
 class precision_sampler {
 public:
-  using buckets_t = fmc::ordered_multimap<uint64_t, uint64_t>;
+  using buckets_t = ordered_multimap<uint64_t, uint64_t>;
   void sample(uint64_t x) {
     using namespace std;
     auto s = double(x);
@@ -76,7 +79,16 @@ private:
 };
 
 int main(int argc, char **argv) {
-  fmc_set_signal_handler(sig_handler);
+  ytp_status_t rv = ytp_initialize(); // also calls apr_initialize(), apr_pool_initialize(), apr_signal_init()
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
+  }
+  apr_signal(SIGQUIT, sig_handler);
+  apr_signal(SIGABRT, sig_handler);
+  apr_signal(SIGTERM, sig_handler);
+  apr_signal(SIGINT, sig_handler);
 
   bool is_source = argc > 1 && std::string_view(argv[1]) == "source";
   bool is_sink = argc > 1 && std::string_view(argv[1]) == "sink";
@@ -100,14 +112,14 @@ int main(int argc, char **argv) {
       "c", "channel", "name of the channel to use", false,
       "performance_test_channel", "string");
 
-  TCLAP::ValueArg<size_t> messagesArg("m", "messages",
+  TCLAP::ValueArg<apr_size_t> messagesArg("m", "messages",
                                       "number of messages to publish", false,
                                       1000000, "integer");
 
-  TCLAP::ValueArg<size_t> sizeArg(
+  TCLAP::ValueArg<apr_size_t> sizeArg(
       "s", "size", "size of the messages to publish", false, 256, "bytes");
 
-  TCLAP::ValueArg<size_t> rateArg("r", "rate",
+  TCLAP::ValueArg<apr_size_t> rateArg("r", "rate",
                                   "number of messages to publish in one second",
                                   false, 1000000, "messages");
 
@@ -144,66 +156,70 @@ int main(int argc, char **argv) {
 
   const std::string &filename = fileArg.getValue();
 
-  fmc_error_t *error;
-  auto fd = fmc_fopen(filename.c_str(), fmc_fmode::READWRITE, &error);
-  if (error) {
-    std::cerr << "Unable to open file " << filename << ": "
-              << fmc_error_msg(error) << std::endl;
-    return -1;
+  apr_pool_t *pool;
+  rv = apr_pool_create(&pool, NULL);
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
+  }
+  apr_file_t *f;
+  rv = apr_file_open(&f, filename.c_str(),
+                     APR_FOPEN_CREATE | APR_FOPEN_READ | APR_FOPEN_WRITE,
+                     APR_FPROT_OS_DEFAULT, pool);
+  if(rv) {
+    std::cerr << "Unable to open file: " << filename << std::endl;
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
   }
 
-  auto *seq = ytp_sequence_new(fd, &error);
-  if (error) {
-    std::cerr << "Unable to create the ytp sequence: " << fmc_error_msg(error)
-              << std::endl;
-    return -1;
+  ytp_sequence_t *seq;
+  rv = ytp_sequence_new(&seq, f);
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
   }
 
   std::string_view peername = "performance_tester";
-  auto peer =
-      ytp_sequence_peer_decl(seq, peername.size(), peername.data(), &error);
-  if (error) {
-    std::cerr << "Unable to declare the ytp peer: " << fmc_error_msg(error)
-              << std::endl;
-    return -1;
+  ytp_peer_t peer;
+  rv = ytp_sequence_peer_decl(seq, &peer, peername.size(), peername.data());
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
   }
 
   std::string_view channelname = channelName.getValue();
-  auto channel =
-      ytp_sequence_ch_decl(seq, peer, fmc_cur_time_ns(), channelname.size(),
-                           channelname.data(), &error);
-  if (error) {
-    std::cerr << "Unable to declare the ytp peer: " << fmc_error_msg(error)
-              << std::endl;
-    return -1;
+  ytp_channel_t channel;
+  rv = ytp_sequence_ch_decl(seq, &channel, peer, cur_time_ns(), channelname.size(), channelname.data());
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
   }
 
   if (affinityArg.isSet()) {
-    fmc_error_t *error;
-    auto cur_thread = fmc_tid_cur(&error);
-    if (error) {
+    auto cur_thread = _tid_cur();
+    auto cpuid = affinityArg.getValue();
+    rv = _set_affinity(cur_thread, cpuid);
+    if (rv) {
       std::string message;
-      message += "Error getting current thread: ";
-      message += fmc_error_msg(error);
+      message += "Error set affinity: ";
+      char error_str[128];
+      message += ytp_strerror(rv, error_str, sizeof(error_str));
       std::cerr << message << std::endl;
     } else {
-      auto cpuid = affinityArg.getValue();
-      fmc_set_affinity(cur_thread, cpuid, &error);
-      if (error) {
-        std::string message;
-        message += "Error set affinity: ";
-        message += fmc_error_msg(error);
-        std::cerr << message << std::endl;
-      } else {
-        if (priorityArg.isSet()) {
-          auto priority = priorityArg.getValue();
-          fmc_set_sched_fifo(cur_thread, priority, &error);
-          if (error) {
-            std::string message;
-            message += "Error setting fifo scheduler: ";
-            message += fmc_error_msg(error);
-            std::cerr << message << std::endl;
-          }
+      if (priorityArg.isSet()) {
+        auto priority = priorityArg.getValue();
+        rv = _set_sched_fifo(cur_thread, priority);
+        if (rv) {
+          std::string message;
+          message += "Error setting fifo scheduler: ";
+          char error_str[128];
+          message += ytp_strerror(rv, error_str, sizeof(error_str));
+          std::cerr << message << std::endl;
         }
       }
     }
@@ -225,35 +241,38 @@ int main(int argc, char **argv) {
           std::chrono::microseconds(std::chrono::seconds(1)).count() / rate);
     }
 
-    size_t msg_count = 0;
-    auto msg_size = std::max(sizeArg.getValue(), sizeof(size_t));
-    std::string payload(msg_size - sizeof(size_t), '.');
+    apr_size_t msg_count = 0;
+    auto msg_size = std::max(sizeArg.getValue(), sizeof(apr_size_t));
+    std::string payload(msg_size - sizeof(apr_size_t), '.');
 
-    size_t prev_messages_count = 0;
-    int64_t next_timer = fmc_cur_time_ns();
+    apr_size_t prev_messages_count = 0;
+    int64_t next_timer = cur_time_ns();
 
-    size_t curr_seqnum = 0;
-    for (ssize_t i = messagesArg.getValue();
+    apr_size_t curr_seqnum = 0;
+    for (apr_ssize_t i = messagesArg.getValue();
          (!messagesArg.isSet() || --i >= 0) && run;) {
       std::this_thread::sleep_for(sleep_ms);
-
-      auto *ptr = ytp_sequence_reserve(seq, msg_size, &error);
-      if (error) {
-        std::cerr << "Unable to reserve: " << fmc_error_msg(error) << std::endl;
-        return -1;
+      char *ptr;
+      rv = ytp_sequence_reserve(seq, &ptr, msg_size);
+      if(rv) {
+        char error_str[128];
+        std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+        return rv;
       }
 
-      auto &msg_seqnum = *reinterpret_cast<size_t *>(ptr);
-      msg_seqnum = fmc_htobe64(curr_seqnum++);
-      memcpy(ptr + sizeof(size_t), payload.data(), payload.size());
+      auto &msg_seqnum = *reinterpret_cast<apr_size_t *>(ptr);
+      msg_seqnum = _htobe64(curr_seqnum++);
+      memcpy(ptr + sizeof(apr_size_t), payload.data(), payload.size());
 
-      auto now = fmc_cur_time_ns();
-      ytp_sequence_commit(seq, peer, channel, now, ptr, &error);
+      auto now = cur_time_ns();
+      ytp_iterator_t it;
+      rv = ytp_sequence_commit(seq, &it, peer, channel, now, ptr);
+      if(rv) {
+        char error_str[128];
+        std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+        return rv;
+      }
       ++msg_count;
-      if (error) {
-        std::cerr << "Unable to commit: " << fmc_error_msg(error) << std::endl;
-        return -1;
-      }
 
       if (next_timer <= now) {
         auto timer_delayed = now - next_timer;
@@ -299,14 +318,12 @@ int main(int argc, char **argv) {
         buckets_.clear();
       }
 
-      void sample(const char *data_ptr, size_t data_sz, uint64_t msg_time) {
-        size_t msg_seqnum =
-            fmc_be64toh(*reinterpret_cast<const size_t *>(data_ptr));
-        auto now = fmc_cur_time_ns();
-        // now - time = how long it took from writing to receiving the message
+      void sample(const char *data_ptr, apr_size_t data_sz, uint64_t msg_time) {
+        apr_size_t msg_seqnum =
+            _be64toh(*reinterpret_cast<const apr_size_t *>(data_ptr));
+        auto now = cur_time_ns();
         uint64_t time_write_read = now - msg_time;
 
-        auto msg_sz = *reinterpret_cast<const size_t *>(data_ptr);
         if (first_message_ == 0) {
           first_message_ = now;
         }
@@ -387,24 +404,20 @@ int main(int argc, char **argv) {
 
     ytp_sequence_data_cb_t on_message =
         [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-           uint64_t msg_time, size_t data_sz, const char *data_ptr) {
+           uint64_t msg_time, apr_size_t data_sz, const char *data_ptr) {
           auto &stats = *reinterpret_cast<stats_t *>(closure);
           stats.sample(data_ptr, data_sz, msg_time);
         };
 
-    ytp_sequence_indx_cb(seq, channel, on_message, &closure, &error);
-    if (error) {
-      std::cerr << "Unable to register callback: " << fmc_error_msg(error)
-                << std::endl;
-      return -1;
-    }
+    ytp_sequence_indx_cb(seq, channel, on_message, &closure);
 
-    int64_t next_timer = fmc_cur_time_ns();
+    int64_t next_timer = cur_time_ns();
 
     while (run) {
-      while (ytp_sequence_poll(seq, &error))
+      bool new_data;
+      while ( !(rv = ytp_sequence_poll(seq, &new_data)) && new_data)
         ;
-      auto now = fmc_cur_time_ns();
+      auto now = cur_time_ns();
       if (next_timer <= now) {
         next_timer = now + interval;
         closure.print();
@@ -413,17 +426,20 @@ int main(int argc, char **argv) {
     }
   }
 
-  ytp_sequence_del(seq, &error);
-  if (error) {
-    std::cerr << "Unable to delete the ytp sequence: " << fmc_error_msg(error)
-              << std::endl;
-    return -1;
+  rv = ytp_sequence_del(seq);
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
   }
 
-  fmc_fclose(fd, &error);
-  if (error) {
-    std::cerr << "Unable to close the file descriptor: " << fmc_error_msg(error)
-              << std::endl;
-    return -1;
+  rv = apr_file_close(f);
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
   }
+  apr_pool_destroy(pool);
+  ytp_terminate();
+  return 0;
 }

@@ -178,6 +178,7 @@ if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif()
+add_subdirectory(bin)
 
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
