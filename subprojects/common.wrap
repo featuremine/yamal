@@ -1,5 +1,0 @@
-[wrap-git]
-directory=common
-url=https://github.com/featuremine/common.git
-push-url=https://github.com/featuremine/common.git
-revision=v6.5.2
