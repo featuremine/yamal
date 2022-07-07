@@ -1,0 +1,14 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: fmc++
+Description: common fmc++ functions
+URL: @PROJECT_HOMEPAGE_URL@
+Version: @PROJECT_VERSION@
+
+Requires:
+Libs: -L${libdir} -lfmc++ @FMCCPP_LIBS@
+Cflags: -I${includedir}
+Libs.private: @FMCCPP_LIBS_PRIVATE@
