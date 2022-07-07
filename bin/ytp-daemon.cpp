@@ -26,32 +26,78 @@
 #include <deque>
 #include <string_view>
 
+#include "utils.hpp"
+
+std::string time_to_string(uint64_t nanosecs) {
+    time_t secs = nanosecs/1000000000;
+    char       buf[64];
+
+    // Format time, "yyyy-mm-dd hh:mm:ss.nnnnnnnnn"
+    struct tm ts = *localtime(&secs);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S.", &ts);
+    std::ostringstream os;
+    os << buf << std::setfill('0') << std::setw(9) << nanosecs % 1000000000;
+    return os.str();
+}
+
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(std::string name, double rate, size_t initial_sz)
       : name_(std::move(name)), rate_(rate), initial_sz_(initial_sz) {
-    fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
-    fmc_runtime_error_unless(!error_)
-        << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
+    rv_ = ytp_initialize(); // also calls apr_initialize(), apr_pool_initialize(), apr_signal_init()
+    if(rv_) {
+      char error_str[128];
+      throw std::runtime_error(ytp_strerror(rv_, error_str, sizeof(error_str)));
+    }
+    rv_ = apr_pool_create(&pool_, NULL);
+    if(rv_) {
+      char error_str[128];
+      throw std::runtime_error(ytp_strerror(rv_, error_str, sizeof(error_str)));
+    }
+    rv_ = apr_file_open(&f_, name_.c_str(),
+                      APR_FOPEN_CREATE | APR_FOPEN_READ,
+                      APR_FPROT_OS_DEFAULT, pool_);
+    if(rv_) {
+      std::string err("Unable to open file ");
+      err += name_;
+      err += ": ";
+      char error_str[128];
+      err += ytp_strerror(rv_, error_str, sizeof(error_str));
+      throw std::runtime_error(err);
+    }
 
-    yamal_ = ytp_yamal_new_2(fd_, false, &error_);
-    fmc_runtime_error_unless(!error_)
-        << "Unable to create the ytp yamal (" << name_
-        << "): " << fmc_error_msg(error_);
+    rv_ = ytp_yamal_new2(&yamal_, f_, false);
+    if(rv_) {
+      std::string err("Unable to create the ytp yamal: ");
+      char error_str[128];
+      err += ytp_strerror(rv_, error_str, sizeof(error_str));
+      throw std::runtime_error(err);
+    }
   }
 
   ~yamal_t() {
-    if (yamal_) {
-      ytp_yamal_del(yamal_, &error_);
-      fmc_runtime_error_unless(!error_)
-          << "Unable to delete the ytp yamal: " << fmc_error_msg(error_);
+    if(yamal_) {
+      rv_ = ytp_yamal_del(yamal_);
+      if(rv_) {
+        std::string err("Unable to delete the ytp yamal: ");
+        char error_str[128];
+        err += ytp_strerror(rv_, error_str, sizeof(error_str));
+        throw std::runtime_error(err);
+      }
     }
-
-    if (fd_ != -1) {
-      fmc_fclose(fd_, &error_);
-      fmc_runtime_error_unless(!error_)
-          << "Unable to close the file descriptor: " << fmc_error_msg(error_);
+    if(f_) {
+      rv_ = apr_file_close(f_);
+      if(rv_) {
+        std::string err("Unable to close the file: ");
+        char error_str[128];
+        err += ytp_strerror(rv_, error_str, sizeof(error_str));
+        throw std::runtime_error(err);
+      }
     }
+    if(pool_) {
+      apr_pool_destroy(pool_);
+    }
+    ytp_terminate();
   }
 
   void allocate(size_t sz_required) {
@@ -60,30 +106,51 @@ struct yamal_t {
     auto required_pages =
         (sz_required + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
     for (auto page = required_pages; page-- > allocated_pages;) {
-      ytp_yamal_allocate_page(yamal_, page, &error_);
-      fmc_runtime_error_unless(!error_) << "Unable to allocate page (" << name_
-                                        << "): " << fmc_error_msg(error_);
+      rv_ = ytp_yamal_allocate_page(yamal_, page);
+      if(rv_) {
+        std::string err("Unable to allocate page (");
+        err += name_;
+        err += "): ";
+        char error_str[128];
+        err += ytp_strerror(rv_, error_str, sizeof(error_str));
+        throw std::runtime_error(err);
+      }
     }
   }
 
   size_t size() {
-    auto sz = ytp_yamal_reserved_size(yamal_, &error_);
-    fmc_runtime_error_unless(!error_)
-        << "Unable to get reserved size (" << name_
-        << "): " << fmc_error_msg(error_);
+    apr_size_t sz;
+    rv_ = ytp_yamal_reserved_size(yamal_, &sz);
+    if(rv_) {
+      std::string err("Unable to get reserved size (");
+      err += name_;
+      err += "): ";
+      char error_str[128];
+      err += ytp_strerror(rv_, error_str, sizeof(error_str));
+      throw std::runtime_error(err);
+    }
     return sz;
   }
 
   size_t fsize() {
-    auto sz = fmc_fsize(fd_, &error_);
-    fmc_runtime_error_unless(!error_) << "Unable to get the ytp size (" << name_
-                                      << "): " << fmc_error_msg(error_);
-    return sz;
+    apr_finfo_t finfo;
+    rv_ = apr_file_info_get(&finfo, APR_FINFO_SIZE, f_);
+    if (rv_) {
+      std::string err("Unable to get the ytp size (");
+      err += name_;
+      err += "): ";
+      char error_str[128];
+      err += ytp_strerror(rv_, error_str, sizeof(error_str));
+      throw std::runtime_error(err);
+      return 0;
+    }
+    return finfo.size;
   }
 
   std::string name_;
-  fmc_error_t *error_;
-  fmc_fd fd_ = -1;
+  ytp_status_t rv_ = YTP_STATUS_OK;
+  apr_pool_t *pool_ = nullptr;
+  apr_file_t *f_ = nullptr;
   ytp_yamal_t *yamal_ = nullptr;
 
   size_t initial_sz_ = 0;
@@ -110,7 +177,16 @@ static std::atomic<bool> run = true;
 static void sig_handler(int s) { run = false; }
 
 int main(int argc, char **argv) {
-  fmc_set_signal_handler(sig_handler);
+  ytp_status_t rv = ytp_initialize(); // also calls apr_initialize(), apr_pool_initialize(), apr_signal_init()
+  if(rv) {
+    char error_str[128];
+    std::cerr << ytp_strerror(rv, error_str, sizeof(error_str)) << std::endl;
+    return rv;
+  }
+  apr_signal(SIGQUIT, sig_handler);
+  apr_signal(SIGABRT, sig_handler);
+  apr_signal(SIGTERM, sig_handler);
+  apr_signal(SIGINT, sig_handler);
 
   TCLAP::CmdLine cmd("ytp preempt allocation tool", ' ', YTP_VERSION);
 
@@ -145,7 +221,7 @@ int main(int argc, char **argv) {
 
   for (auto &ytp : ytps) {
     ytp.prev_sz_ = ytp.size();
-    ytp.prev_time_ = fmc_cur_time_ns();
+    ytp.prev_time_ = cur_time_ns();
     ytp.allocate(std::max(ytp.prev_sz_, ytp.initial_sz_));
     ytp.file_size_ = ytp.fsize();
   }
@@ -160,7 +236,7 @@ int main(int argc, char **argv) {
         auto delta_sz = sz - ytp.prev_sz_;
         ytp.prev_sz_ = sz;
 
-        auto now = fmc_cur_time_ns();
+        auto now = cur_time_ns();
         auto delta_time = now - ytp.prev_time_;
         ytp.prev_time_ = now;
 
@@ -181,17 +257,18 @@ int main(int argc, char **argv) {
               (YTP_MMLIST_PAGE_SIZE * 5 / 100) >
           ytp.file_size_) {
         sleep_count = 0;
-        auto before_time = fmc_cur_time_ns();
+        auto before_time = cur_time_ns();
         ytp.allocate(ytp.file_size_ + YTP_MMLIST_PAGE_SIZE);
-        auto after_time = fmc_cur_time_ns();
+        auto after_time = cur_time_ns();
         auto delta_time = after_time - before_time;
         alloc_time_model.adjust(ytp.file_size_, YTP_MMLIST_PAGE_SIZE,
                                 delta_time);
         ytp.file_size_ += YTP_MMLIST_PAGE_SIZE;
-        std::cout << fmc::time(std::chrono::nanoseconds(fmc_cur_time_ns()))
+        std::cout << time_to_string(cur_time_ns())
                   << " Page allocated in " << delta_time << " ns (" << ytp.name_
                   << ")" << std::endl;
       }
     }
   }
+  ytp_terminate();
 }
