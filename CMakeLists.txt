@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-file (STRINGS "VERSION" BUILD_NUMBER)
+
+file (STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" YAMAL_VERSION)
+
 project(
-    ytp
-    VERSION "${BUILD_NUMBER}"
+    yamal
+    VERSION "${YAMAL_VERSION}"
     DESCRIPTION "Featuremine Yamal Library"
     HOMEPAGE_URL "https://www.featuremine.com"
 )
@@ -34,8 +36,9 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   string(APPEND CMAKE_SHARED_LINKER_FLAGS " -Wl,--exclude-libs,ALL")
 endif()
 
-string(APPEND CMAKE_C_FLAGS " -fPIC -pipe -fdiagnostics-color=always -Wduplicate-decl-specifier -Waddress -Warray-bounds -Wchar-subscripts -Winit-self -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wunused-function -Wunused-label -Wunused-variable -Winvalid-pch -Wall")
-string(APPEND CMAKE_CXX_FLAGS " -fPIC -pipe -fdiagnostics-color=always -Waddress -Warray-bounds -Wchar-subscripts -Winit-self -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wunused-function -Wunused-label -Wunused-variable -Winvalid-pch -Wall -Wnon-virtual-dtor")
+
+string(APPEND CMAKE_C_FLAGS " -fPIC -Wduplicate-decl-specifier -Waddress -Warray-bounds -Wchar-subscripts -Winit-self -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wunused-function -Wunused-label -Wunused-variable -Winvalid-pch -Wall")
+string(APPEND CMAKE_CXX_FLAGS " -fPIC -Waddress -Warray-bounds -Wchar-subscripts -Winit-self -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wunused-function -Wunused-label -Wunused-variable -Winvalid-pch -Wall -Wnon-virtual-dtor")
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -144,13 +147,17 @@ target_link_libraries(
     libapr
     Threads::Threads
 )
-
-add_library(
-    ytp_shared
-    SHARED
-    $<TARGET_OBJECTS:ytp_obj>
+install(
+    TARGETS
+    ytp
 )
+
 if(BUILD_SHARED_LIBS)
+    add_library(
+        ytp_shared
+        SHARED
+        $<TARGET_OBJECTS:ytp_obj>
+    )
     target_include_directories(
         ytp_shared
         PRIVATE
@@ -172,6 +179,10 @@ if(BUILD_SHARED_LIBS)
         OUTPUT_NAME "ytp"
         LINKER_LANGUAGE "C"
     )
+    install(
+        TARGETS
+        ytp_shared
+    )
 endif()
 
 if(BUILD_TESTING)
@@ -189,18 +200,6 @@ configure_file(
     "${PROJECT_SOURCE_DIR}/include/ytp/version.h.in"
     "${PROJECT_BINARY_DIR}/include/ytp/version.h"
     @ONLY
-)
-
-if(BUILD_SHARED_LIBS)
-    install(
-        TARGETS
-        ytp_shared
-    )
-endif()
-
-install(
-    TARGETS
-    ytp
 )
 
 install(
