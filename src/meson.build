@@ -8,7 +8,8 @@ srcs_c = files(
     'fmc/test.cpp',
     'fmc/time.cpp',
     'fmc/sockets.cpp',
-    'fmc/process.cpp'
+    'fmc/process.cpp',
+    'fmc/extension.cpp'
 )
 
 srcs_cpp = files(
@@ -17,9 +18,15 @@ srcs_cpp = files(
 
 cc = meson.get_compiler('cpp')
 
+if is_linux
+    extr_dep_deps = [dl]
+else
+    extr_dep_deps = []
+endif
+
 shared_fmc = shared_library('fmc', [srcs_c],
                             include_directories : [inc],
-                            dependencies : [static_libstdcxx_dep, thread_dep],
+                            dependencies : [static_libstdcxx_dep, thread_dep, extr_dep_deps],
                             cpp_args : static_cpp_args,
                             link_args: static_link_args,
                             link_language: 'c',
@@ -28,7 +35,7 @@ shared_fmc = shared_library('fmc', [srcs_c],
 
 static_fmcpp = static_library('fmc++', [srcs_cpp],
                               include_directories : [inc],
-                              dependencies : [thread_dep],
+                              dependencies : [thread_dep, extr_dep_deps],
                               cpp_args : static_cpp_args,
                               install: true,
                               install_dir: 'lib')

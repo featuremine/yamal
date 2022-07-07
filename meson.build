@@ -72,6 +72,11 @@ elif is_windows
   static_cpp_args = []
 endif
 
+dl = []
+if is_linux
+  dl = cpp_compiler.find_library('dl', required : true)
+endif
+
 is_subproject = meson.is_subproject()
 
 if is_windows
