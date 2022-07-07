@@ -12,7 +12,7 @@
 
  *****************************************************************************/
 
-#include "../src/timeline.hpp"
+#include "../src/ytp/timeline.hpp"
 
 #include <fmc++/gtestwrap.hpp>
 

@@ -3,7 +3,6 @@ fmc_root_incs = [
 	'fmc/debug.h',
 	'fmc/endianness.h',
 	'fmc/error.h',
-	'fmc/extension.h',
 	'fmc/files.h',
 	'fmc/math.h',
 	'fmc/murmur3.h',
@@ -47,18 +46,43 @@ fmcpp_cfg_incs = [
 	'fmc++/config/variant_map.hpp'
 ]
 
-fmcpp_python_incs = [
-	'fmc++/python/component.hpp',
-	'fmc++/python/config.hpp',
-	'fmc++/python/wrapper.hpp'
+fmcpp_json_incs = [
+	'fmc++/json/json.hpp'
 ]
 
+ytp_incs = [
+	'ytp/yamal.h',
+	'ytp/peer.h',
+	'ytp/channel.h',
+	'ytp/time.h',
+	'ytp/control.h',
+	'ytp/sequence.h',
+	'ytp/timeline.h',
+]
+
+version_conf_data = configuration_data()
+
+ytp_version_array = meson.project_version().split('.')
+version_conf_data.set_quoted('YTP_VERSION', meson.project_version())
+version_conf_data.set('YTP_VERSION_MAJOR', ytp_version_array[0])
+version_conf_data.set('YTP_VERSION_MINOR', ytp_version_array[1])
+version_conf_data.set('YTP_VERSION_PATCH', ytp_version_array[2])
+
+configure_file(
+  input : 'version.h.in',
+  output : 'version.h',
+  configuration : version_conf_data,
+  install_dir: 'include',
+  install: true
+)
+
+install_headers(ytp_incs, subdir : 'ytp')
 if install_samples
 	install_headers(fmc_root_incs, subdir : 'fmc')
 	install_headers(cmp_incs, subdir : 'fmc/cmp')
 	install_headers(fmcpp_root_incs, subdir : 'fmc++')
 	install_headers(fmcpp_cfg_incs, subdir : 'fmc++/config')
-	install_headers(fmcpp_python_incs, subdir : 'fmc++/python')
+	install_headers(fmcpp_json_incs, subdir : 'fmc++/json')
 endif
 
 inc = include_directories('.')

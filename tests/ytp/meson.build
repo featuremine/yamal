@@ -7,14 +7,10 @@ foreach test : ytp_tests
     main = name + '.cpp'
     exe = executable(
         'ytp_' + name, main,
-        dependencies : [shared_dep, gtest])
+        dependencies : [shared_ytp_dep, gtest])
     test('ytp_' + name, exe, is_parallel: false)
 endforeach
 
-test('pyext' , python3,
-    args : [src_dir + '/pyext.py'],
-    env : ['PYTHONPATH='+ ytp_pymod_path],
-    timeout: 180)
 
 ytp_big_endian = executable(
     'ytp_big_endian', ['yamal.cpp'] + yamal_srcs,
@@ -25,10 +21,5 @@ test('ytp_big_endian', ytp_big_endian, is_parallel: false)
 
 compiles_c = executable(
     'ytp_compiles_c', 'compiles.c',
-    dependencies : [shared_dep, py3_dep])
+    dependencies : [shared_ytp_dep])
 test('ytp_compiles_c', compiles_c, is_parallel: false)
-
-ytp_common = executable(
-    'ytp_common', 'common.cpp',
-    dependencies : [shared_dep, gtest])
-test('ytp_common', ytp_common, is_parallel: false)

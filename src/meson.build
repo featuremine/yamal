@@ -1,5 +1,5 @@
 srcs_c = files(
-    'fmc/cmp/cmp.c',
+    'fmc/cmp.c',
     'fmc/math.c',
     'fmc/murmur3.c',
     'fmc/signals.c',
@@ -8,27 +8,18 @@ srcs_c = files(
     'fmc/test.cpp',
     'fmc/time.cpp',
     'fmc/sockets.cpp',
-    'fmc/process.cpp',
-    'fmc/extension.cpp'
+    'fmc/process.cpp'
 )
 
 srcs_cpp = files(
-    'fmc++/stackdump.cpp',
-    'fmc++/config/config.cpp',
-    'fmc++/python/config.cpp'
+    'fmc++/config.cpp'
 )
-
-if is_linux
-    extr_dep_deps = [dl, dw, unwind, unwind_lib]
-else
-    extr_dep_deps = []
-endif
 
 cc = meson.get_compiler('cpp')
 
 shared_fmc = shared_library('fmc', [srcs_c],
                             include_directories : [inc],
-                            dependencies : [static_libstdcxx_dep, thread_dep, extr_dep_deps],
+                            dependencies : [static_libstdcxx_dep, thread_dep],
                             cpp_args : static_cpp_args,
                             link_args: static_link_args,
                             link_language: 'c',
@@ -37,7 +28,7 @@ shared_fmc = shared_library('fmc', [srcs_c],
 
 static_fmcpp = static_library('fmc++', [srcs_cpp],
                               include_directories : [inc],
-                              dependencies : [thread_dep, extr_dep_deps, py3_dep],
+                              dependencies : [thread_dep],
                               cpp_args : static_cpp_args,
                               install: true,
                               install_dir: 'lib')
@@ -53,3 +44,36 @@ static_fmcpp_dep = declare_dependency(link_with: [static_fmcpp],
 fmc_dep = declare_dependency(link_with: [static_fmcpp, shared_fmc],
                              include_directories : [inc],
                              version : meson.project_version())
+
+ytp_srcs = files(
+	'ytp/yamal.cpp',
+	'ytp/peer.cpp',
+	'ytp/channel.cpp',
+	'ytp/time.cpp',
+	'ytp/control.cpp',
+	'ytp/sequence.cpp',
+	'ytp/timeline.cpp'
+)
+
+yamal_srcs = files(
+	'ytp/yamal.cpp'
+)
+
+shared_ytp = shared_library('ytp', [ytp_srcs],
+                            include_directories : [inc],
+                            dependencies : [fmc_dep, static_libstdcxx_dep, thread_dep],
+                            cpp_args : static_cpp_args,
+                            link_args: static_link_args,
+                            link_language: 'c',
+                            install: true,
+                            build_rpath: '$ORIGIN',
+                            install_rpath: '$ORIGIN',
+                            install_dir: 'lib')
+
+shared_ytp_dep = declare_dependency(link_with: shared_ytp,
+                                    include_directories : [inc],
+                                    version : meson.project_version(),
+                                    dependencies : [fmc_dep])
+
+
+subdir('tools')

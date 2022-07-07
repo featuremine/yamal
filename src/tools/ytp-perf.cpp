@@ -27,7 +27,7 @@
 #include <fmc/time.h>
 
 #include <ytp/sequence.h>
-#include <ytp/version.h>
+#include <version.h>
 
 using namespace std::chrono_literals;
 

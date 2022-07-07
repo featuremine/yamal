@@ -334,8 +334,7 @@ TEST(yamal, seektell) {
 }
 
 static void invalid_format_throws(bool enable_thread) {
-  std::string path =
-      fs::path(__FILE__).parent_path().append("../tests/data/synth_book.ore");
+  std::string path(__FILE__);
   FILE *ore_fp = fopen(path.c_str(), "rb");
   ASSERT_NE(ore_fp, nullptr);
   FILE *yamal_fp = tmpfile();

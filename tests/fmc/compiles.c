@@ -4,7 +4,6 @@
 #include <fmc/debug.h>
 #include <fmc/endianness.h>
 #include <fmc/error.h>
-#include <fmc/extension.h>
 #include <fmc/files.h>
 #include <fmc/math.h>
 #include <fmc/murmur3.h>

@@ -1,4 +1,4 @@
-tests = ['error', 'files', 'math', 'time', 'threaded', 'shared_map']
+tests = ['error', 'files', 'math', 'time']
 
 foreach test : tests
     name = test
@@ -13,5 +13,3 @@ compiles_c = executable(
     'common_compiles_c', 'compiles.c',
     dependencies : [fmc_dep])
 test('common_compiles_c', compiles_c, is_parallel: false)
-
-subdir('config')

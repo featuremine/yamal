@@ -14,44 +14,44 @@
 
 /**
  * @file version.h
- * @author Ivan Gonzalez
- * @date 24 Feb 2022
- * @brief File contains C declaration of version API of fmc common
+ * @author Federico Ravchina
+ * @date 23 Apr 2021
+ * @brief File contains C declaration of version API of YTP
  *
- * This file contains C declaration of version API of fmc common.
+ * This file contains C declaration of version API of YTP.
  * @see http://www.featuremine.com
  */
 
-#ifndef __FMC_VERSION_H__
-#define __FMC_VERSION_H__
+#ifndef __FM_YTP_VERSION_H__
+#define __FM_YTP_VERSION_H__
 
 /**
- * @brief Major FMC version
+ * @brief Major YTP version
  * 
  * Major version change represents a change to protocol
  */
-#define FMC_VERSION_MAJOR @FMC_VERSION_MAJOR@
+#define YTP_VERSION_MAJOR @YTP_VERSION_MAJOR@
 
 /**
- * @brief Minor FMC version
+ * @brief Minor YTP version
  * 
  * Minor version change represents a change to an API
  */
-#define FMC_VERSION_MINOR @FMC_VERSION_MINOR@
+#define YTP_VERSION_MINOR @YTP_VERSION_MINOR@
 
 /**
- * @brief Patch FMC version
+ * @brief Patch YTP version
  * 
  * Patch version represents fixes and additons that are
  * backwards compatible with previous API
  */
-#define FMC_VERSION_PATCH @FMC_VERSION_PATCH@
+#define YTP_VERSION_PATCH @YTP_VERSION_PATCH@
 
 /**
- * @brief FMC version string
+ * @brief YTP version string
  *
- * FMC version encoded string "MAJOR.MINOR.PATCH"
+ * YTP version encoded string "MAJOR.MINOR.PATCH"
  */
-#define FMC_VERSION @FMC_VERSION@
+#define YTP_VERSION @YTP_VERSION@
 
-#endif // __FMC_VERSION_H__
+#endif // __FM_YTP_VERSION_H__

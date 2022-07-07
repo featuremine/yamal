@@ -3,7 +3,7 @@
 #include <ytp/peer.h>
 #include <ytp/sequence.h>
 #include <ytp/time.h>
-#include <ytp/version.h>
+#include <version.h>
 #include <ytp/yamal.h>
 
 int main() { return 0; }

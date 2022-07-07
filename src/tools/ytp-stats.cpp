@@ -17,7 +17,7 @@
 #include <fmc/time.h>
 
 #include <ytp/sequence.h>
-#include <ytp/version.h>
+#include <version.h>
 
 #include <atomic>
 #include <deque>

@@ -19,7 +19,7 @@
 #include <fmc/signals.h>
 #include <fmc/time.h>
 
-#include <ytp/version.h>
+#include <version.h>
 #include <ytp/yamal.h>
 
 #include <atomic>
