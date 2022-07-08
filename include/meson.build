@@ -3,7 +3,7 @@ fmc_root_incs = [
 	'fmc/debug.h',
 	'fmc/endianness.h',
 	'fmc/error.h',
-    'fmc/extension.h',
+	'fmc/extension.h',
 	'fmc/files.h',
 	'fmc/math.h',
 	'fmc/murmur3.h',
