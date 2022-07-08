@@ -33,6 +33,14 @@ shared_fmc = shared_library('fmc', [srcs_c],
                             install: true,
                             install_dir: 'lib')
 
+static_fmc = static_library('fmc', [srcs_c],
+                            include_directories : [inc],
+                            dependencies : [thread_dep, extr_dep_deps],
+                            cpp_args : static_cpp_args,
+                            link_language: 'c',
+                            install: true,
+                            install_dir: 'lib')
+
 static_fmcpp = static_library('fmc++', [srcs_cpp],
                               include_directories : [inc],
                               dependencies : [thread_dep, extr_dep_deps],
@@ -44,13 +52,15 @@ shared_fmc_dep = declare_dependency(link_with: [shared_fmc],
                                     include_directories : [inc],
                                     version : meson.project_version())
 
+static_fmc_dep = declare_dependency(link_with: [static_fmc],
+                                    include_directories : [inc],
+                                    version : meson.project_version(),
+                                    dependencies : [thread_dep, extr_dep_deps])
+
 static_fmcpp_dep = declare_dependency(link_with: [static_fmcpp],
                                       include_directories : [inc],
-                                      version : meson.project_version())
-
-fmc_dep = declare_dependency(link_with: [static_fmcpp, shared_fmc],
-                             include_directories : [inc],
-                             version : meson.project_version())
+                                      version : meson.project_version(),
+                                      dependencies : [thread_dep, extr_dep_deps])
 
 yamal_srcs = files(
 	'ytp/yamal.cpp'
@@ -68,7 +78,7 @@ ytp_srcs = files(
 
 shared_ytp = shared_library('ytp', [ytp_srcs],
                             include_directories : [inc],
-                            dependencies : [fmc_dep, static_libstdcxx_dep, thread_dep],
+                            dependencies : [shared_fmc_dep, static_fmcpp_dep, static_libstdcxx_dep, thread_dep],
                             cpp_args : static_cpp_args,
                             link_args: static_link_args,
                             link_language: 'c',
@@ -80,7 +90,19 @@ shared_ytp = shared_library('ytp', [ytp_srcs],
 shared_ytp_dep = declare_dependency(link_with: shared_ytp,
                                     include_directories : [inc],
                                     version : meson.project_version(),
-                                    dependencies : [fmc_dep])
+                                    dependencies : [shared_fmc_dep, static_fmcpp_dep])
 
+static_ytp = static_library('ytp', [ytp_srcs],
+                            include_directories : [inc],
+                            dependencies : [static_fmc_dep, static_fmcpp_dep, static_libstdcxx_dep, thread_dep],
+                            cpp_args : static_cpp_args,
+                            link_language: 'c',
+                            install: true,
+                            install_dir: 'lib')
+
+static_ytp_dep = declare_dependency(link_with: static_ytp,
+                                    include_directories : [inc],
+                                    version : meson.project_version(),
+                                    dependencies : [static_fmc_dep, static_fmcpp_dep, thread_dep, extr_dep_deps])
 
 subdir('tools')

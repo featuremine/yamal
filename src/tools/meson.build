@@ -7,7 +7,7 @@ elif host_machine.system() == 'linux'
 endif
 
 ytp_perf = executable('ytp-perf', 'ytp-perf.cpp',
-						dependencies : [fmc_dep, shared_ytp_dep, tclap_dep],
+						dependencies : [static_fmc_dep, static_ytp_dep, tclap_dep],
 						install: true,
 						install_dir: 'tools/ytp',
 						build_rpath: '$ORIGIN:$ORIGIN/../lib',
@@ -15,7 +15,7 @@ ytp_perf = executable('ytp-perf', 'ytp-perf.cpp',
 						link_args: link_args)
 
 ytp_stats = executable('ytp-stats', 'ytp-stats.cpp',
-						dependencies : [fmc_dep, shared_ytp_dep, tclap_dep],
+						dependencies : [static_fmc_dep, static_ytp_dep, tclap_dep],
 						install: true,
 						install_dir: 'tools/ytp',
 						build_rpath: '$ORIGIN:$ORIGIN/../lib',
@@ -23,7 +23,7 @@ ytp_stats = executable('ytp-stats', 'ytp-stats.cpp',
 						link_args: link_args)
 
 ytp_daemon = executable('ytp-daemon', 'ytp-daemon.cpp',
-						dependencies : [fmc_dep, shared_ytp_dep, tclap_dep],
+						dependencies : [static_fmc_dep, static_ytp_dep, tclap_dep],
 						install: true,
 						install_dir: 'tools/ytp',
 						build_rpath: '$ORIGIN:$ORIGIN/../lib',
