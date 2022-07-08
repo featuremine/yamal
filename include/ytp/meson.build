@@ -13,15 +13,3 @@ configure_file(
   install_dir: 'include/ytp',
   install: true
 )
-
-ytp_incs = [
-	'yamal.h',
-	'peer.h',
-	'channel.h',
-	'time.h',
-	'control.h',
-	'sequence.h',
-	'timeline.h',
-]
-
-install_headers(ytp_incs, subdir : 'ytp')

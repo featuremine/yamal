@@ -1,0 +1,64 @@
+/******************************************************************************
+
+        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
+ *****************************************************************************/
+
+/**
+ * @file test.h
+ * @author Maxim Trokhimtchouk
+ * @date 11 Aug 2017
+ * @brief Test utilities
+ *
+ * @see http://www.featuremine.com
+ */
+
+#pragma once
+
+#include <fmc/platform.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief Compares two files using diff
+ *
+ * @param base base filename
+ * @param test test filename
+ * @return true if files are the same, false otherwise
+ */
+FMMODFUNC bool fmc_run_base_vs_test_diff(const char *base, const char *test);
+
+/**
+ * @brief Compares two files using numdiff
+ *
+ * @param base base filename
+ * @param test test filename
+ * @return true if files are the same, false otherwise
+ */
+FMMODFUNC bool fmc_numdiff_base_vs_test(const char *base, const char *test);
+
+#ifdef __cplusplus
+}
+#endif
+
+#define ASSERT_BASE(base, test)                                                \
+  ASSERT_TRUE(fmc_run_base_vs_test_diff(base, test))
+
+#define ASSERT_NUMDIFF_BASE(base, test)                                        \
+  ASSERT_TRUE(fmc_numdiff_base_vs_test(base, test))
+
+#define EXPECT_BASE(base, test)                                                \
+  EXPECT_TRUE(fmc_run_base_vs_test_diff(base, test))
+
+#define EXPECT_NUMDIFF_BASE(base, test)                                        \
+  EXPECT_TRUE(fmc_numdiff_base_vs_test(base, test))

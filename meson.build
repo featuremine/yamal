@@ -1,4 +1,4 @@
-project('yamal', 'cpp', 'c', version:'7.2.3')
+project('yamal', 'cpp', 'c', version:'7.2.4')
 
 version = meson.project_version()
 
@@ -72,39 +72,10 @@ elif is_windows
   static_cpp_args = []
 endif
 
-pymod = import('python')
-
-if meson.is_subproject()
-  py_version = get_option('py_version')
-  python3 = pymod.find_installation(py_version)
-else
-  python3 = pymod.find_installation()
+dl = []
+if is_linux
+  dl = cpp_compiler.find_library('dl', required : true)
 endif
-
-
-if is_windows and is_debug
-  pyv =  python3.language_version().split('.')[1]
-  py_base = 'C:/Program Files/Python3'+ pyv
-  lib = [c_compiler.find_library( 'python3' +pyv + '_d',dirs:[py_base+'/libs/']) ]
-  inc_dir = include_directories(py_base+'/include')
-  py3_dep = declare_dependency(include_directories: inc_dir,
-                                    dependencies:[lib])
-else
-  py3_dep = python3.dependency(embed:true)
-endif
-
-
-if (python3.language_version().split('.')[1].to_int() < 6)
-  error('support python version 3.6 and higher')
-endif
-
-pp = run_command(python3, '-c', 'import sys;print(sys.executable)')
-if pp.returncode() != 0
-  error('failed command')
-endif
-python_path = pp.stdout().strip()
-
-
 
 is_subproject = meson.is_subproject()
 
@@ -128,14 +99,6 @@ endif
 
 tclap_dep = dependency('tclap')
 
-#add common subproject
-common_sp = subproject('common')
-fmc_dep = common_sp.get_variable('fmc_dep')
-shared_fmc_dep = common_sp.get_variable('shared_fmc_dep')
-shared_fmc = common_sp.get_variable('shared_fmc')
-static_fmcpp_dep = common_sp.get_variable('shared_fmc_dep')
-static_fmcpp = common_sp.get_variable('static_fmcpp')
-
 if is_unix
   thread_dep = dependency('threads')
 elif is_windows
@@ -143,19 +106,14 @@ elif is_windows
   thread_dep = declare_dependency(dependencies : thread)
 endif
 
-src = include_directories('.')
 install_samples = get_option('install_samples')
-
-tclap_dep = dependency('tclap')
 
 subdir('include')
 subdir('src')
-subdir('python')
-subdir('bin')
 subdir('tests')
 
 if not is_subproject
   install_subdir('doc', install_dir : '.')
-  install_data('README', install_dir : '.')
+  install_data('README.md', install_dir : '.')
   install_data('LICENSE', install_dir : '.')
 endif
