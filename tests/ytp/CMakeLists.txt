@@ -1,6 +1,6 @@
 add_executable(
     tests_ytp_yamal
-    "${PROJECT_SOURCE_DIR}/tests/yamal.cpp"
+    "yamal.cpp"
 )
 target_link_libraries(
     tests_ytp_yamal
@@ -12,7 +12,7 @@ add_test(NAME ytp_yamal COMMAND tests_ytp_yamal)
 
 add_executable(
     tests_ytp_peer
-    "${PROJECT_SOURCE_DIR}/tests/peer.cpp"
+    "peer.cpp"
 )
 target_link_libraries(
     tests_ytp_peer
@@ -24,7 +24,7 @@ add_test(NAME ytp_peer COMMAND tests_ytp_peer)
 
 add_executable(
     tests_ytp_channel
-    "${PROJECT_SOURCE_DIR}/tests/channel.cpp"
+    "channel.cpp"
 )
 target_link_libraries(
     tests_ytp_channel
@@ -36,7 +36,7 @@ add_test(NAME ytp_channel COMMAND tests_ytp_channel)
 
 add_executable(
     tests_ytp_time
-    "${PROJECT_SOURCE_DIR}/tests/time.cpp"
+    "time.cpp"
 )
 target_link_libraries(
     tests_ytp_time
@@ -48,7 +48,7 @@ add_test(NAME ytp_time COMMAND tests_ytp_time)
 
 add_executable(
     tests_ytp_control
-    "${PROJECT_SOURCE_DIR}/tests/control.cpp"
+    "control.cpp"
 )
 target_link_libraries(
     tests_ytp_control
@@ -60,7 +60,7 @@ add_test(NAME ytp_control COMMAND tests_ytp_control)
 
 add_executable(
     tests_ytp_timeline
-    "${PROJECT_SOURCE_DIR}/tests/timeline.cpp"
+    "timeline.cpp"
 )
 target_link_libraries(
     tests_ytp_timeline
@@ -72,7 +72,7 @@ add_test(NAME ytp_timeline COMMAND tests_ytp_timeline)
 
 add_executable(
     tests_ytp_sequence
-    "${PROJECT_SOURCE_DIR}/tests/sequence.cpp"
+    "sequence.cpp"
 )
 target_link_libraries(
     tests_ytp_sequence
@@ -84,7 +84,7 @@ add_test(NAME ytp_sequence COMMAND tests_ytp_sequence)
 
 add_executable(
     tests_ytp_containers
-    "${PROJECT_SOURCE_DIR}/tests/containers.cpp"
+    "containers.cpp"
 )
 target_link_libraries(
     tests_ytp_containers
@@ -96,7 +96,7 @@ add_test(NAME ytp_containers COMMAND tests_ytp_containers)
 
 add_executable(
     tests_ytp_compiles_c
-    "${PROJECT_SOURCE_DIR}/tests/compiles.c"
+    "compiles.c"
 )
 target_link_libraries(
     tests_ytp_compiles_c
