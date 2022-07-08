@@ -52,19 +52,19 @@ fmc_dep = declare_dependency(link_with: [static_fmcpp, shared_fmc],
                              include_directories : [inc],
                              version : meson.project_version())
 
+yamal_srcs = files(
+	'ytp/yamal.cpp'
+)
+
 ytp_srcs = files(
-	'ytp/yamal.cpp',
 	'ytp/peer.cpp',
 	'ytp/channel.cpp',
 	'ytp/time.cpp',
 	'ytp/control.cpp',
 	'ytp/sequence.cpp',
 	'ytp/timeline.cpp'
-)
+) + yamal_srcs
 
-yamal_srcs = files(
-	'ytp/yamal.cpp'
-)
 
 shared_ytp = shared_library('ytp', [ytp_srcs],
                             include_directories : [inc],
