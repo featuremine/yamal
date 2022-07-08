@@ -23,7 +23,7 @@ ytp_stats = executable('ytp-stats', 'ytp-stats.cpp',
 						link_args: link_args)
 
 ytp_daemon = executable('ytp-daemon', 'ytp-daemon.cpp',
-						dependencies : [static_fmc_dep, static_ytp_dep, tclap_dep],
+						dependencies : [static_fmc_dep, static_fmcpp_dep, static_ytp_dep, tclap_dep],
 						install: true,
 						install_dir: 'tools/ytp',
 						build_rpath: '$ORIGIN:$ORIGIN/../lib',
