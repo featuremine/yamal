@@ -402,7 +402,8 @@ static void allocate_out_of_range_page(bool enable_thread) {
   ASSERT_NE(yamal, nullptr);
   ytp_yamal_allocate_page(yamal, 99999999999ull, &error);
   ASSERT_NE(error, nullptr);
-  ASSERT_EQ(std::string_view(fmc_error_msg(error), 25), "page index out of range (");
+  ASSERT_EQ(std::string_view(fmc_error_msg(error), 25),
+            "page index out of range (");
   error = (fmc_error_t *)1;
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);

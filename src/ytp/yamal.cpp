@@ -160,7 +160,8 @@ static bool mmlist_pages_allocation1(ytp_yamal_t *yamal, fmc_error_t **error) {
   }
   auto yamal_size = ye64toh(last_node_off) + ye64toh(node->size.load());
   auto pred_yamal_size = yamal_size + YTP_MMLIST_PREALLOC_SIZE;
-  auto pred_page_idx = std::min(pred_yamal_size / fm_mmlist_page_sz, fm_mmlist_page_count - 1);
+  auto pred_page_idx =
+      std::min(pred_yamal_size / fm_mmlist_page_sz, fm_mmlist_page_count - 1);
 
   if (!fmc_fview_data(&yamal->pages[pred_page_idx])) {
     std::lock_guard<std::mutex> lock(yamal->pa_mutex_);
