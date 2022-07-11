@@ -14,5 +14,7 @@
 #include <fmc/sockets.h>
 #include <fmc/test.h>
 #include <fmc/time.h>
+#include <fmc/config.h>
+#include <fmc/component.h>
 
 int main() { return 0; }
