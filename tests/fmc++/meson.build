@@ -5,6 +5,6 @@ foreach test : tests
     main = name + '.cpp'
     exe = executable(
         'common_' + name, main,
-        dependencies : [fmc_dep, gtest])
+        dependencies : [static_fmc_dep, static_fmcpp_dep, gtest])
     test('common_' + name, exe, is_parallel: false)
 endforeach
