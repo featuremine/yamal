@@ -30,8 +30,7 @@
 #include <unistd.h>
 #endif
 
-void *fmc_ext_load(const char *sym_name, const char *path,
-                   fmc_error_t **error) {
+fmc_ext_t fmc_ext_open(const char *path, fmc_error_t **error) {
   fmc_error_clear(error);
 #if defined(FMC_SYS_UNIX)
   auto *handle = dlopen(path, RTLD_NOW);
@@ -43,4 +42,11 @@ void *fmc_ext_load(const char *sym_name, const char *path,
 #else
 #error "Unsupported operating system"
 #endif
+}
+
+void *fmc_ext_sym(fmc_ext_t handle, const char *sym, fmc_error_t **error) {
+}
+
+void fmc_ext_sym(fmc_ext_t handle) {
+
 }

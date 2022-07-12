@@ -14,7 +14,6 @@
 
 /**
  * @file extension.h
- * @author Alejandro Farfan
  * @date 17 Jun 2021
  * @brief File contains C declaration of fmc ext loading
  *
@@ -31,6 +30,12 @@
 extern "C" {
 #endif
 
+#if defined(FMC_SYS_UNIX)
+typedef void * fmc_ext_t;
+#else
+#error "Not defined for this operating system"
+#endif
+
 /**
  * @brief Returns a pointer of a symbol in a shared object or executable
  *
@@ -42,8 +47,7 @@ extern "C" {
  * @param error out-parameter for error handling
  * @return a pointer associated with the symbol
  */
-FMMODFUNC void *fmc_ext_load(const char *sym_name, const char *path,
-                             fmc_error_t **error);
+FMMODFUNC fmc_ext_t fmc_ext_load(const char *path, fmc_error_t **error);
 
 #ifdef __cplusplus
 }

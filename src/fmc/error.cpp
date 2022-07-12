@@ -36,19 +36,20 @@
 #include <cstring>
 #include <string>
 
-struct fmc_error {
-  std::string msg;
-  std::string buffer;
+const char *error_msgs[] = {
+  "None",
+  "Could not allocate memory"
 };
 
-const char *fmc_error_msg(fmc_error_t *err) { return err->msg.c_str(); }
+const char *fmc_error_msg(fmc_error_t *err) {
+  return err->code == FMC_ERROR_CUSTOM
+         ? err->buf
+         : error_msgs[err->code];
+}
 
 void fmc_error_clear(fmc_error_t **err) { *err = NULL; }
 
-void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
-  fmc_error_t *err = fmc_error_inst();
-  *err_ptr = err;
-
+void fmc_error_append(fmc_error_t *err, const char *fmt, ...) {
   va_list args1;
   va_start(args1, fmt);
   va_list args2;
@@ -61,9 +62,36 @@ void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
   va_end(args2);
 }
 
+void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
+  fmc_error_t *err = fmc_error_inst();
+  *err_ptr = err;
+
+  va_list args1;
+  va_start(args1, fmt);
+  va_list args2;
+  va_copy(args2, args1);
+  auto size = vsnprintf(NULL, 0, fmt, args1) + 1;
+  char buf[size];
+  err->buffer.swap(err->msg);
+  err->msg.resize(size);
+  va_end(args1);
+  vsnprintf(err->msg.data(), size, fmt, args2);
+  va_end(args2);
+}
+
+struct fmc_error_wrap {
+  fmc_error_wrap() {
+    fmc_error_init(&error);
+  }
+  ~fmc_error_wrap() {
+    fmc_error_destroy(&error);
+  }
+  fmc_error error;
+};
+
 fmc_error_t *fmc_error_inst() {
-  static thread_local fmc_error_t err;
-  return &err;
+  static thread_local fmc_error_wrap wrap;
+  return &wrap.error;
 }
 
 const char *fmc_syserror_msg() {

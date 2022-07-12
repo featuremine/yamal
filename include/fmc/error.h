@@ -30,11 +30,33 @@
 extern "C" {
 #endif
 
-struct fmc_error;
+typedef enum {
+  FMC_ERROR_NONE,
+  FMC_ERROR_MEMORY,
+  FMC_ERROR_CUSTOM
+} FMC_ERROR_CODE;
+
+struct fmc_error {
+   FMC_ERROR_CODE code;
+   char *buf;
+};
+
 typedef struct fmc_error fmc_error_t;
 
 #define FMC_ERROR_REPORT(err, msg)                                             \
   fmc_error_set(err, "%s (%s:%d)", msg, __FILE__, __LINE__)
+
+/**
+ * @brief Initializes the error struct
+ * @param err
+ */
+FMMODFUNC void fmc_error_init(fmc_error_t *err);
+
+/**
+ * @brief Destroy the error struct
+ * @param err
+ */
+FMMODFUNC void fmc_error_destroy(fmc_error_t *err);
 
 /**
  * @brief Clears the error pointer

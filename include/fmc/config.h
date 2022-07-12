@@ -14,26 +14,21 @@
 
 /**
  * @file config.h
- * @author Ivan Gonzalez
  * @date 11 Jul 2022
- * @brief Configuration for components
+ * @brief Yet another configuration API
  *
  * @see http://www.featuremine.com
  */
 
-// TODO : pragma?
-#ifndef CONFIG_H__
-#define CONFIG_H__
+#pragma once
+
+#include <fmc/files.h>
+#include <fmc/error.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define fmc_comp_HEAD  \
-   fmc_comp_type *_vt; \
-   fmc_error _err
-
-// int32_t
 typedef enum {
   FMC_CFG_NONE,             /*  0 */
   FMC_CFG_BOOLEAN,          /*  1 */
@@ -44,14 +39,9 @@ typedef enum {
   FMC_CFG_ARR               /*  6 */
 } FMC_CFG_TYPE;
 
-
-typedef struct fmc_cfg_arr_spec fmc_cfg_arr_spec;
-typedef struct fmc_cfg_node_spec fmc_cfg_node_spec;
-typedef struct fmc_cfg_node fmc_cfg_node;
-typedef struct fmc_cfg_sect fmc_cfg_sect;
-typedef struct fmc_cfg_arr fmc_cfg_arr;
-
 /*
+This is an example of how to implement a confuration specification:
+
 fmc_cfg_node_spec session_cfg_spec[] = {
    {"channel", "YTP channel of the session", FMCCFGSTRING, true, NULL},
    {NULL}
@@ -66,54 +56,64 @@ fmc_cfg_node_spec gateway_cfg_spec[] = {
 };
 */
 
-// Array or section
-struct fmc_cfg_arr_spec {
-   FMC_CFG_TYPE type; // type of the array. if section=FMCCFGSECT.
-   fmc_cfg_node_spec *node; // only for sections, NULL for arrays
-};
-
-// (Key,value) of [Array, section or single value]
-struct fmc_cfg_node_spec {
-   const char *name; // Key
-   const char *descr;
-   FMC_CFG_TYPE type; // array(FMCCFGARRAY), section(FMCCFGSECT) or single value
-   bool required;
+// Specification of the configuration type
+struct fmc_cfg_type {
+   FMC_CFG_TYPE type; // type of the array element
    union {
-    fmc_cfg_arr_spec *array; // Array
-    fmc_cfg_node_spec *node; // section
-   } subnode;
+      struct fmc_cfg_type *array; // Pointer to an array item type
+      struct fmc_cfg_node_spec *node; // Pointer to null terminated array of node specs
+   } spec;
 };
 
-// value
-struct fmc_cfg_node {
+// Configuration node specification
+struct fmc_cfg_node_spec {
+   const char *key; // Key of the configuration node
+   const char *descr;
+   bool required;
+   struct fmc_cfg_type type;
+};
+
+struct fmc_cfg_item {
    union {
       bool boolean;
       int64_t int64;
       double float64;
       const char *str;
-      fmc_cfg_sect *sect;
-      fmc_cfg_arr *arr;
+      struct fmc_cfg_sect_item *sect;
+      struct fmc_cfg_arr_item *arr;
    } value;
-   FMC_CFG_TYPE type;  // could be NONE
+   FMC_CFG_TYPE type;
 };
 
-// Top level
-struct fmc_cfg_sect {
-   const char *name; // key
-   fmc_cfg_node *node; // value
-   fmc_cfg_sect *next;
+struct fmc_cfg_sect_item {
+   const char *key;
+   struct fmc_cfg_item node;
+   struct fmc_cfg_sect_item *next;
 };
 
 // Array values
-struct fmc_cfg_arr {
-   fmc_cfg_node *node; // value
-   fmc_cfg_sect *next;
+struct fmc_cfg_arr_item {
+   struct fmc_cfg_item item; // value
+   struct fmc_cfg_arr_item *next;
 };
 
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item *, const char *);
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item *, const char *, bool);
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *, const char *, int64_t);
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item *, const char *, double);
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item *, const char *, const char *);
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item *, const char *, struct fmc_cfg_sect_item *);
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item *, const char *, struct fmc_cfg_arr_item *);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item *);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item *, bool);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item *, int64_t);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item *, double);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item *, const char *);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item *, struct fmc_cfg_sect_item *);
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *, struct fmc_cfg_arr_item *);
 
+struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_error_t **err);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CONFIG_H__ */
