@@ -13,7 +13,7 @@
 *****************************************************************************/
 
 /**
- * @file config.h
+ * @file component.h
  * @date 11 Jul 2022
  * @brief Reactor component API
  *
