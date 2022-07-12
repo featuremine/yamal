@@ -34,27 +34,40 @@ extern "C" {
 typedef void (*schedproc)(void *comp);
 typedef void (*processproc)(void *comp);
 
-typedef struct fmc_comp_type {
+typedef struct fmc_component_type {
    const char *name;
    const char *descr;
    size_t size;
-   fmc_cfg_node_spec cfgspec;
+   fmc_cfg_node_spec *cfgspec;
    schedproc sched;
    processproc process;
-} fmc_comp_type;
+} fmc_component_type;
 
-typedef struct fmc_comp_sys {
-   fmc_comp_type *components;
-} fmc_comp_sys;
+typedef struct fmc_component {
+   bool alive; // TODO: check
+} fmc_component;
+
+typedef struct fmc_component_module {
+   void *handle; // module handle. Return of dlopen()
+   char *module_name; // module name (e.g. "oms")
+   char *module_path; // file system path of the library
+   fmc_component_type *components_type; // TODO: List?
+} fmc_component_module;
+
+typedef struct fmc_component_sys {
+   const char **search_paths;
+   fmc_component_module *modules; // only != NULL when library succ. loaded // TODO: List?
+   fmc_component *components;
+} fmc_component_sys;
 
 
-void fmc_component_sys_init(fmc_comp_sys *sys);
-void fmc_component_sys_paths_set(fmc_comp_sys *sys, const char **paths);
-const char **fmc_component_sys_path_get(fmc_comp_sys *sys);
-void fmc_component_sys_mod_load(fmc_comp_sys *sys, const char *mod);
-// fmc_component *fmc_component_sys_comp_init(fmc_comp_sys *sys, const char *comp, fmc_cfg_node_spec *cfg);
-// void fmc_comp_sys_comp_destroy(fmc_comp_sys *sys, fmc_component *comp);
-void fmc_comp_sys_destroy(fmc_comp_sys *sys);
+void fmc_component_sys_init(fmc_component_sys *sys);
+void fmc_component_sys_paths_set(fmc_component_sys *sys, const char **paths);
+const char **fmc_component_sys_paths_get(fmc_component_sys *sys);
+void fmc_component_sys_mod_load(fmc_component_sys *sys, const char *mod); // does not load components
+fmc_component *fmc_component_sys_comp_init(fmc_component_sys *sys, const char *comp, fmc_cfg_sect *cfg);
+void fmc_component_sys_comp_destroy(fmc_component_sys *sys, fmc_component *comp);
+void fmc_component_sys_destroy(fmc_component_sys *sys);
 
 #ifdef __cplusplus
 }
