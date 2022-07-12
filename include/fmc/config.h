@@ -35,42 +35,14 @@ extern "C" {
 
 // int32_t
 typedef enum {
-  FMC_TYPE_POSITIVE_FIXNUM, /*  0 */
-  FMC_TYPE_FIXMAP,          /*  1 */
-  FMC_TYPE_FIXARRAY,        /*  2 */
-  FMC_TYPE_FIXSTR,          /*  3 */
-  FMC_TYPE_NIL,             /*  4 */
-  FMC_TYPE_BOOLEAN,         /*  5 */
-  FMC_TYPE_BIN8,            /*  6 */
-  FMC_TYPE_BIN16,           /*  7 */
-  FMC_TYPE_BIN32,           /*  8 */
-  FMC_TYPE_EXT8,            /*  9 */
-  FMC_TYPE_EXT16,           /* 10 */
-  FMC_TYPE_EXT32,           /* 11 */
-  FMC_TYPE_FLOAT,           /* 12 */
-  FMC_TYPE_DOUBLE,          /* 13 */
-  FMC_TYPE_UINT8,           /* 14 */
-  FMC_TYPE_UINT16,          /* 15 */
-  FMC_TYPE_UINT32,          /* 16 */
-  FMC_TYPE_UINT64,          /* 17 */
-  FMC_TYPE_SINT8,           /* 18 */
-  FMC_TYPE_SINT16,          /* 19 */
-  FMC_TYPE_SINT32,          /* 20 */
-  FMC_TYPE_SINT64,          /* 21 */
-  FMC_TYPE_FIXEXT1,         /* 22 */
-  FMC_TYPE_FIXEXT2,         /* 23 */
-  FMC_TYPE_FIXEXT4,         /* 24 */
-  FMC_TYPE_FIXEXT8,         /* 25 */
-  FMC_TYPE_FIXEXT16,        /* 26 */
-  FMC_TYPE_STR8,            /* 27 */
-  FMC_TYPE_STR16,           /* 28 */
-  FMC_TYPE_STR32,           /* 29 */
-  FMC_TYPE_ARRAY16,         /* 30 */
-  FMC_TYPE_ARRAY32,         /* 31 */
-  FMC_TYPE_MAP16,           /* 32 */
-  FMC_TYPE_MAP32,           /* 33 */
-  FMC_TYPE_NEGATIVE_FIXNUM  /* 34 */
-} FMCCFGTYPE;
+  FMC_CFG_NONE,             /*  0 */
+  FMC_CFG_BOOLEAN,          /*  1 */
+  FMC_CFG_INT64,            /*  2 */
+  FMC_CFG_FLOAT64,          /*  3 */
+  FMC_CFG_STR,              /*  4 */
+  FMC_CFG_SECT,             /*  5 */
+  FMC_CFG_ARR               /*  6 */
+} FMC_CFG_TYPE;
 
 
 typedef struct fmc_cfg_arr_spec fmc_cfg_arr_spec;
@@ -96,7 +68,7 @@ fmc_cfg_node_spec gateway_cfg_spec[] = {
 
 // Array or section
 struct fmc_cfg_arr_spec {
-   FMCCFGTYPE type; // type of the array. if section=FMCCFGSECT.
+   FMC_CFG_TYPE type; // type of the array. if section=FMCCFGSECT.
    fmc_cfg_node_spec *node; // only for sections, NULL for arrays
 };
 
@@ -104,20 +76,25 @@ struct fmc_cfg_arr_spec {
 struct fmc_cfg_node_spec {
    const char *name; // Key
    const char *descr;
-   FMCCFGTYPE type; // array, section, single value // TODO: only FMCCFGARRAY(FMCCFGMULTIVALUE), or FMCCFGARRAY/FMCCFGSECT ??
+   FMC_CFG_TYPE type; // array(FMCCFGARRAY), section(FMCCFGSECT) or single value
    bool required;
-   fmc_cfg_arr_spec *array; // Array or section. NULL in case of single value
+   union {
+    fmc_cfg_arr_spec *array; // Array
+    fmc_cfg_node_spec *node; // section
+   } subnode;
 };
 
 // value
 struct fmc_cfg_node {
    union {
+      bool boolean;
+      int64_t int64;
+      double float64;
       const char *str;
-      double real;
-      fmc_cfg_sect* sect;
+      fmc_cfg_sect *sect;
       fmc_cfg_arr *arr;
    } value;
-   FMCCFGTYPE type;   
+   FMC_CFG_TYPE type;  // could be NONE
 };
 
 // Top level
