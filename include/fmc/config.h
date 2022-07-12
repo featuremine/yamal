@@ -71,19 +71,43 @@ typedef enum {
 } FMCCFGTYPE;
 
 
+typedef struct fmc_cfg_arr_spec fmc_cfg_arr_spec;
 typedef struct fmc_cfg_node_spec fmc_cfg_node_spec;
 typedef struct fmc_cfg_node fmc_cfg_node;
 typedef struct fmc_cfg_sect fmc_cfg_sect;
 typedef struct fmc_cfg_arr fmc_cfg_arr;
 
-struct fmc_cfg_node_spec {
-   const char *name;
-   const char *descr;
-   FMCCFGTYPE type;
-   bool required;
-   //fmc_cfg_spec *sect;
+/*
+fmc_cfg_node_spec session_cfg_spec[] = {
+   {"channel", "YTP channel of the session", FMCCFGSTRING, true, NULL},
+   {NULL}
+}
+
+fmc_cfg_arr_spec sessions_cfg_sect_spec = {FMCCFGSECT, &session_cfg_spec};
+fmc_cfg_arr_spec sessions_cfg_arr_spec = {FMCCFGSTRING, NULL};
+
+fmc_cfg_node_spec gateway_cfg_spec[] = {
+   {"sessions", "Array of individual session configuration", FMCCFGARRAY, true, &sessions_cfg_spec},
+   {NULL}
+};
+*/
+
+// Array or section
+struct fmc_cfg_arr_spec {
+   FMCCFGTYPE type; // type of the array. if section=FMCCFGSECT.
+   fmc_cfg_node_spec *node; // only for sections, NULL for arrays
 };
 
+// (Key,value) of [Array, section or single value]
+struct fmc_cfg_node_spec {
+   const char *name; // Key
+   const char *descr;
+   FMCCFGTYPE type; // array, section, single value // TODO: only FMCCFGARRAY(FMCCFGMULTIVALUE), or FMCCFGARRAY/FMCCFGSECT ??
+   bool required;
+   fmc_cfg_arr_spec *array; // Array or section. NULL in case of single value
+};
+
+// value
 struct fmc_cfg_node {
    union {
       const char *str;
@@ -95,13 +119,13 @@ struct fmc_cfg_node {
 };
 
 struct fmc_cfg_sect {
-   const char *name;
-   fmc_cfg_node *node;
+   const char *name; // key
+   fmc_cfg_node *node; // value
    fmc_cfg_sect *next;
 };
 
 struct fmc_cfg_arr {
-   fmc_cfg_node *node;
+   fmc_cfg_node *node; // value
    fmc_cfg_sect *next;
 };
 
