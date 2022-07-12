@@ -131,8 +131,21 @@ typedef struct fmc_component fmc_component_t;
 #define FMC_PTR_LIST_TYPE(type) struct __fmc_list_##type
 
 #define FMC_PTR_LIST_FOREACH(type, list, var, proc) \
-   { for (FMC_PTR_LIST_TYPE(type) **_iter = &list; *_iter; _iter = &_iter->_next) { \
-         type *var = *_iter->_val; {proc}; } } \
+   for (FMC_PTR_LIST_TYPE(type) **_iter = &list; *_iter; _iter = &_iter->_next) { \
+         type *var = *_iter->_val; {proc}; } \
+
+/*
+fmc_component_t cp = NULL;
+FMC_PTR_LIST_FOREACH(fmc_component_t, sys->components, x,
+   if (strcmp(x->name, key) == 0) {
+      cp = x;
+      break;
+   }
+)
+if (cp == NULL) {
+   // could not find it
+}
+*/
 
 FMC_PTR_LIST_DEF(fmc_component_module_t);
 FMC_PTR_LIST_DEF(fmc_component_t);
