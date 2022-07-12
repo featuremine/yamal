@@ -37,10 +37,10 @@ typedef void (*processproc)(void *comp);
 typedef struct fmc_component_type {
    const char *name;
    const char *descr;
-   size_t size;
-   fmc_cfg_node_spec *cfgspec;
-   schedproc sched;
-   processproc process;
+   size_t size; // size of the component struct
+   fmc_cfg_node_spec *cfgspec; // configuration specifications
+   schedproc sched; // returns the next schedule time. If NULL it allways process
+   processproc process; // run the component once
 } fmc_component_type;
 
 typedef struct fmc_component {

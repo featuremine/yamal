@@ -21,6 +21,7 @@
  * @see http://www.featuremine.com
  */
 
+// TODO : pragma?
 #ifndef CONFIG_H__
 #define CONFIG_H__
 
