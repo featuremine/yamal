@@ -32,6 +32,7 @@ extern "C" {
    fmc_comp_type *_vt; \
    fmc_error _err
 
+// int32_t
 typedef enum {
   FMC_TYPE_POSITIVE_FIXNUM, /*  0 */
   FMC_TYPE_FIXMAP,          /*  1 */
@@ -118,12 +119,14 @@ struct fmc_cfg_node {
    FMCCFGTYPE type;   
 };
 
+// Top level
 struct fmc_cfg_sect {
    const char *name; // key
    fmc_cfg_node *node; // value
    fmc_cfg_sect *next;
 };
 
+// Array values
 struct fmc_cfg_arr {
    fmc_cfg_node *node; // value
    fmc_cfg_sect *next;
