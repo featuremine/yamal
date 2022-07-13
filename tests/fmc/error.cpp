@@ -35,6 +35,7 @@ TEST(error, multiple_errors) {
   fmc_error_set(&err, "2");
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(string_view(fmc_error_msg(err)), "2");
+  fmc_error_destroy(err);
 }
 
 TEST(error, long_error) {
@@ -56,31 +57,63 @@ TEST(error, long_error) {
   fmc_error_set(&err, medium_string1.c_str());
   fmc_error_set(&err, medium_string2.c_str());
   ASSERT_EQ(string_view(fmc_error_msg(err)), expected_string3);
+  fmc_error_destroy(err);
   fmc_error_clear(&err);
 }
 
-TEST(error, double_buffer) {
+TEST(error, append_1) {
   fmc_error_t *err;
   fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
+  string string1("1");
+  string string1_append("2");
+  string string1_expected("1, 2");
 
-  string long_string1(2048, '1');
-  fmc_error_set(&err, long_string1.c_str());
+  // Append new string = set
+  fmc_error_append(&err, string1.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1);
+  fmc_error_append(&err, string1_append.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected);
 
-  auto ptr1 = fmc_error_msg(err);
+  fmc_error_destroy(err);
+  fmc_error_clear(&err);
+}
 
-  string long_string2(2048, '2');
-  fmc_error_set(&err, long_string2.c_str());
+TEST(error, append_2) {
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  string string1("1");
+  string string1_append("2");
+  string string1_expected("1, 2");
 
-  auto ptr2 = fmc_error_msg(err);
+  fmc_error_set(&err, string1.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1);
+  fmc_error_append(&err, string1_append.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected);
 
-  string long_string3(2048, '3');
-  fmc_error_set(&err, long_string3.c_str());
+  fmc_error_destroy(err);
+  fmc_error_clear(&err);
+}
 
-  auto ptr3 = fmc_error_msg(err);
+TEST(error, append_3) {
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  string string1("1");
+  string string1_append("2");
+  string string1_expected("1, 2");
+  string string1_expected2("1");
 
-  ASSERT_EQ(ptr1, ptr3);
-  ASSERT_NE(ptr1, ptr2);
+  fmc_error_set(&err, string1.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1);
+  fmc_error_append(&err, string1_append.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected);
+  fmc_error_set(&err, string1.c_str());
+  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected2);
+
+  fmc_error_destroy(err);
+  fmc_error_clear(&err);
 }
 
 GTEST_API_ int main(int argc, char **argv) {

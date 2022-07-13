@@ -67,12 +67,23 @@ FMMODFUNC void fmc_error_clear(fmc_error_t **err);
 /**
  * @brief Set an error message and assigns a pointer to the error message
  *
- * @param err
+ * @param err_ptr
  * @param fmt error format string
  * @param ... depending on the format string, a sequence of additional arguments
  * is expected
  */
-FMMODFUNC void fmc_error_set(fmc_error_t **err, const char *fmt, ...);
+FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
+
+/**
+ * @brief Appends an error message to the existing one. If there was no
+ * previous error message it creates one.
+ *
+ * @param err_ptr
+ * @param fmt error format string
+ * @param ... depending on the format string, a sequence of additional arguments
+ * is expected
+ */
+FMMODFUNC void fmc_error_append(fmc_error_t **err_ptr, const char *fmt, ...);
 
 /**
  * @brief Returns the message associated with the error object
