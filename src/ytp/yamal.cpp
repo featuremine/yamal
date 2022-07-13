@@ -56,10 +56,6 @@ static bool atomic_expect_or_init(std::atomic<T> &data, T desired) {
 static void *allocate_page(ytp_yamal_t *yamal, size_t page,
                            fmc_error_t **error) {
   fmc_error_clear(error);
-  if (page >= fm_mmlist_page_count) {
-    FMC_ERROR_REPORT(error, "page index out of range");
-    return nullptr;
-  }
   auto *mem_page = &yamal->pages[page];
   auto *page_ptr = fmc_fview_data(mem_page);
 
@@ -96,6 +92,10 @@ static void *allocate_page(ytp_yamal_t *yamal, size_t page,
 
 void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
                              fmc_error_t **error) {
+  if (page >= fm_mmlist_page_count) {
+    FMC_ERROR_REPORT(error, "page index out of range");
+    return;
+  }
   allocate_page(yamal, page, error);
 }
 
@@ -114,10 +114,6 @@ static void *get_mapped_memory(ytp_yamal_t *yamal, mmnode_offs offs,
   size_t loffs = ye64toh(offs);
   size_t page = loffs / fm_mmlist_page_sz;
   size_t mem_offset = loffs % fm_mmlist_page_sz;
-  if (page >= fm_mmlist_page_count) {
-    FMC_ERROR_REPORT(error, "page index out of range");
-    return nullptr;
-  }
   void *page_ptr = fmc_fview_data(&yamal->pages[page]);
   if (!page_ptr) {
     std::lock_guard<std::mutex> lock(yamal->pa_mutex_);
@@ -160,8 +156,7 @@ static bool mmlist_pages_allocation1(ytp_yamal_t *yamal, fmc_error_t **error) {
   }
   auto yamal_size = ye64toh(last_node_off) + ye64toh(node->size.load());
   auto pred_yamal_size = yamal_size + YTP_MMLIST_PREALLOC_SIZE;
-  auto pred_page_idx =
-      std::min(pred_yamal_size / fm_mmlist_page_sz, fm_mmlist_page_count - 1);
+  auto pred_page_idx = pred_yamal_size / fm_mmlist_page_sz;
 
   if (!fmc_fview_data(&yamal->pages[pred_page_idx])) {
     std::lock_guard<std::mutex> lock(yamal->pa_mutex_);

@@ -183,17 +183,6 @@ install(
 )
 
 configure_file(
-    "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc.pc.in"
-    "${PROJECT_BINARY_DIR}/fmc.pc"
-    @ONLY
-)
-configure_file(
-    "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc++.pc.in"
-    "${PROJECT_BINARY_DIR}/fmc++.pc"
-    @ONLY
-)
-
-configure_file(
     ${PROJECT_SOURCE_DIR}/lib/pkgconfig/ytp.pc.in
     ${PROJECT_BINARY_DIR}/ytp.pc
     @ONLY
