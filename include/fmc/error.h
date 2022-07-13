@@ -83,7 +83,7 @@ FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
  * @param ... depending on the format string, a sequence of additional arguments
  * is expected
  */
-FMMODFUNC void fmc_error_append(fmc_error_t **err_ptr, const char *fmt, ...);
+FMMODFUNC void fmc_error_append(fmc_error_t *err_ptr, const char *fmt, ...);
 
 /**
  * @brief Returns the message associated with the error object
