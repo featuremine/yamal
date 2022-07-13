@@ -24,7 +24,6 @@
 #include <fmc/error.h>
 
 #include <fmc++/gtestwrap.hpp>
-using namespace std;
 
 TEST(error, multiple_errors) {
   fmc_error_t *err;
@@ -34,7 +33,7 @@ TEST(error, multiple_errors) {
   ASSERT_NE(err, nullptr);
   fmc_error_set(&err, "2");
   ASSERT_NE(err, nullptr);
-  ASSERT_EQ(string_view(fmc_error_msg(err)), "2");
+  ASSERT_EQ(std::string_view(fmc_error_msg(err)), "2");
   fmc_error_destroy(err);
 }
 
@@ -42,78 +41,143 @@ TEST(error, long_error) {
   fmc_error_t *err;
   fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
-  string long_string1(2048, '1');
-  string medium_string1(700, '2');
-  string medium_string2(700, '3');
-  string expected_string1(2048, '1');
-  string expected_string2(700, '2');
-  string expected_string3(700, '3');
+  std::string long_string1(2048, '1');
+  std::string medium_string1(700, '2');
+  std::string medium_string2(700, '3');
+  std::string expected_string1(2048, '1');
+  std::string expected_string2(700, '2');
+  std::string expected_string3(700, '3');
   fmc_error_set(&err, long_string1.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), expected_string1);
+  ASSERT_EQ(std::string_view(fmc_error_msg(err)), expected_string1);
   fmc_error_set(&err, medium_string1.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), expected_string2);
+  ASSERT_EQ(std::string_view(fmc_error_msg(err)), expected_string2);
   fmc_error_clear(&err);
 
   fmc_error_set(&err, medium_string1.c_str());
   fmc_error_set(&err, medium_string2.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), expected_string3);
+  ASSERT_EQ(std::string_view(fmc_error_msg(err)), expected_string3);
   fmc_error_destroy(err);
   fmc_error_clear(&err);
 }
 
-TEST(error, append_1) {
-  fmc_error_t *err;
-  fmc_error_clear(&err);
-  ASSERT_EQ(err, nullptr);
-  string string1("1");
-  string string1_append("2");
-  string string1_expected("1, 2");
+TEST(error, init_none) {
+  fmc_error_t err;
+  std::string errormsg("None");
+  fmc_error_init_none(&err);
 
-  // Append new string = set
-  fmc_error_append(&err, string1.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1);
-  fmc_error_append(&err, string1_append.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected);
+  ASSERT_EQ(err.code, FMC_ERROR_NONE);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err)), errormsg);
 
-  fmc_error_destroy(err);
-  fmc_error_clear(&err);
+  fmc_error_destroy(&err);
 }
 
-TEST(error, append_2) {
-  fmc_error_t *err;
-  fmc_error_clear(&err);
-  ASSERT_EQ(err, nullptr);
-  string string1("1");
-  string string1_append("2");
-  string string1_expected("1, 2");
+TEST(error, init_custom) {
+  fmc_error_t err;
+  std::string errormsg("custom error message");
+  fmc_error_init(&err, FMC_ERROR_CUSTOM, errormsg.c_str());
 
-  fmc_error_set(&err, string1.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1);
-  fmc_error_append(&err, string1_append.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected);
+  ASSERT_EQ(err.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err)), errormsg);
 
-  fmc_error_destroy(err);
-  fmc_error_clear(&err);
+  fmc_error_destroy(&err);
 }
 
-TEST(error, append_3) {
-  fmc_error_t *err;
-  fmc_error_clear(&err);
-  ASSERT_EQ(err, nullptr);
-  string string1("1");
-  string string1_append("2");
-  string string1_expected("1, 2");
-  string string1_expected2("1");
+TEST(error, init_custom_unknown) {
+  fmc_error_t err;
+  std::string errormsg("UNKNOWN");
+  fmc_error_init(&err, FMC_ERROR_CUSTOM, NULL);
 
-  fmc_error_set(&err, string1.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1);
-  fmc_error_append(&err, string1_append.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected);
-  fmc_error_set(&err, string1.c_str());
-  ASSERT_EQ(string_view(fmc_error_msg(err)), string1_expected2);
+  ASSERT_EQ(err.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err)), errormsg);
 
-  fmc_error_destroy(err);
-  fmc_error_clear(&err);
+  fmc_error_destroy(&err);
+}
+
+TEST(error, init_memory) {
+  fmc_error_t err;
+  std::string errormsg("Could not allocate memory");
+  fmc_error_init(&err, FMC_ERROR_MEMORY, nullptr);
+
+  ASSERT_EQ(err.code, FMC_ERROR_MEMORY);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err)), errormsg);
+
+  fmc_error_destroy(&err);
+}
+
+TEST(error, init_sprintf) {
+  fmc_error_t err;
+  std::string errormsg("custom error message 1");
+  fmc_error_init_sprintf(&err, "%s %d", "custom error message", 1);
+
+  ASSERT_EQ(err.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err)), errormsg);
+
+  fmc_error_destroy(&err);
+}
+
+TEST(error, copy) {
+  fmc_error_t err1;
+  std::string errormsg1("Could not allocate memory");
+  fmc_error_init(&err1, FMC_ERROR_MEMORY, nullptr);
+  ASSERT_EQ(err1.code, FMC_ERROR_MEMORY);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)), errormsg1);
+
+  fmc_error_t err2;
+  std::string errormsg2("custom error message");
+  fmc_error_init(&err2, FMC_ERROR_CUSTOM, errormsg2.c_str());
+  ASSERT_EQ(err2.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err2)), errormsg2);
+
+  fmc_error_cpy(&err1, &err2);
+  ASSERT_EQ(err1.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)), errormsg2);
+
+  fmc_error_destroy(&err1);
+  fmc_error_destroy(&err2);
+}
+
+TEST(error, join) {
+  fmc_error_t err1;
+  std::string errormsg1("Could not allocate memory");
+  fmc_error_init(&err1, FMC_ERROR_MEMORY, nullptr);
+  ASSERT_EQ(err1.code, FMC_ERROR_MEMORY);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)), errormsg1);
+
+  fmc_error_t err2;
+  std::string errormsg2("custom error message");
+  fmc_error_init(&err2, FMC_ERROR_CUSTOM, errormsg2.c_str());
+  ASSERT_EQ(err2.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err2)), errormsg2);
+
+  fmc_error_t err3;
+  fmc_error_init_join(&err3, &err1, &err2, "; ");
+  ASSERT_EQ(err3.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err3)), errormsg1 + "; " + errormsg2);
+
+  fmc_error_destroy(&err1);
+  fmc_error_destroy(&err2);
+  fmc_error_destroy(&err3);
+}
+
+TEST(error, cat) {
+  fmc_error_t err1;
+  std::string errormsg1("Could not allocate memory");
+  fmc_error_init(&err1, FMC_ERROR_MEMORY, nullptr);
+  ASSERT_EQ(err1.code, FMC_ERROR_MEMORY);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)), errormsg1);
+
+  fmc_error_t err2;
+  std::string errormsg2("custom error message");
+  fmc_error_init(&err2, FMC_ERROR_CUSTOM, errormsg2.c_str());
+  ASSERT_EQ(err2.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err2)), errormsg2);
+
+  fmc_error_cat(&err1, &err2, ", ");
+  ASSERT_EQ(err1.code, FMC_ERROR_CUSTOM);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)), errormsg1 + ", " + errormsg2);
+
+  fmc_error_destroy(&err1);
+  fmc_error_destroy(&err2);
 }
 
 GTEST_API_ int main(int argc, char **argv) {

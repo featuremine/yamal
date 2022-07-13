@@ -43,18 +43,11 @@ const char *error_msgs[] = {
 
 void fmc_error_init(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf) {
   err->code = code;
+  err->buf = NULL;
   if (code == FMC_ERROR_CUSTOM) {
     buf = buf ? buf : "UNKNOWN";
-    err->buf = (char *)malloc(strlen(buf) + 1);
+    err->buf = (char *)calloc(strlen(buf) + 1, sizeof(*buf));
     strcpy(err->buf, buf);
-  }
-}
-
-void fmc_error_destroy(fmc_error_t *err) {
-  err->code = FMC_ERROR_NONE;
-  if(err->buf) {
-    free(err->buf);
-    err->buf = NULL;
   }
 }
 
@@ -68,10 +61,10 @@ void fmc_error_init_none(fmc_error_t *err) {
     va_start(_args1, fmt); \
     va_list _args2; \
     va_copy(_args2, _args1); \
-    int size = vsnprintf(NULL, 0, fmt, _args1) + 1; \
-    char _buf[size]; \
+    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1; \
+    char _buf[_size]; \
     va_end(_args1); \
-    vsnprintf(_buf, size, fmt, _args2); \
+    vsnprintf(_buf, _size, fmt, _args2); \
     va_end(_args2); \
     fmc_error_init(err, FMC_ERROR_CUSTOM, _buf); \
   } while (0)
@@ -87,14 +80,22 @@ void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
   *err_ptr = err;
 }
 
-const char *fmc_error_msg(fmc_error_t *err) {
-  return err->code == FMC_ERROR_CUSTOM
-         ? err->buf
-         : error_msgs[err->code];
+void fmc_error_destroy(fmc_error_t *err) {
+  err->code = FMC_ERROR_NONE;
+  if(err->buf) {
+    free(err->buf);
+    err->buf = NULL;
+  }
 }
 
 void fmc_error_clear(fmc_error_t **err) {
   *err = NULL;
+}
+
+const char *fmc_error_msg(fmc_error_t *err) {
+  return err->code == FMC_ERROR_CUSTOM
+         ? err->buf
+         : error_msgs[err->code];
 }
 
 void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
@@ -104,9 +105,9 @@ void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
 
 void fmc_error_init_join(fmc_error_t *res, fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
   fmc_error_init_sprintf(res, "%s%s%s",
-    err1->code == FMC_ERROR_NONE ? "" : fmc_error_msg(err1),
-    err1->code == FMC_ERROR_NONE ? "" : sep,
-    err2->code == FMC_ERROR_NONE ? "" : fmc_error_msg(err2));
+    err1->code != FMC_ERROR_NONE        ? fmc_error_msg(err1) : "",
+    err1->code != FMC_ERROR_NONE && sep ? sep                 : "",
+    err2->code != FMC_ERROR_NONE        ? fmc_error_msg(err2) : "");
 }
 
 void fmc_error_cat(fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
@@ -117,7 +118,7 @@ void fmc_error_cat(fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
 
 struct fmc_error_wrap {
   fmc_error_wrap() {
-    fmc_error_init(&error);
+    fmc_error_init_none(&error);
   }
   ~fmc_error_wrap() {
     fmc_error_destroy(&error);
