@@ -391,6 +391,29 @@ TEST(yamal, magic_number) {
   magic_number(false);
 }
 
+static void allocate_out_of_range_page(bool enable_thread) {
+  fmc_error_t *error;
+  FILE *fp = tmpfile();
+  auto fd = fmc_fd_get(fp, &error);
+  ASSERT_TRUE(fmc_fvalid(fd));
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_2(fmc_fd_get(fp, &error), enable_thread, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(yamal, nullptr);
+  ytp_yamal_allocate_page(yamal, 99999999999ull, &error);
+  ASSERT_NE(error, nullptr);
+  ASSERT_EQ(std::string_view(fmc_error_msg(error), 25),
+            "page index out of range (");
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(yamal, allocate_out_of_range_page) {
+  allocate_out_of_range_page(true);
+  allocate_out_of_range_page(false);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
