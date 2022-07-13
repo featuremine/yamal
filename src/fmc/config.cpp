@@ -30,7 +30,7 @@
 #define INI_PARSER_BUFF_SIZE 8192
 
 static char *string_copy_len(const char *src, size_t len) {
-  void *p = calloc(len + 1, sizeof(char));
+  void *p = calloc(1, len + 1);
   if (!p) {
     return NULL;
   }
@@ -270,25 +270,10 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item * tail
   return item;
 }
 
-struct deleter_t {
-  void operator()(struct fmc_cfg_sect_item *head) {
-    fmc_cfg_sect_del(head);
-  }
-  void operator()(struct fmc_cfg_arr_item *head) {
-    fmc_cfg_arr_del(head);
-  }
-};
-template<typename T>
-using unique_cfg_ptr = std::unique_ptr<T, deleter_t>;
-
 struct parser_state_t {
-  struct fmc_cfg_sect_item *sections_head;
   struct fmc_cfg_sect_item *sections_tail;
-  struct fmc_cfg_sect_item *fields_tail;
   size_t line_n;
 };
-
-
 
 static void parse_ini_line(parser_state_t *state, char *line, size_t sz, fmc_error_t **error) {
   ++state->line_n;
@@ -302,18 +287,23 @@ static void parse_ini_line(parser_state_t *state, char *line, size_t sz, fmc_err
       goto do_oom;
     }
 
-    state->sections_tail = new_sect_item();
-    if (!state->sections_tail) {
+    struct fmc_cfg_sect_item *item = new_sect_item();
+    if (!item) {
+      free(key);
       goto do_oom;
     }
+    item->key = key;
+    item->next = state->sections_tail;
+    item->node.value.sect = NULL;
+    item->node.type = FMC_CFG_SECT;
 
-    if (!state->sections_head) {
-      state->sections_head = state->sections_tail;
-    }
-    state->sections_tail->key = key;
-    state->fields_tail = NULL;
+    state->sections_tail = item;
   }
   else {
+    if (!state->sections_tail) {
+      fmc_error_set(error, "Configuration entry doesn't have a section in the file (line %zu)", state->line_n);
+      return;
+    }
     size_t sep;
     for (sep = 0; sep != '=' && sep < sz; ++sep);
     if (sep >= sz) {
@@ -331,22 +321,53 @@ static void parse_ini_line(parser_state_t *state, char *line, size_t sz, fmc_err
       goto do_oom;
     }
 
-    state->fields_tail = fmc_cfg_sect_item_add_str(state->fields_tail, key, value);
-    if (!state->fields_tail) {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_add_str(state->sections_tail->node.value.sect, key, value);
+    if (!item) {
       free(value);
       free(key);
       goto do_oom;
     }
+
+    state->sections_tail->node.value.sect = item;
   }
   return;
 
   do_oom:
   fmc_error_set(error, "Out of memory");
-  return;
 }
 
-struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_error_t **err) {
-  parser_state_t state {NULL, NULL, 0};
+static struct fmc_cfg_sect_item *remove_section(struct parser_state_t *state, const char *key) {
+  for (struct fmc_cfg_sect_item **p = &state->sections_tail; *p; p = &(*p)->next) {
+    struct fmc_cfg_sect_item *item = *p;
+    if (strcmp(item->key, key) == 0) {
+      *p = item->next;
+      item->next = NULL;
+      return item;
+    }
+  }
+  return NULL;
+}
+
+static struct fmc_cfg_sect_item *process_cfg_struct(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **error) {
+  struct fmc_cfg_sect_item *root = remove_section(state, root_key);
+  for (struct fmc_cfg_sect_item *item = root; item; item = item->next) {
+    const char *begin = item->node.value.str;
+    const char *end = begin + strlen(begin);
+    const char *p = end;
+    while (p-- != begin) {
+      if (*p == ',') {
+        if (p + 1 == end) {
+          continue;
+        }
+      }
+    }
+    item->node.type = ;
+  }
+  return root;
+}
+
+struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const char *root_key, fmc_error_t **err) {
+  parser_state_t state {NULL, 0};
   char buffer[INI_PARSER_BUFF_SIZE];
 
   size_t read = 0;
@@ -354,12 +375,12 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
     if (INI_PARSER_BUFF_SIZE == read) {
       FMC_ERROR_REPORT(err,
                        "Error while parsing config file: line is too long");
-      goto do_error;
+      goto do_cleanup;
     }
 
     auto ret = fmc_fread(fd, buffer + read, INI_PARSER_BUFF_SIZE - read, err);
     if (*err) {
-      goto do_error;
+      goto do_cleanup;
     }
     if (ret == 0) {
       if (read > 0 && buffer[read - 1] == '\n') {
@@ -373,7 +394,14 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
       }
       fmc_error_clear(err);
       parse_ini_line(&state, buffer, read, err);
-      goto do_success;
+      if (*err) {
+        goto do_cleanup;
+      }
+
+      //process_cfg_struct(state.sections_tail, spec, root_key, err);
+      if (*err) {
+        goto do_cleanup;
+      }
     }
     size_t line_start = 0;
     auto start = read;
@@ -389,7 +417,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
         }
         parse_ini_line(&state, buffer + line_start, j - line_start, err);
         if (*err) {
-          goto do_error;
+          goto do_cleanup;
         }
         line_start = i + 1;
       }
@@ -399,16 +427,13 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
       memcpy(buffer, buffer + line_start, read);
     }
     if (*err) {
-      goto do_error;
+      goto do_cleanup;
     }
   }
 
-  do_success:
-  return state.sections_head;
-
-  do_error:
-  if (state.sections_head) {
-    fmc_cfg_sect_del(state.sections_head);
+  do_cleanup:
+  if (state.sections_tail) {
+    fmc_cfg_sect_del(state.sections_tail);
   }
   return NULL;
 }
