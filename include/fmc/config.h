@@ -97,6 +97,7 @@ struct fmc_cfg_arr_item {
    struct fmc_cfg_arr_item *next;
 };
 
+void fmc_cfg_sect_del(struct fmc_cfg_sect_item *);
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item *, const char *);
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item *, const char *, bool);
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *, const char *, int64_t);
@@ -104,6 +105,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item *, const char *, const char *);
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item *, const char *, struct fmc_cfg_sect_item *);
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item *, const char *, struct fmc_cfg_arr_item *);
+void fmc_cfg_arr_del(struct fmc_cfg_arr_item *);
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item *);
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item *, bool);
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item *, int64_t);
