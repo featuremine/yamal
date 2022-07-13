@@ -92,6 +92,10 @@ static void *allocate_page(ytp_yamal_t *yamal, size_t page,
 
 void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
                              fmc_error_t **error) {
+  if (page >= fm_mmlist_page_count) {
+    FMC_ERROR_REPORT(error, "page index out of range");
+    return;
+  }
   allocate_page(yamal, page, error);
 }
 

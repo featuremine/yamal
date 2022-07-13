@@ -51,38 +51,59 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 find_package(PkgConfig)
 pkg_check_modules(GTEST REQUIRED IMPORTED_TARGET gtest)
 
-if (NOT TARGET fmc)
-    pkg_check_modules(FMC REQUIRED IMPORTED_TARGET fmc)
-    pkg_check_modules(FMCPP REQUIRED IMPORTED_TARGET fmc++)
-    add_library(
-        fmc
-        INTERFACE IMPORTED
-    )
+add_library(
+    fmc
+    STATIC
+    "${PROJECT_SOURCE_DIR}/src/fmc/cmp.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/extension.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/murmur3.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
+)
+target_include_directories(
+    fmc
+    PUBLIC
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}/include"
+)
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(FMC_LIBS_PRIVATE "-lstdc++fs")
+    set(FMCCPP_LIBS "-lstdc++fs")
+
     target_link_libraries(
         fmc
-        INTERFACE
-        PkgConfig::FMC
+        PUBLIC
+        stdc++fs
     )
-    add_library(
-        fmc++
-        INTERFACE IMPORTED
-    )
-    target_link_libraries(
-        fmc++
-        INTERFACE
-        PkgConfig::FMCPP
-    )
-endif ()
+endif()
+
+add_library(
+    fmc++
+    STATIC
+    "${PROJECT_SOURCE_DIR}/src/fmc++/config.cpp"
+)
+target_include_directories(
+    fmc++
+    PUBLIC
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}/include"
+)
 
 set(
     YTP_SRC
-    "${PROJECT_SOURCE_DIR}/src/yamal.cpp"
-    "${PROJECT_SOURCE_DIR}/src/peer.cpp"
-    "${PROJECT_SOURCE_DIR}/src/channel.cpp"
-    "${PROJECT_SOURCE_DIR}/src/time.cpp"
-    "${PROJECT_SOURCE_DIR}/src/control.cpp"
-    "${PROJECT_SOURCE_DIR}/src/sequence.cpp"
-    "${PROJECT_SOURCE_DIR}/src/timeline.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/yamal.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/time.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/control.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/sequence.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/timeline.cpp"
 )
 
 add_library(
@@ -131,7 +152,9 @@ set_target_properties(
 
 enable_testing()
 
-add_subdirectory(tests)
+add_subdirectory(tests/fmc)
+add_subdirectory(tests/fmc++)
+add_subdirectory(tests/ytp)
 
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -160,7 +183,7 @@ install(
 )
 
 configure_file(
-    ${PROJECT_SOURCE_DIR}/share/pkgconfig/ytp.pc.in
+    ${PROJECT_SOURCE_DIR}/lib/pkgconfig/ytp.pc.in
     ${PROJECT_BINARY_DIR}/ytp.pc
     @ONLY
 )
