@@ -26,10 +26,33 @@
 
 #include <fmc/platform.h>
 #include <time.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef int64_t fm_time64_t;
+
+fm_time64_t fm_time64_from_raw(int64_t value);
+fm_time64_t fm_time64_from_nanos(int64_t value);
+fm_time64_t fm_time64_from_seconds(int32_t value);
+int64_t fm_time64_to_nanos(fm_time64_t t);
+double fm_time64_to_fseconds(fm_time64_t t);
+int64_t fm_time64_raw(fm_time64_t time);
+bool fm_time64_less(fm_time64_t a, fm_time64_t b);
+bool fm_time64_greater(fm_time64_t a, fm_time64_t b);
+bool fm_time64_equal(fm_time64_t a, fm_time64_t b);
+int64_t fm_time64_div(fm_time64_t a, fm_time64_t b);
+fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b);
+void fm_time64_inc(fm_time64_t *a, fm_time64_t b);
+fm_time64_t fm_time64_sub(fm_time64_t a, fm_time64_t b);
+fm_time64_t fm_time64_mul(fm_time64_t a, int64_t b);
+fm_time64_t fm_time64_int_div(fm_time64_t a, int64_t b);
+fm_time64_t fm_time64_start();
+fm_time64_t fm_time64_end();
+bool fm_time64_is_end(fm_time64_t time);
 
 /**
  * @brief Converts given time since epoch into calendar time, expressed in UTC.
