@@ -33,20 +33,37 @@
 fmc_ext_t fmc_ext_open(const char *path, fmc_error_t **error) {
   fmc_error_clear(error);
 #if defined(FMC_SYS_UNIX)
-  auto *handle = dlopen(path, RTLD_NOW);
+  dlerror(); // Clear any existing error
+  fmc_ext_t handle = dlopen(path, RTLD_NOW);
   if (!handle) {
     FMC_ERROR_REPORT(error, dlerror());
-    return nullptr;
   }
-  return dlsym(handle, sym_name);
+  return handle;
 #else
 #error "Unsupported operating system"
 #endif
 }
 
 void *fmc_ext_sym(fmc_ext_t handle, const char *sym, fmc_error_t **error) {
+#if defined(FMC_SYS_UNIX)
+  dlerror(); // Clear any existing error
+  void *ret = dlsym(handle, sym); // ret could be NULL and it is OK
+  char *dlerrorstr = dlerror();
+  if(dlerrorstr) {
+    FMC_ERROR_REPORT(error, dlerrorstr);
+  }
+  return ret;
+#else
+#error "Unsupported operating system"
+#endif
 }
 
-void fmc_ext_sym(fmc_ext_t handle) {
-
+void fmc_ext_close(fmc_ext_t handle) {
+#if defined(FMC_SYS_UNIX)
+  if(handle) {
+    dlclose(handle);
+  }
+#else
+#error "Unsupported operating system"
+#endif
 }

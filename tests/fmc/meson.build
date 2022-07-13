@@ -9,6 +9,11 @@ foreach test : tests
     test('common_' + name, exe, is_parallel: false)
 endforeach
 
+extension = executable(
+    'common_extension', 'extension.cpp',
+    dependencies : [static_fmc_dep, gtest])
+test('common_extension', extension, args: [shared_fmc.full_path()], is_parallel: false)
+
 compiles_c = executable(
     'common_compiles_c', 'compiles.c',
     dependencies : [static_fmc_dep])
