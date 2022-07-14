@@ -229,7 +229,26 @@ void fmc_component_sys_mod_unload(struct fmc_component_sys *sys, const char *mod
   }
 }
 struct fmc_component *fmc_component_sys_comp_new(struct fmc_component_sys *sys, const char *mod, const char *comp, struct fmc_cfg_sect_item *cfg) {
-
+  list_fmc_component_module_t *m = find_mod(sys, mod);
+  if(m) {
+    for(unsigned int i = 0; m->mod.components_type[i].size; ++i) {
+      if(!strcmp(m->mod.components_type[i].name, comp)) {
+        // component was found.
+        // TODO: validate cfg against m->mod.components_type[i].cfgspec
+        // TODO: allocate with the actual size of the component with m->mod.components_type[i].size
+        list_fmc_component_t *newc = (list_fmc_component_t *)calloc(1, sizeof(*newc));
+        if(newc) {
+          // TODO: initialize vt, fmc_error, and the component struct?
+          DL_APPEND(m->mod.components, newc);
+        }
+        return &(newc->comp);
+      }
+    }
+  }
+  else {
+    //TODO: invalid module
+  }
+  return NULL;
 }
 
 void fmc_component_sys_comp_destroy(struct fmc_component_sys *sys, const char *mod, struct fmc_component *comp) {

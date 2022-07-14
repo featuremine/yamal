@@ -101,8 +101,14 @@ struct fmc_component_type components[] = {
       .size = sizeof(manager_comp),
       .sched = (schedproc)gateway_comp_sched,
       .process = (processproc)oms_comp_process_one,
-   }
-   { NULL }
+   },
+   {
+      .name = NULL,
+      .size = 0,
+      .cfgspec = NULL;
+      .sched = (schedproc)NULL,
+      .process = (processproc)NULL,
+   },
 };
 
 FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
