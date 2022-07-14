@@ -348,33 +348,102 @@ static struct fmc_cfg_sect_item *remove_section(struct parser_state_t *state, co
   return NULL;
 }
 
-static struct fmc_cfg_sect_item *process_cfg_struct(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **error) {
+static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err) {
   struct fmc_cfg_sect_item *root = remove_section(state, root_key);
   for (struct fmc_cfg_sect_item *item = root; item; item = item->next) {
-    const char *begin = item->node.value.str;
-    const char *end = begin + strlen(begin);
-    const char *p = end;
-    while (p-- != begin) {
-      if (*p == ',') {
-        if (p + 1 == end) {
-          continue;
-        }
+    struct fmc_cfg_node_spec *spec_item = spec;
+    for (; spec_item->key; ++spec_item) {
+      if (strcmp(spec_item->key, item->key) == 0) {
+        break;
       }
     }
-    item->node.type = ;
+    if (!spec_item->key) {
+      fmc_error_set(err, "Error while parsing config file: unknown key %s", item->key);
+      goto do_cleanup;
+    }
+
+    switch (spec->type.type) {
+    case FMC_CFG_NONE: {
+      if (strcmp(item->node.value.str, "none") == 0) {
+        free((void *) item->node.value.str);
+        item->node.type = FMC_CFG_NONE;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: none was expected in key %s", item->key);
+        goto do_cleanup;
+      }
+    } break;
+    case FMC_CFG_BOOLEAN: {
+      if (strcmp(item->node.value.str, "true") == 0) {
+        free((void *) item->node.value.str);
+        item->node.value.boolean = true;
+      }
+      else if (strcmp(item->node.value.str, "false") == 0) {
+        free((void *) item->node.value.str);
+        item->node.value.boolean = false;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: true or false was expected in key %s", item->key);
+        goto do_cleanup;
+      }
+      item->node.type = FMC_CFG_BOOLEAN;
+    } break;
+    case FMC_CFG_INT64: {
+      char *endptr;
+      int64_t value = strtoll(item->node.value.str, &endptr, 10);
+      if (endptr != item->node.value.str && *endptr == '\0') {
+        free((void *) item->node.value.str);
+        item->node.value.int64 = value;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: unable to parse int64 in key %s", item->key);
+        goto do_cleanup;
+      }
+      item->node.type = FMC_CFG_INT64;
+    } break;
+    case FMC_CFG_FLOAT64: {
+      char *endptr;
+      double value = strtod(item->node.value.str, &endptr);
+      if (endptr != item->node.value.str && *endptr == '\0') {
+        free((void *) item->node.value.str);
+        item->node.value.float64 = value;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: unable to parse float64 in key %s", item->key);
+        goto do_cleanup;
+      }
+      item->node.type = FMC_CFG_FLOAT64;
+    } break;
+    case FMC_CFG_STR: {} break;
+    case FMC_CFG_SECT: {
+      struct fmc_cfg_sect_item *section = parse_section(state, spec_item->type.spec.node, item->node.value.str, err);
+      if (*err) {
+        goto do_cleanup;
+      }
+      free((void *) item->node.value.str);
+      item->node.value.sect = section;
+      item->node.type = FMC_CFG_SECT;
+    } break;
+    case FMC_CFG_ARR: {} break;
+    }
   }
   return root;
+
+  do_cleanup:
+  root->next = state->sections_tail;
+  state->sections_tail = root;
+  return NULL;
 }
 
 struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const char *root_key, fmc_error_t **err) {
+  fmc_error_clear(err);
   parser_state_t state {NULL, 0};
   char buffer[INI_PARSER_BUFF_SIZE];
 
   size_t read = 0;
   while (true) {
     if (INI_PARSER_BUFF_SIZE == read) {
-      FMC_ERROR_REPORT(err,
-                       "Error while parsing config file: line is too long");
+      fmc_error_set(err, "Error while parsing config file: line is too long");
       goto do_cleanup;
     }
 
@@ -398,10 +467,12 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
         goto do_cleanup;
       }
 
-      //process_cfg_struct(state.sections_tail, spec, root_key, err);
+      struct fmc_cfg_sect_item *sect = parse_section(&state, spec, root_key, err);
       if (*err) {
         goto do_cleanup;
       }
+
+      return sect;
     }
     size_t line_start = 0;
     auto start = read;
