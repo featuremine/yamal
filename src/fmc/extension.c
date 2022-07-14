@@ -13,8 +13,7 @@
  *****************************************************************************/
 
 /**
- * @file extension.cpp
- * @author Alejandro Farfan
+ * @file extension.c
  * @date 17 Jun 2021
  * @brief File contains C implementation of fmc ext loading
  *
