@@ -305,7 +305,7 @@ static void parse_ini_line(parser_state_t *state, char *line, size_t sz, fmc_err
       return;
     }
     size_t sep;
-    for (sep = 0; sep != '=' && sep < sz; ++sep);
+    for (sep = 0; line[sep] != '=' && sep < sz; ++sep);
     if (sep >= sz) {
       fmc_error_set(error, "Invalid configuration file key-value entry (line %zu)", state->line_n);
       return;
@@ -350,7 +350,7 @@ static struct fmc_cfg_sect_item *remove_section(struct parser_state_t *state, co
 
 static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err) {
   struct fmc_cfg_sect_item *root = remove_section(state, root_key);
-  for (struct fmc_cfg_sect_item *item = root; item; item = item->next) {
+  for (struct fmc_cfg_sect_item *item = root->node.value.sect; item; item = item->next) {
     struct fmc_cfg_node_spec *spec_item = spec;
     for (; spec_item->key; ++spec_item) {
       if (strcmp(spec_item->key, item->key) == 0) {
@@ -427,6 +427,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
     case FMC_CFG_ARR: {} break;
     }
   }
+
   return root;
 
   do_cleanup:
@@ -496,9 +497,6 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
     read = end - line_start;
     if (line_start != end && line_start > 0) {
       memcpy(buffer, buffer + line_start, read);
-    }
-    if (*err) {
-      goto do_cleanup;
     }
   }
 

@@ -64,6 +64,7 @@ TEST(error, simple_types_1) {
           .type = FMC_CFG_NONE,
         },
       },
+      fmc_cfg_node_spec{NULL},
   };
 
   std::string_view config = "[main]\n"
