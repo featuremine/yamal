@@ -23,13 +23,84 @@
 #include <fmc/config.h>
 
 #include <fmc++/gtestwrap.hpp>
-using namespace std;
+
+struct deleter_t {
+  void operator()(struct fmc_cfg_sect_item *head) {
+    fmc_cfg_sect_del(head);
+  }
+  void operator()(struct fmc_cfg_arr_item *head) {
+    fmc_cfg_arr_del(head);
+  }
+};
+template<typename T>
+using unique_cfg_ptr = std::unique_ptr<T, deleter_t>;
+using unique_sect = unique_cfg_ptr<fmc_cfg_sect_item>;
+using unique_arr = unique_cfg_ptr<fmc_cfg_arr_item>;
+
+void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_sect_item *sect) {
+  for (; sect; sect = sect->next) {
+    result += prefix;
+    result += sect->key;
+    result += " = ";
+    switch (sect->node.type) {
+    case FMC_CFG_NONE: {
+      result += "none\n";
+    } break;
+    case FMC_CFG_BOOLEAN: {
+      result += std::to_string(sect->node.value.boolean);
+      result += "\n";
+    } break;
+    case FMC_CFG_INT64: {
+      result += std::to_string(sect->node.value.int64);
+      result += "\n";
+    } break;
+    case FMC_CFG_FLOAT64: {
+      result += std::to_string(sect->node.value.float64);
+      result += "\n";
+    } break;
+    case FMC_CFG_STR: {
+      result += "\"";
+      result += sect->node.value.str;
+      result += "\"\n";
+    } break;
+    case FMC_CFG_SECT: {
+      result += "{\n";
+      cfg_to_string(prefix + "  ", result, sect->node.value.sect);
+      result += prefix;
+      result += "}\n";
+    } break;
+    case FMC_CFG_ARR: {
+
+    } break;
+    }
+  }
+}
+
+std::string cfg_to_string(const unique_sect &sect) {
+  std::string result;
+  result += "{\n";
+  cfg_to_string("  ", result, sect.get());
+  result += "}\n";
+  return result;
+}
 
 TEST(error, simple_types_1) {
   fmc_error_t *err;
   fmc_fd pipe_descriptors[2];
 
   ASSERT_EQ(pipe(pipe_descriptors), 0);
+
+  struct fmc_cfg_node_spec subsect[] = {
+      fmc_cfg_node_spec{
+        .key = "float64",
+        .descr = "float64 descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_FLOAT64,
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
 
   struct fmc_cfg_node_spec spec[] = {
       fmc_cfg_node_spec{
@@ -57,11 +128,30 @@ TEST(error, simple_types_1) {
         },
       },
       fmc_cfg_node_spec{
+        .key = "str",
+        .descr = "str descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_STR,
+        },
+      },
+      fmc_cfg_node_spec{
         .key = "none",
         .descr = "none descr",
         .required = true,
         .type = fmc_cfg_type{
           .type = FMC_CFG_NONE,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "sect",
+        .descr = "sect descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_SECT,
+          .spec {
+            .node = subsect,
+          },
         },
       },
       fmc_cfg_node_spec{NULL},
@@ -71,16 +161,34 @@ TEST(error, simple_types_1) {
                             "int64=123\n"
                             "boolean=true\n"
                             "float64=1.2\n"
-                            "none=none\n";
+                            "none=none\n"
+                            "sect=sect1\n"
+                            "str=strstr\n"
+                            "\n"
+                            "[sect1]\n"
+                            "float64=1.5\n"
+                            ;
 
   write(pipe_descriptors[1], config.data(), config.size());
   fmc_fclose(pipe_descriptors[1], &err);
   ASSERT_EQ(err, nullptr);
 
-  fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err);
+  auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
   ASSERT_EQ(err, nullptr);
   fmc_fclose(pipe_descriptors[0], &err);
   ASSERT_EQ(err, nullptr);
+
+  ASSERT_EQ(cfg_to_string(sect), ""
+    "{\n"
+    "  str = \"strstr\"\n"
+    "  sect = {\n"
+    "    float64 = 1.500000\n"
+    "  }\n"
+    "  none = none\n"
+    "  float64 = 1.200000\n"
+    "  boolean = 1\n"
+    "  int64 = 123\n"
+    "}\n");
 }
 
 GTEST_API_ int main(int argc, char **argv) {

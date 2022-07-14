@@ -23,9 +23,6 @@
 #include <fmc/config.h>
 #include <string.h>
 #include <stdlib.h>
-#include <string>
-#include <string_view>
-#include <memory>
 
 #define INI_PARSER_BUFF_SIZE 8192
 
@@ -35,7 +32,7 @@ static char *string_copy_len(const char *src, size_t len) {
     return NULL;
   }
   memcpy(p, src, len);
-  return (const char *)p;
+  return (char *)p;
 }
 
 static char *string_copy(const char *src) {
@@ -68,10 +65,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item * 
   }
   item->key = string_copy(key);
   item->node.type = FMC_CFG_NONE;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 
@@ -83,10 +77,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item
   item->key = string_copy(key);
   item->node.type = FMC_CFG_BOOLEAN;
   item->node.value.boolean = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item * tail, const char * key, int64_t new_value) {
@@ -97,10 +88,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *
   item->key = string_copy(key);
   item->node.type = FMC_CFG_INT64;
   item->node.value.int64 = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item * tail, const char * key, double new_value) {
@@ -111,10 +99,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item
   item->key = string_copy(key);
   item->node.type = FMC_CFG_FLOAT64;
   item->node.value.float64 = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item * tail, const char * key, const char * new_value) {
@@ -125,10 +110,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item * t
   item->key = string_copy(key);
   item->node.type = FMC_CFG_STR;
   item->node.value.str = string_copy(new_value);
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item * tail, const char * key, struct fmc_cfg_sect_item * new_value) {
@@ -139,10 +121,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item * 
   item->key = string_copy(key);
   item->node.type = FMC_CFG_SECT;
   item->node.value.sect = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item * tail, const char * key, struct fmc_cfg_arr_item * new_value) {
@@ -153,10 +132,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item * t
   item->key = string_copy(key);
   item->node.type = FMC_CFG_ARR;
   item->node.value.arr = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 
@@ -185,10 +161,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item * tai
     return NULL;
   }
   item->item.type = FMC_CFG_NONE;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item * tail, bool new_value) {
@@ -198,10 +171,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item * 
   }
   item->item.type = FMC_CFG_BOOLEAN;
   item->item.value.boolean = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item * tail, int64_t new_value) {
@@ -211,10 +181,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item * ta
   }
   item->item.type = FMC_CFG_INT64;
   item->item.value.int64 = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item * tail, double new_value) {
@@ -224,10 +191,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item * 
   }
   item->item.type = FMC_CFG_FLOAT64;
   item->item.value.float64 = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item * tail, const char * new_value) {
@@ -237,10 +201,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item * tail
   }
   item->item.type = FMC_CFG_STR;
   item->item.value.str = string_copy(new_value);
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item * tail, struct fmc_cfg_sect_item * new_value) {
@@ -250,10 +211,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item * tai
   }
   item->item.type = FMC_CFG_SECT;
   item->item.value.sect = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item * tail, struct fmc_cfg_arr_item * new_value) {
@@ -263,10 +221,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item * tail
   }
   item->item.type = FMC_CFG_ARR;
   item->item.value.arr = new_value;
-  item->next = NULL;
-  if (tail) {
-    tail->next = item;
-  }
+  item->next = tail;
   return item;
 }
 
@@ -362,7 +317,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
       goto do_cleanup;
     }
 
-    switch (spec->type.type) {
+    switch (spec_item->type.type) {
     case FMC_CFG_NONE: {
       if (strcmp(item->node.value.str, "none") == 0) {
         free((void *) item->node.value.str);
@@ -428,7 +383,12 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
     }
   }
 
-  return root;
+  {
+    struct fmc_cfg_sect_item *ret = root->node.value.sect;
+    root->node.type = FMC_CFG_NONE;
+    fmc_cfg_sect_del(root);
+    return ret;
+  }
 
   do_cleanup:
   root->next = state->sections_tail;
