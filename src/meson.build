@@ -9,7 +9,7 @@ srcs_c = files(
     'fmc/time.cpp',
     'fmc/sockets.cpp',
     'fmc/process.cpp',
-    'fmc/extension.cpp'
+    'fmc/extension.c'
 )
 
 srcs_cpp = files(

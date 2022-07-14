@@ -55,7 +55,6 @@ add_library(
     fmc
     STATIC
     "${PROJECT_SOURCE_DIR}/src/fmc/cmp.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/config.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
@@ -83,7 +82,6 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         stdc++fs
     )
 endif()
-install(TARGETS fmc)
 
 add_library(
     fmc++
@@ -96,8 +94,6 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
-
-install(TARGETS fmc++)
 
 set(
     YTP_SRC
@@ -156,7 +152,9 @@ set_target_properties(
 
 enable_testing()
 
-add_subdirectory(tests)
+add_subdirectory(tests/fmc)
+add_subdirectory(tests/fmc++)
+add_subdirectory(tests/ytp)
 
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
