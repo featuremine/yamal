@@ -303,18 +303,110 @@ static struct fmc_cfg_sect_item *remove_section(struct parser_state_t *state, co
   return NULL;
 }
 
+static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err);
+static struct fmc_cfg_sect_item *parse_array(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, struct fmc_cfg_arr_item *arr, fmc_error_t **err) {
+  switch (spec->type.type) {
+  case FMC_CFG_NONE: {
+    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
+      if (strcmp(item->item.value.str, "none") == 0) {
+        free((void *) item->item.value.str);
+        item->item.type = FMC_CFG_NONE;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: none was expected in array");
+        goto do_cleanup;
+      }
+    }
+  } break;
+  case FMC_CFG_BOOLEAN: {
+    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
+      if (strcmp(item->item.value.str, "true") == 0) {
+        free((void *) item->item.value.str);
+        item->item.value.boolean = true;
+      }
+      else if (strcmp(item->item.value.str, "false") == 0) {
+        free((void *) item->item.value.str);
+        item->item.value.boolean = false;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: true or false was expected in array");
+        goto do_cleanup;
+      }
+      item->item.type = FMC_CFG_BOOLEAN;
+    }
+  } break;
+  case FMC_CFG_INT64: {
+    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
+      char *endptr;
+      int64_t value = strtoll(item->item.value.str, &endptr, 10);
+      if (endptr != item->item.value.str && *endptr == '\0') {
+        free((void *) item->item.value.str);
+        item->item.value.int64 = value;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: unable to parse int64 in array");
+        goto do_cleanup;
+      }
+      item->item.type = FMC_CFG_INT64;
+    }
+  } break;
+  case FMC_CFG_FLOAT64: {
+    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
+      char *endptr;
+      double value = strtod(item->item.value.str, &endptr);
+      if (endptr != item->item.value.str && *endptr == '\0') {
+        free((void *) item->item.value.str);
+        item->item.value.float64 = value;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: unable to parse float64 in array");
+        goto do_cleanup;
+      }
+      item->item.type = FMC_CFG_FLOAT64;
+    }
+  } break;
+  case FMC_CFG_STR: {} break;
+  case FMC_CFG_SECT: {
+    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
+      struct fmc_cfg_sect_item *section = parse_section(state, spec->type.spec.node, item->item.value.str, err);
+      if (*err) {
+        goto do_cleanup;
+      }
+      free((void *) item->item.value.str);
+      item->item.value.sect = section;
+      item->item.type = FMC_CFG_SECT;
+    }
+  } break;
+  case FMC_CFG_ARR: {
+  } break;
+  }
+  do_cleanup:
+  return NULL;
+}
+
 static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err) {
   struct fmc_cfg_sect_item *root = remove_section(state, root_key);
-  for (struct fmc_cfg_sect_item *item = root->node.value.sect; item; item = item->next) {
-    struct fmc_cfg_node_spec *spec_item = spec;
-    for (; spec_item->key; ++spec_item) {
-      if (strcmp(spec_item->key, item->key) == 0) {
+  struct fmc_cfg_sect_item *pending_items = root->node.value.sect;
+  struct fmc_cfg_sect_item *processed_items = NULL;
+  for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
+    struct fmc_cfg_sect_item *item = NULL;
+    for (struct fmc_cfg_sect_item **pitem = &pending_items; *pitem; pitem = &(*pitem)->next) {
+      if (strcmp(spec_item->key, (*pitem)->key) == 0) {
+        item = *pitem;
+        *pitem = item->next;
+        item->next = processed_items;
+        processed_items = item;
         break;
       }
     }
-    if (!spec_item->key) {
-      fmc_error_set(err, "Error while parsing config file: unknown key %s", item->key);
-      goto do_cleanup;
+    if (!item) {
+      if (spec_item->required) {
+        fmc_error_set(err, "Error while parsing config file: missing required field %s", spec_item->key);
+        goto do_cleanup;
+      }
+      else {
+        continue;
+      }
     }
 
     switch (spec_item->type.type) {
@@ -369,7 +461,18 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
       }
       item->node.type = FMC_CFG_FLOAT64;
     } break;
-    case FMC_CFG_STR: {} break;
+    case FMC_CFG_STR: {
+      size_t len = strlen(item->node.value.str);
+      if (len >= 2 && item->node.value.str[0] == '"' && item->node.value.str[len - 1] == '"') {
+        len -= 2;
+        memcpy(item->node.value.str, item->node.value.str + 1, len);
+        item->node.value.str[len] = '\0';
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: unable to parse string in key %s", item->key);
+        goto do_cleanup;
+      }
+    } break;
     case FMC_CFG_SECT: {
       struct fmc_cfg_sect_item *section = parse_section(state, spec_item->type.spec.node, item->node.value.str, err);
       if (*err) {
@@ -383,14 +486,23 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
     }
   }
 
+  if (pending_items) {
+    fmc_error_set(err, "Error while parsing config file: unknown field %s", pending_items->key);
+    goto do_cleanup;
+  }
+
   {
-    struct fmc_cfg_sect_item *ret = root->node.value.sect;
     root->node.type = FMC_CFG_NONE;
     fmc_cfg_sect_del(root);
-    return ret;
+    return processed_items;
   }
 
   do_cleanup:
+  struct fmc_cfg_sect_item **pitem = &pending_items;
+  for (; *pitem; pitem = &(*pitem)->next)
+    ;
+  *pitem = processed_items;
+
   root->next = state->sections_tail;
   state->sections_tail = root;
   return NULL;

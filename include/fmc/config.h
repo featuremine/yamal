@@ -78,7 +78,7 @@ struct fmc_cfg_item {
       bool boolean;
       int64_t int64;
       double float64;
-      const char *str;
+      char *str;
       struct fmc_cfg_sect_item *sect;
       struct fmc_cfg_arr_item *arr;
    } value;
