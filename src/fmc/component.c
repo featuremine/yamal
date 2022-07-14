@@ -18,6 +18,7 @@
  * @brief File contains C implementation of fmc component
  * @see http://www.featuremine.com
  */
+
 #include <fmc/component.h>
 #include <fmc/extension.h>
 #include <fmc/error.h>
@@ -34,20 +35,31 @@
 #error "Unsupported operating system"
 #endif
 
-//TODO: check for callocs return != NULL
-
 void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->search_paths = NULL;
   sys->modules = NULL; // important- initialize lists to NULL
 }
 
-void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths) {
+void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error) {
   unsigned int cnt = 0;
   for(; paths[cnt]; ++cnt) {}
   sys->search_paths = (char **)calloc(cnt+1, sizeof(*(sys->search_paths)));
+  if(!sys->search_paths) {
+    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    return;
+  }
 
   for(cnt = 0; paths[cnt]; ++cnt) {
     sys->search_paths[cnt] = (char *)calloc(strlen(paths[cnt])+1, sizeof(**(sys->search_paths)));
+    if(!sys->search_paths[cnt]) {
+      for(unsigned int i = 0; i < cnt; ++i) {
+        free(sys->search_paths[i]);
+      }
+      free(sys->search_paths);
+      sys->search_paths = NULL;
+      fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+      return;
+    }
     strcpy(sys->search_paths[cnt], paths[cnt]);
   }
   sys->search_paths[cnt] = NULL;
@@ -58,11 +70,12 @@ const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
 }
 
 static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, const char *mod, fmc_error_t **error) {
+  bool found = false;
   fmc_ext_t ext = NULL;
   DIR *d = opendir(dir);
-  if (d == NULL) {
+  if (!d) {
     FMC_ERROR_REPORT(error, strerror(errno));
-    return NULL;
+    return false;
   }
   struct dirent *entry;
   char *path;
@@ -74,6 +87,10 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
       // Recursive find
       size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
       path = (char *)calloc(path_len+1, sizeof(*path));
+      if(!path) {
+        fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+        break;
+      }
       sprintf(path, "%s/%s", dir, entry->d_name);
       bool found = mod_load_recursive(sys, path, mod, error);
       free(path);
@@ -86,54 +103,81 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
       // module file found
       size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
       path = (char *)calloc(path_len+1, sizeof(*path));
+      if(!path) {
+        fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+        break;
+      }
       sprintf(path, "%s/%s", dir, entry->d_name);
       ext = fmc_ext_open(path, error);
       if(*error) {
         // TODO: if error should I abort? Maybe it is a file called mod.so
+        free(path);
         fmc_error_destroy(*error);
       }
       else if(ext) {
         // Check if init function is available
         char *comp_init_function = (char *)calloc(strlen("FMCompInit_")+strlen(mod)+1, sizeof(*comp_init_function));
+        if(!comp_init_function) {
+          fmc_ext_close(ext);
+          free(path);
+          fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+          break;
+        }
         sprintf(comp_init_function, "FMCompInit_%s", mod);
         FMCOMPINITFUNC components_type_init = (FMCOMPINITFUNC)fmc_ext_sym(ext, comp_init_function, error);
         free(comp_init_function);
         if(*error) {
           // Function is not there => try on other files
           // Reset the error because it is not an error
+          fmc_ext_close(ext);
+          free(path);
           fmc_error_destroy(*error);
         }
         else if(components_type_init) {
           // append the module to the system
           list_fmc_component_module_t *module = (list_fmc_component_module_t *)calloc(1, sizeof(*module));
+          if(!module) {
+            fmc_ext_close(ext);
+            free(path);
+            fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+            break;
+          }
           module->mod.handle = ext;
           module->mod.name = (char *)calloc(strlen(mod)+1, sizeof(*(module->mod.name)));
+          if(!module->mod.name) {
+            free(module);
+            fmc_ext_close(ext);
+            free(path);
+            fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+            break;
+          }
           strcpy(module->mod.name, mod);
           module->mod.path = path;
           module->mod.components_type = components_type_init(sys);
           module->mod.components = NULL; // empty components for now
           DL_APPEND(sys->modules, module);
-          return true; // ext is the valid module. Don't free() path.
+          found = true;
+          break; // ext is the valid module. Don't free() path.
         }
       }
       free(path);
     }
   }
-  return false;
+  closedir(d);
+  return found;
 }
 
-bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod) {
+bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error) {
   // search for the module (mod.so; e.g oms.so) in the search_paths
   // Look for the function FMCompInit_mod (e.g.FMCompInit_oms)
   // if it does not have this function, keep looking
 
   // TODO: if it fails error?
-  fmc_error_t *error = NULL;
   bool found = false;
 #if defined(FMC_SYS_UNIX)
   if(sys->search_paths) {
-    for(unsigned int i = 0; sys->search_paths[i] && !found && !error; ++i) {
-      found = mod_load_recursive(sys, sys->search_paths[i], mod, &error);
+    for(unsigned int i = 0; sys->search_paths[i] && !found && !(*error); ++i) {
+      found = mod_load_recursive(sys, sys->search_paths[i], mod, error);
     }
   }
 #else
@@ -167,42 +211,37 @@ static void sys_mod_del(list_fmc_component_module_t **mod) {
   *mod = NULL;
 }
 
-void fmc_component_sys_mod_unload(struct fmc_component_sys *sys, const char *mod) {
-  list_fmc_component_module_t *modunload = NULL;
-  DL_FOREACH(sys->modules,modunload) {
-    if(!strcmp(modunload->mod.name, mod)) {
-      break;
+static list_fmc_component_module_t *find_mod(struct fmc_component_sys *sys, const char *mod_name) {
+  list_fmc_component_module_t *m = NULL;
+  DL_FOREACH(sys->modules,m) {
+    if(!strcmp(m->mod.name, mod_name)) {
+      return m;
     }
   }
-  DL_DELETE(sys->modules,modunload);
-  sys_mod_del(&modunload);
+  return NULL;
 }
 
+void fmc_component_sys_mod_unload(struct fmc_component_sys *sys, const char *mod) {
+  list_fmc_component_module_t *m = find_mod(sys, mod);
+  if(m) {
+    DL_DELETE(sys->modules,m);
+    sys_mod_del(&m);
+  }
+}
 struct fmc_component *fmc_component_sys_comp_new(struct fmc_component_sys *sys, const char *mod, const char *comp, struct fmc_cfg_sect_item *cfg) {
 
 }
 
 void fmc_component_sys_comp_destroy(struct fmc_component_sys *sys, const char *mod, struct fmc_component *comp) {
-  bool found = false;
-  list_fmc_component_module_t *modcomp = NULL;
-  DL_FOREACH(sys->modules,modcomp) {
-    if(!strcmp(modcomp->mod.name, mod)) {
-      found = true;
-      break;
-    }
-  }
-  if(found) {
-    found = false;
-    list_fmc_component_t *compit;
-    DL_FOREACH(modcomp->mod.components,compit) {
-      if( (&(compit->comp)) == comp ) {
-        found = true;
+  list_fmc_component_module_t *m = find_mod(sys, mod);
+  if(m) {
+    list_fmc_component_t *c;
+    DL_FOREACH(m->mod.components,c) {
+      if( (&(c->comp)) == comp ) {
+        DL_DELETE(m->mod.components,c);
+        sys_comp_del(&c);
         break;
       }
-    }
-    if(found) {
-      DL_DELETE(modcomp->mod.components,compit);
-      sys_comp_del(&compit);
     }
   }
 }

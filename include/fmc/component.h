@@ -136,9 +136,9 @@ struct fmc_component_sys {
 typedef struct fmc_component_type * (*FMCOMPINITFUNC)(struct fmc_component_sys *);
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
-void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths);
+void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
 const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod);
+bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
 void fmc_component_sys_mod_unload(struct fmc_component_sys *sys, const char *mod);
 struct fmc_component *fmc_component_sys_comp_new(struct fmc_component_sys *sys, const char *mod, const char *comp, struct fmc_cfg_sect_item *cfg);
 void fmc_component_sys_comp_destroy(struct fmc_component_sys *sys, const char *mod, struct fmc_component *comp);
