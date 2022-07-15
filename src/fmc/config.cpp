@@ -303,6 +303,26 @@ static struct fmc_cfg_sect_item *remove_section(struct parser_state_t *state, co
   return NULL;
 }
 
+static char *parse_string(char **str, char **end, fmc_error_t **err) {
+  if (**str != '"') {
+    fmc_error_set(err, "Error while parsing config file: invalid string");
+    return NULL;
+  }
+  ++*str;
+  char *endptr = *str;
+  while(endptr < *end && *endptr != '"') {
+    ++endptr;
+  }
+  if (endptr == *end) {
+    fmc_error_set(err, "Error while parsing config file: unable to find closing quotes for string in array");
+    return NULL;
+  }
+  *endptr = '\0';
+  char *ret = *str;
+  *str = endptr + 1;
+  return ret;
+}
+
 static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err);
 static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct fmc_cfg_type *spec, char **str, char **end, fmc_error_t **err) {
   fmc_cfg_arr_item *arr = NULL;
@@ -459,29 +479,13 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
           goto do_cleanup;
         }
       }
-      else if (**str == '"') {
-        comma_expected = true;
-        ++*str;
-        char *endptr = *str;
-        while(endptr < *end && *endptr != '"') {
-          ++endptr;
-        }
-        if (endptr == *end) {
-          fmc_error_set(err, "Error while parsing config file: unable to find closing quotes for string in array");
-          goto do_cleanup;
-        }
-        *endptr = '\0';
-        ++endptr;
-        if (!(endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
-          fmc_error_set(err, "Error while parsing config file: unable to parse string in array");
-          goto do_cleanup;
-        }
-        arr = fmc_cfg_arr_item_add_str(arr, *str);
-        *str = endptr;
-      }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse string in array");
-        goto do_cleanup;
+        comma_expected = true;
+        char *value = parse_string(str, end, err);
+        if (*err) {
+          goto do_cleanup;
+        }
+        arr = fmc_cfg_arr_item_add_str(arr, value);
       }
     }
   } break;
@@ -656,16 +660,17 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
       item->node.type = FMC_CFG_FLOAT64;
     } break;
     case FMC_CFG_STR: {
-      size_t len = strlen(item->node.value.str);
-      if (len >= 2 && item->node.value.str[0] == '"' && item->node.value.str[len - 1] == '"') {
-        len -= 2;
-        memcpy(item->node.value.str, item->node.value.str + 1, len);
-        item->node.value.str[len] = '\0';
+      char *begin = item->node.value.str;
+      char *end = item->node.value.str + strlen(item->node.value.str);
+      char *value = parse_string(&begin, &end, err);
+      if (*err) {
+        goto do_cleanup;
       }
-      else {
+      if (begin != end) {
         fmc_error_set(err, "Error while parsing config file: unable to parse string in field %s", item->key);
         goto do_cleanup;
       }
+      memcpy(item->node.value.str, value, strlen(value) + 1);
     } break;
     case FMC_CFG_SECT: {
       struct fmc_cfg_sect_item *section = parse_section(state, spec_item->type.spec.node, item->node.value.str, err);
