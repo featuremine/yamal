@@ -45,6 +45,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
   for(; paths[cnt]; ++cnt) {}
   sys->search_paths = (char **)calloc(cnt+1, sizeof(*(sys->search_paths)));
   if(!sys->search_paths) {
+    *error = fmc_error_inst(); // TODO: check this
     fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
     return;
   }
@@ -57,6 +58,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
       }
       free(sys->search_paths);
       sys->search_paths = NULL;
+      *error = fmc_error_inst(); // TODO: check this
       fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
       return;
     }
@@ -74,7 +76,6 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
   fmc_ext_t ext = NULL;
   DIR *d = opendir(dir);
   if (!d) {
-    FMC_ERROR_REPORT(error, strerror(errno));
     return false;
   }
   struct dirent *entry;
@@ -88,6 +89,7 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
       size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
       path = (char *)calloc(path_len+1, sizeof(*path));
       if(!path) {
+        *error = fmc_error_inst(); // TODO: check this
         fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
         break;
       }
@@ -95,7 +97,7 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
       bool found = mod_load_recursive(sys, path, mod, error);
       free(path);
       if(*error || found) {
-        // TODO: if error should I abort? Maybe it is a file called mod.so or a broken dir?
+        // Only error possible is type FMC_ERROR_NONE
         break;
       }
     }
@@ -104,15 +106,17 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
       size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
       path = (char *)calloc(path_len+1, sizeof(*path));
       if(!path) {
+        *error = fmc_error_inst(); // TODO: check this
         fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
         break;
       }
       sprintf(path, "%s/%s", dir, entry->d_name);
       ext = fmc_ext_open(path, error);
       if(*error) {
-        // TODO: if error should I abort? Maybe it is a file called mod.so
+        // If it is an error don't abort. Keep searching.
         free(path);
         fmc_error_destroy(*error);
+        *error = NULL;
       }
       else if(ext) {
         // Check if init function is available
@@ -120,6 +124,7 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
         if(!comp_init_function) {
           fmc_ext_close(ext);
           free(path);
+          *error = fmc_error_inst(); // TODO: check this
           fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
           break;
         }
@@ -127,8 +132,7 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
         FMCOMPINITFUNC components_type_init = (FMCOMPINITFUNC)fmc_ext_sym(ext, comp_init_function, error);
         free(comp_init_function);
         if(*error) {
-          // Function is not there => try on other files
-          // Reset the error because it is not an error
+          // Function is not there. Keep searching.
           fmc_ext_close(ext);
           free(path);
           fmc_error_destroy(*error);
@@ -139,6 +143,7 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
           if(!module) {
             fmc_ext_close(ext);
             free(path);
+            *error = fmc_error_inst(); // TODO: check this
             fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
             break;
           }
@@ -148,6 +153,7 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
             free(module);
             fmc_ext_close(ext);
             free(path);
+            *error = fmc_error_inst(); // TODO: check this
             fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
             break;
           }
@@ -167,12 +173,12 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
   return found;
 }
 
+// TODO: return false/true, or set error if library not found?
 bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error) {
   // search for the module (mod.so; e.g oms.so) in the search_paths
   // Look for the function FMCompInit_mod (e.g.FMCompInit_oms)
   // if it does not have this function, keep looking
 
-  // TODO: if it fails error?
   bool found = false;
 #if defined(FMC_SYS_UNIX)
   if(sys->search_paths) {
@@ -187,7 +193,7 @@ bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, 
 }
 
 static void sys_comp_del(list_fmc_component_t **comp) {
-  // TODO: destroy (*comp)->comp (struct fmc_component)
+  // TODO: destroy (*comp)->comp (struct fmc_component) ??
   // e.g struct fmc_comp_type *_vt, struct fmc_error _err
   free(*comp);
   *comp = NULL;
