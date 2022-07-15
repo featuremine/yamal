@@ -46,10 +46,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
   for(; paths[cnt]; ++cnt) {}
   sys->search_paths = (char **)calloc(cnt+1, sizeof(*(sys->search_paths)));
   if(!sys->search_paths) {
-    *error = fmc_error_inst(); // TODO: check this: Create function that does this + fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-    // fmc_error_inst_reset(FMC_ERROR_MEMORY)
-    // fmc_error_inst, then call destroy, then fmc_error_init
-    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     return;
   }
 
@@ -61,8 +58,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
       }
       free(sys->search_paths);
       sys->search_paths = NULL;
-      *error = fmc_error_inst(); // TODO: check this
-      fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+      fmc_error_set2(error, FMC_ERROR_MEMORY);
       return;
     }
     strcpy(sys->search_paths[cnt], paths[cnt]);
@@ -81,8 +77,7 @@ static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, cons
   struct fmc_component_module *ret = NULL;
   char *lib_path = (char *)calloc(strlen(dir) + strlen(mod_lib) + 1 + 1, sizeof(*lib_path));
   if(!lib_path) {
-    *error = fmc_error_inst(); // TODO: check this
-    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     goto error_0;
   }
   sprintf(lib_path, "%s/%s", dir, mod_lib);
@@ -99,8 +94,7 @@ static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, cons
   // Check if init function is available
   char *comp_init_function = (char *)calloc(strlen(fmc_comp_INIT_FUNCT_PREFIX)+strlen(mod)+1, sizeof(*comp_init_function));
   if(!comp_init_function) {
-    *error = fmc_error_inst(); // TODO: check this
-    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     goto error_2;
   }
   sprintf(comp_init_function, fmc_comp_INIT_FUNCT_PREFIX "%s", mod);
@@ -118,16 +112,14 @@ static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, cons
   // append the module to the system
   fmc_component_module_list_t *module = (fmc_component_module_list_t *)calloc(1, sizeof(*module));
   if(!module) {
-    *error = fmc_error_inst(); // TODO: check this
-    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     goto error_2;
   }
   module->mod.sys = sys;
   module->mod.handle = ext;
   module->mod.name = (char *)calloc(strlen(mod)+1, sizeof(*(module->mod.name)));
   if(!module->mod.name) {
-    *error = fmc_error_inst(); // TODO: check this
-    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     goto error_3;
   }
   strcpy(module->mod.name, mod);
@@ -246,8 +238,7 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const 
         }
       }
       else {
-        *error = fmc_error_inst(); // TODO: check this
-        fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+        fmc_error_set2(error, FMC_ERROR_MEMORY);
       }
       break;
     }

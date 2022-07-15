@@ -75,7 +75,7 @@ FMMODFUNC void fmc_error_init_none(fmc_error_t *err);
 FMMODFUNC void fmc_error_init_sprintf(fmc_error_t *err, const char *fmt, ...);
 
 /**
- * @brief Set an error message and assigns a pointer to the error message
+ * @brief Set an error message and assigns a pointer to the error
  *
  * @param err_ptr
  * @param fmt error format string
@@ -83,6 +83,14 @@ FMMODFUNC void fmc_error_init_sprintf(fmc_error_t *err, const char *fmt, ...);
  * is expected
  */
 FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
+
+/**
+ * @brief Set an error code and assigns a pointer to the error
+ *
+ * @param err_ptr
+ * @param code FMC_ERROR_CODE
+ */
+FMMODFUNC void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code);
 
 /**
  * @brief Destroy the error struct
