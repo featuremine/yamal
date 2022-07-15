@@ -140,7 +140,7 @@ FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
 */
 
 typedef struct fmc_component_list {
-    struct fmc_component comp;
+    struct fmc_component *comp;
     struct fmc_component_list *next, *prev;
 } fmc_component_list_t;
 

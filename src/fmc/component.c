@@ -216,8 +216,7 @@ struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *
 }
 
 static void comp_del(fmc_component_list_t **comp) {
-  // TODO: destroy (*comp)->comp (struct fmc_component) ??
-  // e.g struct fmc_comp_type *_vt, struct fmc_error _err
+  (*comp)->comp->_vt->del((*comp)->comp);
   free(*comp);
   *comp = NULL;
 }
@@ -264,25 +263,34 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
 }
 
 struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error) {
+  struct fmc_component *ret = NULL;
   for(unsigned int i = 0; mod->components_type[i].size; ++i) {
     if(!strcmp(mod->components_type[i].name, comp)) {
       // component was found.
       // TODO: validate cfg against mod.components_type[i].cfgspec
-
-      struct fmc_component *comp = mod->components_type[i].new(cfg, error);
-      comp->_mod = mod;
-      comp->_vt = &(mod->components_type[i]);
-      fmc_error_init_none(&comp->_err);
-      // TODO: allocate with the actual size of the component with mod.components_type[i].size
       fmc_component_list_t *newc = (fmc_component_list_t *)calloc(1, sizeof(*newc));
       if(newc) {
-        // TODO: initialize vt, fmc_error, and the component struct?
-        DL_APPEND(mod->components, newc);
+        ret = mod->components_type[i].new(cfg, error);
+        if(*error) {
+          ret = NULL;
+          free(newc);
+        }
+        else {
+          ret->_mod = mod;
+          ret->_vt = &mod->components_type[i];
+          fmc_error_init_none(&ret->_err);
+          newc->comp = ret;
+          DL_APPEND(mod->components, newc);
+        }
       }
-      return &(newc->comp);
+      else {
+        *error = fmc_error_inst(); // TODO: check this
+        fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+      }
+      break;
     }
   }
-  return NULL;
+  return ret;
 }
 
 void fmc_component_destroy(struct fmc_component *comp) {
@@ -290,7 +298,7 @@ void fmc_component_destroy(struct fmc_component *comp) {
   fmc_component_list_t *chead = m->components;
   fmc_component_list_t *c;
   DL_FOREACH(chead,c) {
-    if( (&(c->comp)) == comp ) {
+    if( c->comp == comp ) {
       DL_DELETE(m->components,c);
       comp_del(&c);
       break;
