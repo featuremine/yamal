@@ -312,6 +312,10 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
     ++*str;
   }
 
+  if (*str + 1 == *end && **str == ',') {
+    return NULL;
+  }
+
   switch (spec->type) {
   case FMC_CFG_NONE: {
     bool comma_expected = false;
