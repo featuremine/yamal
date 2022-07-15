@@ -150,6 +150,7 @@ struct fmc_component_module *mod_load_recursive(struct fmc_component_sys *sys, c
             fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
             break;
           }
+          module->mod.sys = sys;
           module->mod.handle = ext;
           module->mod.name = (char *)calloc(strlen(mod)+1, sizeof(*(module->mod.name)));
           if(!module->mod.name) {
@@ -162,7 +163,7 @@ struct fmc_component_module *mod_load_recursive(struct fmc_component_sys *sys, c
           }
           strcpy(module->mod.name, mod);
           module->mod.path = path;
-          module->mod.components_type = components_type_init(sys);
+          module->mod.components_type = components_type_init();
           module->mod.components = NULL; // empty components for now
           list_fmc_component_module_t *moduleshead = sys->modules;
           DL_APPEND(moduleshead, module);
@@ -216,6 +217,7 @@ static void sys_comp_del(list_fmc_component_t **comp) {
 static void sys_mod_del(list_fmc_component_module_t **mod) {
   struct fmc_component_module *m = &((*mod)->mod);
   // delete module
+  m->sys = NULL;
   fmc_ext_close(m->handle);
   free(m->name);
   free(m->path);
