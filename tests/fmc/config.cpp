@@ -130,19 +130,40 @@ std::string cfg_to_string(const unique_sect &sect) {
   return result;
 }
 
-TEST(error, simple_types_1) {
-  fmc_error_t *err;
+unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
   fmc_fd pipe_descriptors[2];
 
-  ASSERT_EQ(pipe(pipe_descriptors), 0);
+  if(pipe(pipe_descriptors) != 0) {
+    fmc_error_set(&err, "pipe failed");
+    return nullptr;
+  }
 
+  write(pipe_descriptors[1], config.data(), config.size());
+  fmc_fclose(pipe_descriptors[1], &err);
+  if (err) {
+    return nullptr;
+  }
+
+  auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
+  if (err) {
+    return nullptr;
+  }
+  fmc_fclose(pipe_descriptors[0], &err);
+  if (err) {
+    return nullptr;
+  }
+
+  return sect;
+}
+
+TEST(error, required_1) {
   struct fmc_cfg_node_spec subsect[] = {
       fmc_cfg_node_spec{
-        .key = "float64",
-        .descr = "float64 descr",
+        .key = "int64",
+        .descr = "int64 descr",
         .required = true,
         .type = fmc_cfg_type{
-          .type = FMC_CFG_FLOAT64,
+          .type = FMC_CFG_INT64,
         },
       },
       fmc_cfg_node_spec{NULL},
@@ -152,21 +173,7 @@ TEST(error, simple_types_1) {
       .type = FMC_CFG_INT64,
   };
 
-  struct fmc_cfg_type subarray2 = {
-      .type = FMC_CFG_SECT,
-      .spec {
-        .node = subsect,
-      }
-  };
-
-  struct fmc_cfg_type subarray3 = {
-      .type = FMC_CFG_ARR,
-      .spec {
-        .array = &subarray,
-      }
-  };
-
-  struct fmc_cfg_node_spec spec[] = {
+  struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
         .key = "int64",
         .descr = "int64 descr",
@@ -219,30 +226,8 @@ TEST(error, simple_types_1) {
         },
       },
       fmc_cfg_node_spec{
-        .key = "arr3",
-        .descr = "arr3 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray3,
-          },
-        },
-      },
-      fmc_cfg_node_spec{
-        .key = "arr2",
-        .descr = "arr2 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray2,
-          },
-        },
-      },
-      fmc_cfg_node_spec{
         .key = "arr",
-        .descr = "arr descr",
+        .descr = "arr3 descr",
         .required = true,
         .type = fmc_cfg_type{
           .type = FMC_CFG_ARR,
@@ -253,73 +238,146 @@ TEST(error, simple_types_1) {
       },
       fmc_cfg_node_spec{NULL},
   };
-
-  std::string_view config = "[main]\n"
-                            "int64=123\n"
-                            "boolean=true\n"
-                            "float64=1.2\n"
-                            "none=none\n"
-                            "sect=sect1\n"
-                            "arr2=[sect2,sect3]\n"
-                            "arr3=[[1,2,3],[1,2,3]]\n"
-                            "str=\"strstr\"\n"
-                            "arr=1,2,3,4,5\n"
-                            "\n"
-                            "[sect1]\n"
-                            "float64=1.5\n"
-                            "[sect2]\n"
-                            "float64=1.5\n"
-                            "[sect3]\n"
-                            "float64=1.5\n"
-                            ;
-
-  write(pipe_descriptors[1], config.data(), config.size());
-  fmc_fclose(pipe_descriptors[1], &err);
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "float64=-19.5\n"
+                        "str=\"message\"\n"
+                        "int64=-99\n"
+                        "boolean=false\n"
+                        "none=none\n"
+                        "sect=sect1\n"
+                        "arr=[]\n"
+                        "[sect1]\n"
+                        "int64=-100000\n"
+                        "",
+                        main, err);
   ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "  ]\n"
+                                 "  sect = {\n"
+                                 "    int64 = -100000\n"
+                                 "  }\n"
+                                 "  none = none\n"
+                                 "  str = \"message\"\n"
+                                 "  float64 = -19.500000\n"
+                                 "  boolean = 0\n"
+                                 "  int64 = -99\n"
+                                 "}\n");
 
-  auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
-  ASSERT_NOERR(err);
-  fmc_fclose(pipe_descriptors[0], &err);
-  ASSERT_NOERR(err);
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "str=\"message\"\n"
+                   "int64=-99\n"
+                   "boolean=false\n"
+                   "none=none\n"
+                   "sect=sect1\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field int64");
 
-  ASSERT_EQ(cfg_to_string(sect), ""
-    "{\n"
-    "  arr = [\n"
-    "    1,\n"
-    "    2,\n"
-    "    3,\n"
-    "    4,\n"
-    "    5,\n"
-    "  ]\n"
-    "  arr2 = [\n"
-    "    {\n"
-    "      float64 = 1.500000\n"
-    "    },\n"
-    "    {\n"
-    "      float64 = 1.500000\n"
-    "    },\n"
-    "  ]\n"
-    "  arr3 = [\n"
-    "    [\n"
-    "      1,\n"
-    "      2,\n"
-    "      3,\n"
-    "    ],\n"
-    "    [\n"
-    "      1,\n"
-    "      2,\n"
-    "      3,\n"
-    "    ],\n"
-    "  ]\n"
-    "  sect = {\n"
-    "    float64 = 1.500000\n"
-    "  }\n"
-    "  none = none\n"
-    "  str = \"strstr\"\n"
-    "  float64 = 1.200000\n"
-    "  boolean = 1\n"
-    "  int64 = 123\n"
-    "}\n");
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "str=\"message\"\n"
+                   "int64=-99\n"
+                   "boolean=false\n"
+                   "none=none\n"
+                   "sect=sect1\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field arr");
+
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "str=\"message\"\n"
+                   "int64=-99\n"
+                   "boolean=false\n"
+                   "none=none\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field sect");
+
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "str=\"message\"\n"
+                   "int64=-99\n"
+                   "boolean=false\n"
+                   "sect=sect1\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field none");
+
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "str=\"message\"\n"
+                   "int64=-99\n"
+                   "none=none\n"
+                   "sect=sect1\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field boolean");
+
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "str=\"message\"\n"
+                   "boolean=false\n"
+                   "none=none\n"
+                   "sect=sect1\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field int64");
+
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "float64=-19.5\n"
+                   "int64=-99\n"
+                   "boolean=false\n"
+                   "none=none\n"
+                   "sect=sect1\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field str");
+
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "str=\"message\"\n"
+                   "int64=-99\n"
+                   "boolean=false\n"
+                   "none=none\n"
+                   "sect=sect1\n"
+                   "arr=[]\n"
+                   "[sect1]\n"
+                   "int64=-100000\n"
+                   "",
+                   main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field float64");
 }
 
 GTEST_API_ int main(int argc, char **argv) {

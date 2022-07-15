@@ -574,13 +574,13 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
 
 static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err) {
   struct fmc_cfg_sect_item *root = remove_section(state, root_key);
-  struct fmc_cfg_sect_item *pending_items = root->node.value.sect;
-  struct fmc_cfg_sect_item *processed_items = NULL;
-
   if (!root) {
     fmc_error_set(err, "Error while parsing config file: section %s not found", root_key);
-    goto do_cleanup;
+    return NULL;
   }
+
+  struct fmc_cfg_sect_item *pending_items = root->node.value.sect;
+  struct fmc_cfg_sect_item *processed_items = NULL;
 
   for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
     struct fmc_cfg_sect_item *item = NULL;
