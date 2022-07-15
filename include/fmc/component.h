@@ -39,6 +39,8 @@ extern "C" {
 #error "Unsupported operating system"
 #endif
 
+#define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
+
 #define fmc_comp_HEAD            \
    struct fmc_component_type *_vt;    \
    struct fmc_error _err;        \

@@ -74,115 +74,78 @@ const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
   return (const char **)sys->search_paths;
 }
 
-// TODO: Don't look  recusively throught the directories
-
-// Possible:
-// <path>/oms.so
-// <path>/oms/oms.so
-// fmc common function to join paths. "/" does not work in windows.
+// TODO: Use fmc common function to join paths: "/" does not work in windows.
+// Possible library paths: <path>/mod.so or <path>/mod/mod.so
 #if defined(FMC_SYS_UNIX)
-struct fmc_component_module *mod_load_recursive(struct fmc_component_sys *sys, const char *dir, const char *mod, const char *mod_lib, fmc_error_t **error) {
+static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, const char *dir, const char *mod, const char *mod_lib, fmc_error_t **error) {
   struct fmc_component_module *ret = NULL;
-  fmc_ext_t ext = NULL;
-  DIR *d = opendir(dir);
-  if (!d) {
-    return NULL;
+  char *lib_path = (char *)calloc(strlen(dir) + strlen(mod_lib) + 1 + 1, sizeof(*lib_path));
+  if(!lib_path) {
+    *error = fmc_error_inst(); // TODO: check this
+    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    goto error_0;
   }
-  struct dirent *entry;
-  char *path;
-  while ((entry = readdir(d)) != NULL) {
-    if(entry->d_type == DT_LNK) {
-      // TODO: check if symbolic link is a file or a directory
-    }
-    else if(entry->d_type == DT_DIR && strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-      // Recursive find
-      size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
-      path = (char *)calloc(path_len+1, sizeof(*path));
-      if(!path) {
-        *error = fmc_error_inst(); // TODO: check this
-        fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-        break;
-      }
-      sprintf(path, "%s/%s", dir, entry->d_name);
-      ret = mod_load_recursive(sys, path, mod, mod_lib, error);
-      free(path);
-      if(*error || ret) {
-        // Only error possible is type FMC_ERROR_NONE
-        break;
-      }
-    }
-    else if(entry->d_type == DT_REG && !strcmp(entry->d_name, mod_lib)) {
-      // module file found
-      size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
-      path = (char *)calloc(path_len+1, sizeof(*path));
-      if(!path) {
-        *error = fmc_error_inst(); // TODO: check this
-        fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-        break;
-      }
-      sprintf(path, "%s/%s", dir, entry->d_name);
-      ext = fmc_ext_open(path, error);
-      if(*error) {
-        // If it is an error don't abort. Keep searching.
-        free(path);
-        fmc_error_destroy(*error);
-        fmc_error_clear(error);
-      }
-      else if(ext) {
-        // Check if init function is available
-        char *comp_init_function = (char *)calloc(strlen("FMCompInit_")+strlen(mod)+1, sizeof(*comp_init_function));
-        if(!comp_init_function) {
-          fmc_ext_close(ext);
-          free(path);
-          *error = fmc_error_inst(); // TODO: check this
-          fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-          break;
-        }
-        sprintf(comp_init_function, "FMCompInit_%s", mod);
-        FMCOMPINITFUNC components_type_init = (FMCOMPINITFUNC)fmc_ext_sym(ext, comp_init_function, error);
-        free(comp_init_function);
-        if(*error) {
-          // Function is not there. Keep searching.
-          fmc_ext_close(ext);
-          free(path);
-          fmc_error_destroy(*error);
-          fmc_error_clear(error);
-        }
-        else if(components_type_init) {
-          // append the module to the system
-          fmc_component_module_list_t *module = (fmc_component_module_list_t *)calloc(1, sizeof(*module));
-          if(!module) {
-            fmc_ext_close(ext);
-            free(path);
-            *error = fmc_error_inst(); // TODO: check this
-            fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-            break;
-          }
-          module->mod.sys = sys;
-          module->mod.handle = ext;
-          module->mod.name = (char *)calloc(strlen(mod)+1, sizeof(*(module->mod.name)));
-          if(!module->mod.name) {
-            free(module);
-            fmc_ext_close(ext);
-            free(path);
-            *error = fmc_error_inst(); // TODO: check this
-            fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-            break;
-          }
-          strcpy(module->mod.name, mod);
-          module->mod.path = path;
-          module->mod.components_type = components_type_init();
-          module->mod.components = NULL; // empty components for now
-          fmc_component_module_list_t *moduleshead = sys->modules;
-          DL_APPEND(moduleshead, module);
-          ret = &(module->mod);
-          break; // ext is the valid module. Don't free() path, module nor ext.
-        }
-      }
-      free(path);
-    }
+  sprintf(lib_path, "%s/%s", dir, mod_lib);
+  fmc_ext_t ext = fmc_ext_open(lib_path, error);
+  if(*error) {
+    // If it is an error don't abort. Keep searching.
+    fmc_error_destroy(*error);
+    fmc_error_clear(error);
+    goto error_1;
   }
-  closedir(d);
+  if(!ext) {
+    goto error_1;
+  }
+  // Check if init function is available
+  char *comp_init_function = (char *)calloc(strlen(fmc_comp_INIT_FUNCT_PREFIX)+strlen(mod)+1, sizeof(*comp_init_function));
+  if(!comp_init_function) {
+    *error = fmc_error_inst(); // TODO: check this
+    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    goto error_2;
+  }
+  sprintf(comp_init_function, fmc_comp_INIT_FUNCT_PREFIX "%s", mod);
+  FMCOMPINITFUNC components_type_init = (FMCOMPINITFUNC)fmc_ext_sym(ext, comp_init_function, error);
+  free(comp_init_function);
+  if(*error) {
+    // Function is not there. Keep searching.
+    fmc_error_destroy(*error);
+    fmc_error_clear(error);
+    goto error_2;
+  }
+  if(!components_type_init) {
+    goto error_2;
+  }
+  // append the module to the system
+  fmc_component_module_list_t *module = (fmc_component_module_list_t *)calloc(1, sizeof(*module));
+  if(!module) {
+    *error = fmc_error_inst(); // TODO: check this
+    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    goto error_2;
+  }
+  module->mod.sys = sys;
+  module->mod.handle = ext;
+  module->mod.name = (char *)calloc(strlen(mod)+1, sizeof(*(module->mod.name)));
+  if(!module->mod.name) {
+    *error = fmc_error_inst(); // TODO: check this
+    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    goto error_3;
+  }
+  strcpy(module->mod.name, mod);
+  module->mod.path = lib_path;
+  module->mod.components_type = components_type_init();
+  module->mod.components = NULL; // empty components for now
+  DL_APPEND(sys->modules, module);
+  ret = &(module->mod);
+
+error_3:
+  free(module);
+error_2:
+  fmc_ext_close(ext);
+error_1:
+  if(!ret) {
+    free(lib_path);
+  }
+error_0:
   return ret;
 }
 #else
@@ -195,23 +158,22 @@ struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *
   // if it does not have this function, keep looking
 
   struct fmc_component_module *ret = NULL;
-  char *mod_lib = (char *)calloc(strlen(mod)+strlen(FMC_LIB_SUFFIX)+1, sizeof(*mod_lib));
-  if(!mod_lib) {
-    *error = fmc_error_inst(); // TODO: check this
-    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
-    return false;
-  }
+  char mod_lib[strlen(mod)+strlen(FMC_LIB_SUFFIX)+1];
   sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
+  char mod_lib_2[2*strlen(mod)+1+strlen(FMC_LIB_SUFFIX)+1];
+  sprintf(mod_lib_2, "%s/%s%s", mod, mod, FMC_LIB_SUFFIX);
 #if defined(FMC_SYS_UNIX)
   if(sys->search_paths) {
     for(unsigned int i = 0; sys->search_paths[i] && !ret && !(*error); ++i) {
-      ret = mod_load_recursive(sys, sys->search_paths[i], mod, mod_lib, error);
+      ret = mod_load(sys, sys->search_paths[i], mod, mod_lib, error);
+      if(!ret && !(*error)) {
+        ret = mod_load(sys, sys->search_paths[i], mod, mod_lib_2, error);
+      }
     }
   }
 #else
 #error "Unsupported operating system"
 #endif
-  free(mod_lib);
   return ret;
 }
 
