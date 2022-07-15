@@ -22,6 +22,7 @@
 #include <fmc/component.h>
 #include <fmc/extension.h>
 #include <fmc/error.h>
+#include <fmc/platform.h>
 #include <fmc/uthash/utlist.h>
 #include <stdlib.h> // calloc()
 
@@ -71,6 +72,7 @@ const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
   return (const char **)sys->search_paths;
 }
 
+#if defined(FMC_SYS_UNIX)
 static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, const char *mod, fmc_error_t **error) {
   bool found = false;
   fmc_ext_t ext = NULL;
@@ -172,6 +174,9 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
   closedir(d);
   return found;
 }
+#else
+#error "Unsupported operating system"
+#endif
 
 // TODO: return false/true, or set error if library not found?
 bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error) {
