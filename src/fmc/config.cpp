@@ -354,13 +354,13 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
           goto do_cleanup;
         }
       }
-      else if ((*str + 4 == *end || *str[4] == ',' || (brackets_expected && *str[4] == ']')) && memcmp(*str, "none", 4) == 0) {
+      else if (memcmp(*str, "none", 4) == 0) {
         comma_expected = true;
         *str += 4;
         arr = fmc_cfg_arr_item_add_none(arr);
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse array");
+        fmc_error_set(err, "Error while parsing config file: unable to parse none in array");
         goto do_cleanup;
       }
     }
@@ -382,18 +382,18 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
           goto do_cleanup;
         }
       }
-      else if ((*str + 5 == *end || *str[5] == ',' || (brackets_expected && *str[5] == ']')) && memcmp(*str, "false", 5) == 0) {
+      else if (memcmp(*str, "false", 5) == 0) {
         comma_expected = true;
         *str += 5;
         arr = fmc_cfg_arr_item_add_boolean(arr, false);
       }
-      else if ((*str + 4 == *end || *str[4] == ',' || (brackets_expected && *str[4] == ']')) && memcmp(*str, "true", 4) == 0) {
+      else if (memcmp(*str, "true", 4) == 0) {
         comma_expected = true;
         *str += 4;
         arr = fmc_cfg_arr_item_add_boolean(arr, true);
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse array");
+        fmc_error_set(err, "Error while parsing config file: unable to parse boolean in array");
         goto do_cleanup;
       }
     }
@@ -419,7 +419,7 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
         comma_expected = true;
         char *endptr;
         int64_t value = strtoll(*str, &endptr, 10);
-        if (endptr != *str && (endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
+        if (endptr != *str) {
           *str = endptr;
           arr = fmc_cfg_arr_item_add_int64(arr, value);
         }
@@ -451,7 +451,7 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
         comma_expected = true;
         char *endptr;
         double value = strtod(*str, &endptr);
-        if (endptr != *str && (endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
+        if (endptr != *str) {
           *str = endptr;
           arr = fmc_cfg_arr_item_add_float64(arr, value);
         }
@@ -511,10 +511,6 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
         char *endptr = *str;
         while(endptr < *end && *endptr != ',' && *endptr != ']') {
           ++endptr;
-        }
-        if (!(endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
-          fmc_error_set(err, "Error while parsing config file: unable to parse section in array");
-          goto do_cleanup;
         }
         char endch = *endptr;
         *endptr = '\0';
