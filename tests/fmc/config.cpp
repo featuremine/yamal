@@ -24,6 +24,8 @@
 
 #include <fmc++/gtestwrap.hpp>
 
+#define ASSERT_NOERR(err) ASSERT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), std::string_view())
+
 struct deleter_t {
   void operator()(struct fmc_cfg_sect_item *head) {
     fmc_cfg_sect_del(head);
@@ -273,12 +275,12 @@ TEST(error, simple_types_1) {
 
   write(pipe_descriptors[1], config.data(), config.size());
   fmc_fclose(pipe_descriptors[1], &err);
-  ASSERT_EQ(err, nullptr);
+  ASSERT_NOERR(err);
 
   auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
-  ASSERT_EQ(err, nullptr);
+  ASSERT_NOERR(err);
   fmc_fclose(pipe_descriptors[0], &err);
-  ASSERT_EQ(err, nullptr);
+  ASSERT_NOERR(err);
 
   ASSERT_EQ(cfg_to_string(sect), ""
     "{\n"
