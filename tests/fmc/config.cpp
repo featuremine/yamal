@@ -157,6 +157,13 @@ TEST(error, simple_types_1) {
       }
   };
 
+  struct fmc_cfg_type subarray3 = {
+      .type = FMC_CFG_ARR,
+      .spec {
+        .array = &subarray,
+      }
+  };
+
   struct fmc_cfg_node_spec spec[] = {
       fmc_cfg_node_spec{
         .key = "int64",
@@ -210,8 +217,19 @@ TEST(error, simple_types_1) {
         },
       },
       fmc_cfg_node_spec{
-        .key = "sect2",
-        .descr = "sect2 descr",
+        .key = "arr3",
+        .descr = "arr3 descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray3,
+          },
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "arr2",
+        .descr = "arr2 descr",
         .required = true,
         .type = fmc_cfg_type{
           .type = FMC_CFG_ARR,
@@ -240,9 +258,10 @@ TEST(error, simple_types_1) {
                             "float64=1.2\n"
                             "none=none\n"
                             "sect=sect1\n"
-                            "sect2=[sect2,sect3]\n"
+                            "arr2=[sect2,sect3]\n"
+                            "arr3=[[1,2,3],[1,2,3]]\n"
                             "str=\"strstr\"\n"
-                            "arr=[1,2,3,4],5\n"
+                            "arr=1,2,3,4,5\n"
                             "\n"
                             "[sect1]\n"
                             "float64=1.5\n"
@@ -270,13 +289,25 @@ TEST(error, simple_types_1) {
     "    4,\n"
     "    5,\n"
     "  ]\n"
-    "  sect2 = [\n"
+    "  arr2 = [\n"
     "    {\n"
     "      float64 = 1.500000\n"
     "    },\n"
     "    {\n"
     "      float64 = 1.500000\n"
     "    },\n"
+    "  ]\n"
+    "  arr3 = [\n"
+    "    [\n"
+    "      1,\n"
+    "      2,\n"
+    "      3,\n"
+    "    ],\n"
+    "    [\n"
+    "      1,\n"
+    "      2,\n"
+    "      3,\n"
+    "    ],\n"
     "  ]\n"
     "  sect = {\n"
     "    float64 = 1.500000\n"

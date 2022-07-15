@@ -525,7 +525,34 @@ static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct
       }
     }
   } break;
-  case FMC_CFG_ARR: {} break;
+  case FMC_CFG_ARR: {
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
+      }
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
+      }
+      else {
+        comma_expected = true;
+        struct fmc_cfg_arr_item *subarr = parse_array(state, spec->spec.array, str, end, err);
+        if (*err) {
+          goto do_cleanup;
+        }
+
+        arr = fmc_cfg_arr_item_add_arr(arr, subarr);
+      }
+    }
+  } break;
   }
 
   if (arr) {
