@@ -304,83 +304,240 @@ static struct fmc_cfg_sect_item *remove_section(struct parser_state_t *state, co
 }
 
 static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, const char *root_key, fmc_error_t **err);
-static struct fmc_cfg_sect_item *parse_array(struct parser_state_t *state, struct fmc_cfg_node_spec *spec, struct fmc_cfg_arr_item *arr, fmc_error_t **err) {
-  switch (spec->type.type) {
+static struct fmc_cfg_arr_item *parse_array(struct parser_state_t *state, struct fmc_cfg_type *spec, char **str, char **end, fmc_error_t **err) {
+  fmc_cfg_arr_item *arr = NULL;
+
+  bool brackets_expected = *str < *end && **str == '[';
+  if (brackets_expected) {
+    ++*str;
+  }
+
+  switch (spec->type) {
   case FMC_CFG_NONE: {
-    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
-      if (strcmp(item->item.value.str, "none") == 0) {
-        free((void *) item->item.value.str);
-        item->item.type = FMC_CFG_NONE;
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
+      }
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
+      }
+      else if ((*str + 4 == *end || *str[4] == ',' || (brackets_expected && *str[4] == ']')) && memcmp(*str, "none", 4) == 0) {
+        comma_expected = true;
+        *str += 4;
+        arr = fmc_cfg_arr_item_add_none(arr);
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: none was expected in array");
+        fmc_error_set(err, "Error while parsing config file: unable to parse array");
         goto do_cleanup;
       }
     }
   } break;
   case FMC_CFG_BOOLEAN: {
-    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
-      if (strcmp(item->item.value.str, "true") == 0) {
-        free((void *) item->item.value.str);
-        item->item.value.boolean = true;
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
       }
-      else if (strcmp(item->item.value.str, "false") == 0) {
-        free((void *) item->item.value.str);
-        item->item.value.boolean = false;
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
+      }
+      else if ((*str + 5 == *end || *str[5] == ',' || (brackets_expected && *str[5] == ']')) && memcmp(*str, "false", 5) == 0) {
+        comma_expected = true;
+        *str += 5;
+        arr = fmc_cfg_arr_item_add_boolean(arr, false);
+      }
+      else if ((*str + 4 == *end || *str[4] == ',' || (brackets_expected && *str[4] == ']')) && memcmp(*str, "true", 4) == 0) {
+        comma_expected = true;
+        *str += 4;
+        arr = fmc_cfg_arr_item_add_boolean(arr, true);
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: true or false was expected in array");
+        fmc_error_set(err, "Error while parsing config file: unable to parse array");
         goto do_cleanup;
       }
-      item->item.type = FMC_CFG_BOOLEAN;
     }
   } break;
   case FMC_CFG_INT64: {
-    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
-      char *endptr;
-      int64_t value = strtoll(item->item.value.str, &endptr, 10);
-      if (endptr != item->item.value.str && *endptr == '\0') {
-        free((void *) item->item.value.str);
-        item->item.value.int64 = value;
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
+      }
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse int64 in array");
-        goto do_cleanup;
+        comma_expected = true;
+        char *endptr;
+        int64_t value = strtoll(*str, &endptr, 10);
+        if (endptr != *str && (endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
+          *str = endptr;
+          arr = fmc_cfg_arr_item_add_int64(arr, value);
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: unable to parse int64 in array");
+          goto do_cleanup;
+        }
       }
-      item->item.type = FMC_CFG_INT64;
     }
   } break;
   case FMC_CFG_FLOAT64: {
-    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
-      char *endptr;
-      double value = strtod(item->item.value.str, &endptr);
-      if (endptr != item->item.value.str && *endptr == '\0') {
-        free((void *) item->item.value.str);
-        item->item.value.float64 = value;
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
+      }
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse float64 in array");
-        goto do_cleanup;
+        comma_expected = true;
+        char *endptr;
+        double value = strtod(*str, &endptr);
+        if (endptr != *str && (endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
+          *str = endptr;
+          arr = fmc_cfg_arr_item_add_float64(arr, value);
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: unable to parse float64 in array");
+          goto do_cleanup;
+        }
       }
-      item->item.type = FMC_CFG_FLOAT64;
     }
   } break;
-  case FMC_CFG_STR: {} break;
+  case FMC_CFG_STR: {
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
+      }
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
+      }
+      else if (**str == '"') {
+        comma_expected = true;
+        ++*str;
+        char *endptr = *str;
+        while(endptr < *end && *endptr != '"') {
+          ++endptr;
+        }
+        if (endptr == *end) {
+          fmc_error_set(err, "Error while parsing config file: unable to find closing quotes for string in array");
+          goto do_cleanup;
+        }
+        *endptr = '\0';
+        ++endptr;
+        if (!(endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
+          fmc_error_set(err, "Error while parsing config file: unable to parse string in array");
+          goto do_cleanup;
+        }
+        arr = fmc_cfg_arr_item_add_str(arr, *str);
+        *str = endptr;
+      }
+      else {
+        fmc_error_set(err, "Error while parsing config file: unable to parse string in array");
+        goto do_cleanup;
+      }
+    }
+  } break;
   case FMC_CFG_SECT: {
-    for (struct fmc_cfg_arr_item *item = arr; item; item = item->next) {
-      struct fmc_cfg_sect_item *section = parse_section(state, spec->type.spec.node, item->item.value.str, err);
-      if (*err) {
-        goto do_cleanup;
+    bool comma_expected = false;
+    while(*str < *end) {
+      if (brackets_expected && **str == ']') {
+        ++*str;
+        break;
       }
-      free((void *) item->item.value.str);
-      item->item.value.sect = section;
-      item->item.type = FMC_CFG_SECT;
+      else if (comma_expected) {
+        if (**str == ',') {
+          ++*str;
+          comma_expected = false;
+        }
+        else {
+          fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+          goto do_cleanup;
+        }
+      }
+      else {
+        comma_expected = true;
+        char *endptr = *str;
+        while(endptr < *end && *endptr != ',' && *endptr != ']') {
+          ++endptr;
+        }
+        if (!(endptr == *end || *endptr == ',' || (brackets_expected && *endptr == ']'))) {
+          fmc_error_set(err, "Error while parsing config file: unable to parse section in array");
+          goto do_cleanup;
+        }
+        char endch = *endptr;
+        *endptr = '\0';
+        struct fmc_cfg_sect_item *sect = parse_section(state, spec->spec.node, *str, err);
+        *endptr = endch;
+        if (*err) {
+          goto do_cleanup;
+        }
+        *str = endptr;
+
+        arr = fmc_cfg_arr_item_add_sect(arr, sect);
+      }
     }
   } break;
-  case FMC_CFG_ARR: {
-  } break;
+  case FMC_CFG_ARR: {} break;
   }
+
+  if (arr) {
+    struct fmc_cfg_arr_item *prev = NULL;
+    while (arr->next) {
+      struct fmc_cfg_arr_item *next = arr->next;
+      arr->next = prev;
+      prev = arr;
+      arr = next;
+    }
+    arr->next = prev;
+  }
+  return arr;
+
   do_cleanup:
+  fmc_cfg_arr_del(arr);
   return NULL;
 }
 
@@ -388,6 +545,12 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
   struct fmc_cfg_sect_item *root = remove_section(state, root_key);
   struct fmc_cfg_sect_item *pending_items = root->node.value.sect;
   struct fmc_cfg_sect_item *processed_items = NULL;
+
+  if (!root) {
+    fmc_error_set(err, "Error while parsing config file: section %s not found", root_key);
+    goto do_cleanup;
+  }
+
   for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
     struct fmc_cfg_sect_item *item = NULL;
     for (struct fmc_cfg_sect_item **pitem = &pending_items; *pitem; pitem = &(*pitem)->next) {
@@ -416,7 +579,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
         item->node.type = FMC_CFG_NONE;
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: none was expected in key %s", item->key);
+        fmc_error_set(err, "Error while parsing config file: none was expected in field %s", item->key);
         goto do_cleanup;
       }
     } break;
@@ -430,7 +593,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
         item->node.value.boolean = false;
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: true or false was expected in key %s", item->key);
+        fmc_error_set(err, "Error while parsing config file: true or false was expected in field %s", item->key);
         goto do_cleanup;
       }
       item->node.type = FMC_CFG_BOOLEAN;
@@ -443,7 +606,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
         item->node.value.int64 = value;
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse int64 in key %s", item->key);
+        fmc_error_set(err, "Error while parsing config file: unable to parse int64 in field %s", item->key);
         goto do_cleanup;
       }
       item->node.type = FMC_CFG_INT64;
@@ -456,7 +619,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
         item->node.value.float64 = value;
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse float64 in key %s", item->key);
+        fmc_error_set(err, "Error while parsing config file: unable to parse float64 in field %s", item->key);
         goto do_cleanup;
       }
       item->node.type = FMC_CFG_FLOAT64;
@@ -469,7 +632,7 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
         item->node.value.str[len] = '\0';
       }
       else {
-        fmc_error_set(err, "Error while parsing config file: unable to parse string in key %s", item->key);
+        fmc_error_set(err, "Error while parsing config file: unable to parse string in field %s", item->key);
         goto do_cleanup;
       }
     } break;
@@ -482,7 +645,21 @@ static struct fmc_cfg_sect_item *parse_section(struct parser_state_t *state, str
       item->node.value.sect = section;
       item->node.type = FMC_CFG_SECT;
     } break;
-    case FMC_CFG_ARR: {} break;
+    case FMC_CFG_ARR: {
+      char *begin = item->node.value.str;
+      char *end = item->node.value.str + strlen(item->node.value.str);
+      struct fmc_cfg_arr_item *arr = parse_array(state, spec_item->type.spec.array, &begin, &end, err);
+      if (*err) {
+        goto do_cleanup;
+      }
+      if (begin != end) {
+        fmc_error_set(err, "Error while parsing config file: unable to parse array in field %s", item->key);
+        goto do_cleanup;
+      }
+      free((void *) item->node.value.str);
+      item->node.value.arr = arr;
+      item->node.type = FMC_CFG_ARR;
+    } break;
     }
   }
 

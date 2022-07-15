@@ -37,6 +37,47 @@ using unique_cfg_ptr = std::unique_ptr<T, deleter_t>;
 using unique_sect = unique_cfg_ptr<fmc_cfg_sect_item>;
 using unique_arr = unique_cfg_ptr<fmc_cfg_arr_item>;
 
+void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_sect_item *sect);
+void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_arr_item *arr) {
+  for (; arr; arr = arr->next) {
+    result += prefix;
+    switch (arr->item.type) {
+    case FMC_CFG_NONE: {
+      result += "none,\n";
+    } break;
+    case FMC_CFG_BOOLEAN: {
+      result += std::to_string(arr->item.value.boolean);
+      result += ",\n";
+    } break;
+    case FMC_CFG_INT64: {
+      result += std::to_string(arr->item.value.int64);
+      result += ",\n";
+    } break;
+    case FMC_CFG_FLOAT64: {
+      result += std::to_string(arr->item.value.float64);
+      result += ",\n";
+    } break;
+    case FMC_CFG_STR: {
+      result += "\"";
+      result += arr->item.value.str;
+      result += "\",\n";
+    } break;
+    case FMC_CFG_SECT: {
+      result += "{\n";
+      cfg_to_string(prefix + "  ", result, arr->item.value.sect);
+      result += prefix;
+      result += "},\n";
+    } break;
+    case FMC_CFG_ARR: {
+      result += "[\n";
+      cfg_to_string(prefix + "  ", result, arr->item.value.arr);
+      result += prefix;
+      result += "],\n";
+    } break;
+    }
+  }
+}
+
 void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_sect_item *sect) {
   for (; sect; sect = sect->next) {
     result += prefix;
@@ -70,7 +111,10 @@ void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_sect_
       result += "}\n";
     } break;
     case FMC_CFG_ARR: {
-
+      result += "[\n";
+      cfg_to_string(prefix + "  ", result, sect->node.value.arr);
+      result += prefix;
+      result += "]\n";
     } break;
     }
   }
@@ -100,6 +144,17 @@ TEST(error, simple_types_1) {
         },
       },
       fmc_cfg_node_spec{NULL},
+  };
+
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_INT64,
+  };
+
+  struct fmc_cfg_type subarray2 = {
+      .type = FMC_CFG_SECT,
+      .spec {
+        .node = subsect,
+      }
   };
 
   struct fmc_cfg_node_spec spec[] = {
@@ -154,6 +209,28 @@ TEST(error, simple_types_1) {
           },
         },
       },
+      fmc_cfg_node_spec{
+        .key = "sect2",
+        .descr = "sect2 descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray2,
+          },
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
       fmc_cfg_node_spec{NULL},
   };
 
@@ -163,9 +240,15 @@ TEST(error, simple_types_1) {
                             "float64=1.2\n"
                             "none=none\n"
                             "sect=sect1\n"
+                            "sect2=sect2,sect3\n"
                             "str=\"strstr\"\n"
+                            "arr=1,2,3,4,5\n"
                             "\n"
                             "[sect1]\n"
+                            "float64=1.5\n"
+                            "[sect2]\n"
+                            "float64=1.5\n"
+                            "[sect3]\n"
                             "float64=1.5\n"
                             ;
 
@@ -180,6 +263,21 @@ TEST(error, simple_types_1) {
 
   ASSERT_EQ(cfg_to_string(sect), ""
     "{\n"
+    "  arr = [\n"
+    "    1,\n"
+    "    2,\n"
+    "    3,\n"
+    "    4,\n"
+    "    5,\n"
+    "  ]\n"
+    "  sect2 = [\n"
+    "    {\n"
+    "      float64 = 1.500000\n"
+    "    },\n"
+    "    {\n"
+    "      float64 = 1.500000\n"
+    "    },\n"
+    "  ]\n"
     "  sect = {\n"
     "    float64 = 1.500000\n"
     "  }\n"
