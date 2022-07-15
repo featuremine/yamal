@@ -25,17 +25,26 @@
 #include <fmc/config.h>
 #include <fmc/time.h>
 #include <fmc/extension.h>
+#include <fmc/platform.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define FMC_ERROR_MAX_SIZE 256
+#if defined(FMC_SYS_LINUX)
+#define FMC_LIB_SUFFIX ".so"
+#elif defined(FMC_SYS_MACH)
+#define FMC_LIB_SUFFIX ".dylib"
+#else
+#error "Unsupported operating system"
+#endif
 
-#define fmc_comp_HEAD  \
-   struct fmc_comp_type *_vt; \
-   struct fmc_error _err
+#define fmc_comp_HEAD            \
+   struct fmc_comp_type *_vt;    \
+   struct fmc_error _err;        \
+   struct fmc_component_module *_mod;
 
+struct fmc_component_module;
 struct fmc_component {
    fmc_comp_HEAD;
 };
@@ -103,8 +112,14 @@ struct fmc_component_type components[] = {
       .size = sizeof(manager_comp),
       .sched = (schedproc)gateway_comp_sched,
       .process = (processproc)oms_comp_process_one,
-   }
-   { NULL }
+   },
+   {
+      .name = NULL,
+      .size = 0,
+      .cfgspec = NULL;
+      .sched = (schedproc)NULL,
+      .process = (processproc)NULL,
+   },
 };
 
 FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
@@ -112,56 +127,40 @@ FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
 }
 */
 
+typedef struct list_fmc_component {
+    struct fmc_component comp;
+    struct list_fmc_component *next, *prev;
+} list_fmc_component_t;
+
+struct fmc_component_sys;
 struct fmc_component_module {
+   struct fmc_component_sys *sys; // the system that owns the module
    fmc_ext_t handle; // module handle. Return of dlopen()
-   const char *name; // module name (e.g. "oms")
-   const char *path; // file system path of the library
-   struct fmc_component_type *components; // Null terminated array
+   char *name; // module name (e.g. "oms")
+   char *path; // file system path of the library
+   struct fmc_component_type *components_type; // Null terminated array
+   list_fmc_component_t *components;
 };
 
-typedef struct fmc_component_module fmc_component_module_t;
-typedef struct fmc_component fmc_component_t;
-
-#define FMC_PTR_LIST_DEF(type)          \
-   struct __fmc_list_##type {           \
-      type *_val;                       \
-      struct __fmc_list_##type *_next;  \
-   }
-
-#define FMC_PTR_LIST_TYPE(type) struct __fmc_list_##type
-
-#define FMC_PTR_LIST_FOREACH(type, list, var, proc) \
-   for (FMC_PTR_LIST_TYPE(type) **_iter = &list; *_iter; _iter = &_iter->_next) { \
-         type *var = *_iter->_val; {proc}; } \
-
-/*
-fmc_component_t cp = NULL;
-FMC_PTR_LIST_FOREACH(fmc_component_t, sys->components, x,
-   if (strcmp(x->name, key) == 0) {
-      cp = x;
-      break;
-   }
-)
-if (cp == NULL) {
-   // could not find it
-}
-*/
-
-FMC_PTR_LIST_DEF(fmc_component_module_t);
-FMC_PTR_LIST_DEF(fmc_component_t);
+typedef struct list_fmc_component_module {
+    struct fmc_component_module mod;
+    struct list_fmc_component_module *next, *prev;
+} list_fmc_component_module_t;
 
 struct fmc_component_sys {
-   const char **search_paths;
-   FMC_PTR_LIST_TYPE(fmc_component_module_t) *modules;
-   FMC_PTR_LIST_TYPE(fmc_component_t) *components;
+   char **search_paths;
+   list_fmc_component_module_t *modules;
 };
 
+typedef struct fmc_component_type * (*FMCOMPINITFUNC)(struct fmc_component_sys *);
+
 void fmc_component_sys_init(struct fmc_component_sys *sys);
-void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths);
+void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
 const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-void fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod);
-struct fmc_component *fmc_component_sys_comp_new(struct fmc_component_sys *sys, const char *mod, const char *comp, struct fmc_cfg_sect_item *cfg);
-void fmc_component_sys_comp_destroy(struct fmc_component_sys *sys, struct fmc_component *comp);
+struct fmc_component_module *fmc_component_module_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
+void fmc_component_module_unload(struct fmc_component_module *mod);
+struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
+void fmc_component_destroy(struct fmc_component *comp);
 void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 
 #ifdef __cplusplus
