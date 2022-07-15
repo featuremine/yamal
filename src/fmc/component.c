@@ -73,7 +73,7 @@ const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
 }
 
 #if defined(FMC_SYS_UNIX)
-static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, const char *mod, fmc_error_t **error) {
+static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, const char *mod, const char *mod_lib, fmc_error_t **error) {
   bool found = false;
   fmc_ext_t ext = NULL;
   DIR *d = opendir(dir);
@@ -96,14 +96,14 @@ static bool mod_load_recursive(struct fmc_component_sys *sys, const char *dir, c
         break;
       }
       sprintf(path, "%s/%s", dir, entry->d_name);
-      bool found = mod_load_recursive(sys, path, mod, error);
+      bool found = mod_load_recursive(sys, path, mod, mod_lib, error);
       free(path);
       if(*error || found) {
         // Only error possible is type FMC_ERROR_NONE
         break;
       }
     }
-    else if(entry->d_type == DT_REG && !strcmp(entry->d_name, mod)) {
+    else if(entry->d_type == DT_REG && !strcmp(entry->d_name, mod_lib)) {
       // module file found
       size_t path_len = strlen(dir) + strlen(entry->d_name) + 1;
       path = (char *)calloc(path_len+1, sizeof(*path));
@@ -185,15 +185,23 @@ bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, 
   // if it does not have this function, keep looking
 
   bool found = false;
+  char *mod_lib = (char *)calloc(strlen(mod)+strlen(FMC_LIB_SUFFIX)+1, sizeof(*mod_lib));
+  if(!mod_lib) {
+    *error = fmc_error_inst(); // TODO: check this
+    fmc_error_init(*error, FMC_ERROR_MEMORY, NULL);
+    return false;
+  }
+  sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
 #if defined(FMC_SYS_UNIX)
   if(sys->search_paths) {
     for(unsigned int i = 0; sys->search_paths[i] && !found && !(*error); ++i) {
-      found = mod_load_recursive(sys, sys->search_paths[i], mod, error);
+      found = mod_load_recursive(sys, sys->search_paths[i], mod, mod_lib, error);
     }
   }
 #else
 #error "Unsupported operating system"
 #endif
+  free(mod_lib);
   return found;
 }
 

@@ -25,9 +25,18 @@
 #include <fmc/config.h>
 #include <fmc/time.h>
 #include <fmc/extension.h>
+#include <fmc/platform.h>
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if defined(FMC_SYS_LINUX)
+#define FMC_LIB_SUFFIX ".so"
+#elif defined(FMC_SYS_MACH)
+#define FMC_LIB_SUFFIX ".dylib"
+#else
+#error "Unsupported operating system"
 #endif
 
 #define fmc_comp_HEAD  \
