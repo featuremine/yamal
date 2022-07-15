@@ -207,14 +207,14 @@ struct fmc_component_module *fmc_component_module_load(struct fmc_component_sys 
   return ret;
 }
 
-static void sys_comp_del(list_fmc_component_t **comp) {
+static void comp_del(list_fmc_component_t **comp) {
   // TODO: destroy (*comp)->comp (struct fmc_component) ??
   // e.g struct fmc_comp_type *_vt, struct fmc_error _err
   free(*comp);
   *comp = NULL;
 }
 
-static void sys_mod_del(list_fmc_component_module_t **mod) {
+static void mod_del(list_fmc_component_module_t **mod) {
   struct fmc_component_module *m = &((*mod)->mod);
   // delete module
   m->sys = NULL;
@@ -228,7 +228,7 @@ static void sys_mod_del(list_fmc_component_module_t **mod) {
   list_fmc_component_t *comptmp;
   DL_FOREACH_SAFE(comphead,comp,comptmp) {
     DL_DELETE(comphead,comp);
-    sys_comp_del(&comp);
+    comp_del(&comp);
   }
   m->components = NULL;
   free(*mod);
@@ -251,7 +251,7 @@ void fmc_component_module_unload(struct fmc_component_module *mod) {
   list_fmc_component_module_t *m = find_mod(sys, mod);
   if(m) {
     DL_DELETE(sys->modules,m);
-    sys_mod_del(&m);
+    mod_del(&m);
   }
 }
 
@@ -279,7 +279,7 @@ void fmc_component_destroy(struct fmc_component *comp) {
   DL_FOREACH(chead,c) {
     if( (&(c->comp)) == comp ) {
       DL_DELETE(m->components,c);
-      sys_comp_del(&c);
+      comp_del(&c);
       break;
     }
   }
@@ -298,7 +298,7 @@ void fmc_component_sys_destroy(struct fmc_component_sys *sys) {
   list_fmc_component_module_t *modtmp;
   DL_FOREACH_SAFE(modhead,mod,modtmp) {
     DL_DELETE(modhead,mod);
-    sys_mod_del(&mod);
+    mod_del(&mod);
   }
   sys->modules = NULL;
 }
