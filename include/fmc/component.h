@@ -39,10 +39,12 @@ extern "C" {
 #error "Unsupported operating system"
 #endif
 
-#define fmc_comp_HEAD  \
-   struct fmc_comp_type *_vt; \
-   struct fmc_error _err
+#define fmc_comp_HEAD            \
+   struct fmc_comp_type *_vt;    \
+   struct fmc_error _err;        \
+   struct fmc_component_module *_mod;
 
+struct fmc_component_module;
 struct fmc_component {
    fmc_comp_HEAD;
 };
@@ -130,7 +132,9 @@ typedef struct list_fmc_component {
     struct list_fmc_component *next, *prev;
 } list_fmc_component_t;
 
+struct fmc_component_sys;
 struct fmc_component_module {
+   struct fmc_component_sys *sys; // the system that owns the module
    fmc_ext_t handle; // module handle. Return of dlopen()
    char *name; // module name (e.g. "oms")
    char *path; // file system path of the library
@@ -153,10 +157,10 @@ typedef struct fmc_component_type * (*FMCOMPINITFUNC)(struct fmc_component_sys *
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
 const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-bool fmc_component_sys_mod_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
-void fmc_component_sys_mod_unload(struct fmc_component_sys *sys, const char *mod);
-struct fmc_component *fmc_component_sys_comp_new(struct fmc_component_sys *sys, const char *mod, const char *comp, struct fmc_cfg_sect_item *cfg);
-void fmc_component_sys_comp_destroy(struct fmc_component_sys *sys, const char *mod, struct fmc_component *comp);
+struct fmc_component_module *fmc_component_module_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
+void fmc_component_module_unload(struct fmc_component_module *mod);
+struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
+void fmc_component_destroy(struct fmc_component *comp);
 void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 
 #ifdef __cplusplus
