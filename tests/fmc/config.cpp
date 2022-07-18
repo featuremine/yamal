@@ -39,8 +39,8 @@ using unique_cfg_ptr = std::unique_ptr<T, deleter_t>;
 using unique_sect = unique_cfg_ptr<fmc_cfg_sect_item>;
 using unique_arr = unique_cfg_ptr<fmc_cfg_arr_item>;
 
-void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_sect_item *sect);
-void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_arr_item *arr) {
+void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cfg_sect_item *sect);
+void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cfg_arr_item *arr) {
   for (; arr; arr = arr->next) {
     result += prefix;
     switch (arr->item.type) {
@@ -80,7 +80,7 @@ void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_arr_i
   }
 }
 
-void cfg_to_string(std::string prefix, std::string &result, struct fmc_cfg_sect_item *sect) {
+void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cfg_sect_item *sect) {
   for (; sect; sect = sect->next) {
     result += prefix;
     result += sect->key;
