@@ -89,7 +89,7 @@ FMMODFUNC bool fmc_basedir_exists(const char *file_path, fmc_error_t **error);
  * @param srcpath2 last part of the path
  * @param error out-parameter for error handling
  */
-FMMODFUNC void fmc_path_join(char **destpath, const char *srcpath1, const char *srcpath2, fmc_error_t **error);
+FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2);
 
 /**
  * @brief Opens a process by creating a pipe, forking, and invoking the shell

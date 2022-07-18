@@ -87,25 +87,19 @@ bool fmc_basedir_exists(const char *file_path, fmc_error_t **error) {
   return false;
 }
 
-void fmc_path_join(char **destpath, const char *srcpath1, const char *srcpath2, fmc_error_t **error) {
-  fmc_error_clear(error);
-  size_t len1 = strlen(srcpath1);
-  size_t len2 = strlen(srcpath2);
-  if(!*destpath) {
-    *destpath = (char *)calloc(len1+len2+2, sizeof(**destpath));
-    if(!*destpath) {
-      fmc_error_set2(error, FMC_ERROR_MEMORY);
-    }
-  }
-  memcpy(*destpath, srcpath1, len1);
+size_t fmc_path_join_len(const char *p1, const char *p2) {
+  return strlen(p1) + strlen(p2) + 2;
+}
+
+int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
 #ifdef FMC_SYS_UNIX
-  (*destpath)[len1] = '/';
+  char sep = '/';
 #elif defined(FMC_SYS_WIN)
-  (*destpath)[len1] = '\\';
+  char sep = '\\';
 #else
 #error "Not supported"
 #endif
-  memcpy( &(*destpath)[len1+1], srcpath2, len2);
+return snprintf(dest, sz, "%s%c%s", p1, sep, p2);
 }
 
 FILE *fmc_popen(const char *command, const char *read_mode,

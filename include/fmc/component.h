@@ -89,7 +89,7 @@ struct fmc_component_type components[] = {
    },
 };
 
-FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
+FMCOMPMODINITFUNC struct fmc_component_type *FMCompInit_oms() {
    return components;
 }
 */
@@ -105,7 +105,7 @@ FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
 extern "C" {
 #endif
 
-#define FMCOMPINITFUNC FMMODFUNC
+#define FMCOMPMODINITFUNC FMMODFUNC
 #define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
 
 #define fmc_comp_HEAD                 \
@@ -113,12 +113,11 @@ extern "C" {
    struct fmc_error _err;             \
    struct fmc_component_module *_mod;
 
-struct fmc_component_module;
 struct fmc_component {
    fmc_comp_HEAD;
 };
 
-typedef struct fmc_component_type *(*fmc_comp_init_func)(void);
+typedef struct fmc_component_type *(*fmc_comp_mod_init_func)(void);
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *, fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
 typedef struct fmc_time (*schedproc)(struct fmc_component *);
@@ -147,12 +146,8 @@ struct fmc_component_module {
    char *file; // file full path of the library
    struct fmc_component_type *components_type; // null terminated array
    fmc_component_list_t *components; // allocated components
+   struct fmc_component_module *next, *prev;
 };
-
-typedef struct fmc_component_module_list {
-    struct fmc_component_module mod;
-    struct fmc_component_module_list *next, *prev;
-} fmc_component_module_list_t;
 
 typedef struct fmc_component_path_list {
     struct fmc_component_path_list *next, *prev;
@@ -161,7 +156,7 @@ typedef struct fmc_component_path_list {
 
 struct fmc_component_sys {
    fmc_component_path_list_t *search_paths;
-   fmc_component_module_list_t *modules;
+   struct fmc_component_module *modules;
 };
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
