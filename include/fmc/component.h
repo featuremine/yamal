@@ -175,7 +175,7 @@ typedef struct fmc_component_type * (*FMCOMPINITFUNC)(void);
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
-void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error); // TODO: implement fmc_component_sys_paths_add()
+void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error);
 fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys *sys);
 struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
 void fmc_component_module_destroy(struct fmc_component_module *mod);

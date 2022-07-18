@@ -55,10 +55,10 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
   }
   if(paths) {
     for(unsigned int i = 0; paths[i]; ++i) {
-      fmc_component_path_list_t *path = (fmc_component_path_list_t *)calloc(1, sizeof(*path)+strlen(paths[i])+1);
-      if(path) {
-        strcpy(path->path, paths[i]);
-        DL_APPEND(sys->search_paths, path);
+      fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(paths[i])+1);
+      if(p) {
+        strcpy(p->path, paths[i]);
+        DL_APPEND(sys->search_paths, p);
       }
       else {
         fmc_error_t *err = NULL;
@@ -66,6 +66,19 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
         fmc_error_set2(error, FMC_ERROR_MEMORY);
         break;
       }
+    }
+  }
+}
+
+void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error) {
+  if(path) {
+    fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(path)+1);
+    if(p) {
+      strcpy(p->path, path);
+      DL_APPEND(sys->search_paths, p);
+    }
+    else {
+      fmc_error_set2(error, FMC_ERROR_MEMORY);
     }
   }
 }
