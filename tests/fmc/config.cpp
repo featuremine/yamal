@@ -380,6 +380,85 @@ TEST(error, required_1) {
   EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field float64");
 }
 
+TEST(error, unknown_field_1) {
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "int64",
+        .descr = "int64 descr",
+        .required = false,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_INT64,
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "int63=1\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unknown field int63");
+}
+
+TEST(error, unknown_section_1) {
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "int64",
+        .descr = "int64 descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_INT64,
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[start]\n"
+                        "int64=1\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: section main not found");
+}
+
+TEST(error, unknown_section_2) {
+  struct fmc_cfg_node_spec subsect[] = {
+      fmc_cfg_node_spec{
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = true,
+          .type = fmc_cfg_type{
+              .type = FMC_CFG_INT64,
+          },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "sect",
+        .descr = "sect descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_SECT,
+          .spec {
+            .node = subsect,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "sect=subsact\n"
+                        "[subsect]\n"
+                        "int64=1\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: section subsact not found");
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

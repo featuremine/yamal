@@ -64,12 +64,12 @@ void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
   }
 }
 
-static struct fmc_cfg_sect_item *new_sect_item() {
+static struct fmc_cfg_sect_item *fmc_cfg_sect_item_new() {
   return (struct fmc_cfg_sect_item *)calloc(1, sizeof(fmc_cfg_sect_item));
 }
 
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item * tail, const char * key) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -80,7 +80,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item * 
 }
 
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item * tail, const char * key, bool new_value) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -91,7 +91,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item * tail, const char * key, int64_t new_value) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -102,7 +102,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item * tail, const char * key, double new_value) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -113,7 +113,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item * tail, const char * key, const char * new_value) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -124,7 +124,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item * t
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item * tail, const char * key, struct fmc_cfg_sect_item * new_value) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -135,7 +135,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item * 
   return item;
 }
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item * tail, const char * key, struct fmc_cfg_arr_item * new_value) {
-  struct fmc_cfg_sect_item *item = new_sect_item();
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new();
   if (!item) {
     return NULL;
   }
@@ -169,12 +169,12 @@ void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
   }
 }
 
-static struct fmc_cfg_arr_item *new_arr_item() {
+static struct fmc_cfg_arr_item *fmc_cfg_arr_item_new() {
   return (struct fmc_cfg_arr_item *)calloc(1, sizeof(fmc_cfg_arr_item));
 }
 
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item * tail) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -183,7 +183,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item * tai
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item * tail, bool new_value) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -193,7 +193,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item * 
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item * tail, int64_t new_value) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -203,7 +203,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item * ta
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item * tail, double new_value) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -213,7 +213,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item * 
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item * tail, const char * new_value) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -223,7 +223,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item * tail
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item * tail, struct fmc_cfg_sect_item * new_value) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -233,7 +233,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item * tai
   return item;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item * tail, struct fmc_cfg_arr_item * new_value) {
-  struct fmc_cfg_arr_item *item = new_arr_item();
+  struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
   if (!item) {
     return NULL;
   }
@@ -398,7 +398,7 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
   }
 
   while(*str < end) {
-    struct fmc_cfg_arr_item *item = new_arr_item();
+    struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
     LL_PREPEND(arr, item);
     parse_value(ini, spec, str, end, &item->item, err);
     if (*err) {
@@ -475,6 +475,7 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     name[len] = prev;
     return NULL;
   }
+  isect->used = true;
 
   for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
     struct ini_field *item = NULL;
@@ -492,8 +493,9 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
         continue;
       }
     }
+    item->used = true;
 
-    struct fmc_cfg_sect_item *sitem = new_sect_item();
+    struct fmc_cfg_sect_item *sitem = fmc_cfg_sect_item_new();
     LL_PREPEND(sect, sitem);
     sitem->key = string_copy(item->key);
     char *str = item->val;
@@ -503,6 +505,14 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
       goto do_cleanup;
     }
   }
+
+  for (struct ini_field *item = isect->fields; item; item = item->next) {
+    if (!item->used) {
+      fmc_error_set(err, "Error while parsing config file: unknown field %s", item->key);
+      goto do_cleanup;
+    }
+  }
+
   return sect;
 
   do_cleanup:
