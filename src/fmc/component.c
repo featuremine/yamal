@@ -171,7 +171,7 @@ struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *
   // search for the module (mod.so; e.g oms.so) in the search_paths
   // Look for the function FMCompInit_mod (e.g.FMCompInit_oms)
   // if it does not have this function, keep looking
-
+  fmc_error_clear(error);
   struct fmc_component_module *ret = NULL;
   char mod_lib[strlen(mod)+strlen(FMC_LIB_SUFFIX)+1];
   sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
@@ -233,7 +233,7 @@ static fmc_component_module_list_t *find_mod(struct fmc_component_sys *sys, stru
   return NULL;
 }
 
-void fmc_component_module_destroy(struct fmc_component_module *mod) {
+void fmc_component_module_del(struct fmc_component_module *mod) {
   struct fmc_component_sys *sys = mod->sys;
   fmc_component_module_list_t *m = find_mod(sys, mod);
   if(m) {
@@ -243,6 +243,7 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
 }
 
 struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error) {
+  fmc_error_clear(error);
   struct fmc_component *ret = NULL;
   for(unsigned int i = 0; mod->components_type[i].size; ++i) {
     if(!strcmp(mod->components_type[i].name, comp)) {
@@ -272,7 +273,7 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const 
   return ret;
 }
 
-void fmc_component_destroy(struct fmc_component *comp) {
+void fmc_component_del(struct fmc_component *comp) {
   struct fmc_component_module *m = comp->_mod;
   fmc_component_list_t *chead = m->components;
   fmc_component_list_t *c;
