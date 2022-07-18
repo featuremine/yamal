@@ -505,7 +505,7 @@ TEST(error, invalid_array_1) {
                         "arr=1,,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse int64 in array");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse int64");
 
   sect = parse_cfg(""
                         "[main]\n"
@@ -527,6 +527,146 @@ TEST(error, invalid_array_1) {
                         "",
                         main, err);
   EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: comma was expected in array");
+}
+
+TEST(error, invalid_array_2) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_NONE,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=1,2,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse none");
+}
+
+TEST(error, invalid_array_3) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_BOOLEAN,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=1,2,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse boolean");
+}
+
+TEST(error, invalid_array_4) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_FLOAT64,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=a,b,c\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse float64");
+}
+
+TEST(error, invalid_array_5) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_STR,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=a,b,c\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse string");
+}
+
+TEST(error, invalid_array_6) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_STR,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=\"a\",\"b\",\"c\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to find closing quotes for string");
 }
 
 TEST(error, invalid_ini_1) {
@@ -559,6 +699,55 @@ TEST(error, invalid_ini_1) {
   auto sect = parse_cfg(str,
                         main, err);
   EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: line is too long");
+
+  sect = parse_cfg(""
+                        "arr=1,2,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Configuration entry doesn't have a section in the file (line 1)");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr1,2,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Invalid configuration file key-value entry (line 2)");
+}
+
+TEST(error, ini_format_1) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_INT64,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\r\n"
+                        "arr=1,2,3    \r\n"
+                        "",
+                        main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    1,\n"
+                                 "    2,\n"
+                                 "    3,\n"
+                                 "  ]\n"
+                                 "}\n");
 }
 
 GTEST_API_ int main(int argc, char **argv) {

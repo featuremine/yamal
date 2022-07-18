@@ -299,7 +299,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       *str += 4;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse none in array");
+      fmc_error_set(err, "Error while parsing config file: unable to parse none");
       return;
     }
   } break;
@@ -315,7 +315,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       out->value.boolean = true;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse boolean in array");
+      fmc_error_set(err, "Error while parsing config file: unable to parse boolean");
       return;
     }
   } break;
@@ -328,7 +328,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       out->value.int64 = value;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse int64 in array");
+      fmc_error_set(err, "Error while parsing config file: unable to parse int64");
       return;
     }
   } break;
@@ -341,13 +341,13 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       out->value.float64 = value;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse float64 in array");
+      fmc_error_set(err, "Error while parsing config file: unable to parse float64");
       return;
     }
   } break;
   case FMC_CFG_STR: {
     if (**str != '"') {
-      fmc_error_set(err, "Error while parsing config file: invalid string");
+      fmc_error_set(err, "Error while parsing config file: unable to parse string");
       return;
     }
     ++*str;
@@ -356,7 +356,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       ++endptr;
     }
     if (endptr == end) {
-      fmc_error_set(err, "Error while parsing config file: unable to find closing quotes for string in array");
+      fmc_error_set(err, "Error while parsing config file: unable to find closing quotes for string");
       return;
     }
     out->type = FMC_CFG_STR;
@@ -621,9 +621,9 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
         if (read > 0 && buffer[read - 1] == '\r') {
           --read;
         }
-        while (read > 0 && buffer[read - 1] == ' ') {
-          --read;
-        }
+      }
+      while (read > 0 && buffer[read - 1] == ' ') {
+        --read;
       }
       fmc_error_clear(err);
       ini_line_parse(&state, buffer, read, err);
