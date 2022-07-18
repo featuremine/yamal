@@ -80,13 +80,7 @@ struct fmc_component_type components[] = {
       .sched = (schedproc)oms_comp_sched,
       .process = (processproc)oms_comp_process_one,
    },
-   {
-      .name = NULL,
-      .size = 0,
-      .cfgspec = NULL;
-      .sched = (schedproc)NULL,
-      .process = (processproc)NULL,
-   },
+   { NULL },
 };
 
 FMCOMPMODINITFUNC struct fmc_component_type *FMCompInit_oms() {
