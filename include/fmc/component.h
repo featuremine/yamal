@@ -20,53 +20,6 @@
  * @see http://www.featuremine.com
  */
 
-#pragma once
-
-#include <fmc/config.h>
-#include <fmc/time.h>
-#include <fmc/extension.h>
-#include <fmc/platform.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if defined(FMC_SYS_LINUX)
-#define FMC_LIB_SUFFIX ".so"
-#elif defined(FMC_SYS_MACH)
-#define FMC_LIB_SUFFIX ".dylib"
-#else
-#error "Unsupported operating system"
-#endif
-
-#define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
-
-#define fmc_comp_HEAD            \
-   struct fmc_component_type *_vt;    \
-   struct fmc_error _err;        \
-   struct fmc_component_module *_mod;
-
-struct fmc_component_module;
-struct fmc_component {
-   fmc_comp_HEAD;
-};
-
-typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *, fmc_error_t **);
-typedef void (*delfunc)(struct fmc_component *);
-typedef struct fmc_time (*schedproc)(struct fmc_component *);
-typedef bool (*processproc)(struct fmc_component *, struct fmc_time);
-
-struct fmc_component_type {
-   const char *name;
-   const char *descr;
-   size_t size; // size of the component struct
-   struct fmc_cfg_node_spec *cfgspec; // configuration specifications
-   newfunc new; // allocate and initialize the component
-   delfunc del; // destroy the component
-   schedproc sched; // returns the next schedule time. If NULL it allways process
-   processproc process; // run the component once
-};
-
 /* Example of module main file
 struct gateway_comp {
    fmc_comp_HEAD;
@@ -140,6 +93,53 @@ FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
    return components;
 }
 */
+
+#pragma once
+
+#include <fmc/config.h>
+#include <fmc/time.h>
+#include <fmc/extension.h>
+#include <fmc/platform.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if defined(FMC_SYS_LINUX)
+#define FMC_LIB_SUFFIX ".so"
+#elif defined(FMC_SYS_MACH)
+#define FMC_LIB_SUFFIX ".dylib"
+#else
+#error "Unsupported operating system"
+#endif
+
+#define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
+
+#define fmc_comp_HEAD            \
+   struct fmc_component_type *_vt;    \
+   struct fmc_error _err;        \
+   struct fmc_component_module *_mod;
+
+struct fmc_component_module;
+struct fmc_component {
+   fmc_comp_HEAD;
+};
+
+typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *, fmc_error_t **);
+typedef void (*delfunc)(struct fmc_component *);
+typedef struct fmc_time (*schedproc)(struct fmc_component *);
+typedef bool (*processproc)(struct fmc_component *, struct fmc_time);
+
+struct fmc_component_type {
+   const char *name;
+   const char *descr;
+   size_t size; // size of the component struct
+   struct fmc_cfg_node_spec *cfgspec; // configuration specifications
+   newfunc new; // allocate and initialize the component
+   delfunc del; // destroy the component
+   schedproc sched; // returns the next schedule time. If NULL it allways process
+   processproc process; // run the component once
+};
 
 typedef struct fmc_component_list {
     struct fmc_component *comp;

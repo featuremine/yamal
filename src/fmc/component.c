@@ -23,6 +23,7 @@
 #include <fmc/extension.h>
 #include <fmc/error.h>
 #include <fmc/platform.h>
+#include <fmc/files.h>
 #include <fmc/uthash/utlist.h>
 #include <stdlib.h> // calloc()
 
