@@ -256,18 +256,6 @@ struct ini_field {
   struct ini_field *next;
 };
 
-struct ini_sect {
-  char *key;
-  struct ini_field *fields;
-  size_t line;
-  bool used;
-  struct ini_sect *next;
-};
-
-static struct ini_sect *ini_sect_new() {
-  return (struct ini_sect *)calloc(1, sizeof(struct ini_sect));
-}
-
 static struct ini_field *ini_field_new() {
   return (struct ini_field *)calloc(1, sizeof(struct ini_field));
 }
@@ -278,6 +266,18 @@ static void ini_field_del(struct ini_field *field) {
     free(field->val);
     free(field);
   }
+}
+
+struct ini_sect {
+  char *key;
+  struct ini_field *fields;
+  size_t line;
+  bool used;
+  struct ini_sect *next;
+};
+
+static struct ini_sect *ini_sect_new() {
+  return (struct ini_sect *)calloc(1, sizeof(struct ini_sect));
 }
 
 static void ini_sect_del(struct ini_sect *sect) {
@@ -293,9 +293,12 @@ static void ini_sect_del(struct ini_sect *sect) {
   }
 }
 
-static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, fmc_error_t **err);
-static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, fmc_error_t **err);
-static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, fmc_cfg_item *out, fmc_error_t **err) {
+static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err);
+static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err);
+static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, size_t line, fmc_error_t **err);
+static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_cfg_item *out, fmc_error_t **err);
+
+static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_cfg_item *out, fmc_error_t **err) {
   out->type = FMC_CFG_NONE;
   switch (spec->type) {
   case FMC_CFG_NONE: {
@@ -304,7 +307,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       *str += 4;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse none");
+      fmc_error_set(err, "config error: unable to parse none (line %zu)", line);
       return;
     }
   } break;
@@ -320,7 +323,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       out->value.boolean = true;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse boolean");
+      fmc_error_set(err, "config error: unable to parse boolean (line %zu)", line);
       return;
     }
   } break;
@@ -333,7 +336,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       out->value.int64 = value;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse int64");
+      fmc_error_set(err, "config error: unable to parse int64 (line %zu)", line);
       return;
     }
   } break;
@@ -346,13 +349,13 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       out->value.float64 = value;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: unable to parse float64");
+      fmc_error_set(err, "config error: unable to parse float64 (line %zu)", line);
       return;
     }
   } break;
   case FMC_CFG_STR: {
     if (**str != '"') {
-      fmc_error_set(err, "Error while parsing config file: unable to parse string");
+      fmc_error_set(err, "config error: unable to parse string (line %zu)", line);
       return;
     }
     ++*str;
@@ -361,7 +364,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       ++endptr;
     }
     if (endptr == end) {
-      fmc_error_set(err, "Error while parsing config file: unable to find closing quotes for string");
+      fmc_error_set(err, "config error: unable to find closing quotes for string (line %zu)", line);
       return;
     }
     out->type = FMC_CFG_STR;
@@ -373,7 +376,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
     while(endptr < end && *endptr != ',' && *endptr != ']') {
       ++endptr;
     }
-    struct fmc_cfg_sect_item *sect = parse_section(ini, spec->spec.node, *str, endptr - *str, err);
+    struct fmc_cfg_sect_item *sect = parse_section(ini, spec->spec.node, *str, endptr - *str, line, err);
     if (*err) {
       return;
     }
@@ -382,7 +385,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
     out->value.sect = sect;
   } break;
   case FMC_CFG_ARR: {
-    struct fmc_cfg_arr_item *subarr = parse_array(ini, spec->spec.array, str, end, err);
+    struct fmc_cfg_arr_item *subarr = parse_array(ini, spec->spec.array, str, end, line, err);
     if (*err) {
       return;
     }
@@ -392,7 +395,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
   }
 }
 
-static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, fmc_error_t **err) {
+static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err) {
   fmc_cfg_arr_item *arr = NULL;
   if (**str == ',') {
     ++*str;
@@ -405,7 +408,7 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
   while(*str < end) {
     struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new();
     LL_PREPEND(arr, item);
-    parse_value(ini, spec, str, end, &item->item, err);
+    parse_value(ini, spec, str, end, line, &item->item, err);
     if (*err) {
       goto do_cleanup;
     }
@@ -419,7 +422,7 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
       break;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: comma was expected in array");
+      fmc_error_set(err, "config error: comma was expected in array (line %zu)", line);
       goto do_cleanup;
     }
   }
@@ -441,10 +444,10 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
   return NULL;
 }
 
-static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, fmc_error_t **err) {
+static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err) {
   if (**str == '[') {
     ++*str;
-    struct fmc_cfg_arr_item *arr = parse_array_unwrapped(ini, spec, str, end, err);
+    struct fmc_cfg_arr_item *arr = parse_array_unwrapped(ini, spec, str, end, line, err);
     if (*err) {
       return NULL;
     }
@@ -453,17 +456,17 @@ static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg
       return arr;
     }
     else {
-      fmc_error_set(err, "Error while parsing config file: closing bracket was expected in array");
+      fmc_error_set(err, "config error: closing bracket was expected in array (line %zu)", line);
       fmc_cfg_arr_del(arr);
       return NULL;
     }
   }
   else {
-    return parse_array_unwrapped(ini, spec, str, end, err);
+    return parse_array_unwrapped(ini, spec, str, end, line, err);
   }
 }
 
-static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, fmc_error_t **err) {
+static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, size_t line, fmc_error_t **err) {
   struct ini_sect *isect;
   struct fmc_cfg_sect_item *sect = NULL;
   for (isect = ini; isect; isect = isect->next) {
@@ -475,7 +478,7 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
   if (!isect || isect->used) {
     char prev = name[len];
     name[len] = '\0';
-    fmc_error_set(err, "Error while parsing config file: section %s not found", name);
+    fmc_error_set(err, "config error: section %s not found (line %zu)", name, line);
     name[len] = prev;
     return NULL;
   }
@@ -490,7 +493,7 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     }
     if (!item || item->used) {
       if (spec_item->required) {
-        fmc_error_set(err, "Error while parsing config file: missing required field %s", spec_item->key);
+        fmc_error_set(err, "config error: missing required field %s (line %zu)", spec_item->key, isect->line);
         goto do_cleanup;
       }
       else {
@@ -504,19 +507,19 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     sitem->key = string_copy(item->key);
     char *str = item->val;
     char *end = item->val + strlen(item->val);
-    parse_value(ini, &spec_item->type, &str, end, &sitem->node, err);
+    parse_value(ini, &spec_item->type, &str, end, line, &sitem->node, err);
     if (*err) {
       goto do_cleanup;
     }
     if (str != end) {
-      fmc_error_set(err, "Error while parsing config file: unable to parse field %s", item->key);
+      fmc_error_set(err, "config error: unable to parse field %s (line %zu)", item->key, item->line);
       goto do_cleanup;
     }
   }
 
   for (struct ini_field *item = isect->fields; item; item = item->next) {
     if (!item->used) {
-      fmc_error_set(err, "Error while parsing config file: unknown field %s", item->key);
+      fmc_error_set(err, "config error: unknown field %s (line %zu)", item->key, item->line);
       goto do_cleanup;
     }
   }
@@ -561,14 +564,14 @@ static void ini_line_parse(parser_state_t *state, char *line, size_t sz, fmc_err
   }
   else {
     if (!state->sections) {
-      fmc_error_set(error, "Configuration entry doesn't have a section in the file (line %zu)", state->line_n);
+      fmc_error_set(error, "config error: key-value has no section (line %zu)", state->line_n);
       return;
     }
 
     size_t sep;
     for (sep = 0; line[sep] != '=' && sep < sz; ++sep);
     if (sep >= sz) {
-      fmc_error_set(error, "Invalid configuration file key-value entry (line %zu)", state->line_n);
+      fmc_error_set(error, "config error: invalid key-value entry (line %zu)", state->line_n);
       return;
     }
 
@@ -612,7 +615,7 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
   size_t read = 0;
   while (true) {
     if (INI_PARSER_BUFF_SIZE == read) {
-      fmc_error_set(err, "Error while parsing config file: line is too long");
+      fmc_error_set(err, "config error: line %zu is too long", ++state.line_n);
       goto do_cleanup;
     }
 
@@ -682,7 +685,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
     goto do_cleanup;
   }
 
-  sect = parse_section(ini, spec, root_key_copy, root_key_len, err);
+  sect = parse_section(ini, spec, root_key_copy, root_key_len, 0, err);
   if (*err) {
     goto do_cleanup;
   }

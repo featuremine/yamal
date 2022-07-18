@@ -138,21 +138,16 @@ unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, f
     return nullptr;
   }
 
-  write(pipe_descriptors[1], config.data(), config.size());
-  fmc_fclose(pipe_descriptors[1], &err);
-  if (err) {
-    return nullptr;
-  }
+  std::thread write_thread([&]() {
+    write(pipe_descriptors[1], config.data(), config.size());
+    fmc_error_t *err;
+    fmc_fclose(pipe_descriptors[1], &err);
+  });
 
   auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
-  if (err) {
-    return nullptr;
-  }
-  fmc_fclose(pipe_descriptors[0], &err);
-  if (err) {
-    return nullptr;
-  }
 
+  close(pipe_descriptors[0]);
+  write_thread.join();
   return sect;
 }
 
