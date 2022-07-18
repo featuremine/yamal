@@ -128,9 +128,9 @@ static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, cons
   // append the mod to the system
   mod.sys = sys;
   mod.name = fmc_cstr_new(modstr, error);
-  if(error) goto error_1;
+  if(*error) goto error_1;
   mod.file = fmc_cstr_new(lib_path, error);
-  if(error) goto error_1;
+  if(*error) goto error_1;
   mod.components_type = mod_init();
 
   struct fmc_component_module *m = (struct fmc_component_module *)calloc(1, sizeof(mod));
