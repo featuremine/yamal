@@ -42,45 +42,47 @@ void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->modules = NULL; // important- initialize lists to NULL
 }
 
-void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error) {
-  if(sys->search_paths) {
-    // Reset search_paths if necessary
-    fmc_component_path_list_t *phead = sys->search_paths;
+void component_path_list_del(fmc_component_path_list_t *phead) {
+    if (!phead) return;
     fmc_component_path_list_t *p;
     fmc_component_path_list_t *ptmp;
     DL_FOREACH_SAFE(phead,p,ptmp) {
       DL_DELETE(phead,p);
       free(p);
     }
-    sys->search_paths = NULL;
+}
+
+void component_path_list_add(fmc_component_path_list_t *phead, const char *path, fmc_error_t **error) {
+  fmc_error_clear(error);
+  fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(path)+1);
+  if(p) {
+    strcpy(p->path, path);
+    DL_APPEND(phead, p);
   }
-  if(paths) {
-    for(unsigned int i = 0; paths[i]; ++i) {
-      fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(paths[i])+1);
-      if(p) {
-        strcpy(p->path, paths[i]);
-        DL_APPEND(sys->search_paths, p);
-      }
-      else {
-        fmc_error_t *err = NULL;
-        fmc_component_sys_paths_set(sys, NULL, &err);
-        fmc_error_set2(error, FMC_ERROR_MEMORY);
-        break;
-      }
-    }
+  else {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return;
   }
 }
 
+void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error) {
+  fmc_error_clear(error);
+  fmc_component_path_list_t *tmpls = NULL;
+  for(unsigned int i = 0; paths && paths[i]; ++i) {
+    component_path_list_add(tmpls, paths[i], error);
+    if (*error) {
+      component_path_list_del(tmpls);
+      return;
+    }
+  }
+  component_path_list_del(sys->search_paths);
+  sys->search_paths = tmpls;
+}
+
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error) {
+  fmc_error_clear(*error);
   if(path) {
-    fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(path)+1);
-    if(p) {
-      strcpy(p->path, path);
-      DL_APPEND(sys->search_paths, p);
-    }
-    else {
-      fmc_error_set2(error, FMC_ERROR_MEMORY);
-    }
+    component_path_list_add(sys->search_paths, path, error);
   }
 }
 
@@ -89,6 +91,7 @@ fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys 
 }
 
 // Possible library paths: <path>/mod.so or <path>/mod/mod.so
+// TODO(max): I have some comments here. This functions can be improved 
 #if defined(FMC_SYS_UNIX)
 static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, const char *dir, const char *mod, const char *mod_lib, fmc_error_t **error) {
   struct fmc_component_module *ret = NULL;

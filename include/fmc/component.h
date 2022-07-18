@@ -115,9 +115,9 @@ extern "C" {
 
 #define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
 
-#define fmc_comp_HEAD            \
+#define fmc_comp_HEAD                 \
    struct fmc_component_type *_vt;    \
-   struct fmc_error _err;        \
+   struct fmc_error _err;             \
    struct fmc_component_module *_mod;
 
 struct fmc_component_module;
@@ -152,8 +152,8 @@ struct fmc_component_module {
    fmc_ext_t handle; // module handle. Return of dlopen()
    char *name; // module name (e.g. "oms")
    char *path; // file system path of the library
-   struct fmc_component_type *components_type; // Null terminated array
-   fmc_component_list_t *components;
+   struct fmc_component_type *components_type; // null terminated array
+   fmc_component_list_t *components; // allocated components
 };
 
 typedef struct fmc_component_module_list {
@@ -171,17 +171,18 @@ struct fmc_component_sys {
    fmc_component_module_list_t *modules;
 };
 
-typedef struct fmc_component_type *(*FMCOMPINITFUNC)(void);
+typedef struct fmc_component_type *(*fmc_comp_init_func)(void);
+typedef FMMODFUNC FMCOMPINITFUNC;
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error);
 fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
-void fmc_component_module_destroy(struct fmc_component_module *mod);
-struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
-void fmc_component_destroy(struct fmc_component *comp);
 void fmc_component_sys_destroy(struct fmc_component_sys *sys);
+struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
+void fmc_component_module_del(struct fmc_component_module *mod);
+struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
+void fmc_component_del(struct fmc_component *comp);
 
 #ifdef __cplusplus
 }
