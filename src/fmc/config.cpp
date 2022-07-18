@@ -399,9 +399,9 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
 
   while(*str < end) {
     struct fmc_cfg_arr_item *item = new_arr_item();
-    LL_APPEND(arr, item);
+    LL_PREPEND(arr, item);
     parse_value(ini, spec, str, end, &item->item, err);
-    if (err) {
+    if (*err) {
       goto do_cleanup;
     }
     if(*str == end) {
@@ -441,8 +441,12 @@ static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg
   if (**str == '[') {
     ++*str;
     struct fmc_cfg_arr_item *arr = parse_array_unwrapped(ini, spec, str, end, err);
+    if (*err) {
+      return NULL;
+    }
     if (**str == ']') {
       ++*str;
+      return arr;
     }
     else {
       fmc_error_set(err, "Error while parsing config file: closing bracket was expected in array");
@@ -458,7 +462,7 @@ static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg
 static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, fmc_error_t **err) {
   struct ini_sect *isect;
   struct fmc_cfg_sect_item *sect = NULL;
-  for (isect = ini; isect; ++isect) {
+  for (isect = ini; isect; isect = isect->next) {
     if (memcmp(isect->key, name, len) == 0 && isect->key[len] == '\0') {
       break;
     }
@@ -490,11 +494,12 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     }
 
     struct fmc_cfg_sect_item *sitem = new_sect_item();
-    LL_APPEND(sect, sitem);
+    LL_PREPEND(sect, sitem);
+    sitem->key = string_copy(item->key);
     char *str = item->val;
     char *end = item->val + strlen(item->val);
     parse_value(ini, &spec_item->type, &str, end, &sitem->node, err);
-    if (err) {
+    if (*err) {
       goto do_cleanup;
     }
   }
@@ -534,7 +539,7 @@ static void ini_line_parse(parser_state_t *state, char *line, size_t sz, fmc_err
     item->used = false;
     item->line = state->line_n;
 
-    LL_APPEND(state->sections, item);
+    LL_PREPEND(state->sections, item);
   }
   else {
     if (!state->sections) {
@@ -568,8 +573,9 @@ static void ini_line_parse(parser_state_t *state, char *line, size_t sz, fmc_err
     item->used = false;
     item->line = state->line_n;
 
-    LL_APPEND(state->sections->fields, item);
+    LL_PREPEND(state->sections->fields, item);
   }
+  return;
 
   do_cleanup:
   free(key);
@@ -640,7 +646,6 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
   }
 
   do_cleanup:
-  ini_sect_del(state.sections);
   return NULL;
 }
 
