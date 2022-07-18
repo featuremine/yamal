@@ -87,17 +87,15 @@ fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys 
   return sys->search_paths;
 }
 
-// TODO: Use fmc common function to join paths: "/" does not work in windows.
 // Possible library paths: <path>/mod.so or <path>/mod/mod.so
 #if defined(FMC_SYS_UNIX)
 static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, const char *dir, const char *mod, const char *mod_lib, fmc_error_t **error) {
   struct fmc_component_module *ret = NULL;
-  char *lib_path = (char *)calloc(strlen(dir) + strlen(mod_lib) + 1 + 1, sizeof(*lib_path));
-  if(!lib_path) {
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
+  char *lib_path;
+  fmc_path_join(&lib_path, dir, mod_lib, error);
+  if(*error) {
     goto error_0;
   }
-  sprintf(lib_path, "%s/%s", dir, mod_lib);
   fmc_ext_t ext = fmc_ext_open(lib_path, error);
   if(*error) {
     // If it is an error don't abort. Keep searching.
@@ -169,8 +167,8 @@ struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *
   struct fmc_component_module *ret = NULL;
   char mod_lib[strlen(mod)+strlen(FMC_LIB_SUFFIX)+1];
   sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
-  char mod_lib_2[2*strlen(mod)+1+strlen(FMC_LIB_SUFFIX)+1];
-  sprintf(mod_lib_2, "%s/%s%s", mod, mod, FMC_LIB_SUFFIX);
+  char mod_lib_2[strlen(mod)+1+strlen(mod_lib)+1];
+  fmc_path_join((char **)&mod_lib_2, mod, mod_lib, error);
 #if defined(FMC_SYS_UNIX)
   fmc_component_path_list_t *phead = sys->search_paths;
   fmc_component_path_list_t *p;

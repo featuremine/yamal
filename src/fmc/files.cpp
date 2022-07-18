@@ -87,6 +87,27 @@ bool fmc_basedir_exists(const char *file_path, fmc_error_t **error) {
   return false;
 }
 
+void fmc_path_join(char **destpath, const char *srcpath1, const char *srcpath2, fmc_error_t **error) {
+  fmc_error_clear(error);
+  size_t len1 = strlen(srcpath1);
+  size_t len2 = strlen(srcpath2);
+  if(!*destpath) {
+    *destpath = (char *)calloc(len1+len2+2, sizeof(**destpath));
+    if(!*destpath) {
+      fmc_error_set2(error, FMC_ERROR_MEMORY);
+    }
+  }
+  memcpy(*destpath, srcpath1, len1);
+#ifdef FMC_SYS_UNIX
+  (*destpath)[len1] = '/';
+#elif defined(FMC_SYS_WIN)
+  (*destpath)[len1] = '\\';
+#else
+#error "Not supported"
+#endif
+  memcpy( &(*destpath)[len1+1], srcpath2, len2);
+}
+
 FILE *fmc_popen(const char *command, const char *read_mode,
                 fmc_error_t **error) {
   fmc_error_clear(error);

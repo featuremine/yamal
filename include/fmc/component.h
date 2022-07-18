@@ -171,7 +171,7 @@ struct fmc_component_sys {
    fmc_component_module_list_t *modules;
 };
 
-typedef struct fmc_component_type * (*FMCOMPINITFUNC)(void);
+typedef struct fmc_component_type *(*FMCOMPINITFUNC)(void);
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
