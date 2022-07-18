@@ -138,10 +138,10 @@ unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, f
     return nullptr;
   }
 
-  std::thread write_thread([&]() {
-    write(pipe_descriptors[1], config.data(), config.size());
+  std::thread write_thread([fd=pipe_descriptors[1], config]() {
+    write(fd, config.data(), config.size());
     fmc_error_t *err;
-    fmc_fclose(pipe_descriptors[1], &err);
+    fmc_fclose(fd, &err);
   });
 
   auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
@@ -274,7 +274,7 @@ TEST(error, required_1) {
                    "[sect1]\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field int64");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field int64 (line 9)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -288,7 +288,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field arr");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field arr (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -302,7 +302,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field sect");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field sect (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -316,7 +316,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field none");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field none (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -330,7 +330,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field boolean");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field boolean (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -344,7 +344,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field int64");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field int64 (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -358,7 +358,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field str");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field str (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -372,7 +372,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: missing required field float64");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field float64 (line 1)");
 }
 
 TEST(error, unknown_field_1) {
@@ -393,7 +393,7 @@ TEST(error, unknown_field_1) {
                         "int63=1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unknown field int63");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unknown field int63 (line 2)");
 }
 
 TEST(error, unknown_section_1) {
@@ -414,7 +414,7 @@ TEST(error, unknown_section_1) {
                         "int64=1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: section main not found");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: section main not found (line 0)");
 }
 
 TEST(error, unknown_section_2) {
@@ -451,7 +451,7 @@ TEST(error, unknown_section_2) {
                         "int64=1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: section subsact not found");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: section subsact not found (line 2)");
 }
 
 TEST(error, invalid_array_1) {
@@ -479,49 +479,49 @@ TEST(error, invalid_array_1) {
                         "arr=[1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: closing bracket was expected in array");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: closing bracket was expected in array (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=1]\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse field arr");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=,1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse field arr");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=1,,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse int64");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse int64 (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=[1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: closing bracket was expected in array");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: closing bracket was expected in array (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=1,2,3]\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse field arr");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=[1,2a,3]\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: comma was expected in array");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: comma was expected in array (line 2)");
 }
 
 TEST(error, invalid_array_2) {
@@ -549,7 +549,7 @@ TEST(error, invalid_array_2) {
                         "arr=1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse none");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse none (line 2)");
 }
 
 TEST(error, invalid_array_3) {
@@ -577,7 +577,7 @@ TEST(error, invalid_array_3) {
                         "arr=1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse boolean");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse boolean (line 2)");
 }
 
 TEST(error, invalid_array_4) {
@@ -605,7 +605,7 @@ TEST(error, invalid_array_4) {
                         "arr=a,b,c\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse float64");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse float64 (line 2)");
 }
 
 TEST(error, invalid_array_5) {
@@ -633,7 +633,7 @@ TEST(error, invalid_array_5) {
                         "arr=a,b,c\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse string");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse string (line 2)");
 }
 
 TEST(error, invalid_array_6) {
@@ -661,7 +661,7 @@ TEST(error, invalid_array_6) {
                         "arr=\"a\",\"b\",\"c\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to find closing quotes for string");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to find closing quotes for string (line 2)");
 }
 
 TEST(error, invalid_ini_1) {
@@ -693,20 +693,20 @@ TEST(error, invalid_ini_1) {
   str += "\n";
   auto sect = parse_cfg(str,
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: line is too long");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: line 2 is too long");
 
   sect = parse_cfg(""
                         "arr=1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Configuration entry doesn't have a section in the file (line 1)");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: key-value has no section (line 1)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Invalid configuration file key-value entry (line 2)");
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: invalid key-value entry (line 2)");
 }
 
 TEST(error, ini_format_1) {
