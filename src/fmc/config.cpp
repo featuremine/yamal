@@ -43,24 +43,28 @@ static char *string_copy(const char *src) {
 
 void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
   if (head) {
-    for (; head; head = head->next) {
+    struct fmc_cfg_sect_item *p = head;
+    while (p) {
       switch (head->node.type) {
       case FMC_CFG_SECT:
-        fmc_cfg_sect_del(head->node.value.sect);
+        fmc_cfg_sect_del(p->node.value.sect);
         break;
       case FMC_CFG_ARR:
-        fmc_cfg_arr_del(head->node.value.arr);
+        fmc_cfg_arr_del(p->node.value.arr);
         break;
       case FMC_CFG_STR:
-        free((void *) head->node.value.str);
+        free((void *) p->node.value.str);
         break;
       case FMC_CFG_NONE:
       case FMC_CFG_BOOLEAN:
       case FMC_CFG_INT64:
       case FMC_CFG_FLOAT64: break;
       }
+      struct fmc_cfg_sect_item *next = p->next;
+      free((void *) p->key);
+      free(p);
+      p = next;
     }
-    free(head);
   }
 }
 
@@ -147,25 +151,26 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item * t
 }
 
 void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
-  if (head) {
-    for (; head; head = head->next) {
-      switch (head->item.type) {
-      case FMC_CFG_SECT:
-        fmc_cfg_sect_del(head->item.value.sect);
-        break;
-      case FMC_CFG_ARR:
-        fmc_cfg_arr_del(head->item.value.arr);
-        break;
-      case FMC_CFG_STR:
-        free((void *) head->item.value.str);
-        break;
-      case FMC_CFG_NONE:
-      case FMC_CFG_BOOLEAN:
-      case FMC_CFG_INT64:
-      case FMC_CFG_FLOAT64: break;
-      }
+  struct fmc_cfg_arr_item *p = head;
+  while (p) {
+    switch (p->item.type) {
+    case FMC_CFG_SECT:
+      fmc_cfg_sect_del(p->item.value.sect);
+      break;
+    case FMC_CFG_ARR:
+      fmc_cfg_arr_del(p->item.value.arr);
+      break;
+    case FMC_CFG_STR:
+      free((void *) p->item.value.str);
+      break;
+    case FMC_CFG_NONE:
+    case FMC_CFG_BOOLEAN:
+    case FMC_CFG_INT64:
+    case FMC_CFG_FLOAT64: break;
     }
-    free(head);
+    struct fmc_cfg_arr_item *next = p->next;
+    free(p);
+    p = next;
   }
 }
 
