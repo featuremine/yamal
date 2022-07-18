@@ -411,7 +411,6 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
       ++*str;
     }
     else if (**str == ']') {
-      ++*str;
       break;
     }
     else {
@@ -502,6 +501,10 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     char *end = item->val + strlen(item->val);
     parse_value(ini, &spec_item->type, &str, end, &sitem->node, err);
     if (*err) {
+      goto do_cleanup;
+    }
+    if (str != end) {
+      fmc_error_set(err, "Error while parsing config file: unable to parse field %s", item->key);
       goto do_cleanup;
     }
   }

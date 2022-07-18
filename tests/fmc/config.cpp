@@ -459,6 +459,108 @@ TEST(error, unknown_section_2) {
   EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: section subsact not found");
 }
 
+TEST(error, invalid_array_1) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_INT64,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=[1\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: closing bracket was expected in array");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=1]\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse field arr");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=,1,2,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse field arr");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=1,,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse int64 in array");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=[1,2,3\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: closing bracket was expected in array");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=1,2,3]\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: unable to parse field arr");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=[1,2a,3]\n"
+                        "",
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: comma was expected in array");
+}
+
+TEST(error, invalid_ini_1) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_INT64,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  std::string str = ""
+             "[main]\n"
+             "arr=";
+  while (str.size() < 10000) {
+    str += "1,";
+  }
+  str += "\n";
+  auto sect = parse_cfg(str,
+                        main, err);
+  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "Error while parsing config file: line is too long");
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
