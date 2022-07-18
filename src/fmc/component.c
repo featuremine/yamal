@@ -33,6 +33,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
+#if defined(FMC_SYS_LINUX)
+#define FMC_LIB_SUFFIX ".so"
+#elif defined(FMC_SYS_MACH)
+#define FMC_LIB_SUFFIX ".dylib"
+#endif
 #else
 #error "Unsupported operating system"
 #endif
@@ -42,18 +47,17 @@ void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->modules = NULL; // important- initialize lists to NULL
 }
 
-void component_path_list_del(fmc_component_path_list_t *phead) {
-    if (!phead) return;
-    fmc_component_path_list_t *p;
-    fmc_component_path_list_t *ptmp;
-    DL_FOREACH_SAFE(phead,p,ptmp) {
-      DL_DELETE(phead,p);
-      free(p);
-    }
+static void component_path_list_del(fmc_component_path_list_t *phead) {
+  if (!phead) return;
+  fmc_component_path_list_t *p;
+  fmc_component_path_list_t *ptmp;
+  DL_FOREACH_SAFE(phead,p,ptmp) {
+    DL_DELETE(phead,p);
+    free(p);
+  }
 }
 
-void component_path_list_add(fmc_component_path_list_t *phead, const char *path, fmc_error_t **error) {
-  fmc_error_clear(error);
+static void component_path_list_add(fmc_component_path_list_t *phead, const char *path, fmc_error_t **error) {
   fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(path)+1);
   if(p) {
     strcpy(p->path, path);
@@ -80,7 +84,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
 }
 
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error) {
-  fmc_error_clear(*error);
+  fmc_error_clear(error);
   if(path) {
     component_path_list_add(sys->search_paths, path, error);
   }
@@ -117,7 +121,7 @@ static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, cons
     goto error_2;
   }
   sprintf(comp_init_function, fmc_comp_INIT_FUNCT_PREFIX "%s", mod);
-  FMCOMPINITFUNC components_type_init = (FMCOMPINITFUNC)fmc_ext_sym(ext, comp_init_function, error);
+  fmc_comp_init_func components_type_init = (fmc_comp_init_func)fmc_ext_sym(ext, comp_init_function, error);
   free(comp_init_function);
   if(*error) {
     // Function is not there. Keep searching.
@@ -142,7 +146,7 @@ static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, cons
     goto error_3;
   }
   strcpy(module->mod.name, mod);
-  module->mod.path = lib_path;
+  module->mod.file = lib_path;
   module->mod.components_type = components_type_init();
   module->mod.components = NULL; // empty components for now
   DL_APPEND(sys->modules, module);
@@ -203,7 +207,7 @@ static void mod_del(fmc_component_module_list_t **mod) {
   m->sys = NULL;
   fmc_ext_close(m->handle);
   free(m->name);
-  free(m->path);
+  free(m->file);
   m->components_type = NULL;
   // delete all components in the module
   fmc_component_list_t *comphead = m->components;

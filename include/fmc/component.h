@@ -105,14 +105,7 @@ FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
 extern "C" {
 #endif
 
-#if defined(FMC_SYS_LINUX)
-#define FMC_LIB_SUFFIX ".so"
-#elif defined(FMC_SYS_MACH)
-#define FMC_LIB_SUFFIX ".dylib"
-#else
-#error "Unsupported operating system"
-#endif
-
+#define FMCOMPINITFUNC FMMODFUNC
 #define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
 
 #define fmc_comp_HEAD                 \
@@ -125,6 +118,7 @@ struct fmc_component {
    fmc_comp_HEAD;
 };
 
+typedef struct fmc_component_type *(*fmc_comp_init_func)(void);
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *, fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
 typedef struct fmc_time (*schedproc)(struct fmc_component *);
@@ -146,12 +140,11 @@ typedef struct fmc_component_list {
     struct fmc_component_list *next, *prev;
 } fmc_component_list_t;
 
-struct fmc_component_sys;
 struct fmc_component_module {
    struct fmc_component_sys *sys; // the system that owns the module
    fmc_ext_t handle; // module handle. Return of dlopen()
    char *name; // module name (e.g. "oms")
-   char *path; // file system path of the library
+   char *file; // file full path of the library
    struct fmc_component_type *components_type; // null terminated array
    fmc_component_list_t *components; // allocated components
 };
@@ -170,9 +163,6 @@ struct fmc_component_sys {
    fmc_component_path_list_t *search_paths;
    fmc_component_module_list_t *modules;
 };
-
-typedef struct fmc_component_type *(*fmc_comp_init_func)(void);
-typedef FMMODFUNC FMCOMPINITFUNC;
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);

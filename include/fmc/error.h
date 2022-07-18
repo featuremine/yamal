@@ -43,9 +43,6 @@ struct fmc_error {
 
 typedef struct fmc_error fmc_error_t;
 
-#define FMC_ERROR_REPORT(err, msg)                                             \
-  fmc_error_set(err, "%s (%s:%d)", msg, __FILE__, __LINE__)
-
 /**
  * @brief Initializes the error struct
  * 
@@ -73,24 +70,6 @@ FMMODFUNC void fmc_error_init_none(fmc_error_t *err);
  * is expected
  */
 FMMODFUNC void fmc_error_init_sprintf(fmc_error_t *err, const char *fmt, ...);
-
-/**
- * @brief Set an error message and assigns a pointer to the error
- *
- * @param err_ptr
- * @param fmt error format string
- * @param ... depending on the format string, a sequence of additional arguments
- * is expected
- */
-FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
-
-/**
- * @brief Set an error code and assigns a pointer to the error
- *
- * @param err_ptr
- * @param code FMC_ERROR_CODE
- */
-FMMODFUNC void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code);
 
 /**
  * @brief Destroy the error struct
@@ -153,6 +132,29 @@ FMMODFUNC fmc_error_t *fmc_error_inst();
  * @return a C-string error message
  */
 FMMODFUNC const char *fmc_syserror_msg();
+
+/* Functions and macros below use the global fmc_error_t error instance*/
+
+#define FMC_ERROR_REPORT(err, msg)                                            \
+  fmc_error_set(err, "%s (%s:%d)", msg, __FILE__, __LINE__)
+
+/**
+ * @brief Set an error message and assigns a pointer to the error
+ *
+ * @param err_ptr
+ * @param fmt error format string
+ * @param ... depending on the format string, a sequence of additional arguments
+ * is expected
+ */
+FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
+
+/**
+ * @brief Set an error code and assigns a pointer to the error
+ *
+ * @param err_ptr
+ * @param code FMC_ERROR_CODE
+ */
+FMMODFUNC void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code);
 
 #ifdef __cplusplus
 }
