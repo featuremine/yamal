@@ -42,32 +42,36 @@ void fmc_component_sys_init(struct fmc_component_sys *sys) {
 }
 
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error) {
-  unsigned int cnt = 0;
-  for(; paths[cnt]; ++cnt) {}
-  sys->search_paths = (char **)calloc(cnt+1, sizeof(*(sys->search_paths)));
-  if(!sys->search_paths) {
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
-    return;
-  }
-
-  for(cnt = 0; paths[cnt]; ++cnt) {
-    sys->search_paths[cnt] = (char *)calloc(strlen(paths[cnt])+1, sizeof(**(sys->search_paths)));
-    if(!sys->search_paths[cnt]) {
-      for(unsigned int i = 0; i < cnt; ++i) {
-        free(sys->search_paths[i]);
-      }
-      free(sys->search_paths);
-      sys->search_paths = NULL;
-      fmc_error_set2(error, FMC_ERROR_MEMORY);
-      return;
+  if(sys->search_paths) {
+    // Reset search_paths if necessary
+    fmc_component_path_list_t *phead = sys->search_paths;
+    fmc_component_path_list_t *p;
+    fmc_component_path_list_t *ptmp;
+    DL_FOREACH_SAFE(phead,p,ptmp) {
+      DL_DELETE(phead,p);
+      free(p);
     }
-    strcpy(sys->search_paths[cnt], paths[cnt]);
+    sys->search_paths = NULL;
   }
-  sys->search_paths[cnt] = NULL;
+  if(paths) {
+    for(unsigned int i = 0; paths[i]; ++i) {
+      fmc_component_path_list_t *path = (fmc_component_path_list_t *)calloc(1, sizeof(*path)+strlen(paths[i])+1);
+      if(path) {
+        strcpy(path->path, paths[i]);
+        DL_APPEND(sys->search_paths, path);
+      }
+      else {
+        fmc_error_t *err = NULL;
+        fmc_component_sys_paths_set(sys, NULL, &err);
+        fmc_error_set2(error, FMC_ERROR_MEMORY);
+        break;
+      }
+    }
+  }
 }
 
-const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
-  return (const char **)sys->search_paths;
+fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
+  return sys->search_paths;
 }
 
 // TODO: Use fmc common function to join paths: "/" does not work in windows.
@@ -155,12 +159,15 @@ struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *
   char mod_lib_2[2*strlen(mod)+1+strlen(FMC_LIB_SUFFIX)+1];
   sprintf(mod_lib_2, "%s/%s%s", mod, mod, FMC_LIB_SUFFIX);
 #if defined(FMC_SYS_UNIX)
-  if(sys->search_paths) {
-    for(unsigned int i = 0; sys->search_paths[i] && !ret && !(*error); ++i) {
-      ret = mod_load(sys, sys->search_paths[i], mod, mod_lib, error);
-      if(!ret && !(*error)) {
-        ret = mod_load(sys, sys->search_paths[i], mod, mod_lib_2, error);
-      }
+  fmc_component_path_list_t *phead = sys->search_paths;
+  fmc_component_path_list_t *p;
+  DL_FOREACH(phead,p) {
+    ret = mod_load(sys, p->path, mod, mod_lib, error);
+    if(!ret && !(*error)) {
+      ret = mod_load(sys, p->path, mod, mod_lib_2, error);
+    }
+    if(ret || *error) {
+      break;
     }
   }
 #else
@@ -260,10 +267,13 @@ void fmc_component_destroy(struct fmc_component *comp) {
 }
 
 void fmc_component_sys_destroy(struct fmc_component_sys *sys) {
-  for(unsigned int cnt = 0; sys->search_paths[cnt]; ++cnt) {
-    free(sys->search_paths[cnt]);
+  fmc_component_path_list_t *phead = sys->search_paths;
+  fmc_component_path_list_t *p;
+  fmc_component_path_list_t *ptmp;
+  DL_FOREACH_SAFE(phead,p,ptmp) {
+    DL_DELETE(phead,p);
+    free(p);
   }
-  free(sys->search_paths);
   sys->search_paths = NULL;
 
   // destroy modules: also destroys components of the module

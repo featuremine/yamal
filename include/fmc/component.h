@@ -161,8 +161,13 @@ typedef struct fmc_component_module_list {
     struct fmc_component_module_list *next, *prev;
 } fmc_component_module_list_t;
 
+typedef struct fmc_component_path_list {
+    struct fmc_component_path_list *next, *prev;
+    char path[]; // FAM
+} fmc_component_path_list_t;
+
 struct fmc_component_sys {
-   char **search_paths; // TODO: this should be a list of strings (utlist)
+   fmc_component_path_list_t *search_paths;
    fmc_component_module_list_t *modules;
 };
 
@@ -170,8 +175,8 @@ typedef struct fmc_component_type * (*FMCOMPINITFUNC)(void);
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
-void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error);
-const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys); //  TODO: Return a list of paths
+void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error); // TODO: implement fmc_component_sys_paths_add()
+fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys *sys);
 struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
 void fmc_component_module_destroy(struct fmc_component_module *mod);
 struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
