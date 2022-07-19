@@ -20,15 +20,14 @@
  * This file contains C implementation of fmc string API.
  * @see http://www.featuremine.com
  */
-#include <fmc/string.h>
 #include <fmc/error.h>
-#include <string.h> // memcpy() strlen()
+#include <fmc/string.h>
 #include <stdlib.h> // calloc()
+#include <string.h> // memcpy() strlen()
 
-
-char *fmc_cstr_new2(const char*str, size_t sz, fmc_error_t **error) {
+char *fmc_cstr_new2(const char *str, size_t sz, fmc_error_t **error) {
   char *s = (char *)calloc(sz + 1, sizeof(*s));
-  if(!s) {
+  if (!s) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return NULL;
   }
@@ -36,6 +35,6 @@ char *fmc_cstr_new2(const char*str, size_t sz, fmc_error_t **error) {
   return s;
 }
 
-char *fmc_cstr_new(const char*str, fmc_error_t **error) {
+char *fmc_cstr_new(const char *str, fmc_error_t **error) {
   return fmc_cstr_new2(str, strlen(str), error);
 }

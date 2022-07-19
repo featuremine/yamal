@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 #if defined(FMC_SYS_UNIX)
-typedef void * fmc_ext_t;
+typedef void *fmc_ext_t;
 #else
 #error "Not defined for this operating system"
 #endif
@@ -56,7 +56,8 @@ FMMODFUNC fmc_ext_t fmc_ext_open(const char *path, fmc_error_t **error);
  * @param error out-parameter for error handling
  * @return the address where the specified symbol is loaded into memory
  */
-FMMODFUNC void *fmc_ext_sym(fmc_ext_t handle, const char *sym, fmc_error_t **error);
+FMMODFUNC void *fmc_ext_sym(fmc_ext_t handle, const char *sym,
+                            fmc_error_t **error);
 
 /**
  * @brief Closes an extension

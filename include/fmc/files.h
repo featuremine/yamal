@@ -99,7 +99,8 @@ FMMODFUNC int fmc_path_join_len(const char *p1, const char *p2);
  * @return the number of characters that would have been written on the
  * buffer, if ‘sz’ had been sufficiently large
  */
-FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2);
+FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1,
+                            const char *p2);
 
 /**
  * @brief Opens a process by creating a pipe, forking, and invoking the shell

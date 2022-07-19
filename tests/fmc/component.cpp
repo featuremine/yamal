@@ -20,9 +20,9 @@
  * @see http://www.featuremine.com
  */
 
-#include <fmc/error.h>
 #include <fmc/component.h>
 #include <fmc/config.h>
+#include <fmc/error.h>
 
 #include <fmc++/gtestwrap.hpp>
 
@@ -89,11 +89,13 @@ TEST(component, module) {
   ASSERT_EQ(p->next, nullptr);
   ASSERT_EQ(p, p->prev);
 
-  struct fmc_component_module *modfail = fmc_component_module_new(&sys, "failcomponent", &err);
+  struct fmc_component_module *modfail =
+      fmc_component_module_new(&sys, "failcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(modfail, nullptr);
 
-  struct fmc_component_module *mod = fmc_component_module_new(&sys, "testcomponent", &err);
+  struct fmc_component_module *mod =
+      fmc_component_module_new(&sys, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(mod->sys, &sys);
   ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
@@ -127,22 +129,27 @@ TEST(component, component) {
   ASSERT_EQ(p->next, nullptr);
   ASSERT_EQ(p, p->prev);
 
-  struct fmc_component_module *mod = fmc_component_module_new(&sys, "testcomponent", &err);
+  struct fmc_component_module *mod =
+      fmc_component_module_new(&sys, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(mod->sys, &sys);
   ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
   ASSERT_EQ(sys.modules, mod);
   ASSERT_EQ(sys.modules->prev, mod);
 
-  struct fmc_cfg_sect_item *cfginvalid = fmc_cfg_sect_item_add_str(nullptr, "invalidkey", "message", &err);
+  struct fmc_cfg_sect_item *cfginvalid =
+      fmc_cfg_sect_item_add_str(nullptr, "invalidkey", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *compinvalid = fmc_component_new(mod, "test-component", cfginvalid, &err);
+  struct fmc_component *compinvalid =
+      fmc_component_new(mod, "test-component", cfginvalid, &err);
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(compinvalid, nullptr);
 
-  struct fmc_cfg_sect_item *cfg = fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
+  struct fmc_cfg_sect_item *cfg =
+      fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *comp = fmc_component_new(mod, "test-component", cfg, &err);
+  struct fmc_component *comp =
+      fmc_component_new(mod, "test-component", cfg, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(sys.modules, comp->_mod);
   ASSERT_EQ(std::string(comp->_vt->name), std::string("test-component"));

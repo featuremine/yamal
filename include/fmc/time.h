@@ -25,9 +25,9 @@
 #pragma once
 
 #include <fmc/platform.h>
-#include <time.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {

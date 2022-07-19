@@ -37,7 +37,7 @@ extern "C" {
  * @param error out-parameter for error handling
  * @return The new C string
  */
-FMMODFUNC char *fmc_cstr_new(const char*str, fmc_error_t **error);
+FMMODFUNC char *fmc_cstr_new(const char *str, fmc_error_t **error);
 
 /**
  * @brief Creates a new C string from a string and length
@@ -47,7 +47,7 @@ FMMODFUNC char *fmc_cstr_new(const char*str, fmc_error_t **error);
  * @param error out-parameter for error handling
  * @return The new C string
  */
-FMMODFUNC char *fmc_cstr_new2(const char*str, size_t sz, fmc_error_t **error);
+FMMODFUNC char *fmc_cstr_new2(const char *str, size_t sz, fmc_error_t **error);
 
 #ifdef __cplusplus
 }

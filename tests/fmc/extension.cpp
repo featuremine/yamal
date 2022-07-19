@@ -25,7 +25,6 @@
 
 #include <fmc++/gtestwrap.hpp>
 
-
 std::string libfmc_shared_path;
 
 TEST(error, extension_simple) {

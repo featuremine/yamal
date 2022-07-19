@@ -152,7 +152,8 @@ TEST(error, join) {
   fmc_error_t err3;
   fmc_error_init_join(&err3, &err1, &err2, "; ");
   ASSERT_EQ(err3.code, FMC_ERROR_CUSTOM);
-  ASSERT_EQ(std::string_view(fmc_error_msg(&err3)), errormsg1 + "; " + errormsg2);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err3)),
+            errormsg1 + "; " + errormsg2);
 
   fmc_error_destroy(&err1);
   fmc_error_destroy(&err2);
@@ -174,7 +175,8 @@ TEST(error, cat) {
 
   fmc_error_cat(&err1, &err2, ", ");
   ASSERT_EQ(err1.code, FMC_ERROR_CUSTOM);
-  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)), errormsg1 + ", " + errormsg2);
+  ASSERT_EQ(std::string_view(fmc_error_msg(&err1)),
+            errormsg1 + ", " + errormsg2);
 
   fmc_error_destroy(&err1);
   fmc_error_destroy(&err2);

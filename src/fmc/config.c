@@ -24,8 +24,8 @@
 #include <fmc/string.h>
 #include <fmc/uthash/utlist.h>
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define INI_PARSER_BUFF_SIZE 8192
 
@@ -38,12 +38,13 @@ static void fmc_cfg_item_destroy(struct fmc_cfg_item *node) {
     fmc_cfg_arr_del(node->value.arr);
     break;
   case FMC_CFG_STR:
-    free((void *) node->value.str);
+    free((void *)node->value.str);
     break;
   case FMC_CFG_NONE:
   case FMC_CFG_BOOLEAN:
   case FMC_CFG_INT64:
-  case FMC_CFG_FLOAT64: break;
+  case FMC_CFG_FLOAT64:
+    break;
   }
 }
 
@@ -51,7 +52,7 @@ void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
   while (head) {
     fmc_cfg_item_destroy(&head->node);
     struct fmc_cfg_sect_item *next = head->next;
-    free((void *) head->key);
+    free((void *)head->key);
     free(head);
     head = next;
   }
@@ -60,14 +61,17 @@ void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
 static struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err) {
   fmc_error_clear(err);
 
-  struct fmc_cfg_sect_item *ret = (struct fmc_cfg_sect_item *)calloc(1, sizeof(struct fmc_cfg_sect_item));
+  struct fmc_cfg_sect_item *ret =
+      (struct fmc_cfg_sect_item *)calloc(1, sizeof(struct fmc_cfg_sect_item));
   if (!ret) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   }
   return ret;
 }
 
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item * tail, const char * key, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item *tail, const char *key,
+                           fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -82,7 +86,9 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item * 
   return item;
 }
 
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item * tail, const char * key, bool new_value, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item *tail, const char *key,
+                              bool new_value, fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -97,7 +103,9 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item
   item->next = tail;
   return item;
 }
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item * tail, const char * key, int64_t new_value, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *tail, const char *key,
+                            int64_t new_value, fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -112,7 +120,9 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *
   item->next = tail;
   return item;
 }
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item * tail, const char * key, double new_value, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item *tail, const char *key,
+                              double new_value, fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -127,7 +137,9 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item
   item->next = tail;
   return item;
 }
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item * tail, const char *key, const char *new_value, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item *tail, const char *key,
+                          const char *new_value, fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -146,7 +158,10 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item * t
   item->next = tail;
   return item;
 }
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item * tail, const char *key, struct fmc_cfg_sect_item *new_value, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item *tail, const char *key,
+                           struct fmc_cfg_sect_item *new_value,
+                           fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -161,7 +176,10 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item * 
   item->next = tail;
   return item;
 }
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item * tail, const char * key, struct fmc_cfg_arr_item * new_value, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item *tail, const char *key,
+                          struct fmc_cfg_arr_item *new_value,
+                          fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
     return NULL;
@@ -189,14 +207,16 @@ void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
 static struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err) {
   fmc_error_clear(err);
 
-  struct fmc_cfg_arr_item *ret = (struct fmc_cfg_arr_item *)calloc(1, sizeof(struct fmc_cfg_arr_item));
+  struct fmc_cfg_arr_item *ret =
+      (struct fmc_cfg_arr_item *)calloc(1, sizeof(struct fmc_cfg_arr_item));
   if (!ret) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   }
   return ret;
 }
 
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item * tail, fmc_error_t **err) {
+struct fmc_cfg_arr_item *
+fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item *tail, fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -205,7 +225,9 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item * tai
   item->next = tail;
   return item;
 }
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item * tail, bool new_value, fmc_error_t **err) {
+struct fmc_cfg_arr_item *
+fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item *tail, bool new_value,
+                             fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -215,7 +237,9 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item * 
   item->next = tail;
   return item;
 }
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item * tail, int64_t new_value, fmc_error_t **err) {
+struct fmc_cfg_arr_item *
+fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item *tail, int64_t new_value,
+                           fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -225,7 +249,9 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item * ta
   item->next = tail;
   return item;
 }
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item * tail, double new_value, fmc_error_t **err) {
+struct fmc_cfg_arr_item *
+fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item *tail, double new_value,
+                             fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -235,7 +261,9 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item * 
   item->next = tail;
   return item;
 }
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item * tail, const char * new_value, fmc_error_t **err) {
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item *tail,
+                                                  const char *new_value,
+                                                  fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -249,7 +277,10 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item * tail
   item->next = tail;
   return item;
 }
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item * tail, struct fmc_cfg_sect_item * new_value, fmc_error_t **err) {
+struct fmc_cfg_arr_item *
+fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item *tail,
+                          struct fmc_cfg_sect_item *new_value,
+                          fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -259,7 +290,10 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item * tai
   item->next = tail;
   return item;
 }
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item * tail, struct fmc_cfg_arr_item * new_value, fmc_error_t **err) {
+struct fmc_cfg_arr_item *
+fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *tail,
+                         struct fmc_cfg_arr_item *new_value,
+                         fmc_error_t **err) {
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
     return NULL;
@@ -281,7 +315,8 @@ struct ini_field {
 static struct ini_field *ini_field_new(fmc_error_t **err) {
   fmc_error_clear(err);
 
-  struct ini_field *ret = (struct ini_field *)calloc(1, sizeof(struct ini_field));
+  struct ini_field *ret =
+      (struct ini_field *)calloc(1, sizeof(struct ini_field));
   if (!ret) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   }
@@ -326,20 +361,31 @@ static void ini_sect_del(struct ini_sect *sect) {
   }
 }
 
-static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err);
-static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err);
-static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, size_t line, fmc_error_t **err);
-static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, struct fmc_cfg_item *out, fmc_error_t **err);
+static struct fmc_cfg_arr_item *
+parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec,
+                      char **str, char *end, size_t line, fmc_error_t **err);
+static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini,
+                                            struct fmc_cfg_type *spec,
+                                            char **str, char *end, size_t line,
+                                            fmc_error_t **err);
+static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini,
+                                               struct fmc_cfg_node_spec *spec,
+                                               char *name, size_t len,
+                                               size_t line, fmc_error_t **err);
+static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
+                        char **str, char *end, size_t line,
+                        struct fmc_cfg_item *out, fmc_error_t **err);
 
-static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, struct fmc_cfg_item *out, fmc_error_t **err) {
+static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
+                        char **str, char *end, size_t line,
+                        struct fmc_cfg_item *out, fmc_error_t **err) {
   out->type = FMC_CFG_NONE;
   switch (spec->type) {
   case FMC_CFG_NONE: {
     if (memcmp(*str, "none", 4) == 0) {
       out->type = FMC_CFG_NONE;
       *str += 4;
-    }
-    else {
+    } else {
       fmc_error_set(err, "config error: unable to parse none (line %zu)", line);
       return;
     }
@@ -349,14 +395,13 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       *str += 5;
       out->type = FMC_CFG_BOOLEAN;
       out->value.boolean = false;
-    }
-    else if (memcmp(*str, "true", 4) == 0) {
+    } else if (memcmp(*str, "true", 4) == 0) {
       *str += 4;
       out->type = FMC_CFG_BOOLEAN;
       out->value.boolean = true;
-    }
-    else {
-      fmc_error_set(err, "config error: unable to parse boolean (line %zu)", line);
+    } else {
+      fmc_error_set(err, "config error: unable to parse boolean (line %zu)",
+                    line);
       return;
     }
   } break;
@@ -367,9 +412,9 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       *str = endptr;
       out->type = FMC_CFG_INT64;
       out->value.int64 = value;
-    }
-    else {
-      fmc_error_set(err, "config error: unable to parse int64 (line %zu)", line);
+    } else {
+      fmc_error_set(err, "config error: unable to parse int64 (line %zu)",
+                    line);
       return;
     }
   } break;
@@ -380,24 +425,28 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
       *str = endptr;
       out->type = FMC_CFG_FLOAT64;
       out->value.float64 = value;
-    }
-    else {
-      fmc_error_set(err, "config error: unable to parse float64 (line %zu)", line);
+    } else {
+      fmc_error_set(err, "config error: unable to parse float64 (line %zu)",
+                    line);
       return;
     }
   } break;
   case FMC_CFG_STR: {
     if (**str != '"') {
-      fmc_error_set(err, "config error: unable to parse string (line %zu)", line);
+      fmc_error_set(err, "config error: unable to parse string (line %zu)",
+                    line);
       return;
     }
     ++*str;
     char *endptr = *str;
-    while(endptr < end && *endptr != '"') {
+    while (endptr < end && *endptr != '"') {
       ++endptr;
     }
     if (endptr == end) {
-      fmc_error_set(err, "config error: unable to find closing quotes for string (line %zu)", line);
+      fmc_error_set(
+          err,
+          "config error: unable to find closing quotes for string (line %zu)",
+          line);
       return;
     }
     out->type = FMC_CFG_STR;
@@ -409,10 +458,11 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
   } break;
   case FMC_CFG_SECT: {
     char *endptr = *str;
-    while(endptr < end && *endptr != ',' && *endptr != ']') {
+    while (endptr < end && *endptr != ',' && *endptr != ']') {
       ++endptr;
     }
-    struct fmc_cfg_sect_item *sect = parse_section(ini, spec->spec.node, *str, endptr - *str, line, err);
+    struct fmc_cfg_sect_item *sect =
+        parse_section(ini, spec->spec.node, *str, endptr - *str, line, err);
     if (*err) {
       return;
     }
@@ -421,7 +471,8 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
     out->value.sect = sect;
   } break;
   case FMC_CFG_ARR: {
-    struct fmc_cfg_arr_item *subarr = parse_array(ini, spec->spec.array, str, end, line, err);
+    struct fmc_cfg_arr_item *subarr =
+        parse_array(ini, spec->spec.array, str, end, line, err);
     if (*err) {
       return;
     }
@@ -431,17 +482,18 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
   }
 }
 
-static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err) {
+static struct fmc_cfg_arr_item *
+parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec,
+                      char **str, char *end, size_t line, fmc_error_t **err) {
   struct fmc_cfg_arr_item *arr = NULL;
   if (**str == ',') {
     ++*str;
     return arr;
-  }
-  else if (**str == ']') {
+  } else if (**str == ']') {
     return arr;
   }
 
-  while(*str < end) {
+  while (*str < end) {
     struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
     if (*err) {
       goto do_cleanup;
@@ -451,17 +503,15 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
     if (*err) {
       goto do_cleanup;
     }
-    if(*str == end) {
+    if (*str == end) {
       break;
-    }
-    else if (**str == ',') {
+    } else if (**str == ',') {
       ++*str;
-    }
-    else if (**str == ']') {
+    } else if (**str == ']') {
       break;
-    }
-    else {
-      fmc_error_set(err, "config error: comma was expected in array (line %zu)", line);
+    } else {
+      fmc_error_set(err, "config error: comma was expected in array (line %zu)",
+                    line);
       goto do_cleanup;
     }
   }
@@ -478,34 +528,41 @@ static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, stru
   }
   return arr;
 
-  do_cleanup:
+do_cleanup:
   fmc_cfg_arr_del(arr);
   return NULL;
 }
 
-static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err) {
+static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini,
+                                            struct fmc_cfg_type *spec,
+                                            char **str, char *end, size_t line,
+                                            fmc_error_t **err) {
   if (**str == '[') {
     ++*str;
-    struct fmc_cfg_arr_item *arr = parse_array_unwrapped(ini, spec, str, end, line, err);
+    struct fmc_cfg_arr_item *arr =
+        parse_array_unwrapped(ini, spec, str, end, line, err);
     if (*err) {
       return NULL;
     }
     if (**str == ']') {
       ++*str;
       return arr;
-    }
-    else {
-      fmc_error_set(err, "config error: closing bracket was expected in array (line %zu)", line);
+    } else {
+      fmc_error_set(
+          err, "config error: closing bracket was expected in array (line %zu)",
+          line);
       fmc_cfg_arr_del(arr);
       return NULL;
     }
-  }
-  else {
+  } else {
     return parse_array_unwrapped(ini, spec, str, end, line, err);
   }
 }
 
-static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, size_t line, fmc_error_t **err) {
+static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini,
+                                               struct fmc_cfg_node_spec *spec,
+                                               char *name, size_t len,
+                                               size_t line, fmc_error_t **err) {
   struct ini_sect *isect;
   struct fmc_cfg_sect_item *sect = NULL;
   for (isect = ini; isect; isect = isect->next) {
@@ -517,13 +574,15 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
   if (!isect || isect->used) {
     char prev = name[len];
     name[len] = '\0';
-    fmc_error_set(err, "config error: section %s not found (line %zu)", name, line);
+    fmc_error_set(err, "config error: section %s not found (line %zu)", name,
+                  line);
     name[len] = prev;
     return NULL;
   }
   isect->used = true;
 
-  for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
+  for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key;
+       ++spec_item) {
     struct ini_field *item = NULL;
     for (item = isect->fields; item; item = item->next) {
       if (strcmp(spec_item->key, item->key) == 0) {
@@ -532,10 +591,10 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     }
     if (!item || item->used) {
       if (spec_item->required) {
-        fmc_error_set(err, "config error: missing required field %s (line %zu)", spec_item->key, isect->line);
+        fmc_error_set(err, "config error: missing required field %s (line %zu)",
+                      spec_item->key, isect->line);
         goto do_cleanup;
-      }
-      else {
+      } else {
         continue;
       }
     }
@@ -552,26 +611,29 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_
     }
     char *str = item->val;
     char *end = item->val + strlen(item->val);
-    parse_value(ini, &spec_item->type, &str, end, item->line, &sitem->node, err);
+    parse_value(ini, &spec_item->type, &str, end, item->line, &sitem->node,
+                err);
     if (*err) {
       goto do_cleanup;
     }
     if (str != end) {
-      fmc_error_set(err, "config error: unable to parse field %s (line %zu)", item->key, item->line);
+      fmc_error_set(err, "config error: unable to parse field %s (line %zu)",
+                    item->key, item->line);
       goto do_cleanup;
     }
   }
 
   for (struct ini_field *item = isect->fields; item; item = item->next) {
     if (!item->used) {
-      fmc_error_set(err, "config error: unknown field %s (line %zu)", item->key, item->line);
+      fmc_error_set(err, "config error: unknown field %s (line %zu)", item->key,
+                    item->line);
       goto do_cleanup;
     }
   }
 
   return sect;
 
-  do_cleanup:
+do_cleanup:
   fmc_cfg_sect_del(sect);
   return NULL;
 }
@@ -581,7 +643,8 @@ struct parser_state_t {
   size_t line_n;
 };
 
-static void ini_line_parse(struct parser_state_t *state, char *line, size_t sz, fmc_error_t **err) {
+static void ini_line_parse(struct parser_state_t *state, char *line, size_t sz,
+                           fmc_error_t **err) {
   ++state->line_n;
   if (sz == 0) {
     return;
@@ -606,17 +669,19 @@ static void ini_line_parse(struct parser_state_t *state, char *line, size_t sz, 
     item->line = state->line_n;
 
     LL_PREPEND(state->sections, item);
-  }
-  else {
+  } else {
     if (!state->sections) {
-      fmc_error_set(err, "config error: key-value has no section (line %zu)", state->line_n);
+      fmc_error_set(err, "config error: key-value has no section (line %zu)",
+                    state->line_n);
       return;
     }
 
     size_t sep;
-    for (sep = 0; line[sep] != '=' && sep < sz; ++sep);
+    for (sep = 0; line[sep] != '=' && sep < sz; ++sep)
+      ;
     if (sep >= sz) {
-      fmc_error_set(err, "config error: invalid key-value entry (line %zu)", state->line_n);
+      fmc_error_set(err, "config error: invalid key-value entry (line %zu)",
+                    state->line_n);
       return;
     }
 
@@ -643,12 +708,13 @@ static void ini_line_parse(struct parser_state_t *state, char *line, size_t sz, 
   }
   return;
 
-  do_cleanup:
+do_cleanup:
   free(key);
   free(value);
 }
 
-static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_error_t **err) {
+static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key,
+                                       fmc_error_t **err) {
   struct parser_state_t state = {NULL, 0};
   char buffer[INI_PARSER_BUFF_SIZE];
 
@@ -659,7 +725,8 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
       goto do_cleanup;
     }
 
-    ssize_t ret = fmc_fread(fd, buffer + read, INI_PARSER_BUFF_SIZE - read, err);
+    ssize_t ret =
+        fmc_fread(fd, buffer + read, INI_PARSER_BUFF_SIZE - read, err);
     if (*err) {
       goto do_cleanup;
     }
@@ -700,11 +767,13 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
     }
   }
 
-  do_cleanup:
+do_cleanup:
   return NULL;
 }
 
-struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const char *root_key, fmc_error_t **err) {
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
+                            const char *root_key, fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *ret = NULL;
@@ -727,7 +796,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
   ret = sect;
   sect = NULL;
 
-  do_cleanup:
+do_cleanup:
   fmc_cfg_sect_del(sect);
   ini_sect_del(ini);
   return ret;
@@ -735,23 +804,34 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
 
 static const char *type_name(FMC_CFG_TYPE type) {
   switch (type) {
-  case FMC_CFG_NONE: return "none";
-  case FMC_CFG_BOOLEAN: return "boolean";
-  case FMC_CFG_INT64: return "int64";
-  case FMC_CFG_FLOAT64: return "float64";
-  case FMC_CFG_STR: return "string";
-  case FMC_CFG_SECT: return "section";
-  case FMC_CFG_ARR: return "array";
-  default: return "unknown";
+  case FMC_CFG_NONE:
+    return "none";
+  case FMC_CFG_BOOLEAN:
+    return "boolean";
+  case FMC_CFG_INT64:
+    return "int64";
+  case FMC_CFG_FLOAT64:
+    return "float64";
+  case FMC_CFG_STR:
+    return "string";
+  case FMC_CFG_SECT:
+    return "section";
+  case FMC_CFG_ARR:
+    return "array";
+  default:
+    return "unknown";
   }
 }
 
-static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec, struct fmc_cfg_arr_item *cfg, fmc_error_t **err) {
+static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec,
+                                   struct fmc_cfg_arr_item *cfg,
+                                   fmc_error_t **err) {
   fmc_error_clear(err);
 
   for (; cfg; cfg = cfg->next) {
     if (cfg->item.type != spec->type) {
-      fmc_error_set(err, "config error: item in array %s must be %s", type_name(cfg->item.type), type_name(spec->type));
+      fmc_error_set(err, "config error: item in array %s must be %s",
+                    type_name(cfg->item.type), type_name(spec->type));
       return;
     }
 
@@ -778,11 +858,13 @@ static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec, struct fmc_cfg_arr
   }
 }
 
-void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
+void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
+                             struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
   fmc_error_clear(err);
 
   size_t used_count = 0;
-  for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
+  for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key;
+       ++spec_item) {
     struct fmc_cfg_sect_item *item = NULL;
     for (item = cfg; item; item = item->next) {
       if (strcmp(spec_item->key, item->key) == 0) {
@@ -791,10 +873,10 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
     }
     if (!item) {
       if (spec_item->required) {
-        fmc_error_set(err, "config error: missing required field %s", spec_item->key);
+        fmc_error_set(err, "config error: missing required field %s",
+                      spec_item->key);
         return;
-      }
-      else {
+      } else {
         continue;
       }
     }
@@ -807,7 +889,9 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
     ++used_count;
 
     if (item->node.type != spec_item->type.type) {
-      fmc_error_set(err, "config error: field %s (%s) must be %s", spec_item->key, type_name(item->node.type), type_name(spec_item->type.type));
+      fmc_error_set(err, "config error: field %s (%s) must be %s",
+                    spec_item->key, type_name(item->node.type),
+                    type_name(spec_item->type.type));
       return;
     }
     switch (item->node.type) {
@@ -818,13 +902,15 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
     case FMC_CFG_STR:
       break;
     case FMC_CFG_SECT: {
-      fmc_cfg_node_spec_check(spec_item->type.spec.node, item->node.value.sect, err);
+      fmc_cfg_node_spec_check(spec_item->type.spec.node, item->node.value.sect,
+                              err);
       if (*err) {
         return;
       }
     } break;
     case FMC_CFG_ARR: {
-      fmc_cfg_arr_spec_check(spec_item->type.spec.array, item->node.value.arr, err);
+      fmc_cfg_arr_spec_check(spec_item->type.spec.array, item->node.value.arr,
+                             err);
       if (*err) {
         return;
       }
@@ -846,7 +932,7 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
         }
       }
 
-      if(!spec_item->key) {
+      if (!spec_item->key) {
         fmc_error_set(err, "config error: unknown field %s", item->key);
         return;
       }

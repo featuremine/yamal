@@ -45,10 +45,10 @@ fmc_ext_t fmc_ext_open(const char *path, fmc_error_t **error) {
 
 void *fmc_ext_sym(fmc_ext_t handle, const char *sym, fmc_error_t **error) {
 #if defined(FMC_SYS_UNIX)
-  dlerror(); // Clear any existing error
+  dlerror();                      // Clear any existing error
   void *ret = dlsym(handle, sym); // ret could be NULL and it is OK
   char *dlerrorstr = dlerror();
-  if(dlerrorstr) {
+  if (dlerrorstr) {
     FMC_ERROR_REPORT(error, dlerrorstr);
   }
   return ret;
@@ -59,7 +59,7 @@ void *fmc_ext_sym(fmc_ext_t handle, const char *sym, fmc_error_t **error) {
 
 void fmc_ext_close(fmc_ext_t handle) {
 #if defined(FMC_SYS_UNIX)
-  if(handle) {
+  if (handle) {
     dlclose(handle);
   }
 #else

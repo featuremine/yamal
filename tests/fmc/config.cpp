@@ -25,24 +25,25 @@
 
 #include <fmc++/gtestwrap.hpp>
 
-#define ASSERT_NOERR(err) ASSERT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), std::string_view())
-#define EXPECT_ERR(err, msg) EXPECT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), std::string_view(msg))
+#define ASSERT_NOERR(err)                                                      \
+  ASSERT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), \
+            std::string_view())
+#define EXPECT_ERR(err, msg)                                                   \
+  EXPECT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), \
+            std::string_view(msg))
 
 struct deleter_t {
-  void operator()(struct fmc_cfg_sect_item *head) {
-    fmc_cfg_sect_del(head);
-  }
-  void operator()(struct fmc_cfg_arr_item *head) {
-    fmc_cfg_arr_del(head);
-  }
+  void operator()(struct fmc_cfg_sect_item *head) { fmc_cfg_sect_del(head); }
+  void operator()(struct fmc_cfg_arr_item *head) { fmc_cfg_arr_del(head); }
 };
-template<typename T>
-using unique_cfg_ptr = std::unique_ptr<T, deleter_t>;
+template <typename T> using unique_cfg_ptr = std::unique_ptr<T, deleter_t>;
 using unique_sect = unique_cfg_ptr<fmc_cfg_sect_item>;
 using unique_arr = unique_cfg_ptr<fmc_cfg_arr_item>;
 
-void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cfg_sect_item *sect);
-void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cfg_arr_item *arr) {
+void cfg_to_string(const std::string &prefix, std::string &result,
+                   struct fmc_cfg_sect_item *sect);
+void cfg_to_string(const std::string &prefix, std::string &result,
+                   struct fmc_cfg_arr_item *arr) {
   for (; arr; arr = arr->next) {
     result += prefix;
     switch (arr->item.type) {
@@ -82,7 +83,8 @@ void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cf
   }
 }
 
-void cfg_to_string(const std::string &prefix, std::string &result, struct fmc_cfg_sect_item *sect) {
+void cfg_to_string(const std::string &prefix, std::string &result,
+                   struct fmc_cfg_sect_item *sect) {
   for (; sect; sect = sect->next) {
     result += prefix;
     result += sect->key;
@@ -132,15 +134,16 @@ std::string cfg_to_string(const unique_sect &sect) {
   return result;
 }
 
-unique_sect parse_cfg(const std::vector<std::string_view> &config_parts, struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
+unique_sect parse_cfg(const std::vector<std::string_view> &config_parts,
+                      struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
   fmc_fd pipe_descriptors[2];
 
-  if(pipe(pipe_descriptors) != 0) {
+  if (pipe(pipe_descriptors) != 0) {
     fmc_error_set(&err, "pipe failed");
     return nullptr;
   }
 
-  std::thread write_thread([fd=pipe_descriptors[1], &config_parts]() {
+  std::thread write_thread([fd = pipe_descriptors[1], &config_parts]() {
     for (size_t i = 0; i < config_parts.size(); ++i) {
       if (i > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -151,26 +154,29 @@ unique_sect parse_cfg(const std::vector<std::string_view> &config_parts, struct 
     fmc_fclose(fd, &err);
   });
 
-  auto sect = unique_sect(fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
+  auto sect = unique_sect(
+      fmc_cfg_sect_parse_ini_file(spec, pipe_descriptors[0], "main", &err));
 
   close(pipe_descriptors[0]);
   write_thread.join();
   return sect;
 }
 
-unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
+unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec,
+                      fmc_error_t *&err) {
   return parse_cfg(std::vector<std::string_view>({config}), spec, err);
 }
 
 TEST(parser, required_1) {
   struct fmc_cfg_node_spec subsect[] = {
       fmc_cfg_node_spec{
-        .key = "int64",
-        .descr = "int64 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -181,66 +187,73 @@ TEST(parser, required_1) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "int64",
-        .descr = "int64 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "boolean",
-        .descr = "boolean descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_BOOLEAN,
-        },
+          .key = "boolean",
+          .descr = "boolean descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_BOOLEAN,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "float64",
-        .descr = "float64 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_FLOAT64,
-        },
+          .key = "float64",
+          .descr = "float64 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_FLOAT64,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "str",
-        .descr = "str descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_STR,
-        },
+          .key = "str",
+          .descr = "str descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_STR,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "none",
-        .descr = "none descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_NONE,
-        },
+          .key = "none",
+          .descr = "none descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_NONE,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "sect",
-        .descr = "sect descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_SECT,
-          .spec {
-            .node = subsect,
-          },
-        },
+          .key = "sect",
+          .descr = "sect descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_SECT,
+                  .spec{
+                      .node = subsect,
+                  },
+              },
       },
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr3 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr3 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -389,12 +402,13 @@ TEST(parser, required_1) {
 TEST(parser, unknown_field_1) {
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "int64",
-        .descr = "int64 descr",
-        .required = false,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = false,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -410,12 +424,13 @@ TEST(parser, unknown_field_1) {
 TEST(parser, unknown_section_1) {
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "int64",
-        .descr = "int64 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -434,23 +449,25 @@ TEST(parser, unknown_section_2) {
           .key = "int64",
           .descr = "int64 descr",
           .required = true,
-          .type = fmc_cfg_type{
-              .type = FMC_CFG_INT64,
-          },
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "sect",
-        .descr = "sect descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_SECT,
-          .spec {
-            .node = subsect,
-          },
-        },
+          .key = "sect",
+          .descr = "sect descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_SECT,
+                  .spec{
+                      .node = subsect,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -472,15 +489,16 @@ TEST(parser, invalid_array_1) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -490,48 +508,50 @@ TEST(parser, invalid_array_1) {
                         "arr=[1\n"
                         "",
                         main, err);
-  EXPECT_ERR(err, "config error: closing bracket was expected in array (line 2)");
+  EXPECT_ERR(err,
+             "config error: closing bracket was expected in array (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=1]\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=1]\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=,1,2,3\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=,1,2,3\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=1,,3\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=1,,3\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: unable to parse int64 (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=[1,2,3\n"
-                        "",
-                        main, err);
-  EXPECT_ERR(err, "config error: closing bracket was expected in array (line 2)");
+                   "[main]\n"
+                   "arr=[1,2,3\n"
+                   "",
+                   main, err);
+  EXPECT_ERR(err,
+             "config error: closing bracket was expected in array (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=1,2,3]\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=1,2,3]\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=[1,2a,3]\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=[1,2a,3]\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
 }
 
@@ -542,15 +562,16 @@ TEST(parser, invalid_array_2) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -570,15 +591,16 @@ TEST(parser, invalid_array_3) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -598,15 +620,16 @@ TEST(parser, invalid_array_4) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -626,15 +649,16 @@ TEST(parser, invalid_array_5) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -654,15 +678,16 @@ TEST(parser, invalid_array_6) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -672,7 +697,8 @@ TEST(parser, invalid_array_6) {
                         "arr=\"a\",\"b\",\"c\n"
                         "",
                         main, err);
-  EXPECT_ERR(err, "config error: unable to find closing quotes for string (line 2)");
+  EXPECT_ERR(err,
+             "config error: unable to find closing quotes for string (line 2)");
 }
 
 TEST(parser, invalid_ini_1) {
@@ -682,41 +708,41 @@ TEST(parser, invalid_ini_1) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
   fmc_error_t *err;
   std::string str = ""
-             "[main]\n"
-             "arr=";
+                    "[main]\n"
+                    "arr=";
   while (str.size() < 10000) {
     str += "1,";
   }
   str += "\n";
-  auto sect = parse_cfg(str,
-                        main, err);
+  auto sect = parse_cfg(str, main, err);
   EXPECT_ERR(err, "config error: line 2 is too long");
 
   sect = parse_cfg(""
-                        "arr=1,2,3\n"
-                        "",
-                        main, err);
+                   "arr=1,2,3\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: key-value has no section (line 1)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr1,2,3\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr1,2,3\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: invalid key-value entry (line 2)");
 }
 
@@ -727,23 +753,24 @@ TEST(parser, ini_format_1) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
   fmc_error_t *err;
-  auto sect = parse_cfg(std::vector<std::string_view>({
-                          ""
-                          "[main]\r\n"
-                          "arr=1,2,","3    \r\n"}),
+  auto sect = parse_cfg(std::vector<std::string_view>({""
+                                                       "[main]\r\n"
+                                                       "arr=1,2,",
+                                                       "3    \r\n"}),
                         main, err);
   ASSERT_NOERR(err);
   EXPECT_EQ(cfg_to_string(sect), ""
@@ -763,15 +790,16 @@ TEST(parser, string_1) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -792,24 +820,25 @@ TEST(parser, string_1) {
                                  "}\n");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=\"a\",\"b\",\"c\n"
-                        "",
-                        main, err);
-  EXPECT_ERR(err, "config error: unable to find closing quotes for string (line 2)");
+                   "[main]\n"
+                   "arr=\"a\",\"b\",\"c\n"
+                   "",
+                   main, err);
+  EXPECT_ERR(err,
+             "config error: unable to find closing quotes for string (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=\"a\",\"b,\"c\"\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=\"a\",\"b,\"c\"\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=a\",\"b\",\"c\"\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=a\",\"b\",\"c\"\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: unable to parse string (line 2)");
 }
 
@@ -820,15 +849,16 @@ TEST(parser, boolean_1) {
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -849,24 +879,24 @@ TEST(parser, boolean_1) {
                                  "}\n");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=true,falsee,false\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=true,falsee,false\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=truee,false,false\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=truee,false,false\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=abc,false,false\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=abc,false,false\n"
+                   "",
+                   main, err);
   EXPECT_ERR(err, "config error: unable to parse boolean (line 2)");
 }
 
@@ -876,38 +906,40 @@ TEST(parser, arraysect_1) {
           .key = "int64",
           .descr = "int64 descr",
           .required = true,
-          .type = fmc_cfg_type{
-              .type = FMC_CFG_INT64,
-          },
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
 
   struct fmc_cfg_type subarray2 = {
       .type = FMC_CFG_SECT,
-      .spec {
+      .spec{
           .node = subsect,
       },
   };
 
   struct fmc_cfg_type subarray1 = {
       .type = FMC_CFG_ARR,
-      .spec {
+      .spec{
           .array = &subarray2,
       },
   };
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray1,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray1,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -945,17 +977,17 @@ TEST(parser, arraysect_1) {
                                  "}\n");
 
   sect = parse_cfg(""
-                        "[main]\n"
-                        "arr=sect1,sect2,sect3\n"
-                        "\n"
-                        "[sect3]\n"
-                        "int64=3\n"
-                        "[sect1]\n"
-                        "int64=1\n"
-                        "[sect2]\n"
-                        "int64=2\n"
-                        "",
-                        main, err);
+                   "[main]\n"
+                   "arr=sect1,sect2,sect3\n"
+                   "\n"
+                   "[sect3]\n"
+                   "int64=3\n"
+                   "[sect1]\n"
+                   "int64=1\n"
+                   "[sect2]\n"
+                   "int64=2\n"
+                   "",
+                   main, err);
   ASSERT_NOERR(err);
   EXPECT_EQ(cfg_to_string(sect), ""
                                  "{\n"
@@ -980,15 +1012,20 @@ TEST(direct, basic_1) {
 
   auto sect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse", false, &err));
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(
+      sect.release(), "booleanfalse", false, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
   ASSERT_NOERR(err);
 
   auto arr = unique_arr(fmc_cfg_arr_item_add_none(nullptr, &err));
@@ -1004,53 +1041,60 @@ TEST(direct, basic_1) {
   arr = unique_arr(fmc_cfg_arr_item_add_str(arr.release(), "message", &err));
   ASSERT_NOERR(err);
 
-  auto subsect1 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect1 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
-  arr = unique_arr(fmc_cfg_arr_item_add_sect(arr.release(), subsect1.release(), &err));
+  arr = unique_arr(
+      fmc_cfg_arr_item_add_sect(arr.release(), subsect1.release(), &err));
   ASSERT_NOERR(err);
 
   auto subarr = unique_arr(fmc_cfg_arr_item_add_none(nullptr, &err));
   ASSERT_NOERR(err);
-  subarr = unique_arr(fmc_cfg_arr_item_add_boolean(subarr.release(), true, &err));
+  subarr =
+      unique_arr(fmc_cfg_arr_item_add_boolean(subarr.release(), true, &err));
   ASSERT_NOERR(err);
-  arr = unique_arr(fmc_cfg_arr_item_add_arr(arr.release(), subarr.release(), &err));
+  arr = unique_arr(
+      fmc_cfg_arr_item_add_arr(arr.release(), subarr.release(), &err));
   ASSERT_NOERR(err);
 
-  sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
   ASSERT_NOERR(err);
 
-  auto subsect2 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect2 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect2.release(), &err));
+  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect",
+                                                subsect2.release(), &err));
   ASSERT_NOERR(err);
 
   EXPECT_EQ(cfg_to_string(sect), ""
-                                  "{\n"
-                                  "  sect = {\n"
-                                  "    none = none\n"
-                                  "  }\n"
-                                  "  arr = [\n"
-                                  "    [\n"
-                                  "      1,\n"
-                                  "      none,\n"
-                                  "    ],\n"
-                                  "    {\n"
-                                  "      none = none\n"
-                                  "    },\n"
-                                  "    \"message\",\n"
-                                  "    -45.500000,\n"
-                                  "    -45,\n"
-                                  "    0,\n"
-                                  "    1,\n"
-                                  "    none,\n"
-                                  "  ]\n"
-                                  "  str = \"message\"\n"
-                                  "  float64 = -45.500000\n"
-                                  "  int64 = -45\n"
-                                  "  booleanfalse = 0\n"
-                                  "  booleantrue = 1\n"
-                                  "  none = none\n"
-                                  "}\n"
+                                 "{\n"
+                                 "  sect = {\n"
+                                 "    none = none\n"
+                                 "  }\n"
+                                 "  arr = [\n"
+                                 "    [\n"
+                                 "      1,\n"
+                                 "      none,\n"
+                                 "    ],\n"
+                                 "    {\n"
+                                 "      none = none\n"
+                                 "    },\n"
+                                 "    \"message\",\n"
+                                 "    -45.500000,\n"
+                                 "    -45,\n"
+                                 "    0,\n"
+                                 "    1,\n"
+                                 "    none,\n"
+                                 "  ]\n"
+                                 "  str = \"message\"\n"
+                                 "  float64 = -45.500000\n"
+                                 "  int64 = -45\n"
+                                 "  booleanfalse = 0\n"
+                                 "  booleantrue = 1\n"
+                                 "  none = none\n"
+                                 "}\n"
                                  "");
 }
 
@@ -1059,159 +1103,188 @@ TEST(check, test_1) {
 
   auto sect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse", false, &err));
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(
+      sect.release(), "booleanfalse", false, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
-  ASSERT_NOERR(err);
-
-  auto subsect1 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
-  ASSERT_NOERR(err);
-  auto subarr1 = unique_arr(fmc_cfg_arr_item_add_sect(nullptr, subsect1.release(), &err));
-  ASSERT_NOERR(err);
-  auto subsect2 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
-  ASSERT_NOERR(err);
-  subarr1 = unique_arr(fmc_cfg_arr_item_add_sect(subarr1.release(), subsect2.release(), &err));
-  ASSERT_NOERR(err);
-  auto arr = unique_arr(fmc_cfg_arr_item_add_arr(nullptr, subarr1.release(), &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
   ASSERT_NOERR(err);
 
-  auto subsect3 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect1 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
-  auto subarr2 = unique_arr(fmc_cfg_arr_item_add_sect(nullptr, subsect3.release(), &err));
+  auto subarr1 =
+      unique_arr(fmc_cfg_arr_item_add_sect(nullptr, subsect1.release(), &err));
   ASSERT_NOERR(err);
-  auto subsect4 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect2 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
-  subarr2 = unique_arr(fmc_cfg_arr_item_add_sect(subarr2.release(), subsect4.release(), &err));
+  subarr1 = unique_arr(
+      fmc_cfg_arr_item_add_sect(subarr1.release(), subsect2.release(), &err));
   ASSERT_NOERR(err);
-  arr = unique_arr(fmc_cfg_arr_item_add_arr(arr.release(), subarr2.release(), &err));
+  auto arr =
+      unique_arr(fmc_cfg_arr_item_add_arr(nullptr, subarr1.release(), &err));
   ASSERT_NOERR(err);
 
-  sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
+  auto subsect3 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  auto subarr2 =
+      unique_arr(fmc_cfg_arr_item_add_sect(nullptr, subsect3.release(), &err));
+  ASSERT_NOERR(err);
+  auto subsect4 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  subarr2 = unique_arr(
+      fmc_cfg_arr_item_add_sect(subarr2.release(), subsect4.release(), &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(
+      fmc_cfg_arr_item_add_arr(arr.release(), subarr2.release(), &err));
   ASSERT_NOERR(err);
 
-  auto subsect5 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
   ASSERT_NOERR(err);
-  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect5.release(), &err));
+
+  auto subsect5 =
+      unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect",
+                                                subsect5.release(), &err));
   ASSERT_NOERR(err);
 
   struct fmc_cfg_node_spec subsect[] = {
       fmc_cfg_node_spec{
-        .key = "none",
-        .descr = "none descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_NONE,
-        },
+          .key = "none",
+          .descr = "none descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_NONE,
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
 
   struct fmc_cfg_type subarray2 = {
       .type = FMC_CFG_SECT,
-      .spec {
-        .node = subsect,
+      .spec{
+          .node = subsect,
       },
   };
 
   struct fmc_cfg_type subarray1 = {
       .type = FMC_CFG_ARR,
-      .spec {
+      .spec{
           .array = &subarray2,
       },
   };
 
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
-        .key = "optional",
-        .descr = "optional descr",
-        .required = false,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "optional",
+          .descr = "optional descr",
+          .required = false,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "missing",
-        .descr = "missing descr",
-        .required = false,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "missing",
+          .descr = "missing descr",
+          .required = false,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "int64",
-        .descr = "int64 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_INT64,
-        },
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_INT64,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "booleantrue",
-        .descr = "booleantrue descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_BOOLEAN,
-        },
+          .key = "booleantrue",
+          .descr = "booleantrue descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_BOOLEAN,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "booleanfalse",
-        .descr = "booleanfalse descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_BOOLEAN,
-        },
+          .key = "booleanfalse",
+          .descr = "booleanfalse descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_BOOLEAN,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "float64",
-        .descr = "float64 descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_FLOAT64,
-        },
+          .key = "float64",
+          .descr = "float64 descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_FLOAT64,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "str",
-        .descr = "str descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_STR,
-        },
+          .key = "str",
+          .descr = "str descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_STR,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "none",
-        .descr = "none descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_NONE,
-        },
+          .key = "none",
+          .descr = "none descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_NONE,
+              },
       },
       fmc_cfg_node_spec{
-        .key = "sect",
-        .descr = "sect descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_SECT,
-          .spec {
-            .node = subsect,
-          },
-        },
+          .key = "sect",
+          .descr = "sect descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_SECT,
+                  .spec{
+                      .node = subsect,
+                  },
+              },
       },
       fmc_cfg_node_spec{
-        .key = "arr",
-        .descr = "arr descr",
-        .required = true,
-        .type = fmc_cfg_type{
-          .type = FMC_CFG_ARR,
-          .spec {
-            .array = &subarray1,
-          },
-        },
+          .key = "arr",
+          .descr = "arr descr",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &subarray1,
+                  },
+              },
       },
       fmc_cfg_node_spec{NULL},
   };
@@ -1256,8 +1329,10 @@ TEST(check, test_1) {
   EXPECT_ERR(err, "config error: missing required field missing");
   main[1].required = false;
 
-  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "missssing", -101, &err));
-  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "optional", -101, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_int64(sect.release(), "missssing", -101, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_int64(sect.release(), "optional", -101, &err));
   fmc_cfg_node_spec_check(main, sect.get(), &err);
   EXPECT_ERR(err, "config error: unknown field missssing");
   auto p = sect.release();
@@ -1267,14 +1342,16 @@ TEST(check, test_1) {
   LL_DELETE(p, p);
   sect = unique_sect(p);
 
-  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -101, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_int64(sect.release(), "int64", -101, &err));
   fmc_cfg_node_spec_check(main, sect.get(), &err);
   EXPECT_ERR(err, "config error: duplicated field int64");
   p = sect.release();
   LL_DELETE(p, p);
   sect = unique_sect(p);
 
-  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "optional", -101.0, &err));
+  sect = unique_sect(
+      fmc_cfg_sect_item_add_float64(sect.release(), "optional", -101.0, &err));
   fmc_cfg_node_spec_check(main, sect.get(), &err);
   EXPECT_ERR(err, "config error: field optional (float64) must be int64");
 }

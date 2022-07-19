@@ -32,18 +32,20 @@ TEST(fmc, conversions) {
   int64_t timeraw_expected = 10;
   ASSERT_EQ(fm_time64_from_raw(timeraw), time_expected);
   ASSERT_EQ(fm_time64_from_nanos(timeraw), time_expected);
-  ASSERT_EQ(fm_time64_from_seconds(timeraw), fm_time64_from_nanos(timeraw* 1000000000ULL));
+  ASSERT_EQ(fm_time64_from_seconds(timeraw),
+            fm_time64_from_nanos(timeraw * 1000000000ULL));
   ASSERT_EQ(fm_time64_to_nanos(time), timeraw_expected);
-  ASSERT_EQ(fm_time64_to_fseconds(time*1000000000ULL), (double)timeraw_expected);
+  ASSERT_EQ(fm_time64_to_fseconds(time * 1000000000ULL),
+            (double)timeraw_expected);
   ASSERT_EQ(fm_time64_raw(time), timeraw_expected);
 }
 
 TEST(fmc, comparisons) {
   fm_time64_t time1 = fm_time64_from_raw(1);
   fm_time64_t time2 = fm_time64_from_raw(2);
-  ASSERT_TRUE(fm_time64_less(time1,time2));
-  ASSERT_FALSE(fm_time64_greater(time1,time2));
-  ASSERT_FALSE(fm_time64_equal(time1,time2));
+  ASSERT_TRUE(fm_time64_less(time1, time2));
+  ASSERT_FALSE(fm_time64_greater(time1, time2));
+  ASSERT_FALSE(fm_time64_equal(time1, time2));
   ASSERT_FALSE(fm_time64_is_end(time1));
   ASSERT_TRUE(fm_time64_is_end(fm_time64_end()));
 }

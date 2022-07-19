@@ -37,32 +37,34 @@ typedef enum {
 } FMC_ERROR_CODE;
 
 struct fmc_error {
-   FMC_ERROR_CODE code;
-   char *buf;
+  FMC_ERROR_CODE code;
+  char *buf;
 };
 
 typedef struct fmc_error fmc_error_t;
 
 /**
  * @brief Initializes the error struct
- * 
+ *
  * User must provide a buf if code is FMC_ERROR_CUSTOM
- * 
+ *
  * @param err
  * @param code FMC_ERROR_CODE
  * @param buf error string. Could be NULL if code is not FMC_ERROR_CUSTOM
  */
-FMMODFUNC void fmc_error_init(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf);
+FMMODFUNC void fmc_error_init(fmc_error_t *err, FMC_ERROR_CODE code,
+                              const char *buf);
 
 /**
  * @brief Initializes the error struct with error code FMC_ERROR_NONE
- * 
+ *
  * @param err
  */
 FMMODFUNC void fmc_error_init_none(fmc_error_t *err);
 
 /**
- * @brief Inistializes the error with code FMC_ERROR_CUSTOM and an error message.
+ * @brief Inistializes the error with code FMC_ERROR_CUSTOM and an error
+ * message.
  *
  * @param err
  * @param fmt error format string
@@ -108,7 +110,8 @@ void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
  * @param errsrc2 source error 2: Its error goes last in the final string
  * @param sep separator in between the two error strings
  */
-void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1, fmc_error_t *errsrc2, const char *sep);
+void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
+                         fmc_error_t *errsrc2, const char *sep);
 
 /**
  * @brief Concatenates the error string into another.
@@ -135,7 +138,7 @@ FMMODFUNC const char *fmc_syserror_msg();
 
 /* Functions and macros below use the global fmc_error_t error instance*/
 
-#define FMC_ERROR_REPORT(err, msg)                                            \
+#define FMC_ERROR_REPORT(err, msg)                                             \
   fmc_error_set(err, "%s (%s:%d)", msg, __FILE__, __LINE__)
 
 /**
