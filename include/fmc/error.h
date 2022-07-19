@@ -99,7 +99,7 @@ FMMODFUNC const char *fmc_error_msg(fmc_error_t *err);
  * @param errdest destination error
  * @param errsrc source error
  */
-void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
+FMMODFUNC void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
 
 /**
  * @brief Initializes an error by joining 2 existing ones.
@@ -110,7 +110,7 @@ void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
  * @param errsrc2 source error 2: Its error goes last in the final string
  * @param sep separator in between the two error strings
  */
-void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
+FMMODFUNC void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
                          fmc_error_t *errsrc2, const char *sep);
 
 /**
@@ -121,7 +121,7 @@ void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
  * @param errsrc source error: Its error goes last in the final string
  * @param sep separator in between the two error strings
  */
-void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc, const char *sep);
+FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc, const char *sep);
 
 /**
  * @brief Returns the current thread error object
