@@ -66,7 +66,7 @@ void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
 }
 
 static struct fmc_cfg_sect_item *fmc_cfg_sect_item_new() {
-  return (struct fmc_cfg_sect_item *)calloc(1, sizeof(fmc_cfg_sect_item));
+  return (struct fmc_cfg_sect_item *)calloc(1, sizeof(struct fmc_cfg_sect_item));
 }
 
 struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item * tail, const char * key) {
@@ -171,7 +171,7 @@ void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
 }
 
 static struct fmc_cfg_arr_item *fmc_cfg_arr_item_new() {
-  return (struct fmc_cfg_arr_item *)calloc(1, sizeof(fmc_cfg_arr_item));
+  return (struct fmc_cfg_arr_item *)calloc(1, sizeof(struct fmc_cfg_arr_item));
 }
 
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item * tail) {
@@ -292,9 +292,9 @@ static void ini_sect_del(struct ini_sect *sect) {
 static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err);
 static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err);
 static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini, struct fmc_cfg_node_spec *spec, char *name, size_t len, size_t line, fmc_error_t **err);
-static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_cfg_item *out, fmc_error_t **err);
+static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, struct fmc_cfg_item *out, fmc_error_t **err);
 
-static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_cfg_item *out, fmc_error_t **err) {
+static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, struct fmc_cfg_item *out, fmc_error_t **err) {
   out->type = FMC_CFG_NONE;
   switch (spec->type) {
   case FMC_CFG_NONE: {
@@ -392,7 +392,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec, char **
 }
 
 static struct fmc_cfg_arr_item *parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec, char **str, char *end, size_t line, fmc_error_t **err) {
-  fmc_cfg_arr_item *arr = NULL;
+  struct fmc_cfg_arr_item *arr = NULL;
   if (**str == ',') {
     ++*str;
     return arr;
@@ -532,7 +532,7 @@ struct parser_state_t {
   size_t line_n;
 };
 
-static void ini_line_parse(parser_state_t *state, char *line, size_t sz, fmc_error_t **error) {
+static void ini_line_parse(struct parser_state_t *state, char *line, size_t sz, fmc_error_t **error) {
   ++state->line_n;
   if (sz == 0) {
     return;
@@ -605,7 +605,7 @@ static void ini_line_parse(parser_state_t *state, char *line, size_t sz, fmc_err
 }
 
 static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_error_t **err) {
-  parser_state_t state {NULL, 0};
+  struct parser_state_t state = {NULL, 0};
   char buffer[INI_PARSER_BUFF_SIZE];
 
   size_t read = 0;
