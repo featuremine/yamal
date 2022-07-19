@@ -43,10 +43,6 @@
 #error "Unsupported operating system"
 #endif
 
-// TODO: replace this function with the one on config.h
-void fmc_cfc_spec_check(struct fmc_cfg_node_spec *spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
-
-}
 
 void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->search_paths = NULL;
@@ -193,7 +189,7 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const 
   for(unsigned int i = 0; mod->components_type && mod->components_type[i].name; ++i) {
     struct fmc_component_type *tp = &mod->components_type[i];
     if(!strcmp(tp->name, comp)) {
-      fmc_cfc_spec_check(tp->cfgspec, cfg, error);
+      fmc_cfg_node_spec_check(tp->cfgspec, cfg, error);
       if (*error) return NULL;
 
       fmc_component_list_t *item = (fmc_component_list_t *)calloc(1, sizeof(*item));

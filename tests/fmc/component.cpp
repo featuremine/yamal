@@ -134,16 +134,25 @@ TEST(component, component) {
   ASSERT_EQ(sys.modules, mod);
   ASSERT_EQ(sys.modules->prev, mod);
 
-  struct fmc_cfg_sect_item cfg;
-  // struct fmc_cfg_sect_item *cfg = fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
-  //ASSERT_EQ(err, nullptr);
-  struct fmc_component *comp = fmc_component_new(mod, "test-component", &cfg, &err);
+  struct fmc_cfg_sect_item *cfginvalid = fmc_cfg_sect_item_add_str(nullptr, "invalidkey", "message", &err);
+  ASSERT_EQ(err, nullptr);
+  struct fmc_component *compinvalid = fmc_component_new(mod, "test-component", cfginvalid, &err);
+  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(compinvalid, nullptr);
+
+  struct fmc_cfg_sect_item *cfg = fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
+  ASSERT_EQ(err, nullptr);
+  struct fmc_component *comp = fmc_component_new(mod, "test-component", cfg, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(sys.modules, comp->_mod);
   ASSERT_EQ(std::string(comp->_vt->name), std::string("test-component"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
+  struct test_component *testcomp = (struct test_component *)comp;
+  ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
 
   fmc_component_del(comp);
+  fmc_cfg_sect_del(cfginvalid);
+  fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
