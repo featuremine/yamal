@@ -25,6 +25,7 @@
 #include <fmc++/gtestwrap.hpp>
 
 #define ASSERT_NOERR(err) ASSERT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), std::string_view())
+#define EXPECT_ERR(err, msg) EXPECT_EQ((err) ? std::string_view(fmc_error_msg(err)) : std::string_view(), std::string_view(msg))
 
 struct deleter_t {
   void operator()(struct fmc_cfg_sect_item *head) {
@@ -130,7 +131,7 @@ std::string cfg_to_string(const unique_sect &sect) {
   return result;
 }
 
-unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
+unique_sect parse_cfg(const std::vector<std::string_view> &config_parts, struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
   fmc_fd pipe_descriptors[2];
 
   if(pipe(pipe_descriptors) != 0) {
@@ -138,8 +139,13 @@ unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, f
     return nullptr;
   }
 
-  std::thread write_thread([fd=pipe_descriptors[1], config]() {
-    write(fd, config.data(), config.size());
+  std::thread write_thread([fd=pipe_descriptors[1], &config_parts]() {
+    for (size_t i = 0; i < config_parts.size(); ++i) {
+      if (i > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      }
+      write(fd, config_parts[i].data(), config_parts[i].size());
+    }
     fmc_error_t *err;
     fmc_fclose(fd, &err);
   });
@@ -151,7 +157,11 @@ unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, f
   return sect;
 }
 
-TEST(error, required_1) {
+unique_sect parse_cfg(std::string_view config, struct fmc_cfg_node_spec *spec, fmc_error_t *&err) {
+  return parse_cfg(std::vector<std::string_view>({config}), spec, err);
+}
+
+TEST(parser, required_1) {
   struct fmc_cfg_node_spec subsect[] = {
       fmc_cfg_node_spec{
         .key = "int64",
@@ -274,7 +284,7 @@ TEST(error, required_1) {
                    "[sect1]\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field int64 (line 9)");
+  EXPECT_ERR(err, "config error: missing required field int64 (line 9)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -288,7 +298,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field arr (line 1)");
+  EXPECT_ERR(err, "config error: missing required field arr (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -302,7 +312,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field sect (line 1)");
+  EXPECT_ERR(err, "config error: missing required field sect (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -316,7 +326,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field none (line 1)");
+  EXPECT_ERR(err, "config error: missing required field none (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -330,7 +340,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field boolean (line 1)");
+  EXPECT_ERR(err, "config error: missing required field boolean (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -344,7 +354,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field int64 (line 1)");
+  EXPECT_ERR(err, "config error: missing required field int64 (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -358,7 +368,7 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field str (line 1)");
+  EXPECT_ERR(err, "config error: missing required field str (line 1)");
 
   sect = parse_cfg(""
                    "[main]\n"
@@ -372,10 +382,10 @@ TEST(error, required_1) {
                    "int64=-100000\n"
                    "",
                    main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: missing required field float64 (line 1)");
+  EXPECT_ERR(err, "config error: missing required field float64 (line 1)");
 }
 
-TEST(error, unknown_field_1) {
+TEST(parser, unknown_field_1) {
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
         .key = "int64",
@@ -393,10 +403,10 @@ TEST(error, unknown_field_1) {
                         "int63=1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unknown field int63 (line 2)");
+  EXPECT_ERR(err, "config error: unknown field int63 (line 2)");
 }
 
-TEST(error, unknown_section_1) {
+TEST(parser, unknown_section_1) {
   struct fmc_cfg_node_spec main[] = {
       fmc_cfg_node_spec{
         .key = "int64",
@@ -414,10 +424,10 @@ TEST(error, unknown_section_1) {
                         "int64=1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: section main not found (line 0)");
+  EXPECT_ERR(err, "config error: section main not found (line 0)");
 }
 
-TEST(error, unknown_section_2) {
+TEST(parser, unknown_section_2) {
   struct fmc_cfg_node_spec subsect[] = {
       fmc_cfg_node_spec{
           .key = "int64",
@@ -451,10 +461,10 @@ TEST(error, unknown_section_2) {
                         "int64=1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: section subsact not found (line 2)");
+  EXPECT_ERR(err, "config error: section subsact not found (line 2)");
 }
 
-TEST(error, invalid_array_1) {
+TEST(parser, invalid_array_1) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_INT64,
   };
@@ -479,52 +489,52 @@ TEST(error, invalid_array_1) {
                         "arr=[1\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: closing bracket was expected in array (line 2)");
+  EXPECT_ERR(err, "config error: closing bracket was expected in array (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=1]\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse field arr (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=,1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse field arr (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=1,,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse int64 (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse int64 (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=[1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: closing bracket was expected in array (line 2)");
+  EXPECT_ERR(err, "config error: closing bracket was expected in array (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=1,2,3]\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse field arr (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse field arr (line 2)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr=[1,2a,3]\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: comma was expected in array (line 2)");
+  EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
 }
 
-TEST(error, invalid_array_2) {
+TEST(parser, invalid_array_2) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_NONE,
   };
@@ -549,10 +559,10 @@ TEST(error, invalid_array_2) {
                         "arr=1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse none (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse none (line 2)");
 }
 
-TEST(error, invalid_array_3) {
+TEST(parser, invalid_array_3) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_BOOLEAN,
   };
@@ -577,10 +587,10 @@ TEST(error, invalid_array_3) {
                         "arr=1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse boolean (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse boolean (line 2)");
 }
 
-TEST(error, invalid_array_4) {
+TEST(parser, invalid_array_4) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_FLOAT64,
   };
@@ -605,10 +615,10 @@ TEST(error, invalid_array_4) {
                         "arr=a,b,c\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse float64 (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse float64 (line 2)");
 }
 
-TEST(error, invalid_array_5) {
+TEST(parser, invalid_array_5) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_STR,
   };
@@ -633,10 +643,10 @@ TEST(error, invalid_array_5) {
                         "arr=a,b,c\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to parse string (line 2)");
+  EXPECT_ERR(err, "config error: unable to parse string (line 2)");
 }
 
-TEST(error, invalid_array_6) {
+TEST(parser, invalid_array_6) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_STR,
   };
@@ -661,10 +671,10 @@ TEST(error, invalid_array_6) {
                         "arr=\"a\",\"b\",\"c\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: unable to find closing quotes for string (line 2)");
+  EXPECT_ERR(err, "config error: unable to find closing quotes for string (line 2)");
 }
 
-TEST(error, invalid_ini_1) {
+TEST(parser, invalid_ini_1) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_INT64,
   };
@@ -693,23 +703,23 @@ TEST(error, invalid_ini_1) {
   str += "\n";
   auto sect = parse_cfg(str,
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: line 2 is too long");
+  EXPECT_ERR(err, "config error: line 2 is too long");
 
   sect = parse_cfg(""
                         "arr=1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: key-value has no section (line 1)");
+  EXPECT_ERR(err, "config error: key-value has no section (line 1)");
 
   sect = parse_cfg(""
                         "[main]\n"
                         "arr1,2,3\n"
                         "",
                         main, err);
-  EXPECT_EQ(std::string_view(fmc_error_msg(err)), "config error: invalid key-value entry (line 2)");
+  EXPECT_ERR(err, "config error: invalid key-value entry (line 2)");
 }
 
-TEST(error, ini_format_1) {
+TEST(parser, ini_format_1) {
   struct fmc_cfg_type subarray = {
       .type = FMC_CFG_INT64,
   };
@@ -729,10 +739,10 @@ TEST(error, ini_format_1) {
       fmc_cfg_node_spec{NULL},
   };
   fmc_error_t *err;
-  auto sect = parse_cfg(""
-                        "[main]\r\n"
-                        "arr=1,2,3    \r\n"
-                        "",
+  auto sect = parse_cfg(std::vector<std::string_view>({
+                          ""
+                          "[main]\r\n"
+                          "arr=1,2,","3    \r\n"}),
                         main, err);
   ASSERT_NOERR(err);
   EXPECT_EQ(cfg_to_string(sect), ""
@@ -745,7 +755,270 @@ TEST(error, ini_format_1) {
                                  "}\n");
 }
 
+TEST(parser, string_1) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_STR,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=\"a\",\"b\",\"c\"\n"
+                        "",
+                        main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    \"a\",\n"
+                                 "    \"b\",\n"
+                                 "    \"c\",\n"
+                                 "  ]\n"
+                                 "}\n");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=\"a\",\"b\",\"c\n"
+                        "",
+                        main, err);
+  EXPECT_ERR(err, "config error: unable to find closing quotes for string (line 2)");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=\"a\",\"b,\"c\"\n"
+                        "",
+                        main, err);
+  EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=a\",\"b\",\"c\"\n"
+                        "",
+                        main, err);
+  EXPECT_ERR(err, "config error: unable to parse string (line 2)");
+}
+
+TEST(parser, boolean_1) {
+  struct fmc_cfg_type subarray = {
+      .type = FMC_CFG_BOOLEAN,
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=true,false,false\n"
+                        "",
+                        main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    1,\n"
+                                 "    0,\n"
+                                 "    0,\n"
+                                 "  ]\n"
+                                 "}\n");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=true,falsee,false\n"
+                        "",
+                        main, err);
+  EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=truee,false,false\n"
+                        "",
+                        main, err);
+  EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=abc,false,false\n"
+                        "",
+                        main, err);
+  EXPECT_ERR(err, "config error: unable to parse boolean (line 2)");
+}
+
+TEST(parser, arraysect_1) {
+  struct fmc_cfg_node_spec subsect[] = {
+      fmc_cfg_node_spec{
+          .key = "int64",
+          .descr = "int64 descr",
+          .required = true,
+          .type = fmc_cfg_type{
+              .type = FMC_CFG_INT64,
+          },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+
+  struct fmc_cfg_type subarray2 = {
+      .type = FMC_CFG_SECT,
+      .spec {
+          .node = subsect,
+      },
+  };
+
+  struct fmc_cfg_type subarray1 = {
+      .type = FMC_CFG_ARR,
+      .spec {
+          .array = &subarray2,
+      },
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray1,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+  fmc_error_t *err;
+  auto sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=[[sect1],[sect2,sect3]]\n"
+                        "\n"
+                        "[sect3]\n"
+                        "int64=3\n"
+                        "[sect1]\n"
+                        "int64=1\n"
+                        "[sect2]\n"
+                        "int64=2\n"
+                        "",
+                        main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    [\n"
+                                 "      {\n"
+                                 "        int64 = 1\n"
+                                 "      },\n"
+                                 "    ],\n"
+                                 "    [\n"
+                                 "      {\n"
+                                 "        int64 = 2\n"
+                                 "      },\n"
+                                 "      {\n"
+                                 "        int64 = 3\n"
+                                 "      },\n"
+                                 "    ],\n"
+                                 "  ]\n"
+                                 "}\n");
+
+  sect = parse_cfg(""
+                        "[main]\n"
+                        "arr=sect1,sect2,sect3\n"
+                        "\n"
+                        "[sect3]\n"
+                        "int64=3\n"
+                        "[sect1]\n"
+                        "int64=1\n"
+                        "[sect2]\n"
+                        "int64=2\n"
+                        "",
+                        main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    [\n"
+                                 "      {\n"
+                                 "        int64 = 1\n"
+                                 "      },\n"
+                                 "      {\n"
+                                 "        int64 = 2\n"
+                                 "      },\n"
+                                 "      {\n"
+                                 "        int64 = 3\n"
+                                 "      },\n"
+                                 "    ],\n"
+                                 "  ]\n"
+                                 "}\n");
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+TEST(direct, basic_1) {
+  fmc_error_t *err;
+
+  auto sect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true));
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse", false));
+  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45));
+  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5));
+  sect = unique_sect(fmc_cfg_sect_item_add_str(sect.release(), "str", "message"));
+
+  auto arr = unique_arr(fmc_cfg_arr_item_add_none(nullptr));
+  arr = unique_arr(fmc_cfg_arr_item_add_boolean(arr.release(), true));
+  arr = unique_arr(fmc_cfg_arr_item_add_boolean(arr.release(), false));
+  arr = unique_arr(fmc_cfg_arr_item_add_int64(arr.release(), -45));
+  arr = unique_arr(fmc_cfg_arr_item_add_float64(arr.release(), -45.5));
+  arr = unique_arr(fmc_cfg_arr_item_add_str(arr.release(), "message"));
+  sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release()));
+
+  auto subsect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
+  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect.release()));
+
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                  "{\n"
+                                  "  sect = {\n"
+                                  "    none = none\n"
+                                  "  }\n"
+                                  "  arr = [\n"
+                                  "    \"message\",\n"
+                                  "    -45.500000,\n"
+                                  "    -45,\n"
+                                  "    0,\n"
+                                  "    1,\n"
+                                  "    none,\n"
+                                  "  ]\n"
+                                  "  str = \"message\"\n"
+                                  "  float64 = -45.500000\n"
+                                  "  int64 = -45\n"
+                                  "  booleanfalse = 0\n"
+                                  "  booleantrue = 1\n"
+                                  "  none = none\n"
+                                  "}\n"
+                                 "");
 }

@@ -620,12 +620,6 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
       goto do_cleanup;
     }
     if (ret == 0) {
-      if (read > 0 && buffer[read - 1] == '\n') {
-        --read;
-        if (read > 0 && buffer[read - 1] == '\r') {
-          --read;
-        }
-      }
       while (read > 0 && buffer[read - 1] == ' ') {
         --read;
       }
