@@ -659,7 +659,7 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
       goto do_cleanup;
     }
 
-    auto ret = fmc_fread(fd, buffer + read, INI_PARSER_BUFF_SIZE - read, err);
+    ssize_t ret = fmc_fread(fd, buffer + read, INI_PARSER_BUFF_SIZE - read, err);
     if (*err) {
       goto do_cleanup;
     }
@@ -676,11 +676,11 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key, fmc_erro
       return state.sections;
     }
     size_t line_start = 0;
-    auto start = read;
-    auto end = read + ret;
-    for (auto i = start; i < end; ++i) {
+    size_t start = read;
+    size_t end = read + ret;
+    for (size_t i = start; i < end; ++i) {
       if (buffer[i] == '\n') {
-        auto j = i;
+        size_t j = i;
         if (j > 0 && buffer[j - 1] == '\r') {
           --j;
         }
