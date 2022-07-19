@@ -52,8 +52,8 @@ struct fmc_component_type components[] = {
       .tp_cfgspec = gateway_cfg_spec;
       .tp_new = (newfunc)gateway_comp_new,
       .tp_del = (delfunc)gateway_comp_del,
-      .tp_sched = (schedproc)NULL,
-      .tp_process = (processproc)gateway_comp_process_one,
+      .tp_sched = (schedfunc)NULL,
+      .tp_proc = (procfunc)gateway_comp_process_one,
    },
    {
       .tp_name = "sched-gateway",
@@ -61,24 +61,24 @@ struct fmc_component_type components[] = {
       .tp_cfgspec = gateway_cfg_spec;
       .tp_new = (newfunc)gateway_comp_new,
       .tp_del = (delfunc)gateway_comp_del,
-      .tp_sched = (schedproc)gateway_comp_sched,
-      .tp_process = (processproc)gateway_comp_process_one,
+      .tp_sched = (schedfunc)gateway_comp_sched,
+      .tp_proc = (procfunc)gateway_comp_process_one,
    },
    {
       .tp_name = "live-oms",
       .tp_size = sizeof(manager_comp),
       .tp_new = (newfunc)oms_comp_new,
       .tp_del = (delfunc)oms_comp_del,
-      .tp_sched = (schedproc)NULL,
-      .tp_process = (processproc)oms_comp_process_one,
+      .tp_sched = (schedfunc)NULL,
+      .tp_proc = (procfunc)oms_comp_process_one,
    },
    {
       .tp_name = "sched-oms",
       .tp_size = sizeof(manager_comp),
       .tp_new = (newfunc)oms_comp_new,
       .tp_del = (delfunc)oms_comp_del,
-      .tp_sched = (schedproc)oms_comp_sched,
-      .tp_process = (processproc)oms_comp_process_one,
+      .tp_sched = (schedfunc)oms_comp_sched,
+      .tp_proc = (procfunc)oms_comp_process_one,
    },
    { NULL },
 };
@@ -115,8 +115,8 @@ typedef struct fmc_component_type *(*fmc_comp_mod_init_func)(void);
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
-typedef fm_time64_t (*schedproc)(struct fmc_component *);
-typedef bool (*processproc)(struct fmc_component *, fm_time64_t);
+typedef fm_time64_t (*schedfunc)(struct fmc_component *);
+typedef bool (*procfunc)(struct fmc_component *, fm_time64_t);
 
 struct fmc_component_type {
   const char *tp_name;
@@ -125,8 +125,8 @@ struct fmc_component_type {
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
   newfunc tp_new;    // allocate and initialize the component
   delfunc tp_del;     // destroy the component
-  schedproc tp_sched; // returns the next schedule time. If NULL it allways process
-  processproc tp_process; // run the component once
+  schedfunc tp_sched; // returns the next schedule time. If NULL it allways process
+  procfunc tp_proc; // run the component once
 };
 
 typedef struct fmc_component_list {

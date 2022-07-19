@@ -61,8 +61,8 @@ struct fmc_component_type components[] = {
         .tp_cfgspec = test_component_cfg_spec,
         .tp_new = (newfunc)test_component_new,
         .tp_del = (delfunc)test_component_del,
-        .tp_sched = (schedproc)NULL,
-        .tp_process = (processproc)test_component_process_one,
+        .tp_sched = (schedfunc)NULL,
+        .tp_proc = (procfunc)test_component_process_one,
     },
     {NULL},
 };
