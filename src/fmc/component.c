@@ -121,7 +121,7 @@ static struct fmc_component_module *
 mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
          const char *mod_lib, const char *mod_func, fmc_error_t **error) {
   fmc_error_t *err = NULL;
-  int psz = fmc_path_join_len(dir, mod_lib);
+  int psz = fmc_path_join(NULL, 0, dir, mod_lib) + 1;
   char lib_path[psz];
   fmc_path_join(lib_path, psz, dir, mod_lib);
 
@@ -172,7 +172,7 @@ fmc_component_module_new(struct fmc_component_sys *sys, const char *mod,
   char mod_lib[strlen(mod) + strlen(FMC_LIB_SUFFIX) + 1];
   sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
 
-  int pathlen = fmc_path_join_len(mod, mod_lib);
+  int pathlen = fmc_path_join(NULL, 0, mod, mod_lib) + 1;
   char mod_lib_2[pathlen];
   fmc_path_join(mod_lib_2, pathlen, mod, mod_lib);
 

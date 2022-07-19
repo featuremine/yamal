@@ -87,10 +87,6 @@ bool fmc_basedir_exists(const char *file_path, fmc_error_t **error) {
   return false;
 }
 
-int fmc_path_join_len(const char *p1, const char *p2) {
-  return fmc_path_join(NULL, 0, p1, p2) + 1; // include the null
-}
-
 int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
 #ifdef FMC_SYS_UNIX
   char sep = '/';
