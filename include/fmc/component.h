@@ -154,23 +154,23 @@ struct fmc_component_sys {
   struct fmc_component_module *modules;
 };
 
-void fmc_component_sys_init(struct fmc_component_sys *sys);
-void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
+FMMODFUNC void fmc_component_sys_init(struct fmc_component_sys *sys);
+FMMODFUNC void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
                                  const char **paths, fmc_error_t **error);
-void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
+FMMODFUNC void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
                                  const char *path, fmc_error_t **error);
-fmc_component_path_list_t *
+FMMODFUNC fmc_component_path_list_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-void fmc_component_sys_destroy(struct fmc_component_sys *sys);
-struct fmc_component_module *
+FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
+FMMODFUNC struct fmc_component_module *
 fmc_component_module_new(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error);
-void fmc_component_module_del(struct fmc_component_module *mod);
-struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
+FMMODFUNC void fmc_component_module_del(struct fmc_component_module *mod);
+FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
                                         const char *comp,
                                         struct fmc_cfg_sect_item *cfg,
                                         fmc_error_t **error);
-void fmc_component_del(struct fmc_component *comp);
+FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 #ifdef __cplusplus
 }
