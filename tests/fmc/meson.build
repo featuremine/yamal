@@ -18,3 +18,10 @@ compiles_c = executable(
     'common_compiles_c', 'compiles.c',
     dependencies : [static_fmc_dep])
 test('common_compiles_c', compiles_c, is_parallel: false)
+
+shared_test_component = shared_library('testcomponent', [files('testcomponent.c')],
+                                        name_prefix : '',
+                                        include_directories : [inc],
+                                        dependencies : [shared_fmc_dep],
+                                        link_language: 'c',
+                                        install: false)
