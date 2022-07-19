@@ -81,13 +81,23 @@ FMMODFUNC void fmc_basedir_mk(const char *file_path, fmc_error_t **error);
 FMMODFUNC bool fmc_basedir_exists(const char *file_path, fmc_error_t **error);
 
 /**
+ * @brief Returns the size of the buffer needed to store the full path
+ *
+ * @param p1 base path to join
+ * @param p2 last part of the path to join
+ * @return the lenght of the joined path string plus the null terminated char
+ */
+FMMODFUNC int fmc_path_join_len(const char *p1, const char *p2);
+
+/**
  * @brief Join two paths
  *
- * @param destpath Pointer to the string to store the final path.
- * If it points to NULL the memory is allocated in this function.
- * @param srcpath1 base path
- * @param srcpath2 last part of the path
- * @param error out-parameter for error handling
+ * @param dest buffer to store the string with the final path.
+ * @param sz size of dest buffer.
+ * @param p1 base path to join
+ * @param p2 last part of the path to join
+ * @return the number of characters that would have been written on the
+ * buffer, if ‘sz’ had been sufficiently large
  */
 FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2);
 

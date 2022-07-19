@@ -24,6 +24,7 @@
 #include <fmc/error.h>
 #include <fmc/platform.h>
 #include <fmc/files.h>
+#include <fmc/string.h>
 #include <fmc/uthash/utlist.h>
 #include <stdlib.h> // calloc()
 
@@ -42,26 +43,31 @@
 #error "Unsupported operating system"
 #endif
 
+// TODO: replace this function with the one on config.h
+void fmc_cfc_spec_check(struct fmc_cfg_node_spec *spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
+
+}
+
 void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->search_paths = NULL;
   sys->modules = NULL; // important- initialize lists to NULL
 }
 
-static void component_path_list_del(fmc_component_path_list_t *phead) {
-  if (!phead) return;
+static void component_path_list_del(fmc_component_path_list_t **phead) {
+  if (!*phead) return;
   fmc_component_path_list_t *p;
   fmc_component_path_list_t *ptmp;
-  DL_FOREACH_SAFE(phead,p,ptmp) {
-    DL_DELETE(phead,p);
+  DL_FOREACH_SAFE(*phead,p,ptmp) {
+    DL_DELETE(*phead,p);
     free(p);
   }
 }
 
-static void component_path_list_add(fmc_component_path_list_t *phead, const char *path, fmc_error_t **error) {
+static void component_path_list_add(fmc_component_path_list_t **phead, const char *path, fmc_error_t **error) {
   fmc_component_path_list_t *p = (fmc_component_path_list_t *)calloc(1, sizeof(*p)+strlen(path)+1);
   if(p) {
     strcpy(p->path, path);
-    DL_APPEND(phead, p);
+    DL_APPEND(*phead, p);
   }
   else {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
@@ -73,20 +79,20 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **pat
   fmc_error_clear(error);
   fmc_component_path_list_t *tmpls = NULL;
   for(unsigned int i = 0; paths && paths[i]; ++i) {
-    component_path_list_add(tmpls, paths[i], error);
+    component_path_list_add(&tmpls, paths[i], error);
     if (*error) {
-      component_path_list_del(tmpls);
+      component_path_list_del(&tmpls);
       return;
     }
   }
-  component_path_list_del(sys->search_paths);
+  component_path_list_del(&sys->search_paths);
   sys->search_paths = tmpls;
 }
 
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error) {
   fmc_error_clear(error);
   if(path) {
-    component_path_list_add(sys->search_paths, path, error);
+    component_path_list_add(&sys->search_paths, path, error);
   }
 }
 
@@ -105,15 +111,16 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
     item->comp->_vt->del(item->comp);
     DL_DELETE(head, item);
   }
+  mod->components = NULL;
 }
 
 static struct fmc_component_module *mod_load(struct fmc_component_sys *sys, const char *dir,
                                              const char *modstr, const char *mod_lib, const char *mod_func,
                                              fmc_error_t **error) {
-  fmc_error_t *err;
-  int psz = fmc_path_join(NULL, 0, dir, mod_lib) + 1;
+  fmc_error_t *err = NULL;
+  int psz = fmc_path_join_len(dir, mod_lib);
   char lib_path[psz];
-  fmc_path_join_len(&lib_path, psz, dir, mod_lib);
+  fmc_path_join(lib_path, psz, dir, mod_lib);
 
   struct fmc_component_module mod;
   memset(&mod, 0, sizeof(mod));
@@ -154,18 +161,18 @@ struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *
   char mod_lib[strlen(mod) + strlen(FMC_LIB_SUFFIX) + 1];
   sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
   
-  int pathlen = fmc_path_join(NULL, 0, mod, mod_lib) + 1;
+  int pathlen = fmc_path_join_len(mod, mod_lib);
   char mod_lib_2[pathlen];
   fmc_path_join(mod_lib_2, pathlen, mod, mod_lib);
 
-  char mod_func[strlen(mod) + strlen(fmc_comp_INIT_FUNCT_PREFIX) + 1];
+  char mod_func[strlen(fmc_comp_INIT_FUNCT_PREFIX) + strlen(mod) + 1];
   sprintf(mod_func, "%s%s", fmc_comp_INIT_FUNCT_PREFIX, mod);
-  fmc_component_path_list_t *phead = sys->search_paths;
-  fmc_component_path_list_t *p;
-  DL_FOREACH(phead,p) {
-    ret = mod_load(sys, p->path, mod, mod_lib, mod_func, error);
+  fmc_component_path_list_t *head = sys->search_paths;
+  fmc_component_path_list_t *item;
+  DL_FOREACH(head,item) {
+    ret = mod_load(sys, item->path, mod, mod_lib, mod_func, error);
     if(!ret && !(*error)) {
-      ret = mod_load(sys, p->path, mod, mod_lib_2, mod_func, error);
+      ret = mod_load(sys, item->path, mod, mod_lib_2, mod_func, error);
     }
     if(ret || *error) {
       break;
@@ -220,7 +227,7 @@ void fmc_component_del(struct fmc_component *comp) {
   fmc_component_list_t *item;
   DL_FOREACH(head, item) {
     if (item->comp == comp) {
-      DL_DELETE(head, item);
+      DL_DELETE(m->components, item);
       free(item);
       break;
     }
