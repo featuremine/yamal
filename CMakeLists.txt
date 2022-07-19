@@ -27,6 +27,12 @@ project(
     HOMEPAGE_URL "https://www.featuremine.com"
 )
 
+# Add the cmake folder so the FindSphinx module is found
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# Add subdir "docs" for Doxygen + Sphinx to use.
+add_subdirectory ("docs")
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive")
   string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libgcc -static-libstdc++")
