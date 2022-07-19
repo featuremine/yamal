@@ -115,7 +115,7 @@ struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item *, st
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *, struct fmc_cfg_arr_item *, fmc_error_t **err);
 
 struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const char *root_key, fmc_error_t **err);
-bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err);
+void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err);
 
 #ifdef __cplusplus
 }

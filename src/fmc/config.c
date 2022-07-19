@@ -746,11 +746,13 @@ static const char *type_name(FMC_CFG_TYPE type) {
   }
 }
 
-static bool fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec, struct fmc_cfg_arr_item *cfg, fmc_error_t **err) {
+static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec, struct fmc_cfg_arr_item *cfg, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   for (; cfg; cfg = cfg->next) {
     if (cfg->item.type != spec->type) {
       fmc_error_set(err, "config error: item in array %s must be %s", type_name(cfg->item.type), type_name(spec->type));
-      return false;
+      return;
     }
 
     switch (cfg->item.type) {
@@ -761,24 +763,22 @@ static bool fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec, struct fmc_cfg_arr
     case FMC_CFG_STR:
       break;
     case FMC_CFG_SECT: {
-      bool ret = fmc_cfg_node_spec_check(spec->spec.node, cfg->item.value.sect, err);
-      if (!ret) {
-        return ret;
+      fmc_cfg_node_spec_check(spec->spec.node, cfg->item.value.sect, err);
+      if (*err) {
+        return;
       }
     } break;
     case FMC_CFG_ARR: {
-      bool ret = fmc_cfg_arr_spec_check(spec->spec.array, cfg->item.value.arr, err);
-      if (!ret) {
-        return ret;
+      fmc_cfg_arr_spec_check(spec->spec.array, cfg->item.value.arr, err);
+      if (*err) {
+        return;
       }
     } break;
     }
   }
-
-  return true;
 }
 
-bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
+void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
   fmc_error_clear(err);
 
   size_t used_count = 0;
@@ -792,7 +792,7 @@ bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
     if (!item) {
       if (spec_item->required) {
         fmc_error_set(err, "config error: missing required field %s", spec_item->key);
-        return false;
+        return;
       }
       else {
         continue;
@@ -801,14 +801,14 @@ bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
     for (struct fmc_cfg_sect_item *dup = item->next; dup; dup = dup->next) {
       if (strcmp(spec_item->key, dup->key) == 0) {
         fmc_error_set(err, "config error: duplicated field %s", spec_item->key);
-        return false;
+        return;
       }
     }
     ++used_count;
 
     if (item->node.type != spec_item->type.type) {
       fmc_error_set(err, "config error: field %s (%s) must be %s", spec_item->key, type_name(item->node.type), type_name(spec_item->type.type));
-      return false;
+      return;
     }
     switch (item->node.type) {
     case FMC_CFG_NONE:
@@ -818,15 +818,15 @@ bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
     case FMC_CFG_STR:
       break;
     case FMC_CFG_SECT: {
-      bool ret = fmc_cfg_node_spec_check(spec_item->type.spec.node, item->node.value.sect, err);
-      if (!ret) {
-        return ret;
+      fmc_cfg_node_spec_check(spec_item->type.spec.node, item->node.value.sect, err);
+      if (*err) {
+        return;
       }
     } break;
     case FMC_CFG_ARR: {
-      bool ret = fmc_cfg_arr_spec_check(spec_item->type.spec.array, item->node.value.arr, err);
-      if (!ret) {
-        return ret;
+      fmc_cfg_arr_spec_check(spec_item->type.spec.array, item->node.value.arr, err);
+      if (*err) {
+        return;
       }
     } break;
     }
@@ -848,12 +848,10 @@ bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sec
 
       if(!spec_item->key) {
         fmc_error_set(err, "config error: unknown field %s", item->key);
-        return false;
+        return;
       }
     }
     fmc_error_set(err, "config error: unknown field");
-    return false;
+    return;
   }
-
-  return true;
 }
