@@ -11,7 +11,8 @@ srcs_c = files(
     'fmc/process.cpp',
     'fmc/extension.c',
     'fmc/config.c',
-    'fmc/component.c'
+    'fmc/component.c',
+    'fmc/string.c'
 )
 
 srcs_cpp = files(
