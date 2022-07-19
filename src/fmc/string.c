@@ -22,7 +22,8 @@
  */
 #include <fmc/string.h>
 #include <fmc/error.h>
-#include <string.h>
+#include <string.h> // memcpy() strlen()
+#include <stdlib.h> // calloc()
 
 
 char *fmc_cstr_new(const char*str, fmc_error_t **error) {
