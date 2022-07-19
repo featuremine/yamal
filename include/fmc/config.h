@@ -40,19 +40,19 @@ typedef enum {
 } FMC_CFG_TYPE;
 
 /*
-This is an example of how to implement a confuration specification:
+This is an example of how to implement a configuration specification:
 
 fmc_cfg_node_spec session_cfg_spec[] = {
-   {"channel", "YTP channel of the session", FMCCFGSTRING, true, NULL},
+   {"channel", "YTP channel of the session", FMC_CFG_STR, true, NULL},
    {NULL}
 }
 
-fmc_cfg_arr_spec sessions_cfg_sect_spec = {FMCCFGSECT, &session_cfg_spec};
-fmc_cfg_arr_spec sessions_cfg_arr_spec = {FMCCFGSTRING, NULL};
+fmc_cfg_arr_spec sessions_cfg_spec = {FMC_CFG_SECT, &session_cfg_spec};
 
 fmc_cfg_node_spec gateway_cfg_spec[] = {
-   {"sessions", "Array of individual session configuration", FMCCFGARRAY, true,
-&sessions_cfg_spec}, {NULL}
+   {"sessions", "Array of individual session configuration", FMC_CFG_ARR,
+       true,&sessions_cfg_spec},
+   {NULL}
 };
 */
 
@@ -98,54 +98,54 @@ struct fmc_cfg_arr_item {
   struct fmc_cfg_arr_item *next;
 };
 
-void fmc_cfg_sect_del(struct fmc_cfg_sect_item *);
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item *,
+FMMODFUNC void fmc_cfg_sect_del(struct fmc_cfg_sect_item *);
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item *,
                                                      const char *,
                                                      fmc_error_t **err);
-struct fmc_cfg_sect_item *
+FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item *, const char *, bool,
                               fmc_error_t **err);
-struct fmc_cfg_sect_item *
+FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *, const char *, int64_t,
                             fmc_error_t **err);
-struct fmc_cfg_sect_item *
+FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item *, const char *, double,
                               fmc_error_t **err);
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item *,
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item *,
                                                     const char *, const char *,
                                                     fmc_error_t **err);
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item *,
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item *,
                                                      const char *,
                                                      struct fmc_cfg_sect_item *,
                                                      fmc_error_t **err);
-struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item *,
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item *,
                                                     const char *,
                                                     struct fmc_cfg_arr_item *,
                                                     fmc_error_t **err);
-void fmc_cfg_arr_del(struct fmc_cfg_arr_item *);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item *,
+FMMODFUNC void fmc_cfg_arr_del(struct fmc_cfg_arr_item *);
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item *,
                                                    fmc_error_t **err);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item *,
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item *,
                                                       bool, fmc_error_t **err);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item *,
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item *,
                                                     int64_t, fmc_error_t **err);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item *,
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item *,
                                                       double,
                                                       fmc_error_t **err);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item *,
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item *,
                                                   const char *,
                                                   fmc_error_t **err);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item *,
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item *,
                                                    struct fmc_cfg_sect_item *,
                                                    fmc_error_t **err);
-struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *,
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *,
                                                   struct fmc_cfg_arr_item *,
                                                   fmc_error_t **err);
 
-struct fmc_cfg_sect_item *
+FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
                             const char *root_key, fmc_error_t **err);
-void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
+FMMODFUNC void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
                              struct fmc_cfg_sect_item *cfg, fmc_error_t **err);
 
 #ifdef __cplusplus
