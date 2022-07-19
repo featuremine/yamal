@@ -55,7 +55,7 @@ add_library(
     fmc
     STATIC
     "${PROJECT_SOURCE_DIR}/src/fmc/cmp.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/config.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
