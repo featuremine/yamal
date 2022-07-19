@@ -995,10 +995,18 @@ TEST(direct, basic_1) {
   arr = unique_arr(fmc_cfg_arr_item_add_int64(arr.release(), -45));
   arr = unique_arr(fmc_cfg_arr_item_add_float64(arr.release(), -45.5));
   arr = unique_arr(fmc_cfg_arr_item_add_str(arr.release(), "message"));
+
+  auto subsect1 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
+  arr = unique_arr(fmc_cfg_arr_item_add_sect(arr.release(), subsect1.release()));
+
+  auto subarr = unique_arr(fmc_cfg_arr_item_add_none(nullptr));
+  subarr = unique_arr(fmc_cfg_arr_item_add_boolean(subarr.release(), true));
+  arr = unique_arr(fmc_cfg_arr_item_add_arr(arr.release(), subarr.release()));
+
   sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release()));
 
-  auto subsect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
-  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect.release()));
+  auto subsect2 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
+  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect2.release()));
 
   EXPECT_EQ(cfg_to_string(sect), ""
                                   "{\n"
@@ -1006,6 +1014,13 @@ TEST(direct, basic_1) {
                                   "    none = none\n"
                                   "  }\n"
                                   "  arr = [\n"
+                                  "    [\n"
+                                  "      1,\n"
+                                  "      none,\n"
+                                  "    ],\n"
+                                  "    {\n"
+                                  "      none = none\n"
+                                  "    },\n"
                                   "    \"message\",\n"
                                   "    -45.500000,\n"
                                   "    -45,\n"
