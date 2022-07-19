@@ -32,38 +32,100 @@
 
 #include <cerrno>
 #include <cstdarg>
-#include <cstdio>
-#include <cstring>
+#include <cstdio>  // vsnprintf
+#include <cstring> //memcpy
 #include <string>
 
-struct fmc_error {
-  std::string msg;
-  std::string buffer;
-};
+const char *error_msgs[] = {"None", "Could not allocate memory"};
 
-const char *fmc_error_msg(fmc_error_t *err) { return err->msg.c_str(); }
+void fmc_error_init(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf) {
+  err->code = code;
+  err->buf = NULL;
+  if (code == FMC_ERROR_CUSTOM) {
+    buf = buf ? buf : "UNKNOWN";
+    err->buf = (char *)calloc(strlen(buf) + 1, sizeof(*buf));
+    strcpy(err->buf, buf);
+  }
+}
 
-void fmc_error_clear(fmc_error_t **err) { *err = NULL; }
+void fmc_error_init_none(fmc_error_t *err) {
+  fmc_error_init(err, FMC_ERROR_NONE, NULL);
+}
+
+#define FMC_ERROR_FORMAT(err, fmt)                                             \
+  do {                                                                         \
+    va_list _args1;                                                            \
+    va_start(_args1, fmt);                                                     \
+    va_list _args2;                                                            \
+    va_copy(_args2, _args1);                                                   \
+    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1;                           \
+    char _buf[_size];                                                          \
+    va_end(_args1);                                                            \
+    vsnprintf(_buf, _size, fmt, _args2);                                       \
+    va_end(_args2);                                                            \
+    fmc_error_init(err, FMC_ERROR_CUSTOM, _buf);                               \
+  } while (0)
+
+void fmc_error_init_sprintf(fmc_error_t *err, const char *fmt, ...) {
+  FMC_ERROR_FORMAT(err, fmt);
+}
 
 void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
   fmc_error_t *err = fmc_error_inst();
+  fmc_error_destroy(err);
+  FMC_ERROR_FORMAT(err, fmt);
   *err_ptr = err;
-
-  va_list args1;
-  va_start(args1, fmt);
-  va_list args2;
-  va_copy(args2, args1);
-  auto size = vsnprintf(NULL, 0, fmt, args1) + 1;
-  err->buffer.swap(err->msg);
-  err->msg.resize(size);
-  va_end(args1);
-  vsnprintf(err->msg.data(), size, fmt, args2);
-  va_end(args2);
 }
 
+void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code) {
+  fmc_error_t *err = fmc_error_inst();
+  fmc_error_destroy(err);
+  fmc_error_init(err, code, NULL);
+  *err_ptr = err;
+}
+
+void fmc_error_destroy(fmc_error_t *err) {
+  err->code = FMC_ERROR_NONE;
+  if (err->buf) {
+    free(err->buf);
+    err->buf = NULL;
+  }
+}
+
+void fmc_error_clear(fmc_error_t **err) { *err = NULL; }
+
+const char *fmc_error_msg(fmc_error_t *err) {
+  return err->code == FMC_ERROR_CUSTOM ? err->buf : error_msgs[err->code];
+}
+
+void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
+  fmc_error_destroy(err1);
+  fmc_error_init(err1, err2->code, err2->buf);
+}
+
+void fmc_error_init_join(fmc_error_t *res, fmc_error_t *err1, fmc_error_t *err2,
+                         const char *sep) {
+  fmc_error_init_sprintf(
+      res, "%s%s%s", err1->code != FMC_ERROR_NONE ? fmc_error_msg(err1) : "",
+      err1->code != FMC_ERROR_NONE && sep ? sep : "",
+      err2->code != FMC_ERROR_NONE ? fmc_error_msg(err2) : "");
+}
+
+void fmc_error_cat(fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
+  fmc_error_t res;
+  fmc_error_init_join(&res, err1, err2, sep);
+  fmc_error_cpy(err1, &res);
+}
+
+struct fmc_error_wrap {
+  fmc_error_wrap() { fmc_error_init_none(&error); }
+  ~fmc_error_wrap() { fmc_error_destroy(&error); }
+  fmc_error error;
+};
+
 fmc_error_t *fmc_error_inst() {
-  static thread_local fmc_error_t err;
-  return &err;
+  static thread_local fmc_error_wrap wrap;
+  return &wrap.error;
 }
 
 const char *fmc_syserror_msg() {

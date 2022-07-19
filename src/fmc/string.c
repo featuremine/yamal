@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2018 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -13,34 +13,28 @@
  *****************************************************************************/
 
 /**
- * @file extension.cpp
- * @author Alejandro Farfan
- * @date 17 Jun 2021
- * @brief File contains C implementation of fmc ext loading
+ * @file string.c
+ * @date 19 Jul 2022
+ * @brief File contains C implementation of fmc string API
  *
- * This file contains C implementation of fmc ext loading.
+ * This file contains C implementation of fmc string API.
  * @see http://www.featuremine.com
  */
-#include <fmc/extension.h>
+#include <fmc/error.h>
+#include <fmc/string.h>
+#include <stdlib.h> // calloc()
+#include <string.h> // memcpy() strlen()
 
-#if defined(FMC_SYS_WIN)
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#include <unistd.h>
-#endif
-
-void *fmc_ext_load(const char *sym_name, const char *path,
-                   fmc_error_t **error) {
-  fmc_error_clear(error);
-#if defined(FMC_SYS_UNIX)
-  auto *handle = dlopen(path, RTLD_NOW);
-  if (!handle) {
-    FMC_ERROR_REPORT(error, dlerror());
-    return nullptr;
+char *fmc_cstr_new2(const char *str, size_t sz, fmc_error_t **error) {
+  char *s = (char *)calloc(sz + 1, sizeof(*s));
+  if (!s) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return NULL;
   }
-  return dlsym(handle, sym_name);
-#else
-#error "Unsupported operating system"
-#endif
+  memcpy(s, str, sz);
+  return s;
+}
+
+char *fmc_cstr_new(const char *str, fmc_error_t **error) {
+  return fmc_cstr_new2(str, strlen(str), error);
 }

@@ -30,6 +30,46 @@
 
 #include <chrono>
 
+fm_time64_t fm_time64_from_raw(int64_t value) { return value; }
+
+fm_time64_t fm_time64_from_nanos(int64_t value) {
+  return fm_time64_from_raw(value);
+}
+
+fm_time64_t fm_time64_from_seconds(int32_t value) {
+  return fm_time64_from_nanos(value * 1000000000ULL);
+}
+
+int64_t fm_time64_to_nanos(fm_time64_t t) { return t; }
+
+double fm_time64_to_fseconds(fm_time64_t t) { return (double)t / 1000000000.0; }
+
+int64_t fm_time64_raw(fm_time64_t time) { return time; }
+
+bool fm_time64_less(fm_time64_t a, fm_time64_t b) { return a < b; }
+
+bool fm_time64_greater(fm_time64_t a, fm_time64_t b) { return a > b; }
+
+bool fm_time64_equal(fm_time64_t a, fm_time64_t b) { return a == b; }
+
+int64_t fm_time64_div(fm_time64_t a, fm_time64_t b) { return a / b; }
+
+fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b) { return a + b; }
+
+void fm_time64_inc(fm_time64_t *a, fm_time64_t b) { *a += b; }
+
+fm_time64_t fm_time64_sub(fm_time64_t a, fm_time64_t b) { return a - b; }
+
+fm_time64_t fm_time64_mul(fm_time64_t a, int64_t b) { return a * b; }
+
+fm_time64_t fm_time64_int_div(fm_time64_t a, int64_t b) { return a / b; }
+
+fm_time64_t fm_time64_start() { return INT64_MIN; }
+
+fm_time64_t fm_time64_end() { return INT64_MAX; }
+
+bool fm_time64_is_end(fm_time64_t time) { return time == INT64_MAX; }
+
 using namespace std;
 using namespace chrono;
 

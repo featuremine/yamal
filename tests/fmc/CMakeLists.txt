@@ -10,6 +10,18 @@ target_link_libraries(
 add_test(NAME fmc_compiles_c COMMAND tests_fmc_compiles_c)
 
 add_executable(
+    tests_fmc_config_c
+    "config.cpp"
+)
+target_link_libraries(
+    tests_fmc_config_c
+    PRIVATE
+    fmc
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_config_c COMMAND tests_fmc_config_c)
+
+add_executable(
     tests_fmc_error
     "error.cpp"
 )
