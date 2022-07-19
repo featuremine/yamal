@@ -1221,16 +1221,16 @@ TEST(check, test_1) {
                                  "}\n"
                                  "");
 
-  EXPECT_TRUE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  fmc_cfg_node_spec_check(main, sect.get(), &err);
   ASSERT_NOERR(err);
 
   main[0].required = true;
-  EXPECT_FALSE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  fmc_cfg_node_spec_check(main, sect.get(), &err);
   EXPECT_ERR(err, "config error: missing required field missing");
   main[0].required = false;
 
   sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "missssing", -101, &err));
-  EXPECT_FALSE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  fmc_cfg_node_spec_check(main, sect.get(), &err);
   EXPECT_ERR(err, "config error: unknown field missssing");
 
   auto p = sect.release();
@@ -1238,7 +1238,7 @@ TEST(check, test_1) {
   sect = unique_sect(p);
 
   sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -101, &err));
-  EXPECT_FALSE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  fmc_cfg_node_spec_check(main, sect.get(), &err);
   EXPECT_ERR(err, "config error: duplicated field int64");
 }
 
