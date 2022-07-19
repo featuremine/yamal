@@ -732,3 +732,128 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *
   ini_sect_del(ini);
   return ret;
 }
+
+static const char *type_name(FMC_CFG_TYPE type) {
+  switch (type) {
+  case FMC_CFG_NONE: return "none";
+  case FMC_CFG_BOOLEAN: return "boolean";
+  case FMC_CFG_INT64: return "int64";
+  case FMC_CFG_FLOAT64: return "float64";
+  case FMC_CFG_STR: return "string";
+  case FMC_CFG_SECT: return "section";
+  case FMC_CFG_ARR: return "array";
+  default: return "unknown";
+  }
+}
+
+static bool fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec, struct fmc_cfg_arr_item *cfg, fmc_error_t **err) {
+  for (; cfg; cfg = cfg->next) {
+    if (cfg->item.type != spec->type) {
+      fmc_error_set(err, "config error: item in array %s must be %s", type_name(cfg->item.type), type_name(spec->type));
+      return false;
+    }
+
+    switch (cfg->item.type) {
+    case FMC_CFG_NONE:
+    case FMC_CFG_BOOLEAN:
+    case FMC_CFG_INT64:
+    case FMC_CFG_FLOAT64:
+    case FMC_CFG_STR:
+      break;
+    case FMC_CFG_SECT: {
+      bool ret = fmc_cfg_node_spec_check(spec->spec.node, cfg->item.value.sect, err);
+      if (!ret) {
+        return ret;
+      }
+    } break;
+    case FMC_CFG_ARR: {
+      bool ret = fmc_cfg_arr_spec_check(spec->spec.array, cfg->item.value.arr, err);
+      if (!ret) {
+        return ret;
+      }
+    } break;
+    }
+  }
+
+  return true;
+}
+
+bool fmc_cfg_node_spec_check(struct fmc_cfg_node_spec * spec, struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
+  fmc_error_clear(err);
+
+  size_t used_count = 0;
+  for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key; ++spec_item) {
+    struct fmc_cfg_sect_item *item = NULL;
+    for (item = cfg; item; item = item->next) {
+      if (strcmp(spec_item->key, item->key) == 0) {
+        break;
+      }
+    }
+    if (!item) {
+      if (spec_item->required) {
+        fmc_error_set(err, "config error: missing required field %s", spec_item->key);
+        return false;
+      }
+      else {
+        continue;
+      }
+    }
+    for (struct fmc_cfg_sect_item *dup = item->next; dup; dup = dup->next) {
+      if (strcmp(spec_item->key, dup->key) == 0) {
+        fmc_error_set(err, "config error: duplicated field %s", spec_item->key);
+        return false;
+      }
+    }
+    ++used_count;
+
+    if (item->node.type != spec_item->type.type) {
+      fmc_error_set(err, "config error: field %s (%s) must be %s", spec_item->key, type_name(item->node.type), type_name(spec_item->type.type));
+      return false;
+    }
+    switch (item->node.type) {
+    case FMC_CFG_NONE:
+    case FMC_CFG_BOOLEAN:
+    case FMC_CFG_INT64:
+    case FMC_CFG_FLOAT64:
+    case FMC_CFG_STR:
+      break;
+    case FMC_CFG_SECT: {
+      bool ret = fmc_cfg_node_spec_check(spec_item->type.spec.node, item->node.value.sect, err);
+      if (!ret) {
+        return ret;
+      }
+    } break;
+    case FMC_CFG_ARR: {
+      bool ret = fmc_cfg_arr_spec_check(spec_item->type.spec.array, item->node.value.arr, err);
+      if (!ret) {
+        return ret;
+      }
+    } break;
+    }
+  }
+
+  size_t expected_count = 0;
+  for (struct fmc_cfg_sect_item *item = cfg; item; item = item->next) {
+    ++expected_count;
+  }
+
+  if (expected_count != used_count) {
+    for (struct fmc_cfg_sect_item *item = cfg; item; item = item->next) {
+      struct fmc_cfg_node_spec *spec_item = NULL;
+      for (spec_item = spec; spec_item->key; ++spec_item) {
+        if (strcmp(spec_item->key, item->key) == 0) {
+          break;
+        }
+      }
+
+      if(!spec_item->key) {
+        fmc_error_set(err, "config error: unknown field %s", item->key);
+        return false;
+      }
+    }
+    fmc_error_set(err, "config error: unknown field");
+    return false;
+  }
+
+  return true;
+}

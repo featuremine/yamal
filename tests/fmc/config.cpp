@@ -21,6 +21,7 @@
  */
 
 #include <fmc/config.h>
+#include <fmc/uthash/utlist.h>
 
 #include <fmc++/gtestwrap.hpp>
 
@@ -1051,6 +1052,194 @@ TEST(direct, basic_1) {
                                   "  none = none\n"
                                   "}\n"
                                  "");
+}
+
+TEST(check, test_1) {
+  fmc_error_t *err;
+
+  auto sect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse", false, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
+  ASSERT_NOERR(err);
+
+  auto subarr1 = unique_arr(fmc_cfg_arr_item_add_boolean(nullptr, false, &err));
+  ASSERT_NOERR(err);
+  subarr1 = unique_arr(fmc_cfg_arr_item_add_boolean(subarr1.release(), true, &err));
+  ASSERT_NOERR(err);
+  auto arr = unique_arr(fmc_cfg_arr_item_add_arr(nullptr, subarr1.release(), &err));
+  ASSERT_NOERR(err);
+
+  auto subarr2 = unique_arr(fmc_cfg_arr_item_add_boolean(nullptr, false, &err));
+  ASSERT_NOERR(err);
+  subarr2 = unique_arr(fmc_cfg_arr_item_add_boolean(subarr2.release(), true, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_arr(arr.release(), subarr2.release(), &err));
+  ASSERT_NOERR(err);
+
+  sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
+  ASSERT_NOERR(err);
+
+  auto subsect2 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect2.release(), &err));
+  ASSERT_NOERR(err);
+
+  struct fmc_cfg_node_spec subsect[] = {
+      fmc_cfg_node_spec{
+        .key = "none",
+        .descr = "none descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_NONE,
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+
+  struct fmc_cfg_type subarray2 = {
+      .type = FMC_CFG_BOOLEAN,
+  };
+
+  struct fmc_cfg_type subarray1 = {
+      .type = FMC_CFG_ARR,
+      .spec {
+          .array = &subarray2,
+      },
+  };
+
+  struct fmc_cfg_node_spec main[] = {
+      fmc_cfg_node_spec{
+        .key = "missing",
+        .descr = "missing descr",
+        .required = false,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_INT64,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "int64",
+        .descr = "int64 descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_INT64,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "booleantrue",
+        .descr = "booleantrue descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_BOOLEAN,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "booleanfalse",
+        .descr = "booleanfalse descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_BOOLEAN,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "float64",
+        .descr = "float64 descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_FLOAT64,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "str",
+        .descr = "str descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_STR,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "none",
+        .descr = "none descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_NONE,
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "sect",
+        .descr = "sect descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_SECT,
+          .spec {
+            .node = subsect,
+          },
+        },
+      },
+      fmc_cfg_node_spec{
+        .key = "arr",
+        .descr = "arr descr",
+        .required = true,
+        .type = fmc_cfg_type{
+          .type = FMC_CFG_ARR,
+          .spec {
+            .array = &subarray1,
+          },
+        },
+      },
+      fmc_cfg_node_spec{NULL},
+  };
+
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  sect = {\n"
+                                 "    none = none\n"
+                                 "  }\n"
+                                 "  arr = [\n"
+                                 "    [\n"
+                                 "      1,\n"
+                                 "      0,\n"
+                                 "    ],\n"
+                                 "    [\n"
+                                 "      1,\n"
+                                 "      0,\n"
+                                 "    ],\n"
+                                 "  ]\n"
+                                 "  str = \"message\"\n"
+                                 "  float64 = -45.500000\n"
+                                 "  int64 = -45\n"
+                                 "  booleanfalse = 0\n"
+                                 "  booleantrue = 1\n"
+                                 "  none = none\n"
+                                 "}\n"
+                                 "");
+
+  EXPECT_TRUE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  ASSERT_NOERR(err);
+
+  main[0].required = true;
+  EXPECT_FALSE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  EXPECT_ERR(err, "config error: missing required field missing");
+  main[0].required = false;
+
+  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "missssing", -101, &err));
+  EXPECT_FALSE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  EXPECT_ERR(err, "config error: unknown field missssing");
+
+  auto p = sect.release();
+  LL_DELETE(p, p);
+  sect = unique_sect(p);
+
+  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -101, &err));
+  EXPECT_FALSE(fmc_cfg_node_spec_check(main, sect.get(), &err));
+  EXPECT_ERR(err, "config error: duplicated field int64");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
