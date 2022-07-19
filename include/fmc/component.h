@@ -114,8 +114,8 @@ struct fmc_component {
 typedef struct fmc_component_type *(*fmc_comp_mod_init_func)(void);
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *, fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
-typedef struct fmc_time (*schedproc)(struct fmc_component *);
-typedef bool (*processproc)(struct fmc_component *, struct fmc_time);
+typedef fm_time64_t (*schedproc)(struct fmc_component *);
+typedef bool (*processproc)(struct fmc_component *, fm_time64_t);
 
 struct fmc_component_type {
    const char *name;
