@@ -198,7 +198,7 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const 
 
       fmc_component_list_t *item = (fmc_component_list_t *)calloc(1, sizeof(*item));
       if(item) {
-        struct fmc_component *ret = tp->new(cfg, error);
+        struct fmc_component *ret = tp->new_(cfg, error);
         if(*error) {
           free(item);
           return NULL;

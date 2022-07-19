@@ -122,7 +122,8 @@ struct fmc_component_type {
    const char *descr;
    size_t size; // size of the component struct
    struct fmc_cfg_node_spec *cfgspec; // configuration specifications
-   newfunc new; // allocate and initialize the component
+   //TODO: rename
+   newfunc new_; // allocate and initialize the component
    delfunc del; // destroy the component
    schedproc sched; // returns the next schedule time. If NULL it allways process
    processproc process; // run the component once

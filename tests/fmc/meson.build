@@ -25,3 +25,8 @@ shared_test_component = shared_library('testcomponent', [files('testcomponent.c'
                                         dependencies : [shared_fmc_dep],
                                         link_language: 'c',
                                         install: false)
+
+test_component = executable(
+    'common_component', 'component.cpp',
+    dependencies : [static_fmc_dep, gtest])
+test('common_component', test_component, args: [meson.current_build_dir()], is_parallel: false)

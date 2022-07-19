@@ -40,11 +40,11 @@ struct fmc_cfg_node_spec test_component_cfg_spec[] = {
 
 struct fmc_component_type components[] = {
   {
-    .name = "testcomponent",
+    .name = "test-component",
     .descr = "Test component",
     .size = sizeof(struct test_component),
     .cfgspec = test_component_cfg_spec,
-    .new = (newfunc)test_component_new,
+    .new_ = (newfunc)test_component_new,
     .del = (delfunc)test_component_del,
     .sched = (schedproc)NULL,
     .process = (processproc)test_component_process_one,
