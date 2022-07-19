@@ -87,6 +87,21 @@ bool fmc_basedir_exists(const char *file_path, fmc_error_t **error) {
   return false;
 }
 
+size_t fmc_path_join_len(const char *p1, const char *p2) {
+  return strlen(p1) + strlen(p2) + 2;
+}
+
+int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
+#ifdef FMC_SYS_UNIX
+  char sep = '/';
+#elif defined(FMC_SYS_WIN)
+  char sep = '\\';
+#else
+#error "Not supported"
+#endif
+return snprintf(dest, sz, "%s%c%s", p1, sep, p2);
+}
+
 FILE *fmc_popen(const char *command, const char *read_mode,
                 fmc_error_t **error) {
   fmc_error_clear(error);

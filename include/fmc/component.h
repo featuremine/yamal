@@ -20,47 +20,6 @@
  * @see http://www.featuremine.com
  */
 
-#pragma once
-
-#include <fmc/config.h>
-#include <fmc/time.h>
-#include <fmc/extension.h>
-#include <fmc/platform.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if defined(FMC_SYS_LINUX)
-#define FMC_LIB_SUFFIX ".so"
-#elif defined(FMC_SYS_MACH)
-#define FMC_LIB_SUFFIX ".dylib"
-#else
-#error "Unsupported operating system"
-#endif
-
-#define fmc_comp_HEAD            \
-   struct fmc_comp_type *_vt;    \
-   struct fmc_error _err;        \
-   struct fmc_component_module *_mod;
-
-struct fmc_component_module;
-struct fmc_component {
-   fmc_comp_HEAD;
-};
-
-typedef struct fmc_time (*schedproc)(struct fmc_component *);
-typedef bool (*processproc)(struct fmc_component *, struct fmc_time);
-
-struct fmc_component_type {
-   const char *name;
-   const char *descr;
-   size_t size; // size of the component struct
-   struct fmc_cfg_node_spec *cfgspec; // configuration specifications
-   schedproc sched; // returns the next schedule time. If NULL it allways process
-   processproc process; // run the component once
-};
-
 /* Example of module main file
 struct gateway_comp {
    fmc_comp_HEAD;
@@ -91,6 +50,8 @@ struct fmc_component_type components[] = {
       .name = "live-gateway",
       .size = sizeof(gateway_comp),
       .cfgspec = gateway_cfg_spec;
+      .new = (newfunc)gateway_comp_new,
+      .del = (delfunc)gateway_comp_del,
       .sched = (schedproc)NULL,
       .process = (processproc)gateway_comp_process_one,
    },
@@ -98,70 +59,109 @@ struct fmc_component_type components[] = {
       .name = "sched-gateway",
       .size = sizeof(gateway_comp),
       .cfgspec = gateway_cfg_spec;
+      .new = (newfunc)gateway_comp_new,
+      .del = (delfunc)gateway_comp_del,
       .sched = (schedproc)gateway_comp_sched,
       .process = (processproc)gateway_comp_process_one,
    },
    {
       .name = "live-oms",
       .size = sizeof(manager_comp),
+      .new = (newfunc)oms_comp_new,
+      .del = (delfunc)oms_comp_del,
       .sched = (schedproc)NULL,
       .process = (processproc)oms_comp_process_one,
    },
    {
       .name = "sched-oms",
       .size = sizeof(manager_comp),
-      .sched = (schedproc)gateway_comp_sched,
+      .new = (newfunc)oms_comp_new,
+      .del = (delfunc)oms_comp_del,
+      .sched = (schedproc)oms_comp_sched,
       .process = (processproc)oms_comp_process_one,
    },
-   {
-      .name = NULL,
-      .size = 0,
-      .cfgspec = NULL;
-      .sched = (schedproc)NULL,
-      .process = (processproc)NULL,
-   },
+   { NULL },
 };
 
-FMCOMPINITFUNC struct fmc_component_type *FMCompInit_oms() {
+FMCOMPMODINITFUNC struct fmc_component_type *FMCompInit_oms() {
    return components;
 }
 */
 
-typedef struct list_fmc_component {
-    struct fmc_component comp;
-    struct list_fmc_component *next, *prev;
-} list_fmc_component_t;
+#pragma once
 
-struct fmc_component_sys;
+#include <fmc/config.h>
+#include <fmc/time.h>
+#include <fmc/extension.h>
+#include <fmc/platform.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define FMCOMPMODINITFUNC FMMODFUNC
+#define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
+
+#define fmc_comp_HEAD                 \
+   struct fmc_component_type *_vt;    \
+   struct fmc_error _err;             \
+   struct fmc_component_module *_mod;
+
+struct fmc_component {
+   fmc_comp_HEAD;
+};
+
+typedef struct fmc_component_type *(*fmc_comp_mod_init_func)(void);
+typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *, fmc_error_t **);
+typedef void (*delfunc)(struct fmc_component *);
+typedef struct fmc_time (*schedproc)(struct fmc_component *);
+typedef bool (*processproc)(struct fmc_component *, struct fmc_time);
+
+struct fmc_component_type {
+   const char *name;
+   const char *descr;
+   size_t size; // size of the component struct
+   struct fmc_cfg_node_spec *cfgspec; // configuration specifications
+   newfunc new; // allocate and initialize the component
+   delfunc del; // destroy the component
+   schedproc sched; // returns the next schedule time. If NULL it allways process
+   processproc process; // run the component once
+};
+
+typedef struct fmc_component_list {
+    struct fmc_component *comp;
+    struct fmc_component_list *next, *prev;
+} fmc_component_list_t;
+
 struct fmc_component_module {
    struct fmc_component_sys *sys; // the system that owns the module
    fmc_ext_t handle; // module handle. Return of dlopen()
    char *name; // module name (e.g. "oms")
-   char *path; // file system path of the library
-   struct fmc_component_type *components_type; // Null terminated array
-   list_fmc_component_t *components;
+   char *file; // file full path of the library
+   struct fmc_component_type *components_type; // null terminated array
+   fmc_component_list_t *components; // allocated components
+   struct fmc_component_module *next, *prev;
 };
 
-typedef struct list_fmc_component_module {
-    struct fmc_component_module mod;
-    struct list_fmc_component_module *next, *prev;
-} list_fmc_component_module_t;
+typedef struct fmc_component_path_list {
+    struct fmc_component_path_list *next, *prev;
+    char path[]; // FAM
+} fmc_component_path_list_t;
 
 struct fmc_component_sys {
-   char **search_paths;
-   list_fmc_component_module_t *modules;
+   fmc_component_path_list_t *search_paths;
+   struct fmc_component_module *modules;
 };
-
-typedef struct fmc_component_type * (*FMCOMPINITFUNC)(struct fmc_component_sys *);
 
 void fmc_component_sys_init(struct fmc_component_sys *sys);
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys, const char **paths, fmc_error_t **error);
-const char **fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-struct fmc_component_module *fmc_component_module_load(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
-void fmc_component_module_unload(struct fmc_component_module *mod);
-struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
-void fmc_component_destroy(struct fmc_component *comp);
+void fmc_component_sys_paths_add(struct fmc_component_sys *sys, const char *path, fmc_error_t **error);
+fmc_component_path_list_t *fmc_component_sys_paths_get(struct fmc_component_sys *sys);
 void fmc_component_sys_destroy(struct fmc_component_sys *sys);
+struct fmc_component_module *fmc_component_module_new(struct fmc_component_sys *sys, const char *mod, fmc_error_t **error);
+void fmc_component_module_del(struct fmc_component_module *mod);
+struct fmc_component *fmc_component_new(struct fmc_component_module *mod, const char *comp, struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
+void fmc_component_del(struct fmc_component *comp);
 
 #ifdef __cplusplus
 }

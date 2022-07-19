@@ -81,6 +81,17 @@ FMMODFUNC void fmc_basedir_mk(const char *file_path, fmc_error_t **error);
 FMMODFUNC bool fmc_basedir_exists(const char *file_path, fmc_error_t **error);
 
 /**
+ * @brief Join two paths
+ *
+ * @param destpath Pointer to the string to store the final path.
+ * If it points to NULL the memory is allocated in this function.
+ * @param srcpath1 base path
+ * @param srcpath2 last part of the path
+ * @param error out-parameter for error handling
+ */
+FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2);
+
+/**
  * @brief Opens a process by creating a pipe, forking, and invoking the shell
  *
  * @param command a shell command line

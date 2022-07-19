@@ -80,6 +80,13 @@ void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
   *err_ptr = err;
 }
 
+void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code) {
+  fmc_error_t *err = fmc_error_inst();
+  fmc_error_destroy(err);
+  fmc_error_init(err, code, NULL);
+  *err_ptr = err;
+}
+
 void fmc_error_destroy(fmc_error_t *err) {
   err->code = FMC_ERROR_NONE;
   if(err->buf) {
