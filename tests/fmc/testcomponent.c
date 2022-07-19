@@ -33,7 +33,7 @@ static void test_component_del(struct test_component *comp) {
 
 
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
-  {"teststr", "Test string", true, FMC_CFG_STR, NULL},
+  {"teststr", "Test string", true, {FMC_CFG_STR, {NULL}} },
   {NULL}
 };
 
