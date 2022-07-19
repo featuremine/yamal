@@ -715,7 +715,8 @@ do_cleanup:
 
 static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key,
                                        fmc_error_t **err) {
-  struct parser_state_t state = {NULL, 0};
+  struct parser_state_t state;
+  memset(&state, 0, sizeof(state));
   char buffer[INI_PARSER_BUFF_SIZE];
 
   size_t read = 0;
