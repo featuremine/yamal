@@ -26,13 +26,16 @@
 #include <stdlib.h> // calloc()
 
 
-char *fmc_cstr_new(const char*str, fmc_error_t **error) {
-  size_t sz = strlen(str) + 1;
-  char *s = (char *)calloc(sz, sizeof(*s));
+char *fmc_cstr_new2(const char*str, size_t sz, fmc_error_t **error) {
+  char *s = (char *)calloc(sz + 1, sizeof(*s));
   if(!s) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return NULL;
   }
   memcpy(s, str, sz);
   return s;
+}
+
+char *fmc_cstr_new(const char*str, fmc_error_t **error) {
+  return fmc_cstr_new2(str, strlen(str), error);
 }

@@ -39,6 +39,16 @@ extern "C" {
  */
 FMMODFUNC char *fmc_cstr_new(const char*str, fmc_error_t **error);
 
+/**
+ * @brief Creates a new C string from a string and length
+ *
+ * @param str string to copy from
+ * @param sz length of the string
+ * @param error out-parameter for error handling
+ * @return The new C string
+ */
+FMMODFUNC char *fmc_cstr_new2(const char*str, size_t sz, fmc_error_t **error);
+
 #ifdef __cplusplus
 }
 #endif

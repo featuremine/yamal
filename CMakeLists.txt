@@ -55,14 +55,16 @@ add_library(
     fmc
     STATIC
     "${PROJECT_SOURCE_DIR}/src/fmc/cmp.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc/extension.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/murmur3.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
 )
@@ -181,11 +183,38 @@ install(
     FILES_MATCHING
     PATTERN "*.h"
 )
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include"
+    DESTINATION "."
+    FILES_MATCHING
+    PATTERN "*.hpp"
+)
+
+configure_file(
+    "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc.pc.in"
+    "${PROJECT_BINARY_DIR}/fmc.pc"
+    @ONLY
+)
+configure_file(
+    "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc++.pc.in"
+    "${PROJECT_BINARY_DIR}/fmc++.pc"
+    @ONLY
+)
 
 configure_file(
     ${PROJECT_SOURCE_DIR}/lib/pkgconfig/ytp.pc.in
     ${PROJECT_BINARY_DIR}/ytp.pc
     @ONLY
+)
+
+install(
+    FILES "${PROJECT_BINARY_DIR}/fmc.pc"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+)
+
+install(
+    FILES "${PROJECT_BINARY_DIR}/fmc++.pc"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
 )
 
 install(
