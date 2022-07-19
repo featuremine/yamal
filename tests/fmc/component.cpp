@@ -152,7 +152,7 @@ TEST(component, component) {
       fmc_component_new(mod, "test-component", cfg, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(sys.modules, comp->_mod);
-  ASSERT_EQ(std::string(comp->_vt->name), std::string("test-component"));
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("test-component"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));

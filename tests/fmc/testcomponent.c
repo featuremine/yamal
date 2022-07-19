@@ -55,14 +55,14 @@ struct fmc_cfg_node_spec test_component_cfg_spec[] = {
 
 struct fmc_component_type components[] = {
     {
-        .name = "test-component",
-        .descr = "Test component",
-        .size = sizeof(struct test_component),
-        .cfgspec = test_component_cfg_spec,
-        .new_ = (newfunc)test_component_new,
-        .del = (delfunc)test_component_del,
-        .sched = (schedproc)NULL,
-        .process = (processproc)test_component_process_one,
+        .tp_name = "test-component",
+        .tp_descr = "Test component",
+        .tp_size = sizeof(struct test_component),
+        .tp_cfgspec = test_component_cfg_spec,
+        .tp_new = (newfunc)test_component_new,
+        .tp_del = (delfunc)test_component_del,
+        .tp_sched = (schedproc)NULL,
+        .tp_process = (processproc)test_component_process_one,
     },
     {NULL},
 };

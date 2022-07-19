@@ -111,7 +111,7 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
   fmc_component_list_t *item;
   fmc_component_list_t *tmp;
   DL_FOREACH_SAFE(head, item, tmp) {
-    item->comp->_vt->del(item->comp);
+    item->comp->_vt->tp_del(item->comp);
     DL_DELETE(head, item);
   }
   mod->components = NULL;
@@ -203,18 +203,18 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
                                         struct fmc_cfg_sect_item *cfg,
                                         fmc_error_t **error) {
   fmc_error_clear(error);
-  for (unsigned int i = 0; mod->components_type && mod->components_type[i].name;
+  for (unsigned int i = 0; mod->components_type && mod->components_type[i].tp_name;
        ++i) {
     struct fmc_component_type *tp = &mod->components_type[i];
-    if (!strcmp(tp->name, comp)) {
-      fmc_cfg_node_spec_check(tp->cfgspec, cfg, error);
+    if (!strcmp(tp->tp_name, comp)) {
+      fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
       if (*error)
         return NULL;
 
       fmc_component_list_t *item =
           (fmc_component_list_t *)calloc(1, sizeof(*item));
       if (item) {
-        struct fmc_component *ret = tp->new_(cfg, error);
+        struct fmc_component *ret = tp->tp_new(cfg, error);
         if (*error) {
           free(item);
           return NULL;
@@ -249,7 +249,7 @@ void fmc_component_del(struct fmc_component *comp) {
       break;
     }
   }
-  comp->_vt->del(comp);
+  comp->_vt->tp_del(comp);
 }
 
 void fmc_component_sys_destroy(struct fmc_component_sys *sys) {

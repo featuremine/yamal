@@ -47,38 +47,38 @@ fmc_cfg_node_spec gateway_cfg_spec[] = {
 
 struct fmc_component_type components[] = {
    {
-      .name = "live-gateway",
-      .size = sizeof(gateway_comp),
-      .cfgspec = gateway_cfg_spec;
-      .new = (newfunc)gateway_comp_new,
-      .del = (delfunc)gateway_comp_del,
-      .sched = (schedproc)NULL,
-      .process = (processproc)gateway_comp_process_one,
+      .tp_name = "live-gateway",
+      .tp_size = sizeof(gateway_comp),
+      .tp_cfgspec = gateway_cfg_spec;
+      .tp_new = (newfunc)gateway_comp_new,
+      .tp_del = (delfunc)gateway_comp_del,
+      .tp_sched = (schedproc)NULL,
+      .tp_process = (processproc)gateway_comp_process_one,
    },
    {
-      .name = "sched-gateway",
-      .size = sizeof(gateway_comp),
-      .cfgspec = gateway_cfg_spec;
-      .new = (newfunc)gateway_comp_new,
-      .del = (delfunc)gateway_comp_del,
-      .sched = (schedproc)gateway_comp_sched,
-      .process = (processproc)gateway_comp_process_one,
+      .tp_name = "sched-gateway",
+      .tp_size = sizeof(gateway_comp),
+      .tp_cfgspec = gateway_cfg_spec;
+      .tp_new = (newfunc)gateway_comp_new,
+      .tp_del = (delfunc)gateway_comp_del,
+      .tp_sched = (schedproc)gateway_comp_sched,
+      .tp_process = (processproc)gateway_comp_process_one,
    },
    {
-      .name = "live-oms",
-      .size = sizeof(manager_comp),
-      .new = (newfunc)oms_comp_new,
-      .del = (delfunc)oms_comp_del,
-      .sched = (schedproc)NULL,
-      .process = (processproc)oms_comp_process_one,
+      .tp_name = "live-oms",
+      .tp_size = sizeof(manager_comp),
+      .tp_new = (newfunc)oms_comp_new,
+      .tp_del = (delfunc)oms_comp_del,
+      .tp_sched = (schedproc)NULL,
+      .tp_process = (processproc)oms_comp_process_one,
    },
    {
-      .name = "sched-oms",
-      .size = sizeof(manager_comp),
-      .new = (newfunc)oms_comp_new,
-      .del = (delfunc)oms_comp_del,
-      .sched = (schedproc)oms_comp_sched,
-      .process = (processproc)oms_comp_process_one,
+      .tp_name = "sched-oms",
+      .tp_size = sizeof(manager_comp),
+      .tp_new = (newfunc)oms_comp_new,
+      .tp_del = (delfunc)oms_comp_del,
+      .tp_sched = (schedproc)oms_comp_sched,
+      .tp_process = (processproc)oms_comp_process_one,
    },
    { NULL },
 };
@@ -119,15 +119,14 @@ typedef fm_time64_t (*schedproc)(struct fmc_component *);
 typedef bool (*processproc)(struct fmc_component *, fm_time64_t);
 
 struct fmc_component_type {
-  const char *name;
-  const char *descr;
-  size_t size;                       // size of the component struct
-  struct fmc_cfg_node_spec *cfgspec; // configuration specifications
-  // TODO: rename
-  newfunc new_;    // allocate and initialize the component
-  delfunc del;     // destroy the component
-  schedproc sched; // returns the next schedule time. If NULL it allways process
-  processproc process; // run the component once
+  const char *tp_name;
+  const char *tp_descr;
+  size_t tp_size;                       // size of the component struct
+  struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
+  newfunc tp_new;    // allocate and initialize the component
+  delfunc tp_del;     // destroy the component
+  schedproc tp_sched; // returns the next schedule time. If NULL it allways process
+  processproc tp_process; // run the component once
 };
 
 typedef struct fmc_component_list {
