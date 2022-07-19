@@ -111,7 +111,7 @@ FMMODFUNC void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
  * @param sep separator in between the two error strings
  */
 FMMODFUNC void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
-                         fmc_error_t *errsrc2, const char *sep);
+                                   fmc_error_t *errsrc2, const char *sep);
 
 /**
  * @brief Concatenates the error string into another.
@@ -121,7 +121,8 @@ FMMODFUNC void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
  * @param errsrc source error: Its error goes last in the final string
  * @param sep separator in between the two error strings
  */
-FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc, const char *sep);
+FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc,
+                             const char *sep);
 
 /**
  * @brief Returns the current thread error object

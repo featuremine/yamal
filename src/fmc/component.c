@@ -203,8 +203,8 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
                                         struct fmc_cfg_sect_item *cfg,
                                         fmc_error_t **error) {
   fmc_error_clear(error);
-  for (unsigned int i = 0; mod->components_type && mod->components_type[i].tp_name;
-       ++i) {
+  for (unsigned int i = 0;
+       mod->components_type && mod->components_type[i].tp_name; ++i) {
     struct fmc_component_type *tp = &mod->components_type[i];
     if (!strcmp(tp->tp_name, comp)) {
       fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);

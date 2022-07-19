@@ -123,9 +123,10 @@ struct fmc_component_type {
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  newfunc tp_new;    // allocate and initialize the component
-  delfunc tp_del;     // destroy the component
-  schedfunc tp_sched; // returns the next schedule time. If NULL it allways process
+  newfunc tp_new;                       // allocate and initialize the component
+  delfunc tp_del;                       // destroy the component
+  schedfunc
+      tp_sched; // returns the next schedule time. If NULL it allways process
   procfunc tp_proc; // run the component once
 };
 
@@ -156,9 +157,11 @@ struct fmc_component_sys {
 
 FMMODFUNC void fmc_component_sys_init(struct fmc_component_sys *sys);
 FMMODFUNC void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
-                                 const char **paths, fmc_error_t **error);
+                                           const char **paths,
+                                           fmc_error_t **error);
 FMMODFUNC void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
-                                 const char *path, fmc_error_t **error);
+                                           const char *path,
+                                           fmc_error_t **error);
 FMMODFUNC fmc_component_path_list_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys);
 FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
@@ -166,10 +169,9 @@ FMMODFUNC struct fmc_component_module *
 fmc_component_module_new(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error);
 FMMODFUNC void fmc_component_module_del(struct fmc_component_module *mod);
-FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
-                                        const char *comp,
-                                        struct fmc_cfg_sect_item *cfg,
-                                        fmc_error_t **error);
+FMMODFUNC struct fmc_component *
+fmc_component_new(struct fmc_component_module *mod, const char *comp,
+                  struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 #ifdef __cplusplus
