@@ -64,6 +64,7 @@ add_library(
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
 )

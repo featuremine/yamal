@@ -974,39 +974,54 @@ TEST(parser, arraysect_1) {
                                  "}\n");
 }
 
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-
 TEST(direct, basic_1) {
   fmc_error_t *err;
 
-  auto sect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
-  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true));
-  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse", false));
-  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45));
-  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5));
-  sect = unique_sect(fmc_cfg_sect_item_add_str(sect.release(), "str", "message"));
+  auto sect = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse", false, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
+  ASSERT_NOERR(err);
 
-  auto arr = unique_arr(fmc_cfg_arr_item_add_none(nullptr));
-  arr = unique_arr(fmc_cfg_arr_item_add_boolean(arr.release(), true));
-  arr = unique_arr(fmc_cfg_arr_item_add_boolean(arr.release(), false));
-  arr = unique_arr(fmc_cfg_arr_item_add_int64(arr.release(), -45));
-  arr = unique_arr(fmc_cfg_arr_item_add_float64(arr.release(), -45.5));
-  arr = unique_arr(fmc_cfg_arr_item_add_str(arr.release(), "message"));
+  auto arr = unique_arr(fmc_cfg_arr_item_add_none(nullptr, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_boolean(arr.release(), true, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_boolean(arr.release(), false, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_int64(arr.release(), -45, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_float64(arr.release(), -45.5, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_str(arr.release(), "message", &err));
+  ASSERT_NOERR(err);
 
-  auto subsect1 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
-  arr = unique_arr(fmc_cfg_arr_item_add_sect(arr.release(), subsect1.release()));
+  auto subsect1 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_sect(arr.release(), subsect1.release(), &err));
+  ASSERT_NOERR(err);
 
-  auto subarr = unique_arr(fmc_cfg_arr_item_add_none(nullptr));
-  subarr = unique_arr(fmc_cfg_arr_item_add_boolean(subarr.release(), true));
-  arr = unique_arr(fmc_cfg_arr_item_add_arr(arr.release(), subarr.release()));
+  auto subarr = unique_arr(fmc_cfg_arr_item_add_none(nullptr, &err));
+  ASSERT_NOERR(err);
+  subarr = unique_arr(fmc_cfg_arr_item_add_boolean(subarr.release(), true, &err));
+  ASSERT_NOERR(err);
+  arr = unique_arr(fmc_cfg_arr_item_add_arr(arr.release(), subarr.release(), &err));
+  ASSERT_NOERR(err);
 
-  sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release()));
+  sect = unique_sect(fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
+  ASSERT_NOERR(err);
 
-  auto subsect2 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none"));
-  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect2.release()));
+  auto subsect2 = unique_sect(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  ASSERT_NOERR(err);
+  sect = unique_sect(fmc_cfg_sect_item_add_sect(sect.release(), "sect", subsect2.release(), &err));
+  ASSERT_NOERR(err);
 
   EXPECT_EQ(cfg_to_string(sect), ""
                                   "{\n"
@@ -1036,4 +1051,9 @@ TEST(direct, basic_1) {
                                   "  none = none\n"
                                   "}\n"
                                  "");
+}
+
+GTEST_API_ int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
