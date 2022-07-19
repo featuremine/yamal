@@ -2,12 +2,20 @@
 #include <fmc/config.h>
 #include <fmc/error.h>
 #include <fmc/time.h>
+#include <fmc/string.h>
+#include <fmc/uthash/utlist.h>
 #include <stdlib.h>
+#include <string.h>
+
 
 struct test_component {
   fmc_comp_HEAD;
   char *teststr;
 };
+
+int cmp_key(struct fmc_cfg_sect_item *item, const char *key) {
+    return strcmp(item->key, key);
+}
 
 static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg, fmc_error_t **err) {
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
@@ -15,7 +23,17 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg, 
    fmc_error_set2(err, FMC_ERROR_MEMORY);
    return NULL;
   }
-  // TODO: Parse config
+  struct fmc_cfg_sect_item *item;
+  LL_SEARCH(cfg, item, "teststr", cmp_key);
+  if(item) {
+    if(item->node.type == FMC_CFG_STR) {
+        c->teststr = fmc_cstr_new(item->node.value.str, err);
+    } else {
+        FMC_ERROR_REPORT(err, "Invalid type for string");
+    }
+  } else {
+    fmc_error_set2(err, FMC_ERROR_MEMORY);
+  }
   return c;
 };
 

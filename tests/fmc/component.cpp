@@ -26,6 +26,10 @@
 
 #include <fmc++/gtestwrap.hpp>
 
+struct test_component {
+  fmc_comp_HEAD;
+  char *teststr;
+};
 
 std::string components_path;
 struct fmc_component_sys sys;
@@ -131,6 +135,8 @@ TEST(component, component) {
   ASSERT_EQ(sys.modules->prev, mod);
 
   struct fmc_cfg_sect_item cfg;
+  // struct fmc_cfg_sect_item *cfg = fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
+  //ASSERT_EQ(err, nullptr);
   struct fmc_component *comp = fmc_component_new(mod, "test-component", &cfg, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(sys.modules, comp->_mod);
