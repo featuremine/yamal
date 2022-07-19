@@ -29,23 +29,27 @@
 
 #define INI_PARSER_BUFF_SIZE 8192
 
+static void fmc_cfg_item_destroy(struct fmc_cfg_item *node) {
+  switch (node->type) {
+  case FMC_CFG_SECT:
+    fmc_cfg_sect_del(node->value.sect);
+    break;
+  case FMC_CFG_ARR:
+    fmc_cfg_arr_del(node->value.arr);
+    break;
+  case FMC_CFG_STR:
+    free((void *) node->value.str);
+    break;
+  case FMC_CFG_NONE:
+  case FMC_CFG_BOOLEAN:
+  case FMC_CFG_INT64:
+  case FMC_CFG_FLOAT64: break;
+  }
+}
+
 void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
   while (head) {
-    switch (head->node.type) {
-    case FMC_CFG_SECT:
-      fmc_cfg_sect_del(head->node.value.sect);
-      break;
-    case FMC_CFG_ARR:
-      fmc_cfg_arr_del(head->node.value.arr);
-      break;
-    case FMC_CFG_STR:
-      free((void *) head->node.value.str);
-      break;
-    case FMC_CFG_NONE:
-    case FMC_CFG_BOOLEAN:
-    case FMC_CFG_INT64:
-    case FMC_CFG_FLOAT64: break;
-    }
+    fmc_cfg_item_destroy(&head->node);
     struct fmc_cfg_sect_item *next = head->next;
     free((void *) head->key);
     free(head);
@@ -175,21 +179,7 @@ struct fmc_cfg_sect_item *fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item * t
 
 void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
   while (head) {
-    switch (head->item.type) {
-    case FMC_CFG_SECT:
-      fmc_cfg_sect_del(head->item.value.sect);
-      break;
-    case FMC_CFG_ARR:
-      fmc_cfg_arr_del(head->item.value.arr);
-      break;
-    case FMC_CFG_STR:
-      free((void *) head->item.value.str);
-      break;
-    case FMC_CFG_NONE:
-    case FMC_CFG_BOOLEAN:
-    case FMC_CFG_INT64:
-    case FMC_CFG_FLOAT64: break;
-    }
+    fmc_cfg_item_destroy(&head->item);
     struct fmc_cfg_arr_item *next = head->next;
     free(head);
     head = next;
@@ -299,10 +289,12 @@ static struct ini_field *ini_field_new(fmc_error_t **err) {
 }
 
 static void ini_field_del(struct ini_field *field) {
-  if (field) {
+  while (field) {
+    struct ini_field *next = field->next;
     free(field->key);
     free(field->val);
     free(field);
+    field = next;
   }
 }
 
@@ -325,15 +317,12 @@ static struct ini_sect *ini_sect_new(fmc_error_t **err) {
 }
 
 static void ini_sect_del(struct ini_sect *sect) {
-  if (sect) {
-    struct ini_field *field = sect->fields;
-    while (field) {
-      struct ini_field *next = field->next;
-      ini_field_del(field);
-      field = next;
-    }
+  while (sect) {
+    struct ini_sect *next = sect->next;
+    ini_field_del(sect->fields);
     free(sect->key);
     free(sect);
+    sect = next;
   }
 }
 
