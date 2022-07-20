@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@main
 
     - name: Install tclap
-      run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && cd tclap-code && ./autotools.sh && ./configure && make && make install && cd .. && rm -rf tclap-code 
+      run: apt-get install libtclap-dev
     
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
