@@ -1015,11 +1015,11 @@ TEST(direct, basic_1) {
   sect = sect_ptr(
       fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
   ASSERT_NOERR(err);
-  sect = sect_ptr(fmc_cfg_sect_item_add_boolean(
-      sect.release(), "booleanfalse", false, &err));
+  sect = sect_ptr(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse",
+                                                false, &err));
   ASSERT_NOERR(err);
-  sect = sect_ptr(
-      fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
+  sect =
+      sect_ptr(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
   ASSERT_NOERR(err);
   sect = sect_ptr(
       fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
@@ -1041,8 +1041,7 @@ TEST(direct, basic_1) {
   arr = arr_ptr(fmc_cfg_arr_item_add_str(arr.release(), "message", &err));
   ASSERT_NOERR(err);
 
-  auto subsect1 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect1 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   arr = arr_ptr(
       fmc_cfg_arr_item_add_sect(arr.release(), subsect1.release(), &err));
@@ -1050,19 +1049,17 @@ TEST(direct, basic_1) {
 
   auto subarr = arr_ptr(fmc_cfg_arr_item_add_none(nullptr, &err));
   ASSERT_NOERR(err);
-  subarr =
-      arr_ptr(fmc_cfg_arr_item_add_boolean(subarr.release(), true, &err));
+  subarr = arr_ptr(fmc_cfg_arr_item_add_boolean(subarr.release(), true, &err));
   ASSERT_NOERR(err);
-  arr = arr_ptr(
-      fmc_cfg_arr_item_add_arr(arr.release(), subarr.release(), &err));
+  arr =
+      arr_ptr(fmc_cfg_arr_item_add_arr(arr.release(), subarr.release(), &err));
   ASSERT_NOERR(err);
 
   sect = sect_ptr(
       fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
   ASSERT_NOERR(err);
 
-  auto subsect2 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect2 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   sect = sect_ptr(fmc_cfg_sect_item_add_sect(sect.release(), "sect",
                                              subsect2.release(), &err));
@@ -1106,11 +1103,11 @@ TEST(check, test_1) {
   sect = sect_ptr(
       fmc_cfg_sect_item_add_boolean(sect.release(), "booleantrue", true, &err));
   ASSERT_NOERR(err);
-  sect = sect_ptr(fmc_cfg_sect_item_add_boolean(
-      sect.release(), "booleanfalse", false, &err));
+  sect = sect_ptr(fmc_cfg_sect_item_add_boolean(sect.release(), "booleanfalse",
+                                                false, &err));
   ASSERT_NOERR(err);
-  sect = sect_ptr(
-      fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
+  sect =
+      sect_ptr(fmc_cfg_sect_item_add_int64(sect.release(), "int64", -45, &err));
   ASSERT_NOERR(err);
   sect = sect_ptr(
       fmc_cfg_sect_item_add_float64(sect.release(), "float64", -45.5, &err));
@@ -1119,14 +1116,12 @@ TEST(check, test_1) {
       fmc_cfg_sect_item_add_str(sect.release(), "str", "message", &err));
   ASSERT_NOERR(err);
 
-  auto subsect1 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect1 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   auto subarr1 =
       arr_ptr(fmc_cfg_arr_item_add_sect(nullptr, subsect1.release(), &err));
   ASSERT_NOERR(err);
-  auto subsect2 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect2 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   subarr1 = arr_ptr(
       fmc_cfg_arr_item_add_sect(subarr1.release(), subsect2.release(), &err));
@@ -1135,28 +1130,25 @@ TEST(check, test_1) {
       arr_ptr(fmc_cfg_arr_item_add_arr(nullptr, subarr1.release(), &err));
   ASSERT_NOERR(err);
 
-  auto subsect3 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect3 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   auto subarr2 =
       arr_ptr(fmc_cfg_arr_item_add_sect(nullptr, subsect3.release(), &err));
   ASSERT_NOERR(err);
-  auto subsect4 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect4 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   subarr2 = arr_ptr(
       fmc_cfg_arr_item_add_sect(subarr2.release(), subsect4.release(), &err));
   ASSERT_NOERR(err);
-  arr = arr_ptr(
-      fmc_cfg_arr_item_add_arr(arr.release(), subarr2.release(), &err));
+  arr =
+      arr_ptr(fmc_cfg_arr_item_add_arr(arr.release(), subarr2.release(), &err));
   ASSERT_NOERR(err);
 
   sect = sect_ptr(
       fmc_cfg_sect_item_add_arr(sect.release(), "arr", arr.release(), &err));
   ASSERT_NOERR(err);
 
-  auto subsect5 =
-      sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
+  auto subsect5 = sect_ptr(fmc_cfg_sect_item_add_none(nullptr, "none", &err));
   ASSERT_NOERR(err);
   sect = sect_ptr(fmc_cfg_sect_item_add_sect(sect.release(), "sect",
                                              subsect5.release(), &err));
