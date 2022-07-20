@@ -12,6 +12,12 @@ project(
     HOMEPAGE_URL "https://www.featuremine.com"
 )
 
+# Add the cmake folder so the FindSphinx module is found
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# Add subdir "docs" for Doxygen + Sphinx to use.
+add_subdirectory ("docs")
+
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
