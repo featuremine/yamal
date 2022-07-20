@@ -77,7 +77,8 @@ FMMODFUNC ytp_iterator_t ytp_channel_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
  * @brief Reads a message on channel level
  *
  * @param[in] yamal ytp_yamal_t object
- * @param[in] iterator iterator that points to the memory mapped node to read from
+ * @param[in] iterator iterator that points to the memory mapped node to read
+ * from
  * @param[out] peer the peer that wrote the data
  * @param[out] channel the channel that wrote the data
  * @param[out] sz size of the read data

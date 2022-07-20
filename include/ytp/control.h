@@ -62,7 +62,7 @@
  * field can be empty.\n
  * The peer needs to avoid publishing duplicated directory message if the last
  * directory message in yamal has the same payload.
- * 
+ *
  * @see http://www.featuremine.com
  */
 
