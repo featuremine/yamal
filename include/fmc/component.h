@@ -83,7 +83,8 @@ struct fmc_component_type1 components[] = {
    { NULL },
 };
 
-FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api, struct fmc_component_module *mod) {
+FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
+                                      struct fmc_component_module *mod) {
    // The number at the end of the functions signifies the API version.
    api->components_add1(mod, components);
 }
