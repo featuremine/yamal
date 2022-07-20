@@ -33,34 +33,34 @@ Docs
 yamal.h
 -------------
 
-.. doxygenfile:: yamal.h
+.. doxygenfile:: ytp/yamal.h
 
 control.h
 -------------
 
-.. doxygenfile:: control.h
+.. doxygenfile:: ytp/control.h
 
 sequence.h
 -------------
 
-.. doxygenfile:: sequence.h
+.. doxygenfile:: ytp/sequence.h
 
 peer.h
 -------------
 
-.. doxygenfile:: peer.h
+.. doxygenfile:: ytp/peer.h
 
 channel.h
 -------------
 
-.. doxygenfile:: channel.h
+.. doxygenfile:: ytp/channel.h
 
 time.h
 -------------
 
-.. doxygenfile:: time.h
+.. doxygenfile:: ytp/time.h
 
 timeline.h
 -------------
 
-.. doxygenfile:: timeline.h
+.. doxygenfile:: ytp/timeline.h
