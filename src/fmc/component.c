@@ -43,17 +43,18 @@
 #error "Unsupported operating system"
 #endif
 
-void components_add1(struct fmc_component_module* mod, struct fmc_component_type1 *tps) {
+void components_add1(struct fmc_component_module *mod,
+                     struct fmc_component_type1 *tps) {
   mod->components_type = tps;
 }
 
 static struct fmc_component_api api = {
-  .components_add1 = components_add1,
-  .components_add2 = NULL,
-  .components_add3 = NULL,
-  .components_add4 = NULL,
-  .components_add5 = NULL,
-  ._zeros = {NULL},
+    .components_add1 = components_add1,
+    .components_add2 = NULL,
+    .components_add3 = NULL,
+    .components_add4 = NULL,
+    .components_add5 = NULL,
+    ._zeros = {NULL},
 };
 
 void fmc_component_sys_init(struct fmc_component_sys *sys) {

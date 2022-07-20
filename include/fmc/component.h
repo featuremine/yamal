@@ -105,7 +105,7 @@ extern "C" {
 #define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
 
 #define fmc_comp_HEAD                                                          \
-  struct fmc_component_type1 *_vt;                                              \
+  struct fmc_component_type1 *_vt;                                             \
   struct fmc_error _err;                                                       \
   struct fmc_component_module *_mod;
 
@@ -142,7 +142,7 @@ struct fmc_component_module {
   char *name;                    // module name (e.g. "oms")
   char *file;                    // file full path of the library
   struct fmc_component_type1 *components_type; // null terminated array
-  fmc_component_list_t *components;           // allocated components
+  fmc_component_list_t *components;            // allocated components
   struct fmc_component_module *next, *prev;
 };
 
@@ -177,15 +177,17 @@ FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 /* Current API version: 1 (components_add1) */
 struct fmc_component_api {
-   void (*components_add1)(struct fmc_component_module* mod, struct fmc_component_type1 *tps);
-   void (*components_add2)(struct fmc_component_module* mod, void *);
-   void (*components_add3)(struct fmc_component_module* mod, void *);
-   void (*components_add4)(struct fmc_component_module* mod, void *);
-   void (*components_add5)(struct fmc_component_module* mod, void *);
-   void *_zeros[128];
+  void (*components_add1)(struct fmc_component_module *mod,
+                          struct fmc_component_type1 *tps);
+  void (*components_add2)(struct fmc_component_module *mod, void *);
+  void (*components_add3)(struct fmc_component_module *mod, void *);
+  void (*components_add4)(struct fmc_component_module *mod, void *);
+  void (*components_add5)(struct fmc_component_module *mod, void *);
+  void *_zeros[128];
 };
 
-typedef void (*fmc_comp_mod_init_func)(struct fmc_component_api *, struct fmc_component_module *);
+typedef void (*fmc_comp_mod_init_func)(struct fmc_component_api *,
+                                       struct fmc_component_module *);
 
 #ifdef __cplusplus
 }

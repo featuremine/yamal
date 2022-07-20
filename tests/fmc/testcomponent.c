@@ -67,7 +67,8 @@ struct fmc_component_type1 components[] = {
     {NULL},
 };
 
-FMCOMPMODINITFUNC void FMCompInit_testcomponent(struct fmc_component_api *api,
-                                                struct fmc_component_module *mod) {
-   api->components_add1(mod, components);
+FMCOMPMODINITFUNC void
+FMCompInit_testcomponent(struct fmc_component_api *api,
+                         struct fmc_component_module *mod) {
+  api->components_add1(mod, components);
 }
