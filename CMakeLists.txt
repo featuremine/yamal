@@ -40,6 +40,7 @@ add_library(
     fmc
     STATIC
     "${PROJECT_SOURCE_DIR}/src/fmc/cmp.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/component.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
@@ -58,6 +59,14 @@ target_include_directories(
     PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
+)
+find_library(DL_LIB dl)
+find_library(PTHREAD_LIB pthread)
+target_link_libraries(
+    fmc
+    PRIVATE
+    ${DL_LIB}
+    ${PTHREAD_LIB}
 )
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(FMC_LIBS_PRIVATE "-lstdc++fs")
