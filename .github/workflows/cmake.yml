@@ -22,7 +22,9 @@ jobs:
     - name: Install tclap
       run: sudo apt-get install libtclap-dev
     - name: Install gtest
-      run: sudo apt-get install libgtest-dev
+      run: sudo apt-get install libgtest-dev libgmock-dev googletest
+
+
     
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
