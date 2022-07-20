@@ -916,7 +916,8 @@ static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec,
                                    struct fmc_cfg_arr_item *cfg,
                                    fmc_error_t **err);
 
-static void check_value(struct fmc_cfg_type *spec, struct fmc_cfg_item *item, fmc_error_t **err) {
+static void check_value(struct fmc_cfg_type *spec, struct fmc_cfg_item *item,
+                        fmc_error_t **err) {
   switch (item->type) {
   case FMC_CFG_NONE:
   case FMC_CFG_BOOLEAN:
