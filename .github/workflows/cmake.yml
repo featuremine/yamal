@@ -3,6 +3,7 @@ name: CMake
 on:
   release:
     types: [prereleased]
+  pull_request:
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
