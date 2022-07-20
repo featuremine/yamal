@@ -113,7 +113,6 @@ struct fmc_component {
   fmc_comp_HEAD;
 };
 
-typedef struct fmc_component_type1 *(*fmc_comp_mod_init_func)(void);
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
@@ -176,14 +175,17 @@ fmc_component_new(struct fmc_component_module *mod, const char *comp,
                   struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
+/* Current API version: 1 (components_add1) */
 struct fmc_component_api {
    void (*components_add1)(struct fmc_component_module* mod, struct fmc_component_type1 *tps);
    void (*components_add2)(struct fmc_component_module* mod, void *);
    void (*components_add3)(struct fmc_component_module* mod, void *);
    void (*components_add4)(struct fmc_component_module* mod, void *);
    void (*components_add5)(struct fmc_component_module* mod, void *);
-   void *_zeros[128] = {0};
+   void *_zeros[128];
 };
+
+typedef void (*fmc_comp_mod_init_func)(struct fmc_component_api *, struct fmc_component_module *);
 
 #ifdef __cplusplus
 }
