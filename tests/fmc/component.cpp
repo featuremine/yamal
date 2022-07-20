@@ -24,6 +24,7 @@
 #include <fmc/config.h>
 #include <fmc/error.h>
 
+#include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 
 struct test_component {
@@ -171,6 +172,6 @@ TEST(component, component) {
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  components_path = argv[1];
+  components_path = fs::path(argv[1]).parent_path();
   return RUN_ALL_TESTS();
 }
