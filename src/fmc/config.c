@@ -66,133 +66,168 @@ static struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err) {
   if (!ret) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   }
+  ret->node.type = FMC_CFG_NONE;
   return ret;
 }
 
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_none(struct fmc_cfg_sect_item *tail, const char *key,
                            fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_NONE;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_boolean(struct fmc_cfg_sect_item *tail, const char *key,
                               bool new_value, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_BOOLEAN;
   item->node.value.boolean = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_int64(struct fmc_cfg_sect_item *tail, const char *key,
                             int64_t new_value, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_INT64;
   item->node.value.int64 = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_float64(struct fmc_cfg_sect_item *tail, const char *key,
                               double new_value, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_FLOAT64;
   item->node.value.float64 = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_str(struct fmc_cfg_sect_item *tail, const char *key,
                           const char *new_value, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_STR;
   item->node.value.str = fmc_cstr_new(new_value, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_sect(struct fmc_cfg_sect_item *tail, const char *key,
                            struct fmc_cfg_sect_item *new_value,
                            fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_SECT;
   item->node.value.sect = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_add_arr(struct fmc_cfg_sect_item *tail, const char *key,
                           struct fmc_cfg_arr_item *new_value,
                           fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->key = fmc_cstr_new(key, err);
   if (*err) {
-    fmc_cfg_sect_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->node.type = FMC_CFG_ARR;
   item->node.value.arr = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_sect_del(item);
+  return NULL;
 }
 
 void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
@@ -212,96 +247,138 @@ static struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err) {
   if (!ret) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   }
+  ret->item.type = FMC_CFG_NONE;
   return ret;
 }
 
 struct fmc_cfg_arr_item *
 fmc_cfg_arr_item_add_none(struct fmc_cfg_arr_item *tail, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_NONE;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 struct fmc_cfg_arr_item *
 fmc_cfg_arr_item_add_boolean(struct fmc_cfg_arr_item *tail, bool new_value,
                              fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_BOOLEAN;
   item->item.value.boolean = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 struct fmc_cfg_arr_item *
 fmc_cfg_arr_item_add_int64(struct fmc_cfg_arr_item *tail, int64_t new_value,
                            fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_INT64;
   item->item.value.int64 = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 struct fmc_cfg_arr_item *
 fmc_cfg_arr_item_add_float64(struct fmc_cfg_arr_item *tail, double new_value,
                              fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_FLOAT64;
   item->item.value.float64 = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 struct fmc_cfg_arr_item *fmc_cfg_arr_item_add_str(struct fmc_cfg_arr_item *tail,
                                                   const char *new_value,
                                                   fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_STR;
   item->item.value.str = fmc_cstr_new(new_value, err);
   if (*err) {
-    fmc_cfg_arr_del(item);
-    return NULL;
+    goto do_cleanup;
   }
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 struct fmc_cfg_arr_item *
 fmc_cfg_arr_item_add_sect(struct fmc_cfg_arr_item *tail,
                           struct fmc_cfg_sect_item *new_value,
                           fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_SECT;
   item->item.value.sect = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 struct fmc_cfg_arr_item *
 fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *tail,
                          struct fmc_cfg_arr_item *new_value,
                          fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
   if (*err) {
-    return NULL;
+    goto do_cleanup;
   }
   item->item.type = FMC_CFG_ARR;
   item->item.value.arr = new_value;
   item->next = tail;
   return item;
+
+do_cleanup:
+  fmc_cfg_arr_del(item);
+  return NULL;
 }
 
 struct ini_field {
@@ -314,7 +391,6 @@ struct ini_field {
 
 static struct ini_field *ini_field_new(fmc_error_t **err) {
   fmc_error_clear(err);
-
   struct ini_field *ret =
       (struct ini_field *)calloc(1, sizeof(struct ini_field));
   if (!ret) {
@@ -379,6 +455,8 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
 static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
                         char **str, char *end, size_t line,
                         struct fmc_cfg_item *out, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   out->type = FMC_CFG_NONE;
   switch (spec->type) {
   case FMC_CFG_NONE: {
@@ -485,6 +563,8 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
 static struct fmc_cfg_arr_item *
 parse_array_unwrapped(struct ini_sect *ini, struct fmc_cfg_type *spec,
                       char **str, char *end, size_t line, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct fmc_cfg_arr_item *arr = NULL;
   if (**str == ',') {
     ++*str;
@@ -537,6 +617,8 @@ static struct fmc_cfg_arr_item *parse_array(struct ini_sect *ini,
                                             struct fmc_cfg_type *spec,
                                             char **str, char *end, size_t line,
                                             fmc_error_t **err) {
+  fmc_error_clear(err);
+
   if (**str == '[') {
     ++*str;
     struct fmc_cfg_arr_item *arr =
@@ -563,6 +645,8 @@ static struct fmc_cfg_sect_item *parse_section(struct ini_sect *ini,
                                                struct fmc_cfg_node_spec *spec,
                                                char *name, size_t len,
                                                size_t line, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct ini_sect *isect;
   struct fmc_cfg_sect_item *sect = NULL;
   for (isect = ini; isect; isect = isect->next) {
@@ -645,6 +729,8 @@ struct parser_state_t {
 
 static void ini_line_parse(struct parser_state_t *state, char *line, size_t sz,
                            fmc_error_t **err) {
+  fmc_error_clear(err);
+
   ++state->line_n;
   if (sz == 0) {
     return;
@@ -713,8 +799,9 @@ do_cleanup:
   free(value);
 }
 
-static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key,
-                                       fmc_error_t **err) {
+static struct ini_sect *ini_file_parse(fmc_fd fd, fmc_error_t **err) {
+  fmc_error_clear(err);
+
   struct parser_state_t state;
   memset(&state, 0, sizeof(state));
   char buffer[INI_PARSER_BUFF_SIZE];
@@ -769,6 +856,7 @@ static struct ini_sect *ini_file_parse(fmc_fd fd, const char *root_key,
   }
 
 do_cleanup:
+  ini_sect_del(state.sections);
   return NULL;
 }
 
@@ -784,7 +872,7 @@ fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
   char root_key_copy[root_key_len + 1];
   strcpy(root_key_copy, root_key);
 
-  struct ini_sect *ini = ini_file_parse(fd, root_key, err);
+  struct ini_sect *ini = ini_file_parse(fd, err);
   if (*err) {
     goto do_cleanup;
   }
@@ -826,9 +914,35 @@ static const char *type_name(FMC_CFG_TYPE type) {
 
 static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec,
                                    struct fmc_cfg_arr_item *cfg,
+                                   fmc_error_t **err);
+
+static void check_value(struct fmc_cfg_type *spec, struct fmc_cfg_item *item, fmc_error_t **err) {
+  switch (item->type) {
+  case FMC_CFG_NONE:
+  case FMC_CFG_BOOLEAN:
+  case FMC_CFG_INT64:
+  case FMC_CFG_FLOAT64:
+  case FMC_CFG_STR:
+    break;
+  case FMC_CFG_SECT: {
+    fmc_cfg_node_spec_check(spec->spec.node, item->value.sect, err);
+    if (*err) {
+      return;
+    }
+  } break;
+  case FMC_CFG_ARR: {
+    fmc_cfg_arr_spec_check(spec->spec.array, item->value.arr, err);
+    if (*err) {
+      return;
+    }
+  } break;
+  }
+}
+
+static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec,
+                                   struct fmc_cfg_arr_item *cfg,
                                    fmc_error_t **err) {
   fmc_error_clear(err);
-
   for (; cfg; cfg = cfg->next) {
     if (cfg->item.type != spec->type) {
       fmc_error_set(err, "config error: item in array %s must be %s",
@@ -836,25 +950,9 @@ static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec,
       return;
     }
 
-    switch (cfg->item.type) {
-    case FMC_CFG_NONE:
-    case FMC_CFG_BOOLEAN:
-    case FMC_CFG_INT64:
-    case FMC_CFG_FLOAT64:
-    case FMC_CFG_STR:
-      break;
-    case FMC_CFG_SECT: {
-      fmc_cfg_node_spec_check(spec->spec.node, cfg->item.value.sect, err);
-      if (*err) {
-        return;
-      }
-    } break;
-    case FMC_CFG_ARR: {
-      fmc_cfg_arr_spec_check(spec->spec.array, cfg->item.value.arr, err);
-      if (*err) {
-        return;
-      }
-    } break;
+    check_value(spec, &cfg->item, err);
+    if (*err) {
+      return;
     }
   }
 }
@@ -895,27 +993,9 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
                     type_name(spec_item->type.type));
       return;
     }
-    switch (item->node.type) {
-    case FMC_CFG_NONE:
-    case FMC_CFG_BOOLEAN:
-    case FMC_CFG_INT64:
-    case FMC_CFG_FLOAT64:
-    case FMC_CFG_STR:
-      break;
-    case FMC_CFG_SECT: {
-      fmc_cfg_node_spec_check(spec_item->type.spec.node, item->node.value.sect,
-                              err);
-      if (*err) {
-        return;
-      }
-    } break;
-    case FMC_CFG_ARR: {
-      fmc_cfg_arr_spec_check(spec_item->type.spec.array, item->node.value.arr,
-                             err);
-      if (*err) {
-        return;
-      }
-    } break;
+    check_value(&spec_item->type, &item->node, err);
+    if (*err) {
+      return;
     }
   }
 
