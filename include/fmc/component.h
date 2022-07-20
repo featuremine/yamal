@@ -83,8 +83,8 @@ struct fmc_component_type components[] = {
    { NULL },
 };
 
-FMCOMPMODINITFUNC struct fmc_component_type *FMCompInit_oms() {
-   return components;
+FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_module *mod) {
+   fmc_component_module_add1(mod, components);
 }
 */
 
