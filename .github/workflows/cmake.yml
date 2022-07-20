@@ -26,7 +26,7 @@ jobs:
     - name: Install Doxygen
       run: sudo apt-get install doxygen
     - name: Install sphinx
-      run: sudo apt-get install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_them && pip3 install m2r && pip3 install mistune==0.8.4 && pip3 install sphinx-autodoc-typehints
+      run: sudo apt-get install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install m2r && pip3 install mistune==0.8.4 && pip3 install sphinx-autodoc-typehints
     
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
