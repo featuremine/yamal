@@ -3,6 +3,7 @@
 #include <fmc/alignment.h>
 #include <fmc/component.h>
 #include <fmc/config.h>
+#include <fmc/reactor.h>
 #include <fmc/debug.h>
 #include <fmc/endianness.h>
 #include <fmc/error.h>
