@@ -143,7 +143,7 @@ struct fmc_component_type {
   delfunc tp_del;                       // destroy the component
   schedfunc tp_sched;                   // returns the next schedule time
   procfunc tp_proc;                     // run the component once
-  struct fmc_component_list_t *comps;   // pointer to the containing module
+  fmc_component_list_t *comps;   // pointer to the containing module
   struct fmc_component_type *next, *prev;
 };
 
@@ -191,7 +191,7 @@ fmc_component_new(struct fmc_component_type *tp, struct fmc_cfg_sect_item *cfg,
                  fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
-/* Current API version: 1 (components_add1) */
+/* Current API version: 1 (components_add_v1) */
 struct fmc_component_api {
   void (*components_add_v1)(struct fmc_component_module *mod,
                             struct fmc_component_def_v1 *tps);
