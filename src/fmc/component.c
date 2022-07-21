@@ -48,6 +48,8 @@ void components_add1(struct fmc_component_module *mod,
   mod->components_type = tps;
 }
 
+void incopatible
+
 static struct fmc_component_api api = {
     .components_add1 = components_add1,
     .components_add2 = NULL,
@@ -121,6 +123,7 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
     free(mod->file);
   if (mod->handle)
     fmc_ext_close(mod->handle);
+  fmc_error_destroy(&mod->error);
   fmc_component_list_t *head = mod->components;
   fmc_component_list_t *item;
   fmc_component_list_t *tmp;
@@ -141,6 +144,7 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
 
   struct fmc_component_module mod;
   memset(&mod, 0, sizeof(mod));
+  fmc_error_init_none(&mod.error);
 
   mod.handle = fmc_ext_open(lib_path, &err);
   if (err)
@@ -160,7 +164,13 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
   mod.file = fmc_cstr_new(lib_path, error);
   if (*error)
     goto error_1;
+
+  fmc_error_reset_none(&mod.error);
   mod_init(&api, &mod);
+  if (!fmc_error_has(&mod.error)) {
+    fmc_error_cpy(*error, &mod.error);
+    goto error_1;
+  }
 
   struct fmc_component_module *m =
       (struct fmc_component_module *)calloc(1, sizeof(mod));

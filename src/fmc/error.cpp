@@ -52,6 +52,11 @@ void fmc_error_init_none(fmc_error_t *err) {
   fmc_error_init(err, FMC_ERROR_NONE, NULL);
 }
 
+void fmc_error_reset_none(fmc_error_t *err) {
+  fmc_error_destroy(err);
+  fmc_error_init(err, FMC_ERROR_NONE, NULL);
+}
+
 #define FMC_ERROR_FORMAT(err, fmt)                                             \
   do {                                                                         \
     va_list _args1;                                                            \

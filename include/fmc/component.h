@@ -149,6 +149,7 @@ struct fmc_component_type {
 
 struct fmc_component_module {
   struct fmc_component_sys *sys;    // the system that owns the module
+  fmc_error_t error;                // reports errors for this module
   fmc_ext_t handle;                 // module handle. Return of dlopen()
   char *name;                       // module name (e.g. "oms")
   char *file;                       // file full path of the library
