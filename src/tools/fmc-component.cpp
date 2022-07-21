@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
   if (component->_vt->tp_sched) {
     while (run) {
       fm_time64_t now = component->_vt->tp_sched(component);
-      if (component->_vt->tp_proc(component, now)) {
+      if (!component->_vt->tp_proc(component, now)) {
         break;
       }
     }
