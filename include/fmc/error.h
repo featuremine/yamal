@@ -64,7 +64,8 @@ FMMODFUNC void fmc_error_init(fmc_error_t *err, FMC_ERROR_CODE code,
  * @param code FMC_ERROR_CODE
  * @param buf error string. Could be NULL if code is not FMC_ERROR_CUSTOM
  */
-FMMODFUNC void fmc_error_reset(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf);
+FMMODFUNC void fmc_error_reset(fmc_error_t *err, FMC_ERROR_CODE code,
+                               const char *buf);
 
 /**
  * @brief Initializes the error struct with error code FMC_ERROR_NONE
@@ -156,7 +157,7 @@ FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc,
 
 /**
  * @brief Returns true if it has an error (i.e. is different to FMC_ERROR_NONE)
- * 
+ *
  * @param err
  */
 FMMODFUNC bool fmc_error_has(fmc_error_t *err);

@@ -104,8 +104,8 @@ extern "C" {
 #define FMCOMPMODINITFUNC FMMODFUNC
 #define FMC_COMPONENT_INIT_FUNC_PREFIX "FMCompInit_"
 
-#define fmc_component_HEAD                                      \
-  struct fmc_component_type *_vt;                               \
+#define fmc_component_HEAD                                                     \
+  struct fmc_component_type *_vt;                                              \
   struct fmc_error _err
 
 struct fmc_component {
@@ -189,9 +189,9 @@ FMMODFUNC struct fmc_component_type *
 fmc_component_module_type(struct fmc_component_module *mod, const char *comp,
                           fmc_error_t **error);
 
-FMMODFUNC struct fmc_component *
-fmc_component_new(struct fmc_component_type *tp, struct fmc_cfg_sect_item *cfg,
-                 fmc_error_t **error);
+FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
+                                                  struct fmc_cfg_sect_item *cfg,
+                                                  fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 /* Current API version: 1 (components_add_v1) */

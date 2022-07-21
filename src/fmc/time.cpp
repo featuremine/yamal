@@ -51,9 +51,7 @@ double fm_time64_to_fseconds(fm_time64_t t) {
 
 int64_t fm_time64_raw(fm_time64_t time) { return time.value; }
 
-bool fm_time64_less(fm_time64_t a, fm_time64_t b) {
-  return a.value < b.value;
-}
+bool fm_time64_less(fm_time64_t a, fm_time64_t b) { return a.value < b.value; }
 
 bool fm_time64_greater(fm_time64_t a, fm_time64_t b) {
   return a.value > b.value;
@@ -72,9 +70,7 @@ fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b) {
   return res;
 }
 
-void fm_time64_inc(fm_time64_t *a, fm_time64_t b) {
-  a->value += b.value;
-}
+void fm_time64_inc(fm_time64_t *a, fm_time64_t b) { a->value += b.value; }
 
 fm_time64_t fm_time64_sub(fm_time64_t a, fm_time64_t b) {
   fm_time64_t res = {a.value - b.value};
@@ -101,9 +97,7 @@ fm_time64_t fm_time64_end() {
   return res;
 }
 
-bool fm_time64_is_end(fm_time64_t time) {
-  return time.value == INT64_MAX;
-}
+bool fm_time64_is_end(fm_time64_t time) { return time.value == INT64_MAX; }
 
 typedef struct {
   fm_time64_t start;
