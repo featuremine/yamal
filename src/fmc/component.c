@@ -43,12 +43,26 @@
 #error "Unsupported operating system"
 #endif
 
-static void fmc_component_types_del(struct fmc_component_type **types) {
+static void components_del(struct fmc_component_list **comps) {
+  struct fmc_component_list *head = *comps;
+  struct fmc_component_list *item;
+  struct fmc_component_list *tmp;
+  DL_FOREACH_SAFE(head, item, tmp) {
+    DL_DELETE(head, item);
+    fmc_error_destroy(&item->comp->_err);
+    item->comp->_vt->tp_del(item->comp);
+    free(item);
+  }
+  *comps = NULL;
+}
+
+static void component_types_del(struct fmc_component_type **types) {
   struct fmc_component_type *head = *types;
   struct fmc_component_type *item;
   struct fmc_component_type *tmp;
   DL_FOREACH_SAFE(head, item, tmp) {
     DL_DELETE(head, item);
+    components_del(&item->comps);
     free(item);
   }
   *types = NULL;
@@ -59,11 +73,12 @@ static void components_add_v1(struct fmc_component_module *mod,
   for(int i = 0; d && d[i].tp_name; ++i) {
     struct fmc_component_type *tp = (struct fmc_component_type *)calloc(1, sizeof(*tp));
     if(!tp) {
-      fmc_component_types_del(&mod->types);
+      component_types_del(&mod->types);
       fmc_error_reset(&mod->error, FMC_ERROR_MEMORY, NULL);
       break;
     }
     memcpy(tp, d, sizeof(*d));
+    tp->comps = NULL;
     DL_APPEND(mod->types, tp);
   }
 }
@@ -147,7 +162,7 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
   if (mod->handle)
     fmc_ext_close(mod->handle);
   fmc_error_destroy(&mod->error);
-  fmc_component_types_del(&mod->types);
+  component_types_del(&mod->types);
 }
 
 static struct fmc_component_module *
@@ -160,7 +175,6 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
 
   struct fmc_component_module mod;
   memset(&mod, 0, sizeof(mod));
-  fmc_error_init_none(&mod.error);
 
   mod.handle = fmc_ext_open(lib_path, &err);
   if (err)
@@ -173,6 +187,7 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
     goto error_1;
 
   // append the mod to the system
+  fmc_error_init_none(&mod.error);
   mod.sys = sys;
   mod.name = fmc_cstr_new(modstr, error);
   if (*error)
@@ -287,6 +302,7 @@ void fmc_component_del(struct fmc_component *comp) {
       break;
     }
   }
+  fmc_error_destroy(&comp->_err);
   comp->_vt->tp_del(comp);
 }
 
