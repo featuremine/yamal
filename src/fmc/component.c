@@ -147,8 +147,8 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
     goto error_1;
 
   // Check if init function is available
-  fmc_comp_mod_init_func mod_init =
-      (fmc_comp_mod_init_func)fmc_ext_sym(mod.handle, mod_func, &err);
+  fmc_component_module_init_func mod_init =
+      (fmc_component_module_init_func)fmc_ext_sym(mod.handle, mod_func, &err);
   if (err)
     goto error_1;
 
@@ -190,8 +190,8 @@ fmc_component_module_new(struct fmc_component_sys *sys, const char *mod,
   char mod_lib_2[pathlen];
   fmc_path_join(mod_lib_2, pathlen, mod, mod_lib);
 
-  char mod_func[strlen(fmc_comp_INIT_FUNCT_PREFIX) + strlen(mod) + 1];
-  sprintf(mod_func, "%s%s", fmc_comp_INIT_FUNCT_PREFIX, mod);
+  char mod_func[strlen(FMC_COMPONENT_INIT_FUNC_PREFIX) + strlen(mod) + 1];
+  sprintf(mod_func, "%s%s", FMC_COMPONENT_INIT_FUNC_PREFIX, mod);
   fmc_component_path_list_t *head = sys->search_paths;
   fmc_component_path_list_t *item;
   DL_FOREACH(head, item) {

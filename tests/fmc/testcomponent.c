@@ -8,7 +8,7 @@
 #include <string.h>
 
 struct test_component {
-  fmc_comp_HEAD;
+  fmc_component_HEAD;
   char *teststr;
 };
 
