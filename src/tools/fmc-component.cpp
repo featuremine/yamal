@@ -67,7 +67,8 @@ struct owned_t {
 using module_ptr = std::unique_ptr<fmc_component_module, deleter_t>;
 using config_ptr = std::unique_ptr<fmc_cfg_sect_item, deleter_t>;
 using schema_ptr = struct fmc_cfg_node_spec *;
-using sys_ptr = struct fmc_cfg_node_spec *;
+using sys_ptr = owned_t<fmc_component_sys, initdestroy_t>;
+using file_ptr = owned_t<fmc_fd, initdestroy_t>;
 
 int main(int argc, char **argv) {
   fmc_set_signal_handler(sig_handler);
@@ -91,26 +92,11 @@ int main(int argc, char **argv) {
 
   cmd.parse(argc, argv);
 
-  // typedef type2 type_generic;
-
-  auto mod = load_module();
-  type_generic comptype = mod.get_type("oms");
-  auto spec = comptype.tp_cfgspec;
-
-
-  struct fmc_component_sys_wrapper {
-    fmc_component_sys_wrapper() {
-      fmc_component_sys_init(&sys);
-    }
-    ~fmc_component_sys_wrapper() {
-      fmc_component_sys_destroy(&sys);
-    }
-    struct fmc_component_sys sys;
-  } sys;
+  sys_ptr sys;
 
   fmc_error_t *err;
 
-  auto module = module_ptr(fmc_component_module_new(&sys.sys, moduleArg.getValue().c_str(), &err));
+  auto module = module_ptr(fmc_component_module_new(&sys.value, moduleArg.getValue().c_str(), &err));
   fmc_runtime_error_unless(!err)
         << "Unable to load module " << moduleArg.getValue() << ": " << fmc_error_msg(err);
 
@@ -118,15 +104,9 @@ int main(int argc, char **argv) {
   {
     schema_ptr schema = NULL;
 
-    struct file_wrapper {
-      explicit file_wrapper(const char *path) {
-      }
-      ~file_wrapper() {
-      }
-      fmc_fd fd;
-    } config_file(cfgArg.getValue().c_str());
+    file_ptr config_file(cfgArg.getValue().c_str());
 
-    cfg = config_ptr(fmc_cfg_sect_parse_ini_file(schema, config_file.fd, mainArg.getValue().c_str(), &err));
+    cfg = config_ptr(fmc_cfg_sect_parse_ini_file(schema, config_file.value, mainArg.getValue().c_str(), &err));
   }
 
   auto component = fmc_component_new(module.get(), componentArg.getValue().c_str(), cfg.get(), &err);
