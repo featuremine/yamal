@@ -193,6 +193,24 @@ if(BUILD_TOOLS)
     pkg_check_modules(TCLAP REQUIRED IMPORTED_TARGET tclap)
 
     add_executable(
+        fmc-component
+        "src/tools/fmc-component.cpp"
+    )
+    target_link_libraries(
+        fmc-component
+        PRIVATE
+        ytp
+        fmc++
+        fmc
+        PkgConfig::TCLAP
+        pthread
+    )
+    install(
+        TARGETS
+        fmc-component
+    )
+
+    add_executable(
         ytp-daemon
         "src/tools/ytp-daemon.cpp"
     )
