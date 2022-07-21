@@ -30,7 +30,10 @@
 
 #include <chrono>
 
-fm_time64_t fm_time64_from_raw(int64_t value) { return value; }
+fm_time64_t fm_time64_from_raw(int64_t value) {
+  fm_time64_t res = {value};
+  return res;
+}
 
 fm_time64_t fm_time64_from_nanos(int64_t value) {
   return fm_time64_from_raw(value);
@@ -40,35 +43,72 @@ fm_time64_t fm_time64_from_seconds(int32_t value) {
   return fm_time64_from_nanos(value * 1000000000ULL);
 }
 
-int64_t fm_time64_to_nanos(fm_time64_t t) { return t; }
+int64_t fm_time64_to_nanos(fm_time64_t t) { return t.value; }
 
-double fm_time64_to_fseconds(fm_time64_t t) { return (double)t / 1000000000.0; }
+double fm_time64_to_fseconds(fm_time64_t t) {
+  return (double)t.value / 1000000000.0;
+}
 
-int64_t fm_time64_raw(fm_time64_t time) { return time; }
+int64_t fm_time64_raw(fm_time64_t time) { return time.value; }
 
-bool fm_time64_less(fm_time64_t a, fm_time64_t b) { return a < b; }
+bool fm_time64_less(fm_time64_t a, fm_time64_t b) {
+  return a.value < b.value;
+}
 
-bool fm_time64_greater(fm_time64_t a, fm_time64_t b) { return a > b; }
+bool fm_time64_greater(fm_time64_t a, fm_time64_t b) {
+  return a.value > b.value;
+}
 
-bool fm_time64_equal(fm_time64_t a, fm_time64_t b) { return a == b; }
+bool fm_time64_equal(fm_time64_t a, fm_time64_t b) {
+  return a.value == b.value;
+}
 
-int64_t fm_time64_div(fm_time64_t a, fm_time64_t b) { return a / b; }
+int64_t fm_time64_div(fm_time64_t a, fm_time64_t b) {
+  return a.value / b.value;
+}
 
-fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b) { return a + b; }
+fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b) {
+  fm_time64_t res = {a.value + b.value};
+  return res;
+}
 
-void fm_time64_inc(fm_time64_t *a, fm_time64_t b) { *a += b; }
+void fm_time64_inc(fm_time64_t *a, fm_time64_t b) {
+  a->value += b.value;
+}
 
-fm_time64_t fm_time64_sub(fm_time64_t a, fm_time64_t b) { return a - b; }
+fm_time64_t fm_time64_sub(fm_time64_t a, fm_time64_t b) {
+  fm_time64_t res = {a.value - b.value};
+  return res;
+}
 
-fm_time64_t fm_time64_mul(fm_time64_t a, int64_t b) { return a * b; }
+fm_time64_t fm_time64_mul(fm_time64_t a, int64_t b) {
+  fm_time64_t res = {a.value * b};
+  return res;
+}
 
-fm_time64_t fm_time64_int_div(fm_time64_t a, int64_t b) { return a / b; }
+fm_time64_t fm_time64_int_div(fm_time64_t a, int64_t b) {
+  fm_time64_t res = {a.value / b};
+  return res;
+}
 
-fm_time64_t fm_time64_start() { return INT64_MIN; }
+fm_time64_t fm_time64_start() {
+  fm_time64_t res = {INT64_MIN};
+  return res;
+}
 
-fm_time64_t fm_time64_end() { return INT64_MAX; }
+fm_time64_t fm_time64_end() {
+  fm_time64_t res = {INT64_MAX};
+  return res;
+}
 
-bool fm_time64_is_end(fm_time64_t time) { return time == INT64_MAX; }
+bool fm_time64_is_end(fm_time64_t time) {
+  return time.value == INT64_MAX;
+}
+
+typedef struct {
+  fm_time64_t start;
+  fm_time64_t end;
+} fm_time64_range_t;
 
 using namespace std;
 using namespace chrono;

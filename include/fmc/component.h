@@ -132,10 +132,10 @@ struct fmc_component_def_v1 {
   procfunc tp_proc;                     // run the component once
 };
 
-typedef struct fmc_component_list {
+struct fmc_component_list {
   struct fmc_component *comp;
   struct fmc_component_list *next, *prev;
-} fmc_component_list_t;
+};
 
 struct fmc_component_type {
   const char *tp_name;
@@ -146,7 +146,7 @@ struct fmc_component_type {
   delfunc tp_del;                       // destroy the component
   schedfunc tp_sched;                   // returns the next schedule time
   procfunc tp_proc;                     // run the component once
-  struct fmc_component_list_t *comps;   // pointer to the containing module
+  struct fmc_component_list *comps;     // pointer to the containing component
   struct fmc_component_type *next, *prev;
 };
 

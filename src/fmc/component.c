@@ -54,14 +54,13 @@ static void fmc_component_types_del(struct fmc_component_type **types) {
   *types = NULL;
 }
 
-//TODO: Add fmc_error_t **error
-void components_add_v1(struct fmc_component_module *mod,
-                       struct fmc_component_def_v1 *d) {
+static void components_add_v1(struct fmc_component_module *mod,
+                              struct fmc_component_def_v1 *d) {
   for(int i = 0; d && d[i].tp_name; ++i) {
     struct fmc_component_type *tp = (struct fmc_component_type *)calloc(1, sizeof(*tp));
     if(!tp) {
       fmc_component_types_del(&mod->types);
-      // TODO: Add fmc_error_set2(error, FMC_ERROR_MEMORY); 
+      fmc_error_reset(&mod->error, FMC_ERROR_MEMORY, NULL);
       break;
     }
     memcpy(tp, d, sizeof(*d));
@@ -69,16 +68,16 @@ void components_add_v1(struct fmc_component_module *mod,
   }
 }
 
-void incopatible(struct fmc_component_module *mod, void *unused) {
-  fmc_error_reset_sprintf(mod->error, "component API version is higher than the system version");
+static void incompatible(struct fmc_component_module *mod, void *unused) {
+  fmc_error_reset_sprintf(&mod->error, "component API version is higher than the system version");
 }
 
 struct fmc_component_api api = {
     .components_add_v1 = components_add_v1,
-    .components_add_v2 = incopatible,
-    .components_add_v3 = incopatible,
-    .components_add_v4 = incopatible,
-    .components_add_v5 = incopatible,
+    .components_add_v2 = incompatible,
+    .components_add_v3 = incompatible,
+    .components_add_v4 = incompatible,
+    .components_add_v5 = incompatible,
     ._zeros = {NULL},
 };
 
@@ -184,7 +183,7 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
 
   fmc_error_reset_none(&mod.error);
   mod_init(&api, &mod);
-  if (!fmc_error_has(&mod.error)) {
+  if (fmc_error_has(&mod.error)) {
     fmc_error_set(error, "failed to load components %s with error: %s", modstr, fmc_error_msg(&mod.error));
     goto error_1;
   }
@@ -261,7 +260,7 @@ struct fmc_component *fmc_component_new(struct fmc_component_type *tp, struct fm
   if (*error)
     return NULL;
 
-  fmc_component_list_t *item = (fmc_component_list_t *)calloc(1, sizeof(*item));
+  struct fmc_component_list *item = (struct fmc_component_list *)calloc(1, sizeof(*item));
   if (item) {
     item->comp = tp->tp_new(cfg, error);
     if (*error) {
@@ -279,8 +278,8 @@ struct fmc_component *fmc_component_new(struct fmc_component_type *tp, struct fm
 }
 
 void fmc_component_del(struct fmc_component *comp) {
-  fmc_component_list_t *head = comp->_vt->comps;
-  fmc_component_list_t *item;
+  struct fmc_component_list *head = comp->_vt->comps;
+  struct fmc_component_list *item;
   DL_FOREACH(head, item) {
     if (item->comp == comp) {
       DL_DELETE(comp->_vt->comps, item);
