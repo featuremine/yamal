@@ -119,7 +119,6 @@ int main(int argc, char **argv) {
 
   if (component->_vt->tp_sched) {
     while (run) {
-      // call sched on each component; return wallclock if any sched is null
       fm_time64_t now = component->_vt->tp_sched(component);
       if (component->_vt->tp_proc(component, now)) {
         break;
