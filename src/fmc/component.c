@@ -64,9 +64,10 @@ static void component_types_del(struct fmc_component_type **types) {
 
 static void components_add_v1(struct fmc_component_module *mod,
                               struct fmc_component_def_v1 *d) {
-  for(int i = 0; d && d[i].tp_name; ++i) {
-    struct fmc_component_type *tp = (struct fmc_component_type *)calloc(1, sizeof(*tp));
-    if(!tp) {
+  for (int i = 0; d && d[i].tp_name; ++i) {
+    struct fmc_component_type *tp =
+        (struct fmc_component_type *)calloc(1, sizeof(*tp));
+    if (!tp) {
       component_types_del(&mod->types);
       fmc_error_reset(&mod->error, FMC_ERROR_MEMORY, NULL);
       break;
@@ -78,7 +79,8 @@ static void components_add_v1(struct fmc_component_module *mod,
 }
 
 static void incompatible(struct fmc_component_module *mod, void *unused) {
-  fmc_error_reset_sprintf(&mod->error, "component API version is higher than the system version");
+  fmc_error_reset_sprintf(
+      &mod->error, "component API version is higher than the system version");
 }
 
 struct fmc_component_api api = {
@@ -193,7 +195,8 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
   fmc_error_reset_none(&mod.error);
   mod_init(&api, &mod);
   if (fmc_error_has(&mod.error)) {
-    fmc_error_set(error, "failed to load components %s with error: %s", modstr, fmc_error_msg(&mod.error));
+    fmc_error_set(error, "failed to load components %s with error: %s", modstr,
+                  fmc_error_msg(&mod.error));
     goto error_1;
   }
 
@@ -262,14 +265,16 @@ fmc_component_module_type(struct fmc_component_module *mod, const char *comp,
   return NULL;
 }
 
-struct fmc_component *fmc_component_new(struct fmc_component_type *tp, struct fmc_cfg_sect_item *cfg,
+struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
+                                        struct fmc_cfg_sect_item *cfg,
                                         fmc_error_t **error) {
   fmc_error_clear(error);
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
   if (*error)
     return NULL;
 
-  struct fmc_component_list *item = (struct fmc_component_list *)calloc(1, sizeof(*item));
+  struct fmc_component_list *item =
+      (struct fmc_component_list *)calloc(1, sizeof(*item));
   if (item) {
     item->comp = tp->tp_new(cfg, error);
     if (*error) {
