@@ -30,7 +30,7 @@ struct deleter_t {
   void operator()(struct fmc_cfg_sect_item *ptr) { fmc_cfg_sect_del(ptr); }
 };
 struct initdestroy_t {
-  void init(fmc_fd fd, const char *path) {
+  void init(fmc_fd &fd, const char *path) {
     fmc_error_t *err;
     fd = fmc_fopen(path, READ, &err);
     fmc_runtime_error_unless(!err)
@@ -73,7 +73,7 @@ using file_ptr = owned_t<fmc_fd, initdestroy_t>;
 int main(int argc, char **argv) {
   fmc_set_signal_handler(sig_handler);
 
-  TCLAP::CmdLine cmd("ytp preempt allocation tool", ' ', YTP_VERSION);
+  TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
       "s", "section", "Main section to be used to load the module",
@@ -93,7 +93,6 @@ int main(int argc, char **argv) {
   cmd.parse(argc, argv);
 
   sys_ptr sys;
-
   fmc_error_t *err;
 
   auto module = module_ptr(fmc_component_module_new(&sys.value, moduleArg.getValue().c_str(), &err));
@@ -117,13 +116,13 @@ int main(int argc, char **argv) {
     while (run) {
       // call sched on each component; return wallclock if any sched is null
       fm_time64_t now = component->_vt->tp_sched(component);
-      component->_vt->tp_proc(component, now);
+      if (component->_vt->tp_proc(component, now)) {
+        break;
+      }
     }
   }
   else {
-    while (run) {
-      component->_vt->tp_proc(component, fmc_cur_time_ns());
-    }
+    while (run && component->_vt->tp_proc(component, fmc_cur_time_ns()));
   }
 
   return 0;
