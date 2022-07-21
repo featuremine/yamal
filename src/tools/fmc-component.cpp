@@ -53,23 +53,23 @@ struct initdestroy_t {
   }
 };
 template<typename T, typename InitDestroy>
-struct owned_t {
+struct scopevar_t {
   template<typename ...Args>
-  owned_t(Args && ...args) {
+  scopevar_t(Args && ...args) {
     InitDestroy().init(value, std::forward<Args>(args)...);
   }
-  ~owned_t() {
+  ~scopevar_t() {
     InitDestroy().destroy(value);
   }
-  owned_t(const owned_t &) = delete;
+  scopevar_t(const scopevar_t &) = delete;
   T value;
 };
 using module_ptr = std::unique_ptr<fmc_component_module, deleter_t>;
 using type_ptr = struct fmc_component_type *;
 using config_ptr = std::unique_ptr<fmc_cfg_sect_item, deleter_t>;
 using schema_ptr = struct fmc_cfg_node_spec *;
-using sys_ptr = owned_t<fmc_component_sys, initdestroy_t>;
-using file_ptr = owned_t<fmc_fd, initdestroy_t>;
+using sys_ptr = scopevar_t<fmc_component_sys, initdestroy_t>;
+using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
 
 int main(int argc, char **argv) {
   fmc_set_signal_handler(sig_handler);
