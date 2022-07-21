@@ -45,7 +45,7 @@ fmc_cfg_node_spec gateway_cfg_spec[] = {
 &sessions_cfg_spec}, {NULL}
 };
 
-struct fmc_component_type components[] = {
+struct fmc_component_type1 components[] = {
    {
       .tp_name = "live-gateway",
       .tp_size = sizeof(gateway_comp),
@@ -83,8 +83,10 @@ struct fmc_component_type components[] = {
    { NULL },
 };
 
-FMCOMPMODINITFUNC struct fmc_component_type *FMCompInit_oms() {
-   return components;
+FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
+                                      struct fmc_component_module *mod) {
+   // The number at the end of the functions signifies the API version.
+   api->components_add1(mod, components);
 }
 */
 
@@ -103,7 +105,7 @@ extern "C" {
 #define fmc_comp_INIT_FUNCT_PREFIX "FMCompInit_"
 
 #define fmc_comp_HEAD                                                          \
-  struct fmc_component_type *_vt;                                              \
+  struct fmc_component_type1 *_vt;                                             \
   struct fmc_error _err;                                                       \
   struct fmc_component_module *_mod;
 
@@ -111,14 +113,13 @@ struct fmc_component {
   fmc_comp_HEAD;
 };
 
-typedef struct fmc_component_type *(*fmc_comp_mod_init_func)(void);
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
 typedef fm_time64_t (*schedfunc)(struct fmc_component *);
 typedef bool (*procfunc)(struct fmc_component *, fm_time64_t);
 
-struct fmc_component_type {
+struct fmc_component_type1 {
   const char *tp_name;
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
@@ -140,8 +141,8 @@ struct fmc_component_module {
   fmc_ext_t handle;              // module handle. Return of dlopen()
   char *name;                    // module name (e.g. "oms")
   char *file;                    // file full path of the library
-  struct fmc_component_type *components_type; // null terminated array
-  fmc_component_list_t *components;           // allocated components
+  struct fmc_component_type1 *components_type; // null terminated array
+  fmc_component_list_t *components;            // allocated components
   struct fmc_component_module *next, *prev;
 };
 
@@ -173,6 +174,20 @@ FMMODFUNC struct fmc_component *
 fmc_component_new(struct fmc_component_module *mod, const char *comp,
                   struct fmc_cfg_sect_item *cfg, fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
+
+/* Current API version: 1 (components_add1) */
+struct fmc_component_api {
+  void (*components_add1)(struct fmc_component_module *mod,
+                          struct fmc_component_type1 *tps);
+  void (*components_add2)(struct fmc_component_module *mod, void *);
+  void (*components_add3)(struct fmc_component_module *mod, void *);
+  void (*components_add4)(struct fmc_component_module *mod, void *);
+  void (*components_add5)(struct fmc_component_module *mod, void *);
+  void *_zeros[128];
+};
+
+typedef void (*fmc_comp_mod_init_func)(struct fmc_component_api *,
+                                       struct fmc_component_module *);
 
 #ifdef __cplusplus
 }

@@ -43,6 +43,20 @@
 #error "Unsupported operating system"
 #endif
 
+void components_add1(struct fmc_component_module *mod,
+                     struct fmc_component_type1 *tps) {
+  mod->components_type = tps;
+}
+
+static struct fmc_component_api api = {
+    .components_add1 = components_add1,
+    .components_add2 = NULL,
+    .components_add3 = NULL,
+    .components_add4 = NULL,
+    .components_add5 = NULL,
+    ._zeros = {NULL},
+};
+
 void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->search_paths = NULL;
   sys->modules = NULL; // important- initialize lists to NULL
@@ -146,7 +160,7 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
   mod.file = fmc_cstr_new(lib_path, error);
   if (*error)
     goto error_1;
-  mod.components_type = mod_init();
+  mod_init(&api, &mod);
 
   struct fmc_component_module *m =
       (struct fmc_component_module *)calloc(1, sizeof(mod));
@@ -205,7 +219,7 @@ struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
   fmc_error_clear(error);
   for (unsigned int i = 0;
        mod->components_type && mod->components_type[i].tp_name; ++i) {
-    struct fmc_component_type *tp = &mod->components_type[i];
+    struct fmc_component_type1 *tp = &mod->components_type[i];
     if (!strcmp(tp->tp_name, comp)) {
       fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
       if (*error)
