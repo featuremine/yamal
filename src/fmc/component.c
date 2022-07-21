@@ -27,18 +27,12 @@
 #include <fmc/string.h>
 #include <fmc/uthash/utlist.h>
 #include <stdlib.h> // calloc()
+#include <string.h> // memcpy()
 
-#if defined(FMC_SYS_UNIX)
-#include <dirent.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #if defined(FMC_SYS_LINUX)
 #define FMC_LIB_SUFFIX ".so"
 #elif defined(FMC_SYS_MACH)
 #define FMC_LIB_SUFFIX ".dylib"
-#endif
 #else
 #error "Unsupported operating system"
 #endif
