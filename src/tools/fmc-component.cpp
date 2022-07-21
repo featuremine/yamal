@@ -65,6 +65,7 @@ struct owned_t {
   T value;
 };
 using module_ptr = std::unique_ptr<fmc_component_module, deleter_t>;
+using type_ptr = struct fmc_component_type *;
 using config_ptr = std::unique_ptr<fmc_cfg_sect_item, deleter_t>;
 using schema_ptr = struct fmc_cfg_node_spec *;
 using sys_ptr = owned_t<fmc_component_sys, initdestroy_t>;
@@ -99,16 +100,20 @@ int main(int argc, char **argv) {
   fmc_runtime_error_unless(!err)
         << "Unable to load module " << moduleArg.getValue() << ": " << fmc_error_msg(err);
 
+  auto type = fmc_component_module_type(module.get(), componentArg.getValue().c_str(), &err);
+  fmc_runtime_error_unless(!err)
+        << "Unable to get component type " << componentArg.getValue() << ": " << fmc_error_msg(err);
+
   config_ptr cfg;
   {
-    schema_ptr schema = NULL;
-
+    schema_ptr schema = type->tp_cfgspec;
     file_ptr config_file(cfgArg.getValue().c_str());
-
     cfg = config_ptr(fmc_cfg_sect_parse_ini_file(schema, config_file.value, mainArg.getValue().c_str(), &err));
+    fmc_runtime_error_unless(!err)
+          << "Unable to load configuration file: " << fmc_error_msg(err);
   }
 
-  auto component = fmc_component_new(module.get(), componentArg.getValue().c_str(), cfg.get(), &err);
+  auto component = fmc_component_new(type, cfg.get(), &err);
   fmc_runtime_error_unless(!err)
         << "Unable to load component " << componentArg.getValue() << ": " << fmc_error_msg(err);
 
