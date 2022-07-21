@@ -56,7 +56,7 @@ static void fmc_component_types_del(struct fmc_component_type **types) {
 
 //TODO: Add fmc_error_t **error
 void components_add_v1(struct fmc_component_module *mod,
-                     struct fmc_component_def_v1 *d) {
+                       struct fmc_component_def_v1 *d) {
   for(int i = 0; d && d[i].tp_name; ++i) {
     struct fmc_component_type *tp = (struct fmc_component_type *)calloc(1, sizeof(*tp));
     if(!tp) {
@@ -69,14 +69,16 @@ void components_add_v1(struct fmc_component_module *mod,
   }
 }
 
-void incopatible
+void incopatible(struct fmc_component_module *mod, void *unused) {
+  fmc_error_reset_sprintf(mod->error, "component API version is higher than the system version");
+}
 
-static struct fmc_component_api api = {
+struct fmc_component_api api = {
     .components_add_v1 = components_add_v1,
-    .components_add_v2 = NULL,
-    .components_add_v3 = NULL,
-    .components_add_v4 = NULL,
-    .components_add_v5 = NULL,
+    .components_add_v2 = incopatible,
+    .components_add_v3 = incopatible,
+    .components_add_v4 = incopatible,
+    .components_add_v5 = incopatible,
     ._zeros = {NULL},
 };
 
@@ -183,7 +185,7 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
   fmc_error_reset_none(&mod.error);
   mod_init(&api, &mod);
   if (!fmc_error_has(&mod.error)) {
-    fmc_error_cpy(*error, &mod.error);
+    fmc_error_set(error, "failed to load components %s with error: %s", modstr, fmc_error_msg(&mod.error));
     goto error_1;
   }
 
