@@ -43,23 +43,45 @@
 #error "Unsupported operating system"
 #endif
 
-void components_add1(struct fmc_component_module *mod,
-                     struct fmc_component_type1 *tps) {
-  mod->components_type = tps;
+static void fmc_component_types_del(struct fmc_component_type **types) {
+  struct fmc_component_type *head = *types;
+  struct fmc_component_type *item;
+  struct fmc_component_type *tmp;
+  DL_FOREACH_SAFE(head, item, tmp) {
+    DL_DELETE(head, item);
+    free(item);
+  }
+  *types = NULL;
+}
+
+//TODO: Add fmc_error_t **error
+void components_add_v1(struct fmc_component_module *mod,
+                     struct fmc_component_def_v1 *d) {
+  for(int i = 0; d && d[i].tp_name; ++i) {
+    struct fmc_component_type *tp = (struct fmc_component_type *)calloc(1, sizeof(*tp));
+    if(!tp) {
+      fmc_component_types_del(&mod->types);
+      // TODO: Add fmc_error_set2(error, FMC_ERROR_MEMORY); 
+      break;
+    }
+    memcpy(tp, d, sizeof(*d));
+    DL_APPEND(mod->types, tp);
+  }
 }
 
 static struct fmc_component_api api = {
-    .components_add1 = components_add1,
-    .components_add2 = NULL,
-    .components_add3 = NULL,
-    .components_add4 = NULL,
-    .components_add5 = NULL,
+    .components_add_v1 = components_add_v1,
+    .components_add_v2 = NULL,
+    .components_add_v3 = NULL,
+    .components_add_v4 = NULL,
+    .components_add_v5 = NULL,
     ._zeros = {NULL},
 };
 
 void fmc_component_sys_init(struct fmc_component_sys *sys) {
+  // important: initialize lists to NULL
   sys->search_paths = NULL;
-  sys->modules = NULL; // important- initialize lists to NULL
+  sys->modules = NULL;
 }
 
 static void component_path_list_del(fmc_component_path_list_t **phead) {
@@ -121,14 +143,8 @@ void fmc_component_module_destroy(struct fmc_component_module *mod) {
     free(mod->file);
   if (mod->handle)
     fmc_ext_close(mod->handle);
-  fmc_component_list_t *head = mod->components;
-  fmc_component_list_t *item;
-  fmc_component_list_t *tmp;
-  DL_FOREACH_SAFE(head, item, tmp) {
-    item->comp->_vt->tp_del(item->comp);
-    DL_DELETE(head, item);
-  }
-  mod->components = NULL;
+
+  fmc_component_types_del(&mod->types);
 }
 
 static struct fmc_component_module *
@@ -160,7 +176,7 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
   mod.file = fmc_cstr_new(lib_path, error);
   if (*error)
     goto error_1;
-  mod_init(&api, &mod);
+  mod_init(&api, &mod); // TODO: add error
 
   struct fmc_component_module *m =
       (struct fmc_component_module *)calloc(1, sizeof(mod));
@@ -212,53 +228,51 @@ void fmc_component_module_del(struct fmc_component_module *mod) {
   free(mod);
 }
 
-struct fmc_component *fmc_component_new(struct fmc_component_module *mod,
-                                        const char *comp,
-                                        struct fmc_cfg_sect_item *cfg,
-                                        fmc_error_t **error) {
+struct fmc_component_type *
+fmc_component_module_type(struct fmc_component_module *mod, const char *comp,
+                          fmc_error_t **error) {
   fmc_error_clear(error);
-  for (unsigned int i = 0;
-       mod->components_type && mod->components_type[i].tp_name; ++i) {
-    struct fmc_component_type1 *tp = &mod->components_type[i];
-    if (!strcmp(tp->tp_name, comp)) {
-      fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
-      if (*error)
-        return NULL;
-
-      fmc_component_list_t *item =
-          (fmc_component_list_t *)calloc(1, sizeof(*item));
-      if (item) {
-        struct fmc_component *ret = tp->tp_new(cfg, error);
-        if (*error) {
-          free(item);
-          return NULL;
-        } else {
-          ret->_mod = mod;
-          ret->_vt = tp;
-          fmc_error_init_none(&ret->_err);
-          item->comp = ret;
-          DL_APPEND(mod->components, item);
-          return ret;
-        }
-      } else {
-        fmc_error_set2(error, FMC_ERROR_MEMORY);
-        return NULL;
-      }
-      break;
+  struct fmc_component_type *head = mod->types;
+  struct fmc_component_type *item;
+  DL_FOREACH(head, item) {
+    if (!strcmp(item->tp_name, comp)) {
+      return item;
     }
   }
-  fmc_error_set(error, "could not find computation %s in module %s", comp,
-                mod->name);
+  FMC_ERROR_REPORT(error, "Could not find the component type");
+  return NULL;
+}
+
+struct fmc_component *fmc_component_new(struct fmc_component_type *tp, struct fmc_cfg_sect_item *cfg,
+                                        fmc_error_t **error) {
+  fmc_error_clear(error);
+  fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
+  if (*error)
+    return NULL;
+
+  fmc_component_list_t *item = (fmc_component_list_t *)calloc(1, sizeof(*item));
+  if (item) {
+    item->comp = tp->tp_new(cfg, error);
+    if (*error) {
+      free(item);
+    } else {
+      item->comp->_vt = tp;
+      fmc_error_init_none(&item->comp->_err);
+      DL_APPEND(tp->comps, item);
+      return item->comp;
+    }
+  } else {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+  }
   return NULL;
 }
 
 void fmc_component_del(struct fmc_component *comp) {
-  struct fmc_component_module *m = comp->_mod;
-  fmc_component_list_t *head = m->components;
+  fmc_component_list_t *head = comp->_vt->comps;
   fmc_component_list_t *item;
   DL_FOREACH(head, item) {
     if (item->comp == comp) {
-      DL_DELETE(m->components, item);
+      DL_DELETE(comp->_vt->comps, item);
       free(item);
       break;
     }

@@ -53,7 +53,7 @@ static void test_component_del(struct test_component *comp) {
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
     {"teststr", "Test string", true, {FMC_CFG_STR, {NULL}}}, {NULL}};
 
-struct fmc_component_type1 components[] = {
+struct fmc_component_def_v1 components[] = {
     {
         .tp_name = "test-component",
         .tp_descr = "Test component",
@@ -70,5 +70,5 @@ struct fmc_component_type1 components[] = {
 FMCOMPMODINITFUNC void
 FMCompInit_testcomponent(struct fmc_component_api *api,
                          struct fmc_component_module *mod) {
-  api->components_add1(mod, components);
+  api->components_add_v1(mod, components);
 }
