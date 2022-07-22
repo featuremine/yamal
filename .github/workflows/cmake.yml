@@ -47,5 +47,5 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: cpack -G DEB
       
-    - name: List contents
-      run:  ls -r ${{github.workspace}}/build
+    - name: Upload
+      run: curl -d @${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets{?name,label}
