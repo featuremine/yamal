@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 struct fmc_reactor {
-  fmc_component_list_t *comps;
+  struct fmc_component_list *comps;
   volatile bool stop;
   bool done;
 };
