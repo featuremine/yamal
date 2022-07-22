@@ -48,6 +48,8 @@ jobs:
       run: cpack -G DEB
   
     - name: EnvTest
+      env: 
+        GITHUB_TOKEN: ${{ github.token }}
       run: echo "${{ secrets.GITHUB_TOKEN }} ${CONTENT_TYPE_HEADER}"
 
     - name: Upload
