@@ -57,7 +57,6 @@ FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_is_done(struct fmc_reactor *reactor);
 
-
 #ifdef __cplusplus
 }
 #endif
