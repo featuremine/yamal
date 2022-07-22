@@ -15,6 +15,9 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    
+    env:
+      CONTENT_TYPE_HEADER="Content-Type: application/zip"
 
     steps:
     - uses: actions/checkout@main
@@ -48,4 +51,4 @@ jobs:
       run: cpack -G DEB
       
     - name: Upload
-      run: curl -d @${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets{?name,label}
+      run: curl -f -XPOST -H "${CONTENT_TYPE_HEADER}" --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets{?name,label}
