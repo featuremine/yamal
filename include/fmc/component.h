@@ -186,8 +186,8 @@ fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error);
 FMMODFUNC void fmc_component_module_del(struct fmc_component_module *mod);
 FMMODFUNC struct fmc_component_type *
-fmc_component_module_type_get(struct fmc_component_module *mod, const char *comp,
-                          fmc_error_t **error);
+fmc_component_module_type_get(struct fmc_component_module *mod,
+                              const char *comp, fmc_error_t **error);
 
 FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
                                                   struct fmc_cfg_sect_item *cfg,

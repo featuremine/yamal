@@ -25,9 +25,9 @@
 #include <fmc/files.h>
 #include <fmc/platform.h>
 #include <fmc/string.h>
-#include <uthash/utlist.h>
 #include <stdlib.h> // calloc()
 #include <string.h> // memcpy()
+#include <uthash/utlist.h>
 
 #if defined(FMC_SYS_LINUX)
 #define FMC_LIB_SUFFIX ".so"
@@ -219,7 +219,7 @@ struct fmc_component_module *
 fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error) {
   fmc_error_clear(error);
-  
+
   // If the module exists, get it
   struct fmc_component_module *mhead = sys->modules;
   struct fmc_component_module *mitem;
@@ -260,8 +260,8 @@ void fmc_component_module_del(struct fmc_component_module *mod) {
 }
 
 struct fmc_component_type *
-fmc_component_module_type_get(struct fmc_component_module *mod, const char *comp,
-                          fmc_error_t **error) {
+fmc_component_module_type_get(struct fmc_component_module *mod,
+                              const char *comp, fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_component_type *head = mod->types;
   struct fmc_component_type *item;
