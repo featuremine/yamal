@@ -53,5 +53,13 @@ jobs:
     - name: EnvTest
       run: echo "${{ secrets.GITHUB_TOKEN }} ${CONTENT_TYPE_HEADER}"
 
-    - name: Upload
-      run: curl -f -sSL -XPOST -H "Authorization:token ${GITHUB_TOKEN}" -H "${CONTENT_TYPE_HEADER}" --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
+    #- name: Upload
+    #  run: curl -f -sSL -XPOST -H "Authorization:token ${GITHUB_TOKEN}" -H "${CONTENT_TYPE_HEADER}" --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
+
+    - name: Upload to release
+      uses: JasonEtco/upload-to-release@master
+      with:
+          args: yamal-7.2.6-Linux.deb
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOAD_URL: https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
