@@ -25,7 +25,7 @@
 #include <fmc/files.h>
 #include <fmc/platform.h>
 #include <fmc/string.h>
-#include <fmc/uthash/utlist.h>
+#include <uthash/utlist.h>
 #include <stdlib.h> // calloc()
 #include <string.h> // memcpy()
 

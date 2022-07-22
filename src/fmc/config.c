@@ -22,7 +22,7 @@
 
 #include <fmc/config.h>
 #include <fmc/string.h>
-#include <fmc/uthash/utlist.h>
+#include <uthash/utlist.h>
 
 #include <stdlib.h>
 #include <string.h>
