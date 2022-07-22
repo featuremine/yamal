@@ -64,7 +64,7 @@ struct scopevar_t {
   scopevar_t(const scopevar_t &) = delete;
   T value;
 };
-using module_ptr = std::unique_ptr<fmc_component_module, deleter_t>;
+using module_ptr = fmc_component_module *;
 using type_ptr = struct fmc_component_type *;
 using config_ptr = std::unique_ptr<fmc_cfg_sect_item, deleter_t>;
 using schema_ptr = struct fmc_cfg_node_spec *;
@@ -96,11 +96,11 @@ int main(int argc, char **argv) {
   sys_ptr sys;
   fmc_error_t *err;
 
-  auto module = module_ptr(fmc_component_module_new(&sys.value, moduleArg.getValue().c_str(), &err));
+  auto module = module_ptr(fmc_component_module_get(&sys.value, moduleArg.getValue().c_str(), &err));
   fmc_runtime_error_unless(!err)
         << "Unable to load module " << moduleArg.getValue() << ": " << fmc_error_msg(err);
 
-  auto type = fmc_component_module_type(module.get(), componentArg.getValue().c_str(), &err);
+  auto type = fmc_component_module_type_get(module, componentArg.getValue().c_str(), &err);
   fmc_runtime_error_unless(!err)
         << "Unable to get component type " << componentArg.getValue() << ": " << fmc_error_msg(err);
 
@@ -120,13 +120,16 @@ int main(int argc, char **argv) {
   if (component->_vt->tp_sched) {
     while (run) {
       fm_time64_t now = component->_vt->tp_sched(component);
-      if (!component->_vt->tp_proc(component, now)) {
-        break;
+      if (fm_time64_is_end(now)) {
+          break;
       }
+      component->_vt->tp_proc(component, now);
+      fmc_runtime_error_unless(!fmc_error_has(&component->_err)) << "Component proc failed: " << fmc_error_msg(&component->_err);
+      break;
     }
   }
   else {
-    while (run && component->_vt->tp_proc(component, fmc_cur_time_ns()));
+    while (run && component->_vt->tp_proc(component, fm_time64_from_nanos(fmc_cur_time_ns())));
   }
 
   return 0;
