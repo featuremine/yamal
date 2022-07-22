@@ -174,43 +174,43 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
 
   mod.handle = fmc_ext_open(lib_path, &err);
   if (err)
-    goto error_1;
+    goto cleanup;
 
   // Check if init function is available
   fmc_component_module_init_func mod_init =
       (fmc_component_module_init_func)fmc_ext_sym(mod.handle, mod_func, &err);
   if (err)
-    goto error_1;
+    goto cleanup;
 
   // append the mod to the system
   fmc_error_init_none(&mod.error);
   mod.sys = sys;
   mod.name = fmc_cstr_new(modstr, error);
   if (*error)
-    goto error_1;
+    goto cleanup;
   mod.file = fmc_cstr_new(lib_path, error);
   if (*error)
-    goto error_1;
+    goto cleanup;
 
   fmc_error_reset_none(&mod.error);
   mod_init(&api, &mod);
   if (fmc_error_has(&mod.error)) {
     fmc_error_set(error, "failed to load components %s with error: %s", modstr,
                   fmc_error_msg(&mod.error));
-    goto error_1;
+    goto cleanup;
   }
 
   struct fmc_component_module *m =
       (struct fmc_component_module *)calloc(1, sizeof(mod));
   if (!m) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
-    goto error_1;
+    goto cleanup;
   }
   memcpy(m, &mod, sizeof(mod));
   DL_APPEND(sys->modules, m);
 
   return m;
-error_1:
+cleanup:
   fmc_component_module_destroy(&mod);
   return NULL;
 }
