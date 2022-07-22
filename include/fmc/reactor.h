@@ -35,6 +35,8 @@ fmc_reactor_stop(&loop);
 #pragma once
 
 #include <fmc/component.h>
+#include <fmc/error.h>
+#include <fmc/platform.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,8 +44,8 @@ extern "C" {
 
 struct fmc_reactor {
   fmc_component_list_t *comps;
-  bool run;
-  bool active;
+  volatile bool stop;
+  bool done;
 };
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
@@ -53,6 +55,8 @@ FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
                                          fmc_error_t **error);
 FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
+FMMODFUNC bool fmc_reactor_is_done(struct fmc_reactor *reactor);
+
 
 #ifdef __cplusplus
 }
