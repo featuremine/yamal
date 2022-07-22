@@ -91,7 +91,10 @@ void fmc_reactor_run(struct fmc_reactor *reactor) {
           fm_time64_equal(now, item->comp->_vt->tp_sched(item->comp))) {
         proc = item->comp->_vt->tp_proc(item->comp, now);
         // TODO: what to do with tp_proc return value?
-        // TODO: handle error? If 1 component fails, others should fail?
+        if(fmc_error_has(&item->comp->_err)) {
+          // TODO: report error
+          return;
+        }
       }
     }
   }
