@@ -21,7 +21,7 @@
  */
 
 #include <fmc/config.h>
-#include <fmc/uthash/utlist.h>
+#include <uthash/utlist.h>
 
 #include <fmc++/gtestwrap.hpp>
 
