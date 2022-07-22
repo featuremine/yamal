@@ -12,15 +12,18 @@ project(
     HOMEPAGE_URL "https://www.featuremine.com"
 )
 
-# Add the cmake folder so the FindSphinx module is found
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
-# Add subdir "docs" for Doxygen + Sphinx to use.
-add_subdirectory ("docs")
-
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
+option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
+
+# Add the cmake folder so the FindSphinx module is found
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+if (BUILD_API_DOCS)
+    # Add subdir "docs" for Doxygen + Sphinx to use.
+    add_subdirectory ("docs")
+endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive")
@@ -45,14 +48,14 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 add_library(
     fmc
     STATIC
-    "${PROJECT_SOURCE_DIR}/src/fmc/cmp.c"
+    "${PROJECT_SOURCE_DIR}/src/cmp/cmp.c"
+    "${PROJECT_SOURCE_DIR}/src/murmur3/murmur3.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/component.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/murmur3.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
@@ -202,7 +205,6 @@ if(BUILD_TOOLS)
         ytp
         fmc++
         fmc
-        PkgConfig::TCLAP
         pthread
     )
     install(
@@ -220,7 +222,6 @@ if(BUILD_TOOLS)
         ytp
         fmc++
         fmc
-        PkgConfig::TCLAP
         pthread
     )
     install(
@@ -238,7 +239,6 @@ if(BUILD_TOOLS)
         ytp
         fmc++
         fmc
-        PkgConfig::TCLAP
         pthread
     )
     install(
@@ -252,22 +252,16 @@ if(BUILD_TESTING)
 endif()
 
 install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include"
-    DESTINATION "."
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
+    DESTINATION "./fmc"
     FILES_MATCHING
     PATTERN "*.h"
 )
 install(
-    DIRECTORY "${PROJECT_BINARY_DIR}/include"
+    DIRECTORY "${PROJECT_BINARY_DIR}/include/ytp"
     DESTINATION "."
     FILES_MATCHING
     PATTERN "*.h"
-)
-install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include"
-    DESTINATION "."
-    FILES_MATCHING
-    PATTERN "*.hpp"
 )
 
 set(CPACK_PACKAGE_VENDOR "Featuremine")

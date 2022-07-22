@@ -3,12 +3,12 @@
 #include <fmc/error.h>
 #include <fmc/string.h>
 #include <fmc/time.h>
-#include <fmc/uthash/utlist.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uthash/utlist.h>
 
 struct test_component {
-  fmc_comp_HEAD;
+  fmc_component_HEAD;
   char *teststr;
 };
 
@@ -53,7 +53,7 @@ static void test_component_del(struct test_component *comp) {
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
     {"teststr", "Test string", true, {FMC_CFG_STR, {NULL}}}, {NULL}};
 
-struct fmc_component_type components[] = {
+struct fmc_component_def_v1 components[] = {
     {
         .tp_name = "test-component",
         .tp_descr = "Test component",
@@ -67,6 +67,8 @@ struct fmc_component_type components[] = {
     {NULL},
 };
 
-FMCOMPMODINITFUNC struct fmc_component_type *FMCompInit_testcomponent() {
-  return components;
+FMCOMPMODINITFUNC void
+FMCompInit_testcomponent(struct fmc_component_api *api,
+                         struct fmc_component_module *mod) {
+  api->components_add_v1(mod, components);
 }

@@ -1,7 +1,7 @@
 srcs_c = files(
-    'fmc/cmp.c',
+    'cmp/cmp.c',
+    'murmur3/murmur3.c',
     'fmc/math.c',
-    'fmc/murmur3.c',
     'fmc/signals.c',
     'fmc/error.cpp',
     'fmc/files.cpp',
