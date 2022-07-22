@@ -51,4 +51,4 @@ jobs:
       run: cpack -G DEB
       
     - name: Upload
-      run: curl -f -XPOST -H "${CONTENT_TYPE_HEADER}" --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets{?name,label}
+      run: curl -f -sSL -XPOST -H "Authorization:token ${GITHUB_TOKEN}" -H "${CONTENT_TYPE_HEADER}" --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets{?name,label}
