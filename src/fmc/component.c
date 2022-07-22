@@ -216,11 +216,20 @@ cleanup:
 }
 
 struct fmc_component_module *
-fmc_component_module_new(struct fmc_component_sys *sys, const char *mod,
+fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error) {
   fmc_error_clear(error);
-  struct fmc_component_module *ret = NULL;
+  
+  // If the module exists, get it
+  struct fmc_component_module *mhead = sys->modules;
+  struct fmc_component_module *mitem;
+  DL_FOREACH(mhead, mitem) {
+    if (!strcmp(mitem->name, mod)) {
+      return mitem;
+    }
+  }
 
+  struct fmc_component_module *ret = NULL;
   char mod_lib[strlen(mod) + strlen(FMC_LIB_SUFFIX) + 1];
   sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
 
@@ -251,7 +260,7 @@ void fmc_component_module_del(struct fmc_component_module *mod) {
 }
 
 struct fmc_component_type *
-fmc_component_module_type(struct fmc_component_module *mod, const char *comp,
+fmc_component_module_type_get(struct fmc_component_module *mod, const char *comp,
                           fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_component_type *head = mod->types;

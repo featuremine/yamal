@@ -91,17 +91,28 @@ TEST(component, module) {
   ASSERT_EQ(p, p->prev);
 
   struct fmc_component_module *modfail =
-      fmc_component_module_new(&sys, "failcomponent", &err);
+      fmc_component_module_get(&sys, "failcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(modfail, nullptr);
 
   struct fmc_component_module *mod =
-      fmc_component_module_new(&sys, "testcomponent", &err);
+      fmc_component_module_get(&sys, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(mod->sys, &sys);
   ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
   ASSERT_EQ(sys.modules, mod);
   ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_module *samemod =
+      fmc_component_module_get(&sys, "testcomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(samemod->sys, &sys);
+  ASSERT_EQ(std::string(samemod->name), std::string("testcomponent"));
+  ASSERT_EQ(sys.modules, samemod);
+  ASSERT_EQ(sys.modules->prev, samemod);
+  ASSERT_EQ(sys.modules->prev, samemod);
+  ASSERT_EQ(samemod, mod);
+
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
 
@@ -131,7 +142,7 @@ TEST(component, component) {
   ASSERT_EQ(p, p->prev);
 
   struct fmc_component_module *mod =
-      fmc_component_module_new(&sys, "testcomponent", &err);
+      fmc_component_module_get(&sys, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(mod->sys, &sys);
   ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
@@ -139,13 +150,13 @@ TEST(component, component) {
   ASSERT_EQ(sys.modules->prev, mod);
 
   struct fmc_component_type *tpinvalid =
-      fmc_component_module_type(mod, "invalid-component", &err);
+      fmc_component_module_type_get(mod, "invalid-component", &err);
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(err->code, FMC_ERROR_CUSTOM);
   ASSERT_EQ(tpinvalid, nullptr);
 
   struct fmc_component_type *tp =
-      fmc_component_module_type(mod, "test-component", &err);
+      fmc_component_module_type_get(mod, "test-component", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(tp, nullptr);
 
