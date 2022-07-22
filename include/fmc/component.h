@@ -104,14 +104,17 @@ extern "C" {
 #define FMCOMPMODINITFUNC FMMODFUNC
 #define FMC_COMPONENT_INIT_FUNC_PREFIX "FMCompInit_"
 
-#define fmc_component_HEAD                                      \
-  struct fmc_component_type *_vt;                               \
+#define fmc_component_HEAD                                                     \
+  struct fmc_component_type *_vt;                                              \
   struct fmc_error _err
 
 struct fmc_component {
   fmc_component_HEAD;
 };
 
+/* NOTE: fmc_error_t, fm_time64_t and fmc_cfg_sect_item cannot change.
+         If changes to config or error object are required, must add
+         new error or config structure and implement new API version */
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
@@ -129,10 +132,10 @@ struct fmc_component_def_v1 {
   procfunc tp_proc;                     // run the component once
 };
 
-typedef struct fmc_component_list {
+struct fmc_component_list {
   struct fmc_component *comp;
   struct fmc_component_list *next, *prev;
-} fmc_component_list_t;
+};
 
 struct fmc_component_type {
   const char *tp_name;
@@ -143,12 +146,13 @@ struct fmc_component_type {
   delfunc tp_del;                       // destroy the component
   schedfunc tp_sched;                   // returns the next schedule time
   procfunc tp_proc;                     // run the component once
-  struct fmc_component_list_t *comps;   // pointer to the containing module
+  struct fmc_component_list *comps;     // pointer to the containing component
   struct fmc_component_type *next, *prev;
 };
 
 struct fmc_component_module {
   struct fmc_component_sys *sys;    // the system that owns the module
+  fmc_error_t error;                // reports errors for this module
   fmc_ext_t handle;                 // module handle. Return of dlopen()
   char *name;                       // module name (e.g. "oms")
   char *file;                       // file full path of the library
@@ -178,19 +182,19 @@ fmc_component_sys_paths_get(struct fmc_component_sys *sys);
 FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 
 FMMODFUNC struct fmc_component_module *
-fmc_component_module_new(struct fmc_component_sys *sys, const char *mod,
+fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error);
 FMMODFUNC void fmc_component_module_del(struct fmc_component_module *mod);
 FMMODFUNC struct fmc_component_type *
-fmc_component_module_type(struct fmc_component_module *mod, const char *comp,
+fmc_component_module_type_get(struct fmc_component_module *mod, const char *comp,
                           fmc_error_t **error);
 
-FMMODFUNC struct fmc_component *
-fmc_component_new(struct fmc_component_type *tp, struct fmc_cfg_sect_item *cfg,
-                 fmc_error_t **error);
+FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
+                                                  struct fmc_cfg_sect_item *cfg,
+                                                  fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
-/* Current API version: 1 (components_add1) */
+/* Current API version: 1 (components_add_v1) */
 struct fmc_component_api {
   void (*components_add_v1)(struct fmc_component_module *mod,
                             struct fmc_component_def_v1 *tps);
