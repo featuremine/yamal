@@ -46,6 +46,8 @@ FMMODFUNC int64_t fm_time64_raw(fm_time64_t time);
 FMMODFUNC bool fm_time64_less(fm_time64_t a, fm_time64_t b);
 FMMODFUNC bool fm_time64_greater(fm_time64_t a, fm_time64_t b);
 FMMODFUNC bool fm_time64_equal(fm_time64_t a, fm_time64_t b);
+FMMODFUNC fm_time64_t fm_time64_min(fm_time64_t a, fm_time64_t b);
+FMMODFUNC fm_time64_t fm_time64_max(fm_time64_t a, fm_time64_t b);
 FMMODFUNC int64_t fm_time64_div(fm_time64_t a, fm_time64_t b);
 FMMODFUNC fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b);
 FMMODFUNC void fm_time64_inc(fm_time64_t *a, fm_time64_t b);

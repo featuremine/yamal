@@ -61,6 +61,14 @@ bool fm_time64_equal(fm_time64_t a, fm_time64_t b) {
   return a.value == b.value;
 }
 
+fm_time64_t fm_time64_min(fm_time64_t a, fm_time64_t b) {
+  return fm_time64_less(a, b) ? a : b;
+}
+
+fm_time64_t fm_time64_max(fm_time64_t a, fm_time64_t b) {
+  return fm_time64_greater(a, b) ? a : b;
+}
+
 int64_t fm_time64_div(fm_time64_t a, fm_time64_t b) {
   return a.value / b.value;
 }

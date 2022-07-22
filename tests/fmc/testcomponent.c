@@ -10,6 +10,7 @@
 struct test_component {
   fmc_component_HEAD;
   char *teststr;
+  fm_time64_t timesim;
 };
 
 int cmp_key(struct fmc_cfg_sect_item *item, const char *key) {
@@ -28,6 +29,7 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
   if (item) {
     if (item->node.type == FMC_CFG_STR) {
       c->teststr = fmc_cstr_new(item->node.value.str, err);
+      c->timesim = fm_time64_start();
     } else {
       FMC_ERROR_REPORT(err, "Invalid type for string");
     }
@@ -37,17 +39,22 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
   return c;
 };
 
+static fm_time64_t test_component_sched(struct test_component *comp) {
+  if(fm_time64_greater(comp->timesim, fm_time64_add(fm_time64_start(), fm_time64_from_nanos(100)))) {
+    return fm_time64_end();
+  }
+  return comp->timesim;
+}
+
 static bool test_component_process_one(struct test_component *comp,
                                        fm_time64_t time) {
-  struct test_component *c = (struct test_component *)comp;
-  // TODO: process one
+  fm_time64_inc(&comp->timesim, fm_time64_from_nanos(10));
   return true;
 };
 
 static void test_component_del(struct test_component *comp) {
-  struct test_component *c = (struct test_component *)comp;
-  free(c->teststr);
-  free(c);
+  free(comp->teststr);
+  free(comp);
 };
 
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
@@ -61,7 +68,7 @@ struct fmc_component_def_v1 components[] = {
         .tp_cfgspec = test_component_cfg_spec,
         .tp_new = (newfunc)test_component_new,
         .tp_del = (delfunc)test_component_del,
-        .tp_sched = (schedfunc)NULL,
+        .tp_sched = (schedfunc)test_component_sched,
         .tp_proc = (procfunc)test_component_process_one,
     },
     {NULL},
