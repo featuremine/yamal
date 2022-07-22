@@ -21,9 +21,9 @@
  */
 
 #include <fmc/component.h>
-#include <fmc/reactor.h>
 #include <fmc/config.h>
 #include <fmc/error.h>
+#include <fmc/reactor.h>
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
@@ -178,7 +178,7 @@ TEST(component, component) {
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
-  ASSERT_TRUE(fm_time64_equal(testcomp->timesim,fm_time64_start()));
+  ASSERT_TRUE(fm_time64_equal(testcomp->timesim, fm_time64_start()));
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfginvalid);
@@ -234,7 +234,7 @@ TEST(reactor, reactor) {
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
-  ASSERT_TRUE(fm_time64_equal(testcomp->timesim,fm_time64_start()));
+  ASSERT_TRUE(fm_time64_equal(testcomp->timesim, fm_time64_start()));
 
   struct fmc_reactor r;
   fmc_reactor_init(&r);
@@ -246,7 +246,9 @@ TEST(reactor, reactor) {
 
   fmc_reactor_run(&r);
   ASSERT_EQ(r.done, true);
-  ASSERT_TRUE(fm_time64_equal(testcomp->timesim,fm_time64_add(fm_time64_start(), fm_time64_from_nanos(110))));
+  ASSERT_TRUE(fm_time64_equal(
+      testcomp->timesim,
+      fm_time64_add(fm_time64_start(), fm_time64_from_nanos(110))));
 
   fmc_reactor_destroy(&r);
 

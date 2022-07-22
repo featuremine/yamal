@@ -40,7 +40,9 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
 };
 
 static fm_time64_t test_component_sched(struct test_component *comp) {
-  if(fm_time64_greater(comp->timesim, fm_time64_add(fm_time64_start(), fm_time64_from_nanos(100)))) {
+  if (fm_time64_greater(
+          comp->timesim,
+          fm_time64_add(fm_time64_start(), fm_time64_from_nanos(100)))) {
     return fm_time64_end();
   }
   return comp->timesim;
