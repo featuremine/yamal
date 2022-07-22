@@ -25,9 +25,9 @@
 #include <fmc/files.h>
 #include <fmc/platform.h>
 #include <fmc/string.h>
-#include <fmc/uthash/utlist.h>
 #include <stdlib.h> // calloc()
 #include <string.h> // memcpy()
+#include <uthash/utlist.h>
 
 #if defined(FMC_SYS_LINUX)
 #define FMC_LIB_SUFFIX ".so"
