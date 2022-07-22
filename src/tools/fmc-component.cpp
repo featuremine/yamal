@@ -14,6 +14,7 @@
 
 #include <fmc/component.h>
 #include <fmc/config.h>
+#include <fmc/reactor.h>
 #include <fmc/signals.h>
 
 #include <fmc++/mpl.hpp>
@@ -116,26 +117,20 @@ int main(int argc, char **argv) {
         << "Unable to load configuration file: " << fmc_error_msg(err);
   }
 
-  auto component = fmc_component_new(type, cfg.get(), &err);
+  fmc_component *component = fmc_component_new(type, cfg.get(), &err);
   fmc_runtime_error_unless(!err)
       << "Unable to load component " << componentArg.getValue() << ": "
       << fmc_error_msg(err);
 
-  if (component->_vt->tp_sched) {
-    while (run) {
-      fm_time64_t now = component->_vt->tp_sched(component);
-      if (fm_time64_is_end(now)) {
-        break;
-      }
-      component->_vt->tp_proc(component, now);
-      fmc_runtime_error_unless(!fmc_error_has(&component->_err))
-          << "Component proc failed: " << fmc_error_msg(&component->_err);
-    }
-  } else {
-    while (run && component->_vt->tp_proc(
-                      component, fm_time64_from_nanos(fmc_cur_time_ns())))
-      ;
-  }
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+  fmc_reactor_component_add(&r, component, &err);
+  fmc_runtime_error_unless(!err)
+      << "Unable to add component " << componentArg.getValue() << " to reactor : "
+      << fmc_error_msg(err);
 
+  fmc_reactor_run(&r);
+
+  fmc_reactor_destroy(&r);
   return 0;
 }
