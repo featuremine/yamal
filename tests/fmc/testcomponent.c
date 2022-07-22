@@ -3,9 +3,9 @@
 #include <fmc/error.h>
 #include <fmc/string.h>
 #include <fmc/time.h>
-#include <uthash/utlist.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uthash/utlist.h>
 
 struct test_component {
   fmc_comp_HEAD;

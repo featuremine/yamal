@@ -31,7 +31,7 @@
 #include <config.h> // To check for long long
 #endif
 
-// If Microsoft has already typedef'd wchar_t as an unsigned 
+// If Microsoft has already typedef'd wchar_t as an unsigned
 // short, then compiles will break because it's as if we're
 // creating ArgTraits twice for unsigned short. Thus...
 #ifdef _MSC_VER
@@ -46,18 +46,12 @@ namespace TCLAP {
 // have value-like semantics.
 
 // Strings have string like argument traits.
-template<>
-struct ArgTraits<std::string> {
-    typedef StringLike ValueCategory;
-};
+template <> struct ArgTraits<std::string> { typedef StringLike ValueCategory; };
 
-template<typename T>
-void SetString(T &dst, const std::string &src)
-{
-    dst = src;
+template <typename T> void SetString(T &dst, const std::string &src) {
+  dst = src;
 }
 
-} // namespace
+} // namespace TCLAP
 
 #endif
-
