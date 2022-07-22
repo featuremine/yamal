@@ -130,7 +130,6 @@ int main(int argc, char **argv) {
       component->_vt->tp_proc(component, now);
       fmc_runtime_error_unless(!fmc_error_has(&component->_err))
           << "Component proc failed: " << fmc_error_msg(&component->_err);
-      break;
     }
   } else {
     while (run && component->_vt->tp_proc(
