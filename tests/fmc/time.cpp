@@ -26,17 +26,17 @@
 #include <fmc/time.h>
 
 TEST(fmc, conversions) {
-  fm_time64_t time = 10;
-  fm_time64_t time_expected = 10;
-  int64_t timeraw = 10;
-  int64_t timeraw_expected = 10;
-  ASSERT_EQ(fm_time64_from_raw(timeraw), time_expected);
-  ASSERT_EQ(fm_time64_from_nanos(timeraw), time_expected);
-  ASSERT_EQ(fm_time64_from_seconds(timeraw),
-            fm_time64_from_nanos(timeraw * 1000000000ULL));
+  fm_time64_t time = fm_time64_from_nanos(10);
+  fm_time64_t time_expected = fm_time64_from_nanos(10);
+  int64_t timeraw = fm_time64_raw(time);
+  int64_t timeraw_expected = fm_time64_raw(time_expected);
+  ASSERT_EQ(fm_time64_raw(fm_time64_from_raw(timeraw)), timeraw_expected);
+  ASSERT_EQ(fm_time64_raw(fm_time64_from_nanos(timeraw)), timeraw_expected);
+  ASSERT_EQ(fm_time64_raw(fm_time64_from_seconds(timeraw)),
+            fm_time64_raw(fm_time64_from_nanos(timeraw * 1000000000ULL)));
   ASSERT_EQ(fm_time64_to_nanos(time), timeraw_expected);
-  ASSERT_EQ(fm_time64_to_fseconds(time * 1000000000ULL),
-            (double)timeraw_expected);
+  ASSERT_EQ(fm_time64_to_fseconds(fm_time64_from_nanos(1000000000ULL)),
+            (double)1.0);
   ASSERT_EQ(fm_time64_raw(time), timeraw_expected);
 }
 
@@ -54,10 +54,10 @@ TEST(fmc, operators) {
   fm_time64_t time1 = fm_time64_from_raw(10);
   fm_time64_t time2 = fm_time64_from_raw(20);
   ASSERT_EQ(fm_time64_div(time2, time1), 2);
-  ASSERT_EQ(fm_time64_add(time2, time1), fm_time64_from_raw(30));
-  ASSERT_EQ(fm_time64_sub(time2, time1), fm_time64_from_raw(10));
-  ASSERT_EQ(fm_time64_mul(time2, 10), fm_time64_from_raw(200));
-  ASSERT_EQ(fm_time64_int_div(time2, 10), fm_time64_from_raw(2));
+  ASSERT_EQ(fm_time64_raw(fm_time64_add(time2, time1)), 30);
+  ASSERT_EQ(fm_time64_raw(fm_time64_sub(time2, time1)), 10);
+  ASSERT_EQ(fm_time64_raw(fm_time64_mul(time2, 10)), 200);
+  ASSERT_EQ(fm_time64_raw(fm_time64_int_div(time2, 10)), 2);
   fm_time64_inc(&time1, time2);
   ASSERT_EQ(fm_time64_raw(time1), 30);
 }

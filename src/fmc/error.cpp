@@ -48,8 +48,17 @@ void fmc_error_init(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf) {
   }
 }
 
+void fmc_error_reset(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf) {
+  fmc_error_destroy(err);
+  fmc_error_init(err, code, buf);
+}
+
 void fmc_error_init_none(fmc_error_t *err) {
   fmc_error_init(err, FMC_ERROR_NONE, NULL);
+}
+
+void fmc_error_reset_none(fmc_error_t *err) {
+  fmc_error_reset(err, FMC_ERROR_NONE, NULL);
 }
 
 #define FMC_ERROR_FORMAT(err, fmt)                                             \
@@ -67,6 +76,11 @@ void fmc_error_init_none(fmc_error_t *err) {
   } while (0)
 
 void fmc_error_init_sprintf(fmc_error_t *err, const char *fmt, ...) {
+  FMC_ERROR_FORMAT(err, fmt);
+}
+
+void fmc_error_reset_sprintf(fmc_error_t *err, const char *fmt, ...) {
+  fmc_error_destroy(err);
   FMC_ERROR_FORMAT(err, fmt);
 }
 
@@ -116,6 +130,8 @@ void fmc_error_cat(fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
   fmc_error_init_join(&res, err1, err2, sep);
   fmc_error_cpy(err1, &res);
 }
+
+bool fmc_error_has(fmc_error_t *err) { return err->code != FMC_ERROR_NONE; }
 
 struct fmc_error_wrap {
   fmc_error_wrap() { fmc_error_init_none(&error); }
