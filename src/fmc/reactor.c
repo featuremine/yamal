@@ -19,12 +19,12 @@
  * @see http://www.featuremine.com
  */
 
-#include <fmc/reactor.h>
 #include <fmc/component.h>
-#include <fmc/time.h>
 #include <fmc/error.h>
-#include <uthash/utlist.h>
+#include <fmc/reactor.h>
+#include <fmc/time.h>
 #include <stdlib.h> // calloc() free()
+#include <uthash/utlist.h>
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
@@ -64,12 +64,13 @@ static fm_time64_t next_sched_time(struct fmc_component_list *head) {
   fm_time64_t ret = fm_time64_end();
   struct fmc_component_list *item;
   DL_FOREACH(head, item) {
-    if(item->comp->_vt->tp_sched) {
+    if (item->comp->_vt->tp_sched) {
       fm_time64_t comptime = item->comp->_vt->tp_sched(item->comp);
       ret = fm_time64_min(comptime, ret);
     } else {
       // TODO: return wallclock
-      return fm_time64_from_nanos(fmc_cur_time_ns()); // return wallclock if any sched is null
+      return fm_time64_from_nanos(
+          fmc_cur_time_ns()); // return wallclock if any sched is null
     }
   }
   return ret;
@@ -80,10 +81,10 @@ void fmc_reactor_run(struct fmc_reactor *reactor) {
   bool proc;
   struct fmc_component_list *head = reactor->comps;
   struct fmc_component_list *item;
-  while(!reactor->stop) {
+  while (!reactor->stop) {
     fm_time64_t now = next_sched_time(reactor->comps);
     if (fm_time64_is_end(now)) {
-          break;
+      break;
     }
     DL_FOREACH(head, item) {
       if (!item->comp->_vt->tp_sched ||
@@ -98,10 +99,6 @@ void fmc_reactor_run(struct fmc_reactor *reactor) {
   reactor->stop = false;
 }
 
-void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  reactor->stop = true;
-}
+void fmc_reactor_stop(struct fmc_reactor *reactor) { reactor->stop = true; }
 
-bool fmc_reactor_is_done(struct fmc_reactor *reactor) {
-  return reactor->done;
-}
+bool fmc_reactor_is_done(struct fmc_reactor *reactor) { return reactor->done; }
