@@ -83,7 +83,7 @@ void fmc_reactor_run(struct fmc_reactor *reactor) {
   while(!reactor->stop) {
     fm_time64_t now = next_sched_time(reactor->comps);
     if (fm_time64_is_end(now)) {
-          break;
+      break;
     }
     DL_FOREACH(head, item) {
       if (!item->comp->_vt->tp_sched ||
@@ -94,8 +94,8 @@ void fmc_reactor_run(struct fmc_reactor *reactor) {
       }
     }
   }
-  reactor->done = true;
   reactor->stop = false;
+  reactor->done = true;
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
