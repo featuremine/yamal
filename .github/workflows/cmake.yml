@@ -61,7 +61,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
+        upload_url: https://uploads.github.com/repos/featuremine/yamal/releases/72552575/
         asset_path: ${{github.workspace}}/build/yamal-7.2.6-Linux.deb
         asset_name: yamal-7.2.6-Linux.deb
-        asset_content_type: application/zip
+        asset_content_type: application/vnd.debian.binary-package
