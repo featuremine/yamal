@@ -43,3 +43,9 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
       
+    - name: Package
+      working-directory: ${{github.workspace}}/build
+      run: cpack -G DEB
+      
+    - name: List contents
+      run:  ls -r ${{github.workspace}}/build
