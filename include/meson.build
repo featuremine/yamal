@@ -6,18 +6,12 @@ fmc_root_incs = [
 	'fmc/extension.h',
 	'fmc/files.h',
 	'fmc/math.h',
-	'fmc/murmur3.h',
 	'fmc/platform.h',
 	'fmc/process.h',
 	'fmc/signals.h',
 	'fmc/sockets.h',
 	'fmc/test.h',
 	'fmc/time.h',
-]
-
-cmp_incs = [
-	'fmc/cmp/cmp.h',
-	'fmc/cmp/serialization.hpp',
 ]
 
 fmcpp_root_incs = [
@@ -47,10 +41,6 @@ fmcpp_cfg_incs = [
 	'fmc++/config/variant_map.hpp'
 ]
 
-fmcpp_json_incs = [
-	'fmc++/json/json.hpp'
-]
-
 ytp_incs = [
 	'ytp/yamal.h',
 	'ytp/peer.h',
@@ -62,13 +52,7 @@ ytp_incs = [
 ]
 
 install_headers(ytp_incs, subdir : 'ytp')
-if install_samples
-	install_headers(fmc_root_incs, subdir : 'fmc')
-	install_headers(cmp_incs, subdir : 'fmc/cmp')
-	install_headers(fmcpp_root_incs, subdir : 'fmc++')
-	install_headers(fmcpp_cfg_incs, subdir : 'fmc++/config')
-	install_headers(fmcpp_json_incs, subdir : 'fmc++/json')
-endif
+install_headers(fmc_root_incs, subdir : 'fmc')
 
 inc = include_directories('.')
 

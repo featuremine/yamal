@@ -25,8 +25,8 @@
 #include <fmc/files.h>
 #include <fmc/platform.h>
 #include <fmc/string.h>
-#include <fmc/uthash/utlist.h>
 #include <stdlib.h> // calloc()
+#include <uthash/utlist.h>
 
 #if defined(FMC_SYS_UNIX)
 #include <dirent.h>
