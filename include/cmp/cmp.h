@@ -30,6 +30,10 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct cmp_ctx_s;
 
 typedef bool (*cmp_reader)(struct cmp_ctx_s *ctx, void *data, size_t limit);
@@ -551,3 +555,7 @@ bool cmp_object_to_bin(cmp_ctx_t *ctx, cmp_object_t *obj, void *data,
 #endif /* CMP_H__ */
 
 /* vi: set et ts=2 sw=2: */
+
+#ifdef __cplusplus
+}
+#endif

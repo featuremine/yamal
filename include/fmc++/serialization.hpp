@@ -24,7 +24,7 @@
 #pragma once
 
 extern "C" {
-#include <fmc/cmp/cmp.h>
+#include <cmp/cmp.h>
 }
 
 #include <fmc++/strings.hpp>
