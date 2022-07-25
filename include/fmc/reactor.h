@@ -36,14 +36,22 @@ fmc_reactor_stop(&loop);
 
 #include <fmc/component.h>
 #include <fmc/error.h>
+#include <fmc/time.h>
 #include <fmc/platform.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct fmc_reactor_component_list {
+  struct fmc_component *comp;
+  struct fmc_component_list *next, *prev;
+  fmc_time64_t sched;
+  int priority;
+};
+
 struct fmc_reactor {
-  struct fmc_component_list *comps;
+  struct fmc_reactor_component_list *comps;
   volatile bool stop;
   bool done;
 };
@@ -52,10 +60,17 @@ FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
                                          struct fmc_component *comp,
+                                         int priority,
                                          fmc_error_t **error);
-FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor);
+FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor,
+                               fmc_error_t **error);
+FMMODFUNC bool fmc_reactor_sched(struct fmc_reactor *reactor,
+                                 fmc_error_t **error);
+FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
+                                    struct fmc_time64_t now,
+                                    fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
-FMMODFUNC bool fmc_reactor_is_done(struct fmc_reactor *reactor);
+FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);
 
 #ifdef __cplusplus
 }

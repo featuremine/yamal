@@ -33,9 +33,9 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct fmc_time64 {
   int64_t value;
-} fm_time64_t;
+} fmc_time64_t;
 
 FMMODFUNC fm_time64_t fm_time64_from_raw(int64_t value);
 FMMODFUNC fm_time64_t fm_time64_from_nanos(int64_t value);

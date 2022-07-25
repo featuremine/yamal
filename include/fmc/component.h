@@ -119,7 +119,7 @@ typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
 typedef fm_time64_t (*schedfunc)(struct fmc_component *);
-typedef bool (*procfunc)(struct fmc_component *, fm_time64_t);
+typedef bool (*procfunc)(struct fmc_component *, fm_time64_t, bool *);
 
 struct fmc_component_def_v1 {
   const char *tp_name;
