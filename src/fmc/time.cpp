@@ -53,9 +53,13 @@ int64_t fmc_time64_raw(fmc_time64_t time) { return time.value; }
 
 bool fmc_time64_less(fmc_time64_t a, fmc_time64_t b) { return a.value < b.value; }
 
+bool fmc_time64_less_or_equal(fmc_time64_t a, fmc_time64_t b) { return a.value <= b.value; }
+
 bool fmc_time64_greater(fmc_time64_t a, fmc_time64_t b) {
   return a.value > b.value;
 }
+
+bool fmc_time64_greater_or_equal(fmc_time64_t a, fmc_time64_t b) { return a.value >= b.value; }
 
 bool fmc_time64_equal(fmc_time64_t a, fmc_time64_t b) {
   return a.value == b.value;

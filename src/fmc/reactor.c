@@ -99,15 +99,15 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor,
   while (*it) {
     struct fmc_component *comp = (*it)->comp;
     bool stop = reactor->stop;
-    if (!fmc_error_has(comp->_err)) {
-      if (!comp->_vt->sched || (*it)->sched <= now) {
-        if (comp->tp_proc(comp, now, &stop)) {
+    if (!fmc_error_has(&comp->_err)) {
+      if (!comp->_vt->tp_sched || fmc_time64_less_or_equal((*it)->sched, now)) {
+        if (comp->_vt->tp_proc(comp, now, &stop)) {
           complete = true;
           (*it)->sched = fmc_time64_end();
           it = &reactor->comps;
           continue;
         } else {
-          reactor->stop ||= fmc_error_has(comp->_err);
+          reactor->stop = reactor->stop || fmc_error_has(&comp->_err);
         }
       }
     }
