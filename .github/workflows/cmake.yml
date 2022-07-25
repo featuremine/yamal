@@ -59,13 +59,5 @@ jobs:
     #- name: Upload
     #  run: curl -f -sSL -XPOST --header 'Authorization:token "${{ secrets.GITHUB_TOKEN }}"' --header 'content-type:application/zip' --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
       
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: https://uploads.github.com/repos/featuremine/yamal/releases/72552575/
-        asset_path: ${{github.workspace}}/build/yamal-7.2.6-Linux.deb
-        asset_name: yamal-7.2.6-Linux.deb
-        asset_content_type: application/vnd.debian.binary-package
+    - name: use CLI
+      run: gh release upload v7.2.5 ${{github.workspace}}/build/yamal-7.2.6-Linux.deb 
