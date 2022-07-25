@@ -60,4 +60,6 @@ jobs:
     #  run: curl -f -sSL -XPOST --header 'Authorization:token "${{ secrets.GITHUB_TOKEN }}"' --header 'content-type:application/zip' --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
       
     - name: use CLI
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v7.2.5 ${{github.workspace}}/build/yamal-7.2.6-Linux.deb 
