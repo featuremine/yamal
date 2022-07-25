@@ -75,53 +75,47 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   fmc_time64_t ret = fmc_time64_end();
   struct fmc_reactor_component_list *head = reactor->comps;
   struct fmc_reactor_component_list *item;
+  bool realtime = false;
   DL_FOREACH(head, item) {
-    item->sched = item->comp->_vt->tp_sched ?
-                  item->comp->_vt->tp_sched(item->comp) : 
-                  fmc_time64_from_nanos(fmc_cur_time_ns());
+    if (!item->comp->_vt->tp_sched) {
+      realtime = true;
+      continue;
+    }
+    if (fmc_time64_is_end(item->sched)) {
+      item->sched = item->comp->_vt->tp_sched(item->comp);
+    }
     ret = fmc_time64_min(item->sched, ret);
   }
-  return ret;
+  return realtime ? fmc_time64_from_nanos(fmc_cur_time_ns()) : ret;
 }
 
 bool fmc_reactor_run_once(struct fmc_reactor *reactor,
                           fmc_time64_t now,
                           fmc_error_t **error) {
   fmc_error_clear(error);
-  bool ret = false;
-  bool retcomp = false;
-  struct fmc_reactor_component_list *item = reactor->comps;
-  while(item != NULL)
-  {
+  struct fmc_reactor_component_list **it = &reactor->comps;
+  bool complete = false;
+  bool done = true;
+  while (*it) {
+    struct fmc_component *comp = (*it)->comp;
     bool stop = reactor->stop;
-    if (!item->comp->_vt->tp_sched ||
-        fmc_time64_equal(now, item->sched)) {
-      // TODO: What to do with high priority RT components
-      // Will they block any other component??
-      retcomp = item->comp->_vt->tp_proc(item->comp, now, &stop);
-      // TODO: How does the stop work here? How do I handle it?
+    if (!fmc_error_has(comp->_err)) {
+      if (!comp->_vt->sched || (*it)->sched <= now) {
+        if (comp->tp_proc(comp, now, &stop)) {
+          complete = true;
+          (*it)->sched = fmc_time64_end();
+          it = &reactor->comps;
+          continue;
+        } else {
+          reactor->stop ||= fmc_error_has(comp->_err);
+        }
+      }
     }
-    if(fmc_error_has(&item->comp->_err)) {
-      fmc_error_set(error, "failed to run component %s with error: %s", item->comp->_vt->tp_name,
-                    fmc_error_msg(&item->comp->_err));
-      reactor->stop = true;
-      return false;
-    } else if (reactor->stop && !stop) {
-      // no-op
-    } else if ( (item->comp->_vt->tp_sched && retcomp)) {
-      item = reactor->comps; // head
-      // TODO: Why do we go to head? Don't we need to start from this item?
-      // The first high priority items run already.
-    } else {
-      item = item->next;
-    }
-    ret |= retcomp;
-    retcomp = false;
+    it = &(*it)->next;
+    done = done && stop;
   }
-  if(reactor->stop) {
-    reactor->done = true;
-  }
-  return ret;
+  reactor->done = done;
+  return complete;
 }
 
 void fmc_reactor_run(struct fmc_reactor *reactor,
@@ -131,9 +125,8 @@ void fmc_reactor_run(struct fmc_reactor *reactor,
   fmc_time64_t now = fmc_reactor_sched(reactor);
   while (!reactor->done && !fmc_time64_is_end(now)) {
     fmc_reactor_run_once(reactor, now, error);
-    now = fmc_reactor_sched(reactor);
+    now = fmc_time64_max(now, fmc_reactor_sched(reactor));
   }
-  reactor->stop = false;
   reactor->done = true;
 }
 
