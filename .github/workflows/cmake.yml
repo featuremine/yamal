@@ -5,7 +5,7 @@ on:
     types: [prereleased]
   pull_request:
 
-permissions: read-all|write-all
+permissions: write-all
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
