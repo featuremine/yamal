@@ -30,87 +30,87 @@
 
 #include <chrono>
 
-fm_time64_t fm_time64_from_raw(int64_t value) {
-  fm_time64_t res = {value};
+fmc_time64_t fmc_time64_from_raw(int64_t value) {
+  fmc_time64_t res = {value};
   return res;
 }
 
-fm_time64_t fm_time64_from_nanos(int64_t value) {
-  return fm_time64_from_raw(value);
+fmc_time64_t fmc_time64_from_nanos(int64_t value) {
+  return fmc_time64_from_raw(value);
 }
 
-fm_time64_t fm_time64_from_seconds(int32_t value) {
-  return fm_time64_from_nanos(value * 1000000000ULL);
+fmc_time64_t fmc_time64_from_seconds(int32_t value) {
+  return fmc_time64_from_nanos(value * 1000000000ULL);
 }
 
-int64_t fm_time64_to_nanos(fm_time64_t t) { return t.value; }
+int64_t fmc_time64_to_nanos(fmc_time64_t t) { return t.value; }
 
-double fm_time64_to_fseconds(fm_time64_t t) {
+double fmc_time64_to_fseconds(fmc_time64_t t) {
   return (double)t.value / 1000000000.0;
 }
 
-int64_t fm_time64_raw(fm_time64_t time) { return time.value; }
+int64_t fmc_time64_raw(fmc_time64_t time) { return time.value; }
 
-bool fm_time64_less(fm_time64_t a, fm_time64_t b) { return a.value < b.value; }
+bool fmc_time64_less(fmc_time64_t a, fmc_time64_t b) { return a.value < b.value; }
 
-bool fm_time64_greater(fm_time64_t a, fm_time64_t b) {
+bool fmc_time64_greater(fmc_time64_t a, fmc_time64_t b) {
   return a.value > b.value;
 }
 
-bool fm_time64_equal(fm_time64_t a, fm_time64_t b) {
+bool fmc_time64_equal(fmc_time64_t a, fmc_time64_t b) {
   return a.value == b.value;
 }
 
-fm_time64_t fm_time64_min(fm_time64_t a, fm_time64_t b) {
-  return fm_time64_less(a, b) ? a : b;
+fmc_time64_t fmc_time64_min(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_less(a, b) ? a : b;
 }
 
-fm_time64_t fm_time64_max(fm_time64_t a, fm_time64_t b) {
-  return fm_time64_greater(a, b) ? a : b;
+fmc_time64_t fmc_time64_max(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_greater(a, b) ? a : b;
 }
 
-int64_t fm_time64_div(fm_time64_t a, fm_time64_t b) {
+int64_t fmc_time64_div(fmc_time64_t a, fmc_time64_t b) {
   return a.value / b.value;
 }
 
-fm_time64_t fm_time64_add(fm_time64_t a, fm_time64_t b) {
-  fm_time64_t res = {a.value + b.value};
+fmc_time64_t fmc_time64_add(fmc_time64_t a, fmc_time64_t b) {
+  fmc_time64_t res = {a.value + b.value};
   return res;
 }
 
-void fm_time64_inc(fm_time64_t *a, fm_time64_t b) { a->value += b.value; }
+void fmc_time64_inc(fmc_time64_t *a, fmc_time64_t b) { a->value += b.value; }
 
-fm_time64_t fm_time64_sub(fm_time64_t a, fm_time64_t b) {
-  fm_time64_t res = {a.value - b.value};
+fmc_time64_t fmc_time64_sub(fmc_time64_t a, fmc_time64_t b) {
+  fmc_time64_t res = {a.value - b.value};
   return res;
 }
 
-fm_time64_t fm_time64_mul(fm_time64_t a, int64_t b) {
-  fm_time64_t res = {a.value * b};
+fmc_time64_t fmc_time64_mul(fmc_time64_t a, int64_t b) {
+  fmc_time64_t res = {a.value * b};
   return res;
 }
 
-fm_time64_t fm_time64_int_div(fm_time64_t a, int64_t b) {
-  fm_time64_t res = {a.value / b};
+fmc_time64_t fmc_time64_int_div(fmc_time64_t a, int64_t b) {
+  fmc_time64_t res = {a.value / b};
   return res;
 }
 
-fm_time64_t fm_time64_start() {
-  fm_time64_t res = {INT64_MIN};
+fmc_time64_t fmc_time64_start() {
+  fmc_time64_t res = {INT64_MIN};
   return res;
 }
 
-fm_time64_t fm_time64_end() {
-  fm_time64_t res = {INT64_MAX};
+fmc_time64_t fmc_time64_end() {
+  fmc_time64_t res = {INT64_MAX};
   return res;
 }
 
-bool fm_time64_is_end(fm_time64_t time) { return time.value == INT64_MAX; }
+bool fmc_time64_is_end(fmc_time64_t time) { return time.value == INT64_MAX; }
 
 typedef struct {
-  fm_time64_t start;
-  fm_time64_t end;
-} fm_time64_range_t;
+  fmc_time64_t start;
+  fmc_time64_t end;
+} fmc_time64_range_t;
 
 using namespace std;
 using namespace chrono;

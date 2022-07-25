@@ -45,9 +45,9 @@ extern "C" {
 
 struct fmc_reactor_component_list {
   struct fmc_component *comp;
-  struct fmc_component_list *next, *prev;
   fmc_time64_t sched;
   int priority;
+  struct fmc_reactor_component_list *next, *prev;
 };
 
 struct fmc_reactor {
@@ -62,13 +62,12 @@ FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
                                          struct fmc_component *comp,
                                          int priority,
                                          fmc_error_t **error);
+FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
+FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
+                                    fmc_time64_t now,
+                                    fmc_error_t **error);
 FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor,
                                fmc_error_t **error);
-FMMODFUNC bool fmc_reactor_sched(struct fmc_reactor *reactor,
-                                 fmc_error_t **error);
-FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
-                                    struct fmc_time64_t now,
-                                    fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);
 

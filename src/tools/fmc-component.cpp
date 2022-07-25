@@ -124,12 +124,15 @@ int main(int argc, char **argv) {
 
   struct fmc_reactor r;
   fmc_reactor_init(&r);
-  fmc_reactor_component_add(&r, component, &err);
+  fmc_reactor_component_add(&r, component, 99, &err);
   fmc_runtime_error_unless(!err)
       << "Unable to add component " << componentArg.getValue() << " to reactor : "
       << fmc_error_msg(err);
 
-  fmc_reactor_run(&r);
+  fmc_reactor_run(&r, &err);
+  fmc_runtime_error_unless(!err)
+      << "Unable to run reactor : "
+      << fmc_error_msg(err);
 
   fmc_reactor_destroy(&r);
   return 0;

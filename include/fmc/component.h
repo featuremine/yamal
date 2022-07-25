@@ -112,14 +112,14 @@ struct fmc_component {
   fmc_component_HEAD;
 };
 
-/* NOTE: fmc_error_t, fm_time64_t and fmc_cfg_sect_item cannot change.
+/* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
          If changes to config or error object are required, must add
          new error or config structure and implement new API version */
 typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
-typedef fm_time64_t (*schedfunc)(struct fmc_component *);
-typedef bool (*procfunc)(struct fmc_component *, fm_time64_t, bool *);
+typedef fmc_time64_t (*schedfunc)(struct fmc_component *);
+typedef bool (*procfunc)(struct fmc_component *, fmc_time64_t, bool *);
 
 struct fmc_component_def_v1 {
   const char *tp_name;
