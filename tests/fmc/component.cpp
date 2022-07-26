@@ -24,6 +24,7 @@
 #include <fmc/config.h>
 #include <fmc/error.h>
 #include <fmc/reactor.h>
+#include <stdlib.h>
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
@@ -36,6 +37,64 @@ struct test_component {
 
 std::string components_path;
 struct fmc_component_sys sys;
+
+TEST(component, sys_paths) {
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_paths_default_set(&sys, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *pdef = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(pdef, nullptr);
+  EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
+  EXPECT_EQ(std::string(pdef->next->path), std::string(getenv("HOME")) + std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->path), std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
+  ASSERT_EQ(pdef->next->next->next, nullptr);
+
+  setenv(FMC_MOD_SEARCHPATH_ENV, "/first/path:/second/path", 1);
+  fmc_component_sys_paths_default_set(&sys, &err);
+  ASSERT_EQ(err, nullptr);
+  pdef = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(pdef, nullptr);
+  EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
+  EXPECT_EQ(std::string(pdef->next->path), std::string(getenv("HOME")) + std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->path), std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->next->path), std::string("/first/path"));
+  EXPECT_EQ(std::string(pdef->next->next->next->next->path), std::string("/second/path"));
+  ASSERT_EQ(pdef->next->next->next->next->next, nullptr);
+
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  const char new_path[] = "new_path";
+  fmc_component_sys_paths_add(&sys, new_path, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p2 = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p2, nullptr);
+  ASSERT_NE(p2, p2->next);
+  EXPECT_EQ(std::string(p2->path), std::string(paths[0]));
+  EXPECT_EQ(std::string(p2->next->path), std::string(new_path));
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
 
 TEST(component, sys) {
   fmc_error_t *err;
