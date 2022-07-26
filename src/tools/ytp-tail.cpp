@@ -32,9 +32,10 @@ int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("ytp tail tool", ' ', YTP_VERSION);
 
   TCLAP::UnlabeledValueArg<std::string> pathArg("ytp", "ytp path", true, "path", "string");
+  cmd.add(pathArg);
 
-  TCLAP::ValueArg<bool> fArg("f", "follow", "output appended data as the file grows;", false,
-                               false, "boolean");
+  TCLAP::SwitchArg fArg("f", "follow", "output appended data as the file grows;");
+
   cmd.add(fArg);
 
   cmd.parse(argc, argv);
