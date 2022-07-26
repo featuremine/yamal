@@ -135,7 +135,7 @@ The stop flag argument must return true if the component is stopped.
 typedef bool (*procfunc)(struct fmc_component *, fmc_time64_t, bool *);
 
 struct fmc_component_def_v1 {
-  const char *tp_name;
+  const char *tp_name;                  // prohibited characters: '-'
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
@@ -151,7 +151,7 @@ struct fmc_component_list {
 };
 
 struct fmc_component_type {
-  const char *tp_name;
+  const char *tp_name;                  // prohibited characters: '-'
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications

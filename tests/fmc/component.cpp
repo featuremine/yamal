@@ -158,7 +158,7 @@ TEST(component, component) {
   ASSERT_EQ(tpinvalid, nullptr);
 
   struct fmc_component_type *tp =
-      fmc_component_module_type_get(mod, "test-component", &err);
+      fmc_component_module_type_get(mod, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(tp, nullptr);
 
@@ -174,7 +174,7 @@ TEST(component, component) {
   ASSERT_EQ(err, nullptr);
   struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("test-component"));
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
@@ -221,7 +221,7 @@ TEST(reactor, reactor) {
   ASSERT_EQ(sys.modules->prev, mod);
 
   struct fmc_component_type *tp =
-      fmc_component_module_type_get(mod, "test-component", &err);
+      fmc_component_module_type_get(mod, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(tp, nullptr);
 
@@ -230,7 +230,7 @@ TEST(reactor, reactor) {
   ASSERT_EQ(err, nullptr);
   struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("test-component"));
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));

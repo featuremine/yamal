@@ -70,7 +70,7 @@ struct fmc_cfg_node_spec test_component_cfg_spec[] = {
 
 struct fmc_component_def_v1 components[] = {
     {
-        .tp_name = "test-component",
+        .tp_name = "testcomponent",
         .tp_descr = "Test component",
         .tp_size = sizeof(struct test_component),
         .tp_cfgspec = test_component_cfg_spec,
