@@ -31,10 +31,12 @@ int main(int argc, char **argv) {
 
   TCLAP::CmdLine cmd("ytp tail tool", ' ', YTP_VERSION);
 
-  TCLAP::UnlabeledValueArg<std::string> pathArg("ytp", "ytp path", true, "path", "string");
+  TCLAP::UnlabeledValueArg<std::string> pathArg("ytp", "ytp path", true, "path",
+                                                "string");
   cmd.add(pathArg);
 
-  TCLAP::SwitchArg fArg("f", "follow", "output appended data as the file grows;");
+  TCLAP::SwitchArg fArg("f", "follow",
+                        "output appended data as the file grows;");
 
   cmd.add(fArg);
 
@@ -43,7 +45,8 @@ int main(int argc, char **argv) {
   auto out_yamal_name = pathArg.getValue();
 
   fmc_error_t *error;
-  fmc_fd out_yamal_fd = fmc_fopen(out_yamal_name.c_str(), fmc_fmode::READWRITE, &error);
+  fmc_fd out_yamal_fd =
+      fmc_fopen(out_yamal_name.c_str(), fmc_fmode::READWRITE, &error);
   if (!fmc_fvalid(out_yamal_fd)) {
     std::cerr << "Unable to open file " << out_yamal_name << std::endl;
     return -1;
@@ -57,7 +60,7 @@ int main(int argc, char **argv) {
   }
 
   auto cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                uint64_t time, size_t data_sz, const char *data_ptr) {
+               uint64_t time, size_t data_sz, const char *data_ptr) {
     auto seq = (ytp_sequence_t *)closure;
     fmc_error_t *error;
 
@@ -69,7 +72,7 @@ int main(int argc, char **argv) {
     size_t channel_name_sz;
     const char *channel_name_ptr;
     ytp_sequence_ch_name(seq, channel, &channel_name_sz, &channel_name_ptr,
-                          &error);
+                         &error);
     std::string_view channel_name{channel_name_ptr, channel_name_sz};
 
     std::string_view data(data_ptr, data_sz);
