@@ -231,6 +231,23 @@ if(BUILD_TOOLS)
     )
 
     add_executable(
+        ytp-tail
+        "src/tools/ytp-tail.cpp"
+    )
+    target_link_libraries(
+        ytp-tail
+        PRIVATE
+        ytp
+        fmc++
+        fmc
+        pthread
+    )
+    install(
+        TARGETS
+        ytp-tail
+    )
+
+    add_executable(
         ytp-perf
         "src/tools/ytp-perf.cpp"
     )
