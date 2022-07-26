@@ -33,11 +33,6 @@ int main(int argc, char **argv) {
 
   TCLAP::UnlabeledValueArg<std::string> pathArg("ytp", "ytp path", true, "path", "string");
 
-  TCLAP::ValueArg<uint64_t> nArg("n", "lines", 
-      "output the last NUM lines, instead of the last 10",
-      false, 10, "integer");
-  cmd.add(nArg);
-
   TCLAP::ValueArg<bool> fArg("f", "follow", "output appended data as the file grows;", false,
                                false, "boolean");
   cmd.add(fArg);
