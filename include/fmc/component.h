@@ -50,35 +50,35 @@ struct fmc_component_def_v1 components[] = {
       .tp_name = "live-gateway",
       .tp_size = sizeof(gateway_comp),
       .tp_cfgspec = gateway_cfg_spec;
-      .tp_new = (newfunc)gateway_comp_new,
-      .tp_del = (delfunc)gateway_comp_del,
-      .tp_sched = (schedfunc)NULL,
-      .tp_proc = (procfunc)gateway_comp_process_one,
+      .tp_new = (fmc_newfunc)gateway_comp_new,
+      .tp_del = (fmc_delfunc)gateway_comp_del,
+      .tp_sched = (fmc_schedfunc)NULL,
+      .tp_proc = (fmc_procfunc)gateway_comp_process_one,
    },
    {
       .tp_name = "sched-gateway",
       .tp_size = sizeof(gateway_comp),
       .tp_cfgspec = gateway_cfg_spec;
-      .tp_new = (newfunc)gateway_comp_new,
-      .tp_del = (delfunc)gateway_comp_del,
-      .tp_sched = (schedfunc)gateway_comp_sched,
-      .tp_proc = (procfunc)gateway_comp_process_one,
+      .tp_new = (fmc_newfunc)gateway_comp_new,
+      .tp_del = (fmc_delfunc)gateway_comp_del,
+      .tp_sched = (fmc_schedfunc)gateway_comp_sched,
+      .tp_proc = (fmc_procfunc)gateway_comp_process_one,
    },
    {
       .tp_name = "live-oms",
       .tp_size = sizeof(manager_comp),
-      .tp_new = (newfunc)oms_comp_new,
-      .tp_del = (delfunc)oms_comp_del,
-      .tp_sched = (schedfunc)NULL,
-      .tp_proc = (procfunc)oms_comp_process_one,
+      .tp_new = (fmc_newfunc)oms_comp_new,
+      .tp_del = (fmc_delfunc)oms_comp_del,
+      .tp_sched = (fmc_schedfunc)NULL,
+      .tp_proc = (fmc_procfunc)oms_comp_process_one,
    },
    {
       .tp_name = "sched-oms",
       .tp_size = sizeof(manager_comp),
-      .tp_new = (newfunc)oms_comp_new,
-      .tp_del = (delfunc)oms_comp_del,
-      .tp_sched = (schedfunc)oms_comp_sched,
-      .tp_proc = (procfunc)oms_comp_process_one,
+      .tp_new = (fmc_newfunc)oms_comp_new,
+      .tp_del = (fmc_delfunc)oms_comp_del,
+      .tp_sched = (fmc_schedfunc)oms_comp_sched,
+      .tp_proc = (fmc_procfunc)oms_comp_process_one,
    },
    { NULL },
 };
@@ -123,26 +123,26 @@ struct fmc_component {
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
          If changes to config or error object are required, must add
          new error or config structure and implement new API version */
-typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
+typedef struct fmc_component *(*fmc_newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
-typedef void (*delfunc)(struct fmc_component *);
-typedef fmc_time64_t (*schedfunc)(struct fmc_component *);
+typedef void (*fmc_delfunc)(struct fmc_component *);
+typedef fmc_time64_t (*fmc_schedfunc)(struct fmc_component *);
 /*
-procfunc must return false and report in the internal
+fmc_procfunc must return false and report in the internal
 error if an error occurred.
 The stop flag argument must return true if the component is stopped.
 */
-typedef bool (*procfunc)(struct fmc_component *, fmc_time64_t, bool *);
+typedef bool (*fmc_procfunc)(struct fmc_component *, fmc_time64_t, bool *);
 
 struct fmc_component_def_v1 {
   const char *tp_name;                  // prohibited characters: '-'
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  newfunc tp_new;                       // allocate and initialize the component
-  delfunc tp_del;                       // destroy the component
-  schedfunc tp_sched;                   // returns the next schedule time
-  procfunc tp_proc;                     // run the component once
+  fmc_newfunc tp_new;                       // allocate and initialize the component
+  fmc_delfunc tp_del;                       // destroy the component
+  fmc_schedfunc tp_sched;                   // returns the next schedule time
+  fmc_procfunc tp_proc;                     // run the component once
 };
 
 struct fmc_component_list {
@@ -155,10 +155,10 @@ struct fmc_component_type {
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  newfunc tp_new;                       // allocate and initialize the component
-  delfunc tp_del;                       // destroy the component
-  schedfunc tp_sched;                   // returns the next schedule time
-  procfunc tp_proc;                     // run the component once
+  fmc_newfunc tp_new;                       // allocate and initialize the component
+  fmc_delfunc tp_del;                       // destroy the component
+  fmc_schedfunc tp_sched;                   // returns the next schedule time
+  fmc_procfunc tp_proc;                     // run the component once
   struct fmc_component_list *comps;     // pointer to the containing component
   struct fmc_component_type *next, *prev;
 };
