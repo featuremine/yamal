@@ -103,11 +103,9 @@ extern "C" {
 
 // MODULES SEARCH PATHS
 #define FMC_MOD_SEARCHPATH_CUR ""
-#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
-#define FMC_MOD_SEARCHPATH_SIZE 3
+#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
-#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 
 #define FMCOMPMODINITFUNC FMMODFUNC
 #define FMC_COMPONENT_INIT_FUNC_PREFIX "FMCompInit_"
