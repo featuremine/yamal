@@ -46,7 +46,7 @@ TEST(component, sys_paths) {
   ASSERT_EQ(sys.search_paths, nullptr);
   ASSERT_EQ(sys.modules, nullptr);
 
-  fmc_component_sys_paths_default_set(&sys, &err);
+  fmc_component_sys_paths_set_default(&sys, &err);
   ASSERT_EQ(err, nullptr);
   fmc_component_path_list_t *pdef = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
@@ -60,7 +60,7 @@ TEST(component, sys_paths) {
   ASSERT_EQ(pdef->next->next->next, nullptr);
 
   setenv(FMC_MOD_SEARCHPATH_ENV, "/first/path:/second/path", 1);
-  fmc_component_sys_paths_default_set(&sys, &err);
+  fmc_component_sys_paths_set_default(&sys, &err);
   ASSERT_EQ(err, nullptr);
   pdef = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);

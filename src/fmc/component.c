@@ -137,7 +137,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
   sys->search_paths = tmpls;
 }
 
-void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
+void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
                                          fmc_error_t **error) {
   fmc_error_clear(error);
   unsigned int pathscnt = FMC_MOD_SEARCHPATH_SIZE;
