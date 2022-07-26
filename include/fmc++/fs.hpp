@@ -26,7 +26,7 @@
 
 #include <fmc/platform.h>
 
-#if !defined(FMC_SYS_WIN) || (defined(__GNUC__) && __GNUC__ < 8)
+#if defined(FMC_SYS_LINUX) && defined(__GNUC__) && __GNUC__ < 8
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #else
