@@ -55,7 +55,7 @@ void fmc_reactor_component_add(struct fmc_reactor *reactor,
   if (add) {
     add->comp = comp;
     add->priority = priority;
-    add->sched = comp->_vt->tp_sched(comp);
+    add->sched = fmc_time64_end();
     struct fmc_reactor_component_list *head = reactor->comps;
     struct fmc_reactor_component_list *item;
     DL_FOREACH(head, item) {

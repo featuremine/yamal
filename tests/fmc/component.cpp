@@ -317,6 +317,9 @@ TEST(reactor, reactor) {
   ASSERT_TRUE(fmc_time64_equal(
       testcomp->timesim,
       fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
+  ASSERT_TRUE(fmc_time64_equal(
+      fmc_reactor_sched(&r),
+      fmc_time64_end()));
 
   fmc_reactor_destroy(&r);
 

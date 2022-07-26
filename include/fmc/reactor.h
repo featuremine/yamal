@@ -24,12 +24,12 @@
 fmc_error_t *error;
 fmc_reactor loop;
 fmc_reactor_init(&loop);
-fmc_reactor_component_add(&loop, gateway, &error); // Add priority later
-fmc_reactor_component_add(&loop, manager, &error);
-fmc_reactor_run(&loop);
+fmc_reactor_component_add(&loop, gateway, 99, &error);
+if(error) { fmc_reactor_destroy(&loop); return; }
+fmc_reactor_component_add(&loop, manager, 98, &error);
+if(error) { fmc_reactor_destroy(&loop); return; }
+fmc_reactor_run(&loop, &error);
 fmc_reactor_destroy(&loop);
-// Sould we need a function to stop it from another thread?
-fmc_reactor_stop(&loop);
 */
 
 #pragma once
