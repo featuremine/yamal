@@ -67,22 +67,19 @@ int main(int argc, char **argv) {
 
     size_t peer_name_sz;
     const char *peer_name_ptr;
-    ytp_sequence_peer_name(seq, peer, &peer_name_sz,
-                            &peer_name_ptr, &error);
+    ytp_sequence_peer_name(seq, peer, &peer_name_sz, &peer_name_ptr, &error);
     std::string_view peer_name(peer_name_ptr, peer_name_sz);
 
     size_t channel_name_sz;
     const char *channel_name_ptr;
-    ytp_sequence_ch_name(seq, channel, &channel_name_sz,
-                          &channel_name_ptr, &error);
+    ytp_sequence_ch_name(seq, channel, &channel_name_sz, &channel_name_ptr,
+                         &error);
     std::string_view channel_name(channel_name_ptr, channel_name_sz);
 
     std::cout << std::to_string(fmc::time(time)) << " "
-              << std::string(peer_name) << " "
-              << std::string(channel_name) << " "
-              << std::string_view(data_ptr, data_sz) << std::endl;
+              << std::string(peer_name) << " " << std::string(channel_name)
+              << " " << std::string_view(data_ptr, data_sz) << std::endl;
     fflush(stdout);
-
   };
 
   ytp_sequence_prfx_cb(seq, 1, "/", cb, seq, &error);
