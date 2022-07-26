@@ -29,7 +29,7 @@
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(std::string name, double rate, size_t initial_sz)
-      : name_(std::move(name)), rate_(rate), initial_sz_(initial_sz) {
+      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
     fmc_runtime_error_unless(!error_)
         << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
