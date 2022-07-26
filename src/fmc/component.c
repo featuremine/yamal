@@ -182,6 +182,7 @@ void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
   paths[i] = NULL;
   fmc_component_sys_paths_set(sys, (const char **)paths, error);
   component_path_list_del(&tmpls);
+  free(paths);
 }
 
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
