@@ -30,6 +30,14 @@ ytp_daemon = executable('ytp-daemon', 'ytp-daemon.cpp',
 						install_rpath: '$ORIGIN:$ORIGIN/../../lib',
 						link_args: link_args)
 
+ytp_tail = executable('ytp-tail', 'ytp-tail.cpp',
+						dependencies : [static_fmc_dep, static_fmcpp_dep, static_ytp_dep, tclap_dep],
+						install: true,
+						install_dir: 'tools/ytp',
+						build_rpath: '$ORIGIN:$ORIGIN/../lib',
+						install_rpath: '$ORIGIN:$ORIGIN/../../lib',
+						link_args: link_args)
+
 fmc_component = executable('fmc-component', 'fmc-component.cpp',
 						dependencies : [static_fmc_dep, tclap_dep],
 						install: true,
