@@ -12,6 +12,7 @@ srcs_c = files(
     'fmc/extension.c',
     'fmc/config.c',
     'fmc/component.c',
+    'fmc/reactor.c',
     'fmc/string.c'
 )
 

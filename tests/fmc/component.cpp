@@ -23,6 +23,8 @@
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/error.h>
+#include <fmc/reactor.h>
+#include <stdlib.h>
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
@@ -30,10 +32,77 @@
 struct test_component {
   fmc_component_HEAD;
   char *teststr;
+  fmc_time64_t timesim;
 };
 
 std::string components_path;
 struct fmc_component_sys sys;
+
+TEST(component, sys_paths) {
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_paths_set_default(&sys, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *pdef = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(pdef, nullptr);
+  EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
+  EXPECT_EQ(std::string(pdef->next->path),
+            std::string(getenv("HOME")) +
+                std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->path),
+            std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
+  ASSERT_EQ(pdef->next->next->next, nullptr);
+
+  setenv(FMC_MOD_SEARCHPATH_ENV, "/first/path:/second/path", 1);
+  fmc_component_sys_paths_set_default(&sys, &err);
+  ASSERT_EQ(err, nullptr);
+  pdef = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(pdef, nullptr);
+  EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
+  EXPECT_EQ(std::string(pdef->next->path),
+            std::string(getenv("HOME")) +
+                std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->path),
+            std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->next->path),
+            std::string("/first/path"));
+  EXPECT_EQ(std::string(pdef->next->next->next->next->path),
+            std::string("/second/path"));
+  ASSERT_EQ(pdef->next->next->next->next->next, nullptr);
+
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  const char new_path[] = "new_path";
+  fmc_component_sys_paths_add(&sys, new_path, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p2 = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p2, nullptr);
+  ASSERT_NE(p2, p2->next);
+  EXPECT_EQ(std::string(p2->path), std::string(paths[0]));
+  EXPECT_EQ(std::string(p2->next->path), std::string(new_path));
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
 
 TEST(component, sys) {
   fmc_error_t *err;
@@ -92,7 +161,7 @@ TEST(component, module) {
 
   struct fmc_component_module *modfail =
       fmc_component_module_get(&sys, "failcomponent", &err);
-  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(err, nullptr);
   ASSERT_EQ(modfail, nullptr);
 
   struct fmc_component_module *mod =
@@ -156,7 +225,7 @@ TEST(component, component) {
   ASSERT_EQ(tpinvalid, nullptr);
 
   struct fmc_component_type *tp =
-      fmc_component_module_type_get(mod, "test-component", &err);
+      fmc_component_module_type_get(mod, "testcomponent", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(tp, nullptr);
 
@@ -172,13 +241,87 @@ TEST(component, component) {
   ASSERT_EQ(err, nullptr);
   struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("test-component"));
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
+  ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfginvalid);
+  fmc_cfg_sect_del(cfg);
+
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
+
+TEST(reactor, reactor) {
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "testcomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_type *tp =
+      fmc_component_module_type_get(mod, "testcomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(tp, nullptr);
+
+  struct fmc_cfg_sect_item *cfg =
+      fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
+  ASSERT_EQ(err, nullptr);
+  struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
+  ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
+  struct test_component *testcomp = (struct test_component *)comp;
+  ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
+  ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
+
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+  fmc_reactor_component_add(&r, comp, 99, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.stop, false);
+  ASSERT_EQ(r.done, true);
+  ASSERT_EQ(r.comps->comp, comp);
+
+  fmc_reactor_run(&r, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.done, true);
+  ASSERT_TRUE(fmc_time64_equal(
+      testcomp->timesim,
+      fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
+  ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+
+  fmc_reactor_destroy(&r);
+
+  fmc_component_del(comp);
   fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);

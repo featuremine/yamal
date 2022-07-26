@@ -9,6 +9,7 @@
 #include <fmc/math.h>
 #include <fmc/platform.h>
 #include <fmc/process.h>
+#include <fmc/reactor.h>
 #include <fmc/signals.h>
 #include <fmc/sockets.h>
 #include <fmc/test.h>

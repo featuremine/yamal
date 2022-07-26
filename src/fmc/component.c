@@ -25,15 +25,18 @@
 #include <fmc/files.h>
 #include <fmc/platform.h>
 #include <fmc/string.h>
-#include <stdlib.h> // calloc()
-#include <string.h> // memcpy()
+#include <stdlib.h> // calloc() getenv()
+#include <string.h> // memcpy() strtok()
 #include <uthash/utlist.h>
 
 #if defined(FMC_SYS_LINUX)
 #define FMC_LIB_SUFFIX ".so"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 #elif defined(FMC_SYS_MACH)
 #define FMC_LIB_SUFFIX ".dylib"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 #else
+#define FMC_MOD_SEARCHPATH_ENV_SEP ";"
 #error "Unsupported operating system"
 #endif
 
@@ -122,19 +125,64 @@ static void component_path_list_add(fmc_component_path_list_t **phead,
   }
 }
 
+static void component_path_list_set(fmc_component_path_list_t **head,
+                                    const char **paths, fmc_error_t **error) {
+  for (unsigned int i = 0; paths && paths[i]; ++i) {
+    component_path_list_add(head, paths[i], error);
+    if (*error) {
+      component_path_list_del(head);
+      return;
+    }
+  }
+}
+
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
                                  const char **paths, fmc_error_t **error) {
   fmc_error_clear(error);
   fmc_component_path_list_t *tmpls = NULL;
-  for (unsigned int i = 0; paths && paths[i]; ++i) {
-    component_path_list_add(&tmpls, paths[i], error);
-    if (*error) {
-      component_path_list_del(&tmpls);
-      return;
+  component_path_list_set(&tmpls, paths, error);
+  if (!*error) {
+    fmc_component_path_list_t *tmpls2 = sys->search_paths;
+    sys->search_paths = tmpls;
+    tmpls = tmpls2;
+  }
+  component_path_list_del(&tmpls);
+}
+
+void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
+                                         fmc_error_t **error) {
+  fmc_error_clear(error);
+  fmc_component_path_list_t *tmpls = NULL;
+
+  char *tmp = getenv("HOME");
+  int psz = fmc_path_join(NULL, 0, tmp, FMC_MOD_SEARCHPATH_USRLOCAL) + 1;
+  char home_path[psz];
+  fmc_path_join(home_path, psz, tmp, FMC_MOD_SEARCHPATH_USRLOCAL);
+
+  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, home_path,
+                            FMC_MOD_SEARCHPATH_SYSLOCAL, NULL};
+
+  component_path_list_set(&tmpls, defaults, error);
+  if (*error)
+    goto cleanup;
+
+  tmp = getenv(FMC_MOD_SEARCHPATH_ENV);
+  if (tmp) {
+    char ycpaths[strlen(tmp) + 1];
+    strcpy(ycpaths, tmp);
+    char *found;
+    tmp = ycpaths;
+    while ((found = strsep(&tmp, FMC_MOD_SEARCHPATH_ENV_SEP))) {
+      component_path_list_add(&tmpls, found, error);
+      if (*error)
+        goto cleanup;
     }
   }
-  component_path_list_del(&sys->search_paths);
+  fmc_component_path_list_t *tmpls2 = sys->search_paths;
   sys->search_paths = tmpls;
+  tmpls = tmpls2;
+cleanup:
+  component_path_list_del(&tmpls);
 }
 
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
@@ -249,6 +297,9 @@ fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
     if (ret || *error) {
       break;
     }
+  }
+  if (!ret && !(*error)) {
+    fmc_error_set(error, "component module %s was not found", mod);
   }
   return ret;
 }
