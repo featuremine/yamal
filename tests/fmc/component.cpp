@@ -94,7 +94,7 @@ TEST(component, module) {
 
   struct fmc_component_module *modfail =
       fmc_component_module_get(&sys, "failcomponent", &err);
-  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(err, nullptr);
   ASSERT_EQ(modfail, nullptr);
 
   struct fmc_component_module *mod =

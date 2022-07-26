@@ -250,6 +250,9 @@ fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
       break;
     }
   }
+  if(!ret && !(*error)) {
+    fmc_error_set(error, "component module %s was not found", mod);
+  }
   return ret;
 }
 
