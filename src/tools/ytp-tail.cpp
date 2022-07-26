@@ -12,6 +12,7 @@
 
 #include <tclap/CmdLine.h>
 
+#include <fmc++/time.hpp>
 #include <fmc/signals.h>
 #include <ytp/control.h>
 #include <ytp/sequence.h>
@@ -66,20 +67,23 @@ int main(int argc, char **argv) {
 
     size_t peer_name_sz;
     const char *peer_name_ptr;
-    ytp_sequence_peer_name(seq, peer, &peer_name_sz, &peer_name_ptr, &error);
-    std::string_view peer_name{peer_name_ptr, peer_name_sz};
+    ytp_sequence_peer_name(seq, peer, &peer_name_sz,
+                            &peer_name_ptr, &error);
+    std::string_view peer_name(peer_name_ptr, peer_name_sz);
 
     size_t channel_name_sz;
     const char *channel_name_ptr;
-    ytp_sequence_ch_name(seq, channel, &channel_name_sz, &channel_name_ptr,
-                         &error);
-    std::string_view channel_name{channel_name_ptr, channel_name_sz};
+    ytp_sequence_ch_name(seq, channel, &channel_name_sz,
+                          &channel_name_ptr, &error);
+    std::string_view channel_name(channel_name_ptr, channel_name_sz);
 
-    std::string_view data(data_ptr, data_sz);
+    fprintf(stdout, "%s %s %s %s\n",
+            std::to_string(fmc::time(time)).c_str(),
+            std::string(peer_name).c_str(),
+            std::string(channel_name).c_str(),
+            std::string_view(data_ptr, data_sz).data());
+    fflush(stdout);
 
-    std::cout << "peer: " << peer << " (" << peer_name
-              << ") | channel: " << channel << " (" << channel_name
-              << ") | data: " << data << std::endl;
   };
 
   ytp_sequence_prfx_cb(seq, 1, "/", cb, seq, &error);
