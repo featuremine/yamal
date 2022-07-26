@@ -25,8 +25,8 @@
 #include <fmc/files.h>
 #include <fmc/platform.h>
 #include <fmc/string.h>
-#include <stdlib.h> // calloc()
-#include <string.h> // memcpy()
+#include <stdlib.h> // calloc() getenv()
+#include <string.h> // memcpy() strtok()
 #include <uthash/utlist.h>
 
 #if defined(FMC_SYS_LINUX)
@@ -135,6 +135,50 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
   }
   component_path_list_del(&sys->search_paths);
   sys->search_paths = tmpls;
+}
+
+void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
+                                         fmc_error_t **error) {
+  fmc_error_clear(error);
+  char *tmp = getenv("HOME");
+  int psz = fmc_path_join(NULL, 0, tmp, FMC_MOD_SEARCHPATH_USRLOCAL) + 1;
+  char home_path[psz];
+  fmc_path_join(home_path, psz, tmp, FMC_MOD_SEARCHPATH_USRLOCAL);
+
+  tmp = getenv(FMC_MOD_SEARCHPATH_ENV);
+  char ycpaths[strlen(tmp)+1];
+  strcpy(ycpaths, tmp);
+  fmc_component_path_list_t *tmpls = NULL;
+
+  unsigned int pathscnt = FMC_MOD_SEARCHPATH_SIZE;
+  char *newpath = strtok(ycpaths, FMC_MOD_SEARCHPATH_ENV_SEP);
+  while( newpath != NULL ) {
+    pathscnt++;
+    component_path_list_add(&tmpls, newpath, error);
+    if (*error) {
+      component_path_list_del(&tmpls);
+      return;
+    }
+    newpath = strtok(NULL, FMC_MOD_SEARCHPATH_ENV_SEP);
+  }
+
+  char **paths = calloc(pathscnt, sizeof(*paths));
+  if(!paths) {
+    component_path_list_del(&tmpls);
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return;
+  }
+  paths[0] = FMC_MOD_SEARCHPATH_CUR;
+  paths[1] = home_path;
+  paths[2] = FMC_MOD_SEARCHPATH_SYSLOCAL;
+  fmc_component_path_list_t *item = NULL;
+  unsigned int i = FMC_MOD_SEARCHPATH_SIZE;
+  DL_FOREACH(tmpls, item) {
+    paths[i] = item->path;
+    ++i;
+  }
+  fmc_component_sys_paths_set(sys, (const char **)paths, error);
+  component_path_list_del(&tmpls);
 }
 
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys,

@@ -101,6 +101,14 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
 extern "C" {
 #endif
 
+// MODULES SEARCH PATHS
+#define FMC_MOD_SEARCHPATH_CUR        ""
+#define FMC_MOD_SEARCHPATH_SYSLOCAL   "/usr/local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_USRLOCAL   ".local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_SIZE       3
+#define FMC_MOD_SEARCHPATH_ENV        "YAMALCOMPPATH"
+#define FMC_MOD_SEARCHPATH_ENV_SEP    ":"
+
 #define FMCOMPMODINITFUNC FMMODFUNC
 #define FMC_COMPONENT_INIT_FUNC_PREFIX "FMCompInit_"
 
@@ -184,6 +192,8 @@ FMMODFUNC void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
                                            fmc_error_t **error);
 FMMODFUNC fmc_component_path_list_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys);
+FMMODFUNC void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
+                                                   fmc_error_t **error);
 FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 
 FMMODFUNC struct fmc_component_module *
