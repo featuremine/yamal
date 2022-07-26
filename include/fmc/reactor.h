@@ -36,8 +36,8 @@ fmc_reactor_stop(&loop);
 
 #include <fmc/component.h>
 #include <fmc/error.h>
-#include <fmc/time.h>
 #include <fmc/platform.h>
+#include <fmc/time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,12 +60,10 @@ FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
                                          struct fmc_component *comp,
-                                         int priority,
-                                         fmc_error_t **error);
+                                         int priority, fmc_error_t **error);
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
-                                    fmc_time64_t now,
-                                    fmc_error_t **error);
+                                    fmc_time64_t now, fmc_error_t **error);
 FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor,
                                fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);

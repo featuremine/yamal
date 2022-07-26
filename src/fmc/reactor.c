@@ -47,8 +47,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
 }
 
 void fmc_reactor_component_add(struct fmc_reactor *reactor,
-                               struct fmc_component *comp,
-                               int priority,
+                               struct fmc_component *comp, int priority,
                                fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_reactor_component_list *add =
@@ -60,7 +59,7 @@ void fmc_reactor_component_add(struct fmc_reactor *reactor,
     struct fmc_reactor_component_list *head = reactor->comps;
     struct fmc_reactor_component_list *item;
     DL_FOREACH(head, item) {
-      if(priority > item->priority) {
+      if (priority > item->priority) {
         DL_PREPEND_ELEM(reactor->comps, item, add);
         return;
       }
@@ -89,8 +88,7 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   return realtime ? fmc_time64_from_nanos(fmc_cur_time_ns()) : ret;
 }
 
-bool fmc_reactor_run_once(struct fmc_reactor *reactor,
-                          fmc_time64_t now,
+bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                           fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_reactor_component_list **it = &reactor->comps;
@@ -118,8 +116,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor,
   return complete;
 }
 
-void fmc_reactor_run(struct fmc_reactor *reactor,
-                     fmc_error_t **error) {
+void fmc_reactor_run(struct fmc_reactor *reactor, fmc_error_t **error) {
   fmc_error_clear(error);
   reactor->done = false;
   fmc_time64_t now = fmc_reactor_sched(reactor);
