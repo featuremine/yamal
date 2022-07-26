@@ -125,7 +125,8 @@ static void component_path_list_add(fmc_component_path_list_t **phead,
   }
 }
 
-static void component_path_list_set(fmc_component_path_list_t **head, const char **paths, fmc_error_t **error) {
+static void component_path_list_set(fmc_component_path_list_t **head,
+                                    const char **paths, fmc_error_t **error) {
   for (unsigned int i = 0; paths && paths[i]; ++i) {
     component_path_list_add(head, paths[i], error);
     if (*error) {
@@ -158,15 +159,12 @@ void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
   char home_path[psz];
   fmc_path_join(home_path, psz, tmp, FMC_MOD_SEARCHPATH_USRLOCAL);
 
-  const char *defaults[] = {
-    FMC_MOD_SEARCHPATH_CUR,
-    home_path,
-    FMC_MOD_SEARCHPATH_SYSLOCAL,
-    NULL
-  };
+  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, home_path,
+                            FMC_MOD_SEARCHPATH_SYSLOCAL, NULL};
 
   component_path_list_set(&tmpls, defaults, error);
-  if (*error) goto cleanup;
+  if (*error)
+    goto cleanup;
 
   tmp = getenv(FMC_MOD_SEARCHPATH_ENV);
   if (tmp) {
@@ -174,9 +172,10 @@ void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
     strcpy(ycpaths, tmp);
     char *found;
     tmp = ycpaths;
-    while ( (found = strsep(&tmp, FMC_MOD_SEARCHPATH_ENV_SEP)) ) {
+    while ((found = strsep(&tmp, FMC_MOD_SEARCHPATH_ENV_SEP))) {
       component_path_list_add(&tmpls, found, error);
-      if (*error) goto cleanup;
+      if (*error)
+        goto cleanup;
     }
   }
   fmc_component_path_list_t *tmpls2 = sys->search_paths;
