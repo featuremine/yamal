@@ -139,10 +139,10 @@ struct fmc_component_def_v1 {
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  fmc_newfunc tp_new;                       // allocate and initialize the component
-  fmc_delfunc tp_del;                       // destroy the component
-  fmc_schedfunc tp_sched;                   // returns the next schedule time
-  fmc_procfunc tp_proc;                     // run the component once
+  fmc_newfunc tp_new;                   // allocate and initialize the component
+  fmc_delfunc tp_del;                   // destroy the component
+  fmc_schedfunc tp_sched;               // returns the next schedule time
+  fmc_procfunc tp_proc;                 // run the component once
 };
 
 struct fmc_component_list {
@@ -151,15 +151,15 @@ struct fmc_component_list {
 };
 
 struct fmc_component_type {
-  const char *tp_name;                  // prohibited characters: '-'
+  const char *tp_name;                    // prohibited characters: '-'
   const char *tp_descr;
-  size_t tp_size;                       // size of the component struct
-  struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  fmc_newfunc tp_new;                       // allocate and initialize the component
-  fmc_delfunc tp_del;                       // destroy the component
-  fmc_schedfunc tp_sched;                   // returns the next schedule time
-  fmc_procfunc tp_proc;                     // run the component once
-  struct fmc_component_list *comps;     // pointer to the containing component
+  size_t tp_size;                         // size of the component struct
+  struct fmc_cfg_node_spec *tp_cfgspec;   // configuration specifications
+  fmc_newfunc tp_new;                     // allocate and initialize the component
+  fmc_delfunc tp_del;                     // destroy the component
+  fmc_schedfunc tp_sched;                 // returns the next schedule time
+  fmc_procfunc tp_proc;                   // run the component once
+  struct fmc_component_list *comps;       // pointer to the containing component
   struct fmc_component_type *next, *prev;
 };
 
