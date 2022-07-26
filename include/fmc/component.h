@@ -119,6 +119,11 @@ typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
                                          fmc_error_t **);
 typedef void (*delfunc)(struct fmc_component *);
 typedef fmc_time64_t (*schedfunc)(struct fmc_component *);
+/*
+procfunc must return false and report in the internal
+error if an error occurred.
+The stop flag argument must return true if the component is stopped.
+*/
 typedef bool (*procfunc)(struct fmc_component *, fmc_time64_t, bool *);
 
 struct fmc_component_def_v1 {
