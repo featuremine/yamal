@@ -74,8 +74,8 @@ int main(int argc, char **argv) {
 
     std::string_view data(data_ptr, data_sz);
 
-    std::cout << "Data | p: " << peer << " (" << peer_name
-              << ") | c: " << channel << " (" << channel_name
+    std::cout << "peer: " << peer << " (" << peer_name
+              << ") | channel: " << channel << " (" << channel_name
               << ") | data: " << data << std::endl;
   };
 
