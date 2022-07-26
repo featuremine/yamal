@@ -77,11 +77,10 @@ int main(int argc, char **argv) {
                           &channel_name_ptr, &error);
     std::string_view channel_name(channel_name_ptr, channel_name_sz);
 
-    fprintf(stdout, "%s %s %s %s\n",
-            std::to_string(fmc::time(time)).c_str(),
-            std::string(peer_name).c_str(),
-            std::string(channel_name).c_str(),
-            std::string_view(data_ptr, data_sz).data());
+    std::cout << std::to_string(fmc::time(time)) << " "
+              << std::string(peer_name) << " "
+              << std::string(channel_name) << " "
+              << std::string_view(data_ptr, data_sz) << std::endl;
     fflush(stdout);
 
   };
