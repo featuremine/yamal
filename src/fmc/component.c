@@ -124,7 +124,8 @@ static void component_path_list_add(fmc_component_path_list_t **phead,
     return;
   }
 }
-void component_path_list_set(fmc_component_path_list_t **head, const char **paths, fmc_error_t **error) {
+
+static void component_path_list_set(fmc_component_path_list_t **head, const char **paths, fmc_error_t **error) {
   for (unsigned int i = 0; paths && paths[i]; ++i) {
     component_path_list_add(head, paths[i], error);
     if (*error) {
@@ -138,7 +139,7 @@ void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
                                  const char **paths, fmc_error_t **error) {
   fmc_error_clear(error);
   fmc_component_path_list_t *tmpls = NULL;
-  component_path_list_set(tmpls, paths, error);
+  component_path_list_set(&tmpls, paths, error);
   if (!*error) {
     fmc_component_path_list_t *tmpls2 = sys->search_paths;
     sys->search_paths = tmpls;
@@ -157,7 +158,7 @@ void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
   char home_path[psz];
   fmc_path_join(home_path, psz, tmp, FMC_MOD_SEARCHPATH_USRLOCAL);
 
-  const char *defaults = {
+  const char *defaults[] = {
     FMC_MOD_SEARCHPATH_CUR,
     home_path,
     FMC_MOD_SEARCHPATH_SYSLOCAL,
@@ -165,19 +166,17 @@ void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
   };
 
   component_path_list_set(&tmpls, defaults, error);
-  if (error) goto cleanup;
+  if (*error) goto cleanup;
 
   tmp = getenv(FMC_MOD_SEARCHPATH_ENV);
   if (tmp) {
     char ycpaths[strlen(tmp) + 1];
     strcpy(ycpaths, tmp);
-    char *lasts;
-    
-    char *newpath = strsep(ycpaths, FMC_MOD_SEARCHPATH_ENV_SEP);
-    while (newpath != NULL) {
-      component_path_list_add(&tmpls, newpath, error);
+    char *found;
+    tmp = ycpaths;
+    while ( (found = strsep(&tmp, FMC_MOD_SEARCHPATH_ENV_SEP)) ) {
+      component_path_list_add(&tmpls, found, error);
       if (*error) goto cleanup;
-      newpath = strsep(NULL, FMC_MOD_SEARCHPATH_ENV_SEP);
     }
   }
   fmc_component_path_list_t *tmpls2 = sys->search_paths;
