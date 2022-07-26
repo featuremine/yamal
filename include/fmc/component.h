@@ -102,12 +102,12 @@ extern "C" {
 #endif
 
 // MODULES SEARCH PATHS
-#define FMC_MOD_SEARCHPATH_CUR        ""
-#define FMC_MOD_SEARCHPATH_SYSLOCAL   "/usr/local/lib/yamal/modules"
-#define FMC_MOD_SEARCHPATH_USRLOCAL   ".local/lib/yamal/modules"
-#define FMC_MOD_SEARCHPATH_SIZE       3
-#define FMC_MOD_SEARCHPATH_ENV        "YAMALCOMPPATH"
-#define FMC_MOD_SEARCHPATH_ENV_SEP    ":"
+#define FMC_MOD_SEARCHPATH_CUR ""
+#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_SIZE 3
+#define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 
 #define FMCOMPMODINITFUNC FMMODFUNC
 #define FMC_COMPONENT_INIT_FUNC_PREFIX "FMCompInit_"
@@ -124,7 +124,7 @@ struct fmc_component {
          If changes to config or error object are required, must add
          new error or config structure and implement new API version */
 typedef struct fmc_component *(*fmc_newfunc)(struct fmc_cfg_sect_item *,
-                                         fmc_error_t **);
+                                             fmc_error_t **);
 typedef void (*fmc_delfunc)(struct fmc_component *);
 typedef fmc_time64_t (*fmc_schedfunc)(struct fmc_component *);
 /*
@@ -135,7 +135,7 @@ The stop flag argument must return true if the component is stopped.
 typedef bool (*fmc_procfunc)(struct fmc_component *, fmc_time64_t, bool *);
 
 struct fmc_component_def_v1 {
-  const char *tp_name;                  // prohibited characters: '-'
+  const char *tp_name; // prohibited characters: '-'
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
@@ -151,15 +151,15 @@ struct fmc_component_list {
 };
 
 struct fmc_component_type {
-  const char *tp_name;                    // prohibited characters: '-'
+  const char *tp_name; // prohibited characters: '-'
   const char *tp_descr;
-  size_t tp_size;                         // size of the component struct
-  struct fmc_cfg_node_spec *tp_cfgspec;   // configuration specifications
-  fmc_newfunc tp_new;                     // alloc and initialize the component
-  fmc_delfunc tp_del;                     // destroy the component
-  fmc_schedfunc tp_sched;                 // returns the next schedule time
-  fmc_procfunc tp_proc;                   // run the component once
-  struct fmc_component_list *comps;       // ptr to the containing component
+  size_t tp_size;                       // size of the component struct
+  struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
+  fmc_newfunc tp_new;                   // alloc and initialize the component
+  fmc_delfunc tp_del;                   // destroy the component
+  fmc_schedfunc tp_sched;               // returns the next schedule time
+  fmc_procfunc tp_proc;                 // run the component once
+  struct fmc_component_list *comps;     // ptr to the containing component
   struct fmc_component_type *next, *prev;
 };
 
@@ -192,8 +192,9 @@ FMMODFUNC void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
                                            fmc_error_t **error);
 FMMODFUNC fmc_component_path_list_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys);
-FMMODFUNC void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
-                                                   fmc_error_t **error);
+FMMODFUNC void
+fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
+                                    fmc_error_t **error);
 FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 
 FMMODFUNC struct fmc_component_module *

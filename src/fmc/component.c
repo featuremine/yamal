@@ -148,12 +148,12 @@ void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
 
   tmp = getenv(FMC_MOD_SEARCHPATH_ENV);
   fmc_component_path_list_t *tmpls = NULL;
-  if(tmp) {
-    char ycpaths[strlen(tmp)+1];
+  if (tmp) {
+    char ycpaths[strlen(tmp) + 1];
     strcpy(ycpaths, tmp);
 
     char *newpath = strtok(ycpaths, FMC_MOD_SEARCHPATH_ENV_SEP);
-    while( newpath != NULL ) {
+    while (newpath != NULL) {
       pathscnt++;
       component_path_list_add(&tmpls, newpath, error);
       if (*error) {
@@ -164,8 +164,8 @@ void fmc_component_sys_paths_default_set(struct fmc_component_sys *sys,
     }
   }
 
-  char **paths = calloc(pathscnt+1, sizeof(*paths));
-  if(!paths) {
+  char **paths = calloc(pathscnt + 1, sizeof(*paths));
+  if (!paths) {
     component_path_list_del(&tmpls);
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return;
@@ -298,7 +298,7 @@ fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
       break;
     }
   }
-  if(!ret && !(*error)) {
+  if (!ret && !(*error)) {
     fmc_error_set(error, "component module %s was not found", mod);
   }
   return ret;

@@ -52,8 +52,11 @@ TEST(component, sys_paths) {
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(pdef, nullptr);
   EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
-  EXPECT_EQ(std::string(pdef->next->path), std::string(getenv("HOME")) + std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
-  EXPECT_EQ(std::string(pdef->next->next->path), std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
+  EXPECT_EQ(std::string(pdef->next->path),
+            std::string(getenv("HOME")) +
+                std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->path),
+            std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
   ASSERT_EQ(pdef->next->next->next, nullptr);
 
   setenv(FMC_MOD_SEARCHPATH_ENV, "/first/path:/second/path", 1);
@@ -63,10 +66,15 @@ TEST(component, sys_paths) {
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(pdef, nullptr);
   EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
-  EXPECT_EQ(std::string(pdef->next->path), std::string(getenv("HOME")) + std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
-  EXPECT_EQ(std::string(pdef->next->next->path), std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
-  EXPECT_EQ(std::string(pdef->next->next->next->path), std::string("/first/path"));
-  EXPECT_EQ(std::string(pdef->next->next->next->next->path), std::string("/second/path"));
+  EXPECT_EQ(std::string(pdef->next->path),
+            std::string(getenv("HOME")) +
+                std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->path),
+            std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
+  EXPECT_EQ(std::string(pdef->next->next->next->path),
+            std::string("/first/path"));
+  EXPECT_EQ(std::string(pdef->next->next->next->next->path),
+            std::string("/second/path"));
   ASSERT_EQ(pdef->next->next->next->next->next, nullptr);
 
   const char *paths[2];
