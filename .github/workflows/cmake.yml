@@ -35,29 +35,28 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       
-    - name: Build
+ #   - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+ #     run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Test
-      working-directory: ${{github.workspace}}/build
+#    - name: Test
+#      working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+#      run: ctest -C ${{env.BUILD_TYPE}}
       
-    - name: Package
-      working-directory: ${{github.workspace}}/build
-      run: cpack -G DEB
-  
-    - name: EnvTest
-      env: 
-        GITHUB_TOKEN: ${{ github.token }}
-      run: echo "${{ secrets.GITHUB_TOKEN }}"
-
-    #- name: Upload
-    #  run: curl -f -sSL -XPOST --header 'Authorization:token "${{ secrets.GITHUB_TOKEN }}"' --header 'content-type:application/zip' --upload-file ${{github.workspace}}/build/yamal-7.2.6-Linux.deb https://uploads.github.com/repos/featuremine/yamal/releases/72552575/assets?name=yamal-7.2.6-Linux.deb
-      
-    - name: use CLI
+#    - name: Package
+#      working-directory: ${{github.workspace}}/build
+#      run: cpack -G DEB
+        
+    - name: Echo test
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v7.2.5 ${{github.workspace}}/build/yamal-7.2.6-Linux.deb 
+      run: echo "${{github.ref_name}} ${{github.workspace}}/build/${{github.repository}}-${{github.ref_name}}-Linux.deb"
+
+    #- name: Upload package
+    #  env:
+    #    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #run: gh release upload ¢{TAG} ${FILENAME}
+      #run: gh release upload ${{github.ref_name}} ${{github.workspace}}/build/${{github.repository}}-${{github.ref_name}}-Linux.deb
+    #  run: gh release upload v7.2.5 ${{github.workspace}}/build/yamal-7.2.6-Linux.deb 
