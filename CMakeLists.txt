@@ -16,11 +16,13 @@ option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
+option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
 
 # Add the cmake folder so the FindSphinx module is found
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-if (BUILD_API_DOCS)
+find_package(Doxygen)
+if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
     find_package(Doxygen)
     # Add subdir "docs" for Doxygen + Sphinx to use.
     add_subdirectory ("docs")
