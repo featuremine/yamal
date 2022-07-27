@@ -20,8 +20,8 @@ option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
 # Add the cmake folder so the FindSphinx module is found
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-find_package(Doxygen)
-if (DOXYGEN_FOUND AND BUILD_API_DOCS)
+if (BUILD_API_DOCS)
+    find_package(Doxygen)
     # Add subdir "docs" for Doxygen + Sphinx to use.
     add_subdirectory ("docs")
 endif ()
@@ -89,6 +89,10 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         stdc++fs
     )
 endif()
+install(
+    TARGETS
+    fmc
+)
 configure_file(
     "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc.pc.in"
     "${PROJECT_BINARY_DIR}/fmc.pc"
@@ -97,6 +101,12 @@ configure_file(
 install(
     FILES "${PROJECT_BINARY_DIR}/fmc.pc"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+)
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
 )
 
 add_library(
@@ -165,14 +175,26 @@ target_link_libraries(
     PUBLIC
     fmc
 )
-install(
-    TARGETS
-    ytp
-)
 set_target_properties(
     ytp
     PROPERTIES
     LINKER_LANGUAGE "C"
+)
+install(
+    TARGETS
+    ytp
+)
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/ytp"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+install(
+    DIRECTORY "${PROJECT_BINARY_DIR}/include/ytp"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
 )
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -287,19 +309,6 @@ if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif()
-
-install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
-    DESTINATION "./fmc"
-    FILES_MATCHING
-    PATTERN "*.h"
-)
-install(
-    DIRECTORY "${PROJECT_BINARY_DIR}/include/ytp"
-    DESTINATION "."
-    FILES_MATCHING
-    PATTERN "*.h"
-)
 
 set(CPACK_PACKAGE_VENDOR "Featuremine")
 set(CPACK_PACKAGE_CONTACT "support@featuremine.com")
