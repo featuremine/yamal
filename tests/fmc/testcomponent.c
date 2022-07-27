@@ -13,9 +13,10 @@ struct test_component {
   fmc_time64_t timesim;
 };
 
-int cmp_key(struct fmc_cfg_sect_item *item, const char *key) {
-  return strcmp(item->key, key);
-}
+static void test_component_del(struct test_component *comp) {
+  free(comp->teststr);
+  free(comp);
+};
 
 static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
                                                  fmc_error_t **err) {
@@ -24,19 +25,17 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
     fmc_error_set2(err, FMC_ERROR_MEMORY);
     return NULL;
   }
-  struct fmc_cfg_sect_item *item;
-  LL_SEARCH(cfg, item, "teststr", cmp_key);
-  if (item) {
-    if (item->node.type == FMC_CFG_STR) {
-      c->teststr = fmc_cstr_new(item->node.value.str, err);
-      c->timesim = fmc_time64_start();
-    } else {
-      FMC_ERROR_REPORT(err, "Invalid type for string");
-    }
-  } else {
-    fmc_error_set2(err, FMC_ERROR_MEMORY);
-  }
+  memset(c, 0, sizeof(*c));
+  struct fmc_cfg_sect_item *item =
+    fmc_cfg_sect_item_get(cfg, FMC_CFG_STR, "teststr", false, err);
+  if(*err) goto cleanup;
+  c->teststr = fmc_cstr_new(item->node.value.str, err);
+  if(*err) goto cleanup;
+  c->timesim = fmc_time64_start();
   return c;
+cleanup:
+  test_component_del(c);
+  return NULL;
 };
 
 static fmc_time64_t test_component_sched(struct test_component *comp) {
@@ -58,11 +57,6 @@ static bool test_component_process_one(struct test_component *comp,
   }
   ret = !ret;
   return ret;
-};
-
-static void test_component_del(struct test_component *comp) {
-  free(comp->teststr);
-  free(comp);
 };
 
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {

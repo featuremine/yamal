@@ -1024,3 +1024,23 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
     return;
   }
 }
+
+static int cmp_key(struct fmc_cfg_sect_item *item, const char *key) {
+  return strcmp(item->key, key);
+}
+
+struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, FMC_CFG_TYPE t,
+                      const char *key, bool optional, fmc_error_t **err) {
+  struct fmc_cfg_sect_item *item = NULL;
+  LL_SEARCH(cfg, item, key, cmp_key);
+  if (item) {
+    if (item->node.type != t) {
+      fmc_error_set(err, "invalid type for key %s, expected %s",
+                    key, fmc_cfg_type_name(t));
+    }
+  } else if (!optional) {
+    fmc_error_set(err, "configuration key %s not found", key);
+  }
+  return item;
+}
