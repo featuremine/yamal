@@ -3,6 +3,7 @@ name: CMake
 on:
   release:
     types: [released]
+  pull_request:
 
 permissions: write-all
 
@@ -48,11 +49,6 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: cpack -G DEB
         
-    - name: Echo test
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: echo "${{github.ref_name}} ${{github.workspace}}/build/${{github.repository}}-${{github.ref_name}}-Linux.deb"
-
     - name: Upload package
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
