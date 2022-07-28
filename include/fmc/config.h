@@ -153,7 +153,7 @@ FMMODFUNC const char *fmc_cfg_type_name(FMC_CFG_TYPE type);
 
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, FMC_CFG_TYPE t,
-                      const char *key, bool optional, fmc_error_t **err);
+                      const char *key, bool required, fmc_error_t **err);
 
 #ifdef __cplusplus
 }

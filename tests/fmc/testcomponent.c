@@ -27,7 +27,7 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
   }
   memset(c, 0, sizeof(*c));
   struct fmc_cfg_sect_item *item =
-    fmc_cfg_sect_item_get(cfg, FMC_CFG_STR, "teststr", false, err);
+    fmc_cfg_sect_item_get(cfg, FMC_CFG_STR, "teststr", true, err);
   if(*err) goto cleanup;
   c->teststr = fmc_cstr_new(item->node.value.str, err);
   if(*err) goto cleanup;
