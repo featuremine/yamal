@@ -1030,17 +1030,9 @@ static int cmp_key(struct fmc_cfg_sect_item *item, const char *key) {
 }
 
 struct fmc_cfg_sect_item *
-fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, FMC_CFG_TYPE t,
-                      const char *key, bool required, fmc_error_t **err) {
+fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg,
+                      const char *key, fmc_error_t **err) {
   struct fmc_cfg_sect_item *item = NULL;
   LL_SEARCH(cfg, item, key, cmp_key);
-  if (item) {
-    if (item->node.type != t) {
-      fmc_error_set(err, "invalid type for key %s, expected %s",
-                    key, fmc_cfg_type_name(t));
-    }
-  } else if (required) {
-    fmc_error_set(err, "configuration key %s not found", key);
-  }
   return item;
 }
