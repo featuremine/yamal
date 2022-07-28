@@ -152,8 +152,7 @@ FMMODFUNC void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
 FMMODFUNC const char *fmc_cfg_type_name(FMC_CFG_TYPE type);
 
 FMMODFUNC struct fmc_cfg_sect_item *
-fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg,
-                      const char *key, fmc_error_t **err);
+fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, const char *key);
 
 #ifdef __cplusplus
 }
