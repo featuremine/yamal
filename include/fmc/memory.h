@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include <fmc/error.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct pool {
     void *buf;
     size_t sz;
@@ -128,6 +132,7 @@ void memory_destroy(struct memory *mem, fmc_error_t **e) {
     pool_free(p, mem->proxy, e);
 }
 
+
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
