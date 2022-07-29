@@ -35,8 +35,8 @@ struct pool {
 };
 
 struct memory {
-    bool proxy;
     void **view;
+    bool proxy;
 };
 
 void **pool_allocate(struct pool **p, size_t sz, fmc_error_t **e) {
