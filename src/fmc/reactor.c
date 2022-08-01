@@ -99,7 +99,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     bool stop = reactor->stop;
     if (!fmc_error_has(&comp->_err)) {
       if (!comp->_vt->tp_sched || fmc_time64_less_or_equal((*it)->sched, now)) {
-        if (comp->_vt->tp_proc(comp, now, &stop)) {
+        if (comp->_vt->tp_proc(comp, now, &stop, comp->_vt->tp_ninps, comp->_vt->tp_inps, comp->_vt->tp_nouts, comp->_vt->tp_outs)) {
           complete = true;
           (*it)->sched = fmc_time64_end();
           it = &reactor->comps;

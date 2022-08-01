@@ -96,6 +96,7 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
 #include <fmc/extension.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
+#include <fmc/memory.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,16 +113,22 @@ extern "C" {
 
 #define fmc_component_HEAD                                                     \
   struct fmc_component_type *_vt;                                              \
+  char **_out_tps;                                                             \
   struct fmc_error _err
 
 struct fmc_component {
   fmc_component_HEAD;
+  size_t tp_ninps;
+  size_t tp_nouts;
+  struct memory **tp_inps;                     // null terminated input types array
+  struct memory **tp_outps;                     // null terminated input types array
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
          If changes to config or error object are required, must add
          new error or config structure and implement new API version */
 typedef struct fmc_component *(*fmc_newfunc)(struct fmc_cfg_sect_item *,
+                                             char* in_tps[],
                                              fmc_error_t **);
 typedef void (*fmc_delfunc)(struct fmc_component *);
 typedef fmc_time64_t (*fmc_schedfunc)(struct fmc_component *);
@@ -130,7 +137,9 @@ fmc_procfunc must return false and report in the internal
 error if an error occurred.
 The stop flag argument must return true if the component is stopped.
 */
-typedef bool (*fmc_procfunc)(struct fmc_component *, fmc_time64_t, bool *);
+typedef bool (*fmc_procfunc)(struct fmc_component *, fmc_time64_t, bool *,
+                             size_t inpc, struct memory *inps[],
+                             size_t outc, struct memory *outs[]);
 
 struct fmc_component_def_v1 {
   const char *tp_name; // prohibited characters: '-'
@@ -141,6 +150,11 @@ struct fmc_component_def_v1 {
   fmc_delfunc tp_del;                   // destroy the component
   fmc_schedfunc tp_sched;               // returns the next schedule time
   fmc_procfunc tp_proc;                 // run the component once
+};
+
+struct fmc_component_def_v2 : fmc_component_def_v1 {
+  char **tp_inputs;                     // null terminated input types array
+  char **tp_outputs;                    // null terminated output types array
 };
 
 struct fmc_component_list {
@@ -212,7 +226,8 @@ FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 struct fmc_component_api {
   void (*components_add_v1)(struct fmc_component_module *mod,
                             struct fmc_component_def_v1 *tps);
-  void (*components_add_v2)(struct fmc_component_module *mod, void *);
+  void (*components_add_v2)(struct fmc_component_module *mod,
+                            struct fmc_component_def_v2 *tps);
   void (*components_add_v3)(struct fmc_component_module *mod, void *);
   void (*components_add_v4)(struct fmc_component_module *mod, void *);
   void (*components_add_v5)(struct fmc_component_module *mod, void *);
