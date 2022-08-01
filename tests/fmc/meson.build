@@ -33,5 +33,5 @@ test('common_component', test_component, args: [shared_test_component.full_path(
 
 memory = executable(
     'memory', 'memory.cpp',
-    dependencies : [static_fmc_dep])
+    dependencies : [static_fmc_dep, gtest])
 test('memory', memory)
