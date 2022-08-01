@@ -24,6 +24,7 @@
 #include <fmc/memory.h>
 
 #include <fmc++/gtestwrap.hpp>
+#include <string_view>
 
 TEST(fmc_pool, allocation_proxy) {
     struct pool *p = nullptr;
@@ -113,7 +114,40 @@ TEST(fmc_memory, init_view) {
 }
 
 
-TEST(fmc_memory, memory_copy) {
+TEST(fmc_memory, memory_alloc_copy) {
+    struct pool *p = nullptr;
+    fmc_error_t *e = nullptr;
+
+    struct memory mem;
+    mem.view = nullptr;
+    ASSERT_EQ(mem.view, nullptr);
+
+    memory_init_alloc(&mem, &p, 100, &e);
+    ASSERT_NE(mem.view, nullptr);
+    ASSERT_NE(*mem.view, nullptr);
+    ASSERT_EQ(mem.proxy, false);
+    ASSERT_EQ(e, nullptr);
+
+    struct memory dest;
+    dest.view = nullptr;
+    ASSERT_EQ(dest.view, nullptr);
+
+    memory_init_cp(&dest, &mem);
+    ASSERT_NE(dest.view, nullptr);
+    ASSERT_NE(*dest.view, nullptr);
+    ASSERT_EQ(dest.proxy, false);
+    ASSERT_EQ(e, nullptr);
+
+    void* old_view = *dest.view;
+    memory_destroy(&mem, &e);
+    ASSERT_EQ(e, nullptr);
+    void* new_view = *dest.view;
+    ASSERT_EQ(old_view, new_view);
+    memory_destroy(&dest, &e);
+    ASSERT_EQ(e, nullptr);
+}
+
+TEST(fmc_memory, memory_view_copy) {
     struct pool *p = nullptr;
     fmc_error_t *e = nullptr;
 
@@ -138,8 +172,12 @@ TEST(fmc_memory, memory_copy) {
     ASSERT_EQ(dest.proxy, false);
     ASSERT_EQ(e, nullptr);
 
+    void* old_view = *dest.view;
+    ASSERT_EQ(old_view, (void*)view.data());
     memory_destroy(&mem, &e);
     ASSERT_EQ(e, nullptr);
+    void* new_view = *dest.view;
+    ASSERT_NE(old_view, new_view);
     memory_destroy(&dest, &e);
     ASSERT_EQ(e, nullptr);
 }
