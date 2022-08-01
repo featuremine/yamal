@@ -45,6 +45,7 @@ struct memory {
 };
 
 void **pool_allocate(struct pool **p, size_t sz, fmc_error_t **e) {
+    fmc_error_clear(e);
     struct pool *tmp = (struct pool *)calloc(1, sizeof(*tmp));
     if (!tmp) goto cleanup;
     tmp->buf = calloc(1, sz);
@@ -67,6 +68,7 @@ cleanup:
 }
 
 void **pool_view(struct pool **p, void *view, size_t sz, fmc_error_t **e) {
+    fmc_error_clear(e);
     struct pool *tmp = (struct pool *)calloc(1, sizeof(*tmp));
     if (!tmp) goto cleanup;
     tmp->buf = view;
@@ -85,6 +87,7 @@ cleanup:
 }
 
 void pool_take(struct pool *p, fmc_error_t **e) {
+    fmc_error_clear(e);
     if (p->owned) return;
     void *tmp = malloc(p->sz);
     if (!tmp) {
@@ -97,6 +100,7 @@ void pool_take(struct pool *p, fmc_error_t **e) {
 }
 
 void pool_free(struct pool *p, bool proxy, fmc_error_t **e) {
+    fmc_error_clear(e);
     --p->count;
     if (--p->count) {
         if(proxy)
@@ -112,6 +116,7 @@ void pool_free(struct pool *p, bool proxy, fmc_error_t **e) {
 }
 
 void memory_init_alloc(struct memory *mem, struct pool **pool, size_t sz, fmc_error_t **e) {
+    fmc_error_clear(e);
     void **view = pool_allocate(pool, sz, e);
     if (*e) return;
     mem->view = view;
@@ -119,6 +124,7 @@ void memory_init_alloc(struct memory *mem, struct pool **pool, size_t sz, fmc_er
 }
 
 void memory_init_view(struct memory *mem, struct pool **pool, void *v, size_t sz, fmc_error_t **e) {
+    fmc_error_clear(e);
     void **view = pool_view(pool, v, sz, e);
     if (*e) return;
     mem->view = view;
@@ -131,6 +137,7 @@ void memory_init_cp(struct memory *dest, struct memory *src) {
 }
 
 void memory_destroy(struct memory *mem, fmc_error_t **e) {
+    fmc_error_clear(e);
     struct pool *p = (struct pool *)mem->view;
     pool_free(p, mem->proxy, e);
 }

@@ -27,7 +27,7 @@
 
 TEST(fmc_pool, allocation_proxy) {
     struct pool *p = nullptr;
-    fmc_error_t *e;
+    fmc_error_t *e = nullptr;
 
     size_t sz = 100;
     pool_allocate(&p, sz, &e);
@@ -40,7 +40,7 @@ TEST(fmc_pool, allocation_proxy) {
 
 TEST(fmc_pool, allocation_no_proxy) {
     struct pool *p = nullptr;
-    fmc_error_t *e;
+    fmc_error_t *e = nullptr;
 
     size_t sz = 100;
     pool_allocate(&p, sz, &e);
@@ -53,7 +53,7 @@ TEST(fmc_pool, allocation_no_proxy) {
 
 TEST(fmc_pool, view) {
     struct pool *p = nullptr;
-    fmc_error_t *e;
+    fmc_error_t *e = nullptr;
 
     size_t sz = 100;
     pool_allocate(&p, sz, &e);
@@ -77,12 +77,32 @@ TEST(fmc_pool, view) {
 
 TEST(fmc_memory, init_allocation) {
     struct pool *p = nullptr;
-    fmc_error_t *e;
+    fmc_error_t *e = nullptr;
 
     struct memory mem;
+    mem.view = nullptr;
     ASSERT_EQ(mem.view, nullptr);
 
     memory_init_alloc(&mem, &p, 100, &e);
+    ASSERT_NE(mem.view, nullptr);
+    ASSERT_NE(*mem.view, nullptr);
+    ASSERT_EQ(mem.proxy, false);
+    ASSERT_EQ(e, nullptr);
+
+    memory_destroy(&mem, &e);
+    ASSERT_EQ(e, nullptr);
+}
+
+TEST(fmc_memory, init_view) {
+    struct pool *p = nullptr;
+    fmc_error_t *e = nullptr;
+
+    struct memory mem;
+    mem.view = nullptr;
+    ASSERT_EQ(mem.view, nullptr);
+
+    std::string_view view = "valid data";
+    memory_init_view(&mem, &p, (void *)view.data(), view.size(), &e);
     ASSERT_NE(mem.view, nullptr);
     ASSERT_NE(*mem.view, nullptr);
     ASSERT_EQ(mem.proxy, true);
@@ -92,37 +112,20 @@ TEST(fmc_memory, init_allocation) {
     ASSERT_EQ(e, nullptr);
 }
 
-TEST(fmc_memory, init_view) {
-    struct pool *p = nullptr;
-    fmc_error_t *e;
-
-    struct memory mem;
-    ASSERT_EQ(mem.view, nullptr);
-
-    std::string_view view = "valid data";
-    memory_init_view(&mem, &p, (void *)view.data(), view.size(), &e);
-    ASSERT_NE(mem.view, nullptr);
-    ASSERT_NE(*mem.view, nullptr);
-    ASSERT_EQ(mem.proxy, false);
-    ASSERT_EQ(e, nullptr);
-
-    memory_destroy(&mem, &e);
-    ASSERT_EQ(e, nullptr);
-}
-
 
 TEST(fmc_memory, memory_copy) {
     struct pool *p = nullptr;
-    fmc_error_t *e;
+    fmc_error_t *e = nullptr;
 
     struct memory mem;
+    mem.view = nullptr;
     ASSERT_EQ(mem.view, nullptr);
 
     std::string_view view = "valid data";
     memory_init_view(&mem, &p, (void *)view.data(), view.size(), &e);
     ASSERT_NE(mem.view, nullptr);
     ASSERT_NE(*mem.view, nullptr);
-    ASSERT_EQ(mem.proxy, false);
+    ASSERT_EQ(mem.proxy, true);
     ASSERT_EQ(e, nullptr);
 
     struct memory dest;
