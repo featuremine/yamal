@@ -15,6 +15,7 @@
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/reactor.h>
+#include <fmc/process.h>
 
 #include <fmc++/mpl.hpp>
 
@@ -82,6 +83,16 @@ int main(int argc, char **argv) {
       "component", "Component name", true, "component", "component");
   cmd.add(componentArg);
 
+  TCLAP::ValueArg<int> affinityArg("a", "affinity",
+                                   "set the CPU affinity of the main process",
+                                   false, 0, "cpuid");
+  cmd.add(affinityArg);
+
+  TCLAP::ValueArg<int> priorityArg(
+      "x", "priority", "set the priority of the main process (1-99)", false, 1,
+      "priority");
+  cmd.add(priorityArg);
+
   cmd.parse(argc, argv);
 
   sys_ptr sys;
@@ -113,6 +124,27 @@ int main(int argc, char **argv) {
   fmc_runtime_error_unless(!err)
       << "Unable to load component " << componentArg.getValue() << ": "
       << fmc_error_msg(err);
+
+  if (affinityArg.isSet()) {
+    fmc_tid threadid = fmc_tid_cur(&err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to get current thread id: "
+        << fmc_error_msg(err);
+
+    int cpuid = affinityArg.getValue();
+    fmc_set_affinity(threadid, cpuid, &err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to set current thread cpu affinity: "
+        << fmc_error_msg(err);
+
+    if (priorityArg.isSet()) {
+      int priority = priorityArg.getValue();
+      fmc_set_sched_fifo(threadid, priority, &err);
+      fmc_runtime_error_unless(!err)
+          << "Unable to set current thread priority: "
+          << fmc_error_msg(err);
+    }
+  }
 
   struct fmc_reactor r;
   fmc_reactor_init(&r);
