@@ -132,7 +132,7 @@ void memory_init_view(struct memory *mem, struct pool **pool, void *v, size_t sz
 }
 
 void memory_init_cp(struct memory *dest, struct memory *src) {
-    dest->view = dest->view;
+    dest->view = src->view;
     dest->proxy = false;
 }
 

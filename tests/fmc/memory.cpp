@@ -129,6 +129,8 @@ TEST(fmc_memory, memory_copy) {
     ASSERT_EQ(e, nullptr);
 
     struct memory dest;
+    dest.view = nullptr;
+    ASSERT_EQ(dest.view, nullptr);
 
     memory_init_cp(&dest, &mem);
     ASSERT_NE(dest.view, nullptr);
