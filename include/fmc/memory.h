@@ -88,7 +88,7 @@ void pool_take(struct pool *p, fmc_error_t **e) {
     if (p->owned) return;
     void *tmp = malloc(p->sz);
     if (!tmp) {
-        // set error
+        fmc_error_set2(e, FMC_ERROR_MEMORY);
         return;
     }
     memcpy(tmp, p->buf, p->sz);
@@ -105,7 +105,9 @@ void pool_free(struct pool *p, bool proxy, fmc_error_t **e) {
         if (p->owned) {
             free(p->buf);
         }
-        // remove pool element
+        p->next->prev = p->prev;
+        p->prev->next = p->next;
+        free(p);
     }
 }
 
