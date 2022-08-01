@@ -173,7 +173,7 @@ TEST(fmc_memory, memory_view_copy) {
     ASSERT_EQ(e, nullptr);
 
     void* old_view = *dest.view;
-    ASSERT_EQ(old_view, (void*)view.data());
+    ASSERT_EQ(old_view, view.data());
     memory_destroy(&mem, &e);
     ASSERT_EQ(e, nullptr);
     void* new_view = *dest.view;
