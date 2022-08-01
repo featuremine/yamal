@@ -27,17 +27,17 @@ extern "C" {
 #endif
 
 struct pool {
-    void *buf;
-    size_t sz;
-    struct pool *prev;
-    struct pool *next;
-    int count;
-    bool owned;
+  void *buf;
+  size_t sz;
+  struct pool *prev;
+  struct pool *next;
+  int count;
+  bool owned;
 };
 
 struct memory {
-    void **view;
-    bool proxy;
+  void **view;
+  bool proxy;
 };
 
 /**
@@ -57,7 +57,8 @@ FMMODFUNC void **pool_allocate(struct pool **p, size_t sz, fmc_error_t **e);
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void **pool_view(struct pool **p, void *view, size_t sz, fmc_error_t **e);
+FMMODFUNC void **pool_view(struct pool **p, void *view, size_t sz,
+                           fmc_error_t **e);
 
 /**
  * @brief Pool takes ownership of memory view
@@ -84,7 +85,8 @@ FMMODFUNC void pool_free(struct pool *p, bool proxy, fmc_error_t **e);
  * @param sz size of memory buffer to allocate
  * @param e out-parameter for error handling
  */
-FMMODFUNC void memory_init_alloc(struct memory *mem, struct pool **pool, size_t sz, fmc_error_t **e);
+FMMODFUNC void memory_init_alloc(struct memory *mem, struct pool **pool,
+                                 size_t sz, fmc_error_t **e);
 
 /**
  * @brief Initialize memory with memory view
@@ -95,12 +97,14 @@ FMMODFUNC void memory_init_alloc(struct memory *mem, struct pool **pool, size_t 
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void memory_init_view(struct memory *mem, struct pool **pool, void *v, size_t sz, fmc_error_t **e);
+FMMODFUNC void memory_init_view(struct memory *mem, struct pool **pool, void *v,
+                                size_t sz, fmc_error_t **e);
 
 /**
  * @brief Copy memory
  *
- * @param dest out-parameter pointer to memory structure to be initialized with copy
+ * @param dest out-parameter pointer to memory structure to be initialized with
+ * copy
  * @param src pointer to memory structure used as source
  */
 FMMODFUNC void memory_init_cp(struct memory *dest, struct memory *src);
