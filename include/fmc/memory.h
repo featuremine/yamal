@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <fmc/error.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +57,7 @@ void **pool_allocate(struct pool **p, size_t sz, fmc_error_t **e) {
     tmp->owned = true;
     return &tmp->buf;
 cleanup:
-    fmc_error_reset(*e, MEMORY_ERROR);
+    fmc_error_set2(e, FMC_ERROR_MEMORY);
     if (tmp) {
         if (tmp->buf)
             free(tmp->buf);
@@ -77,7 +78,7 @@ void **pool_view(struct pool **p, void *view, size_t sz, fmc_error_t **e) {
     tmp->owned = false;
     return &tmp->buf;
 cleanup:
-    fmc_error_reset(*e, MEMORY_ERROR);
+    fmc_error_set2(e, FMC_ERROR_MEMORY);
     if (tmp)
         free(tmp);
     return NULL;
@@ -90,12 +91,12 @@ void pool_take(struct pool *p, fmc_error_t **e) {
         // set error
         return;
     }
-    memcpy(tmp, p->buf, sz);
+    memcpy(tmp, p->buf, p->sz);
     p->buf = tmp;
     p->owned = true;
 }
 
-void pool_free(struct pool *p, bool proxy, fmc_error_r **e) {
+void pool_free(struct pool *p, bool proxy, fmc_error_t **e) {
     --p->count;
     if (--p->count) {
         if(proxy)
@@ -111,15 +112,15 @@ void pool_free(struct pool *p, bool proxy, fmc_error_r **e) {
 void memory_init_alloc(struct memory *mem, struct pool **pool, size_t sz, fmc_error_t **e) {
     void **view = pool_allocate(pool, sz, e);
     if (*e) return;
-    memory->view = view;
-    memory->proxy = false;
+    mem->view = view;
+    mem->proxy = false;
 }
 
-void memory_init_view(struct memory *mem, struct pool **pool, void *view, size_t sz, fmc_error_t **e) {
-    void **view = pool_view(pool, view, sz, e);
+void memory_init_view(struct memory *mem, struct pool **pool, void *v, size_t sz, fmc_error_t **e) {
+    void **view = pool_view(pool, v, sz, e);
     if (*e) return;
-    memory->view = view;
-    memory->proxy = true;
+    mem->view = view;
+    mem->proxy = true;
 }
 
 void memory_init_cp(struct memory *dest, struct memory *src) {
