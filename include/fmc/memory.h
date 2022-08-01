@@ -26,18 +26,23 @@
 extern "C" {
 #endif
 
-struct pool {
+struct pool_node {
   void *buf;
   size_t sz;
-  struct pool *prev;
-  struct pool *next;
   int count;
-  bool owned;
+  struct memory *owner;
+  struct pool_node *prev;
+  struct pool_node *next;
+  struct pool *pool;
 };
+
+struct pool {
+    struct pool_node *used;
+    stuct pool_node *free;
+}
 
 struct memory {
   void **view;
-  bool proxy;
 };
 
 /**
@@ -47,7 +52,7 @@ struct memory {
  * @param sz size of memory buffer to be allocated
  * @param e out-parameter for error handling
  */
-FMMODFUNC void **pool_allocate(struct pool **p, size_t sz, fmc_error_t **e);
+FMMODFUNC void **fmc_pool_allocate(struct pool *p, size_t sz, fmc_error_t **e);
 
 /**
  * @brief Allocates a pool for a memory view
@@ -57,7 +62,7 @@ FMMODFUNC void **pool_allocate(struct pool **p, size_t sz, fmc_error_t **e);
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void **pool_view(struct pool **p, void *view, size_t sz,
+FMMODFUNC void **fmc_pool_view(struct pool *p, void *view, size_t sz,
                            fmc_error_t **e);
 
 /**
@@ -66,7 +71,7 @@ FMMODFUNC void **pool_view(struct pool **p, void *view, size_t sz,
  * @param p pointer to pool
  * @param e out-parameter for error handling
  */
-FMMODFUNC void pool_take(struct pool *p, fmc_error_t **e);
+FMMODFUNC void fmc_pool_take(struct pool_node *p, fmc_error_t **e);
 
 /**
  * @brief Deallocate pool
@@ -75,7 +80,21 @@ FMMODFUNC void pool_take(struct pool *p, fmc_error_t **e);
  * @param proxy flag to signal a proxy pool
  * @param e out-parameter for error handling
  */
-FMMODFUNC void pool_free(struct pool *p, bool proxy, fmc_error_t **e);
+FMMODFUNC void fmc_pool_free(struct pool_node *p, struct memory *m, fmc_error_t **e);
+
+/**
+ * @brief Initializes the pool
+ *
+ * @param p pointer to pointer of pool
+ */
+FMMODFUNC void fmc_pool_init(struct pool *p);
+
+/**
+ * @brief Destroys the pool
+ *
+ * @param p pointer to pointer of pool
+ */
+FMMODFUNC void fmc_pool_destroy(struct pool *p);
 
 /**
  * @brief Initialize memory with allocated buffer
@@ -85,7 +104,7 @@ FMMODFUNC void pool_free(struct pool *p, bool proxy, fmc_error_t **e);
  * @param sz size of memory buffer to allocate
  * @param e out-parameter for error handling
  */
-FMMODFUNC void memory_init_alloc(struct memory *mem, struct pool **pool,
+FMMODFUNC void fmc_memory_init_alloc(struct memory *mem, struct pool *pool,
                                  size_t sz, fmc_error_t **e);
 
 /**
@@ -97,7 +116,7 @@ FMMODFUNC void memory_init_alloc(struct memory *mem, struct pool **pool,
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void memory_init_view(struct memory *mem, struct pool **pool, void *v,
+FMMODFUNC void fmc_memory_init_view(struct memory *mem, struct pool *pool, void *v,
                                 size_t sz, fmc_error_t **e);
 
 /**
@@ -107,7 +126,7 @@ FMMODFUNC void memory_init_view(struct memory *mem, struct pool **pool, void *v,
  * copy
  * @param src pointer to memory structure used as source
  */
-FMMODFUNC void memory_init_cp(struct memory *dest, struct memory *src);
+FMMODFUNC void fmc_memory_init_cp(struct memory *dest, struct memory *src);
 
 /**
  * @brief Destroy memory
@@ -115,7 +134,7 @@ FMMODFUNC void memory_init_cp(struct memory *dest, struct memory *src);
  * @param mem pointer to memory to be destroyed
  * @param e out-parameter for error handling
  */
-FMMODFUNC void memory_destroy(struct memory *mem, fmc_error_t **e);
+FMMODFUNC void fmc_memory_destroy(struct memory *mem, fmc_error_t **e);
 
 #ifdef __cplusplus
 }
