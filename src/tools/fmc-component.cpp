@@ -15,16 +15,10 @@
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/reactor.h>
-#include <fmc/signals.h>
 
 #include <fmc++/mpl.hpp>
 
 #include <ytp/version.h>
-
-#include <atomic>
-
-static std::atomic<bool> run = true;
-static void sig_handler(int s) { run = false; }
 
 struct deleter_t {
   void operator()(struct fmc_component_module *ptr) {
@@ -69,8 +63,6 @@ using sys_ptr = scopevar_t<fmc_component_sys, initdestroy_t>;
 using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
 
 int main(int argc, char **argv) {
-  fmc_set_signal_handler(sig_handler);
-
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
