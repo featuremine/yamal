@@ -27,13 +27,13 @@
 #include <string_view>
 
 TEST(fmc_pool, allocation_no_pools_created) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
   fmc_pool_destroy(&p);
 }
 
 TEST(fmc_pool, owned_view_allocation_pool_cleanup) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
 
   size_t sz = 100;
@@ -47,7 +47,7 @@ TEST(fmc_pool, owned_view_allocation_pool_cleanup) {
 }
 
 TEST(fmc_pool, not_owned_view_allocation) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
 
   std::string_view view = "data string";
@@ -62,12 +62,12 @@ TEST(fmc_pool, not_owned_view_allocation) {
 }
 
 TEST(fmc_memory, init_allocation) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct memory mem;
+  struct fmc_memory_t mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -82,12 +82,12 @@ TEST(fmc_memory, init_allocation) {
 }
 
 TEST(fmc_memory, init_view) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct memory mem;
+  struct fmc_memory_t mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -103,12 +103,12 @@ TEST(fmc_memory, init_view) {
 }
 
 TEST(fmc_memory, fmc_memory_alloc_copy) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct memory mem;
+  struct fmc_memory_t mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -117,7 +117,7 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  struct memory dest;
+  struct fmc_memory_t dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
 
@@ -138,12 +138,12 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
 }
 
 TEST(fmc_memory, fmc_memory_view_copy) {
-  struct pool p;
+  struct fmc_pool_t p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct memory mem;
+  struct fmc_memory_t mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -154,7 +154,7 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(*mem.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
-  struct memory dest;
+  struct fmc_memory_t dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
 
@@ -168,7 +168,7 @@ TEST(fmc_memory, fmc_memory_view_copy) {
 
   ASSERT_NE(*dest.view, (void *)view.data());
 
-  struct pool_node *node = (struct pool_node *)dest.view;
+  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)dest.view;
   ASSERT_EQ(view.size(), node->sz);
   ASSERT_EQ(std::string_view((char*)node->buf, node->sz).compare(view), 0);
 
