@@ -214,6 +214,8 @@ void fmc_memory_destroy(struct memory *mem, fmc_error_t **e) {
   } else {
     if (p->prev)
         p->prev->next = p->next;
+    else
+        p->pool->used = p->next;
     if (p->next)
         p->next->prev = p->prev;
     if (p->pool->free)
