@@ -20,6 +20,7 @@
  */
 
 #include <fmc/component.h>
+#include <fmc/reactor.h>
 #include <fmc/error.h>
 #include <fmc/extension.h>
 #include <fmc/files.h>
@@ -325,8 +326,10 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
   return NULL;
 }
 
-struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
+struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
+                                        struct fmc_component_type *tp,
                                         struct fmc_cfg_sect_item *cfg,
+                                        struct fmc_component_input *inps,
                                         fmc_error_t **error) {
   fmc_error_clear(error);
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
@@ -336,7 +339,9 @@ struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
   struct fmc_component_list *item =
       (struct fmc_component_list *)calloc(1, sizeof(*item));
   if (item) {
-    item->comp = tp->tp_new(cfg, error);
+    struct fmc_reactor_ctx ctx = {reactor, reactor->count};
+    item->comp = tp->tp_new(cfg, &ctx, intps, error);
+    fmc_reactor_component_add(reactor, item->comp, inps, error);
     if (*error) {
       free(item);
     } else {

@@ -50,8 +50,19 @@ struct fmc_reactor_component_list {
   struct fmc_reactor_component_list *next, *prev;
 };
 
+struct fmc_reactor_ctx {
+  struct fmc_reactor *reactor;
+  size_t idx;
+  size_t *deps[];
+};
+
 struct fmc_reactor {
   struct fmc_reactor_component_list *comps;
+  size_t count;
+  struct fmc_reactor_ctx **ctxs;
+  struct fmc_reactor_time_queue *sched;
+  struct fmc_reactor_call_queue *queued;
+  struct fmc_reactor_call_queue *toqueue;
   volatile bool stop;
   bool done;
 };
@@ -59,12 +70,15 @@ struct fmc_reactor {
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
-                                         struct fmc_component *comp,
-                                         int priority, fmc_error_t **error);
+                                    struct fmc_component *comp,
+                                    struct fmc_component_input *inps,
+                                    fmc_error_t **error);
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
                                     fmc_time64_t now, fmc_error_t **error);
-FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor,
+FMMODFUNC void fmc_reactor_run_sched(struct fmc_reactor *reactor,
+                               fmc_error_t **error);
+FMMODFUNC void fmc_reactor_run_live(struct fmc_reactor *reactor,
                                fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);

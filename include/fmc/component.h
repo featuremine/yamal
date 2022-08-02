@@ -117,8 +117,7 @@ extern "C" {
 #define fmc_component_HEAD                                                     \
   struct fmc_component_type *_vt;                                              \
   char **_out_tps;                                                             \
-  struct fmc_error _err;                                                       \
-  struct fmc_reactor_ctx *                                                     \
+  struct fmc_error _err
 
 struct fmc_component {
   fmc_component_HEAD;
