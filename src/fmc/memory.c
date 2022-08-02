@@ -44,6 +44,9 @@ void **fmc_pool_allocate(struct pool *p, size_t sz, fmc_error_t **e) {
       tmp->buf = realloc(tmp->buf, sz);
     } else {
       tmp = (struct pool_node *)calloc(1, sizeof(*tmp));
+      if (!tmp)
+        goto cleanup;
+      tmp->pool = p;
       tmp->owned = true;
     }
   } else {
@@ -52,6 +55,7 @@ void **fmc_pool_allocate(struct pool *p, size_t sz, fmc_error_t **e) {
       goto cleanup;
     tmp->buf = calloc(1, sz);
     tmp->pool = p;
+    tmp->owned = true;
   }
   if (!tmp->buf)
     goto cleanup;
@@ -88,14 +92,15 @@ void **fmc_pool_view(struct pool *p, void *view, size_t sz,
     p->free = tmp->next;
     if (tmp->owned) {
       free(tmp->buf);
+      tmp->owned = false;
     }
   } else {
     tmp = (struct pool_node *)calloc(1, sizeof(*tmp));
     if (!tmp)
       goto cleanup;
     tmp->pool = p;
+    tmp->owned = false;
   }
-  tmp->owned = false;
   tmp->buf = view;
   tmp->sz = sz;
   tmp->count = 1;
@@ -133,7 +138,6 @@ void fmc_pool_destroy(struct pool *p) {
     if (tmp->owned && tmp->buf)
       free(tmp->buf);
     struct pool_node *next = tmp->next;
-    printf("free free %p\n",tmp);
     free(tmp);
     tmp = next;
   }
@@ -142,7 +146,6 @@ void fmc_pool_destroy(struct pool *p) {
     if (tmp->owned && tmp->buf)
       free(tmp->buf);
     struct pool_node *next = tmp->next;
-    printf("used free %p\n",tmp);
     free(tmp);
     tmp = next;
   }
@@ -160,6 +163,8 @@ void fmc_memory_init_alloc(struct memory *mem, struct pool *pool,
                            size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_allocate(pool, sz, e);
+  struct pool_node *p = (struct pool_node *)mem->view;
+  p->owner = mem;
 }
 
 /**
@@ -175,6 +180,8 @@ void fmc_memory_init_view(struct memory *mem, struct pool *pool, void *v,
                           size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_view(pool, v, sz, e);
+  struct pool_node *p = (struct pool_node *)mem->view;
+  p->owner = mem;
 }
 
 /**

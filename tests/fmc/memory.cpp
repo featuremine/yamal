@@ -151,6 +151,7 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   fmc_memory_init_view(&mem, &p, (void *)view.data(), view.size(), &e);
   ASSERT_NE(mem.view, nullptr);
   ASSERT_NE(*mem.view, nullptr);
+  ASSERT_EQ(*mem.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
   struct memory dest;
@@ -159,14 +160,13 @@ TEST(fmc_memory, fmc_memory_view_copy) {
 
   fmc_memory_init_cp(&dest, &mem);
   ASSERT_NE(dest.view, nullptr);
-  ASSERT_NE(*dest.view, nullptr);
+  ASSERT_EQ(*dest.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
-  void *old_view = *dest.view;
-  ASSERT_EQ(old_view, view.data());
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
-  ASSERT_NE(old_view, *dest.view);
+
+  ASSERT_NE(*dest.view, (void *)view.data());
   fmc_memory_destroy(&dest, &e);
   ASSERT_EQ(e, nullptr);
 
