@@ -26,9 +26,7 @@
 extern "C" {
 #endif
 
-struct memory {
-  void **view;
-};
+typedef void **view fmc_memory_t;
 
 struct pool;
 

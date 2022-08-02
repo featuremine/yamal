@@ -29,6 +29,8 @@ struct manager_comp {
    fmc_component_HEAD;
 };
 
+fmc_reactor_api_v1 *_reactor;
+
 gateway_comp_process_one(gateway_comp *comp) {
    gateway_comp *c = (gateway_comp *)comp;
 };
@@ -87,6 +89,7 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
                                       struct fmc_component_module *mod) {
    // The number at the end of the functions signifies the API version.
    api->components_add_v1(mod, components);
+   _reactor = api->reactor_v1;
 }
 */
 
@@ -102,6 +105,7 @@ extern "C" {
 #endif
 
 // MODULES SEARCH PATHS
+// TODO: move to src and make system dependent
 #define FMC_MOD_SEARCHPATH_CUR ""
 #define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
@@ -112,25 +116,31 @@ extern "C" {
 
 #define fmc_component_HEAD                                                     \
   struct fmc_component_type *_vt;                                              \
-  struct fmc_error _err
+  char **_out_tps;                                                             \
+  struct fmc_error _err;                                                       \
+  struct fmc_reactor_ctx *                                                     \
 
 struct fmc_component {
   fmc_component_HEAD;
+};
+
+struct fmc_reactor_api_v1 {
+   fmc_time64_t (*now)(struct fmc_reactor_ctx *);
+   void (*queue)(struct fmc_reactor_ctx *);
+   void (*schedule)(struct fmc_reactor_ctx *, fmc_time64_t);
+   void (*notify)(struct fmc_reactor_ctx *, int, fmc_memory_t); // notify the system that output have been updated
+   void (*on_input)(struct fmc_reactor_ctx *, fmc_input_clbck); // one of the input components have been updated
+   void (*on_exec)(struct fmc_reactor_ctx *, fmc_exec_clbck); // all input components have been updated
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
          If changes to config or error object are required, must add
          new error or config structure and implement new API version */
 typedef struct fmc_component *(*fmc_newfunc)(struct fmc_cfg_sect_item *,
+                                             fmc_reactor_ctx *ctx,
+                                             char **inp_tps,
                                              fmc_error_t **);
 typedef void (*fmc_delfunc)(struct fmc_component *);
-typedef fmc_time64_t (*fmc_schedfunc)(struct fmc_component *);
-/*
-fmc_procfunc must return false and report in the internal
-error if an error occurred.
-The stop flag argument must return true if the component is stopped.
-*/
-typedef bool (*fmc_procfunc)(struct fmc_component *, fmc_time64_t, bool *);
 
 struct fmc_component_def_v1 {
   const char *tp_name; // prohibited characters: '-'
@@ -139,8 +149,6 @@ struct fmc_component_def_v1 {
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
   fmc_newfunc tp_new;                   // alloc and initialize the component
   fmc_delfunc tp_del;                   // destroy the component
-  fmc_schedfunc tp_sched;               // returns the next schedule time
-  fmc_procfunc tp_proc;                 // run the component once
 };
 
 struct fmc_component_list {
@@ -155,8 +163,6 @@ struct fmc_component_type {
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
   fmc_newfunc tp_new;                   // alloc and initialize the component
   fmc_delfunc tp_del;                   // destroy the component
-  fmc_schedfunc tp_sched;               // returns the next schedule time
-  fmc_procfunc tp_proc;                 // run the component once
   struct fmc_component_list *comps;     // ptr to the containing component
   struct fmc_component_type *next, *prev;
 };
@@ -203,20 +209,32 @@ FMMODFUNC struct fmc_component_type *
 fmc_component_module_type_get(struct fmc_component_module *mod,
                               const char *comp, fmc_error_t **error);
 
-FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
+struct fmc_component_input {
+   struct fmc_component *comp;
+   int idx;
+};
+
+FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
+                                                  struct fmc_component_type *tp,
                                                   struct fmc_cfg_sect_item *cfg,
+                                                  struct fmc_component_input *inps,
                                                   fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 /* Current API version: 1 (components_add_v1) */
 struct fmc_component_api {
-  void (*components_add_v1)(struct fmc_component_module *mod,
+   fmc_reactor_api_v1 *reactor_v1;
+   void (*components_add_v1)(struct fmc_component_module *mod,
                             struct fmc_component_def_v1 *tps);
-  void (*components_add_v2)(struct fmc_component_module *mod, void *);
-  void (*components_add_v3)(struct fmc_component_module *mod, void *);
-  void (*components_add_v4)(struct fmc_component_module *mod, void *);
-  void (*components_add_v5)(struct fmc_component_module *mod, void *);
-  void *_zeros[128];
+   void *reactor_v2;
+   void (*components_add_v2)(struct fmc_component_module *mod, void *);
+   void *reactor_v3;
+   void (*components_add_v3)(struct fmc_component_module *mod, void *);
+   void *reactor_v4;
+   void (*components_add_v4)(struct fmc_component_module *mod, void *);
+   void *reactor_v5;
+   void (*components_add_v5)(struct fmc_component_module *mod, void *);
+   void *_zeros[128];
 };
 
 typedef void (*fmc_component_module_init_func)(struct fmc_component_api *,
