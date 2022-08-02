@@ -26,35 +26,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void fmc_pool_init(struct pool *p) {
-  p->free = NULL;
-  p->used = NULL;
-}
-
-void fmc_pool_destroy(struct pool *p) {
-  struct pool_node *tmp = NULL;
-  tmp = p->free;
-  while (tmp) {
-    if (tmp->owned && tmp->buf)
-      free(tmp->buf);
-    struct pool_node *next = tmp->next;
-    free(tmp);
-    tmp = next;
-  }
-  tmp = p->used;
-  while (tmp) {
-    if (tmp->owned && tmp->buf)
-      free(tmp->buf);
-    struct pool_node *next = tmp->next;
-    free(tmp);
-    tmp = next;
-  }
-}
-
+/**
+ * @brief Allocates a pool owning a buffer
+ *
+ * @param p pointer to empty pointer of pool
+ * @param sz size of memory buffer to be allocated
+ * @param e out-parameter for error handling
+ */
 void **fmc_pool_allocate(struct pool *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   struct pool_node *tmp = NULL;
@@ -90,8 +68,16 @@ cleanup:
   return NULL;
 }
 
+/**
+ * @brief Allocates a pool for a memory view
+ *
+ * @param p pointer to empty pointer of pool
+ * @param view pointer to memory view
+ * @param sz size of memory view
+ * @param e out-parameter for error handling
+ */
 void **fmc_pool_view(struct pool *p, void *view, size_t sz,
-                           fmc_error_t **e) {
+                               fmc_error_t **e) {
   fmc_error_clear(e);
   struct pool_node *tmp = NULL;
   if (p->free) {
@@ -120,25 +106,85 @@ cleanup:
   return NULL;
 }
 
-void **pool_view(struct pool **p, void *view, size_t sz, fmc_error_t **e) {
+/**
+ * @brief Initializes the pool
+ *
+ * @param p pointer to pointer of pool
+ */
+void fmc_pool_init(struct pool *p) {
+  p->free = NULL;
+  p->used = NULL;
+}
+
+/**
+ * @brief Destroys the pool
+ *
+ * @param p pointer to pointer of pool
+ */
+void fmc_pool_destroy(struct pool *p) {
+  struct pool_node *tmp = NULL;
+  tmp = p->free;
+  while (tmp) {
+    if (tmp->owned && tmp->buf)
+      free(tmp->buf);
+    struct pool_node *next = tmp->next;
+    free(tmp);
+    tmp = next;
+  }
+  tmp = p->used;
+  while (tmp) {
+    if (tmp->owned && tmp->buf)
+      free(tmp->buf);
+    struct pool_node *next = tmp->next;
+    free(tmp);
+    tmp = next;
+  }
+}
+
+/**
+ * @brief Initialize memory with allocated buffer
+ *
+ * @param mem pointer to memory structure to be initialized
+ * @param pool pointer to pointer of empty pool to manage memory view
+ * @param sz size of memory buffer to allocate
+ * @param e out-parameter for error handling
+ */
+void fmc_memory_init_alloc(struct memory *mem, struct pool *pool,
+                           size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
-  // struct pool *tmp = (struct pool *)calloc(1, sizeof(*tmp));
-  // if (!tmp)
-  //   goto cleanup;
-  // tmp->buf = view;
-  // tmp->sz = sz;
-  // tmp->next = *p;
-  // if (*p)
-  //   (*p)->prev = tmp;
-  // *p = tmp;
-  // tmp->count = 1;
-  // tmp->owned = false;
-  // return &tmp->buf;
-  // cleanup:
-  //   fmc_error_set2(e, FMC_ERROR_MEMORY);
-  //   if (tmp)
-  //     free(tmp);
-  return NULL;
+  void **view = fmc_pool_allocate(pool, sz, e);
+  if (*e)
+    return;
+  mem->view = view;
+}
+
+/**
+ * @brief Initialize memory with memory view
+ *
+ * @param mem pointer to memory structure to be initialized
+ * @param pool pointer to pointer of empty pool to manage memory view
+ * @param v address of memory view
+ * @param sz size of memory view
+ * @param e out-parameter for error handling
+ */
+void fmc_memory_init_view(struct memory *mem, struct pool *pool, void *v,
+                          size_t sz, fmc_error_t **e) {
+  fmc_error_clear(e);
+  void **view = fmc_pool_view(pool, v, sz, e);
+  if (*e)
+    return;
+  mem->view = view;
+}
+
+/**
+ * @brief Copy memory
+ *
+ * @param dest out-parameter pointer to memory structure to be initialized with
+ * copy
+ * @param src pointer to memory structure used as source
+ */
+void fmc_memory_init_cp(struct memory *dest, struct memory *src) {
+  dest->view = src->view;
 }
 
 void fmc_pool_free(struct pool_node *p, struct memory *m, fmc_error_t **e) {
@@ -167,36 +213,14 @@ void fmc_pool_free(struct pool_node *p, struct memory *m, fmc_error_t **e) {
   // }
 }
 
-void memory_init_alloc(struct memory *mem, struct pool **pool, size_t sz,
-                       fmc_error_t **e) {
+/**
+ * @brief Destroy memory
+ *
+ * @param mem pointer to memory to be destroyed
+ * @param e out-parameter for error handling
+ */
+void fmc_memory_destroy(struct memory *mem, fmc_error_t **e) {
   fmc_error_clear(e);
-  // void **view = pool_allocate(pool, sz, e);
-  // if (*e)
-  //   return;
-  // mem->view = view;
-  // mem->proxy = false;
+  struct pool_node *p = (struct pool_node *)mem->view;
+  fmc_pool_free(p, mem, e);
 }
-
-void memory_init_view(struct memory *mem, struct pool **pool, void *v,
-                      size_t sz, fmc_error_t **e) {
-  fmc_error_clear(e);
-  // void **view = pool_view(pool, v, sz, e);
-  // if (*e)
-  //   return;
-  // mem->view = view;
-  // mem->proxy = true;
-}
-
-void memory_init_cp(struct memory *dest, struct memory *src) {
-  dest->view = src->view;
-}
-
-void memory_destroy(struct memory *mem, fmc_error_t **e) {
-  // fmc_error_clear(e);
-  // struct pool *p = (struct pool *)mem->view;
-  // pool_free(p, mem->proxy, e);
-}
-
-#ifdef __cplusplus
-}
-#endif

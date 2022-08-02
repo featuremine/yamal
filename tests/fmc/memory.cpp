@@ -32,7 +32,7 @@ TEST(fmc_pool, allocation_no_pools_created) {
   fmc_pool_destroy(&p);
 }
 
-TEST(fmc_pool, allocation) {
+TEST(fmc_pool, owned_view_allocation_pool_cleanup) {
   struct pool p;
   fmc_pool_init(&p);
 
@@ -46,7 +46,7 @@ TEST(fmc_pool, allocation) {
   fmc_pool_destroy(&p);
 }
 
-TEST(fmc_pool, view) {
+TEST(fmc_pool, not_owned_view_allocation) {
   struct pool p;
   fmc_pool_init(&p);
 

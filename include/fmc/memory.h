@@ -70,23 +70,6 @@ FMMODFUNC void **fmc_pool_view(struct pool *p, void *view, size_t sz,
                            fmc_error_t **e);
 
 /**
- * @brief Pool takes ownership of memory view
- *
- * @param p pointer to pool
- * @param e out-parameter for error handling
- */
-FMMODFUNC void fmc_pool_take(struct pool_node *p, fmc_error_t **e);
-
-/**
- * @brief Deallocate pool
- *
- * @param p pointer to empty pointer of pool
- * @param proxy flag to signal a proxy pool
- * @param e out-parameter for error handling
- */
-FMMODFUNC void fmc_pool_free(struct pool_node *p, struct memory *m, fmc_error_t **e);
-
-/**
  * @brief Initializes the pool
  *
  * @param p pointer to pointer of pool
