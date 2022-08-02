@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /**
  * @brief Allocates a pool owning a buffer
@@ -50,11 +51,13 @@ void **fmc_pool_allocate(struct pool *p, size_t sz, fmc_error_t **e) {
     if (!tmp)
       goto cleanup;
     tmp->buf = calloc(1, sz);
+    tmp->pool = p;
   }
   if (!tmp->buf)
     goto cleanup;
   tmp->sz = sz;
   tmp->count = 1;
+  tmp->prev = NULL;
   tmp->next = p->used;
   p->used = tmp;
   return &tmp->buf;
@@ -95,6 +98,7 @@ void **fmc_pool_view(struct pool *p, void *view, size_t sz,
   tmp->buf = view;
   tmp->sz = sz;
   tmp->count = 1;
+  tmp->prev = NULL;
   tmp->next = p->used;
   p->used = tmp;
   return &tmp->buf;
@@ -128,6 +132,7 @@ void fmc_pool_destroy(struct pool *p) {
     if (tmp->owned && tmp->buf)
       free(tmp->buf);
     struct pool_node *next = tmp->next;
+    printf("free free %p\n",tmp);
     free(tmp);
     tmp = next;
   }
@@ -136,6 +141,7 @@ void fmc_pool_destroy(struct pool *p) {
     if (tmp->owned && tmp->buf)
       free(tmp->buf);
     struct pool_node *next = tmp->next;
+    printf("used free %p\n",tmp);
     free(tmp);
     tmp = next;
   }
@@ -178,6 +184,8 @@ void fmc_memory_init_view(struct memory *mem, struct pool *pool, void *v,
  * @param src pointer to memory structure used as source
  */
 void fmc_memory_init_cp(struct memory *dest, struct memory *src) {
+  struct pool_node *p = (struct pool_node *)src->view;
+  ++p->count;
   dest->view = src->view;
 }
 
@@ -190,7 +198,6 @@ void fmc_memory_init_cp(struct memory *dest, struct memory *src) {
 void fmc_memory_destroy(struct memory *mem, fmc_error_t **e) {
   fmc_error_clear(e);
   struct pool_node *p = (struct pool_node *)mem->view;
-  fmc_error_clear(e);
   if (--p->count) {
     if (p->owner == mem) {
       if (p->owned)
@@ -205,7 +212,14 @@ void fmc_memory_destroy(struct memory *mem, fmc_error_t **e) {
       p->owned = true;
     }
   } else {
-    p->next = p->pool->used;
-    p->pool->used = p;
+    if (p->prev)
+        p->prev->next = p->next;
+    if (p->next)
+        p->next->prev = p->prev;
+    if (p->pool->free)
+        p->pool->free->prev = p;
+    p->prev = NULL;
+    p->next = p->pool->free;
+    p->pool->free = p;
   }
 }
