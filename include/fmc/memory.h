@@ -26,11 +26,18 @@
 extern "C" {
 #endif
 
+struct memory {
+  void **view;
+};
+
+struct pool;
+
 struct pool_node {
   void *buf;
   size_t sz;
   int count;
   struct memory *owner;
+  bool owned;
   struct pool_node *prev;
   struct pool_node *next;
   struct pool *pool;
@@ -38,12 +45,9 @@ struct pool_node {
 
 struct pool {
     struct pool_node *used;
-    stuct pool_node *free;
-}
-
-struct memory {
-  void **view;
+    struct pool_node *free;
 };
+
 
 /**
  * @brief Allocates a pool owning a buffer
