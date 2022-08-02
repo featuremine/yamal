@@ -93,6 +93,7 @@ void **fmc_pool_view(struct pool *p, void *view, size_t sz,
     tmp = (struct pool_node *)calloc(1, sizeof(*tmp));
     if (!tmp)
       goto cleanup;
+    tmp->pool = p;
   }
   tmp->owned = false;
   tmp->buf = view;
