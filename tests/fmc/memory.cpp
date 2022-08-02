@@ -167,6 +167,11 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(e, nullptr);
 
   ASSERT_NE(*dest.view, (void *)view.data());
+
+  struct pool_node *node = (struct pool_node *)dest.view;
+  ASSERT_EQ(view.size(), node->sz);
+  ASSERT_EQ(std::string_view((char*)node->buf, node->sz).compare(view), 0);
+
   fmc_memory_destroy(&dest, &e);
   ASSERT_EQ(e, nullptr);
 
