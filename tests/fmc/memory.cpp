@@ -61,104 +61,117 @@ TEST(fmc_pool, not_owned_view_allocation) {
   fmc_pool_destroy(&p);
 }
 
-// TEST(fmc_memory, init_allocation) {
-//   struct pool *p = nullptr;
-//   fmc_error_t *e = nullptr;
+TEST(fmc_memory, init_allocation) {
+  struct pool p;
+  fmc_pool_init(&p);
 
-//   struct memory mem;
-//   mem.view = nullptr;
-//   ASSERT_EQ(mem.view, nullptr);
+  fmc_error_t *e = nullptr;
 
-//   fmc_memory_init_alloc(&mem, p, 100, &e);
-//   ASSERT_NE(mem.view, nullptr);
-//   ASSERT_NE(*mem.view, nullptr);
-//   ASSERT_EQ(e, nullptr);
+  struct memory mem;
+  mem.view = nullptr;
+  ASSERT_EQ(mem.view, nullptr);
 
-//   fmc_memory_destroy(&mem, &e);
-//   ASSERT_EQ(e, nullptr);
-// }
+  fmc_memory_init_alloc(&mem, &p, 100, &e);
+  ASSERT_NE(mem.view, nullptr);
+  ASSERT_NE(*mem.view, nullptr);
+  ASSERT_EQ(e, nullptr);
 
-// TEST(fmc_memory, init_view) {
-//   struct pool *p = nullptr;
-//   fmc_error_t *e = nullptr;
+  fmc_memory_destroy(&mem, &e);
+  ASSERT_EQ(e, nullptr);
+  fmc_pool_destroy(&p);
+}
 
-//   struct memory mem;
-//   mem.view = nullptr;
-//   ASSERT_EQ(mem.view, nullptr);
+TEST(fmc_memory, init_view) {
+  struct pool p;
+  fmc_pool_init(&p);
 
-//   std::string_view view = "valid data";
-//   fmc_memory_init_view(&mem, p, (void *)view.data(), view.size(), &e);
-//   ASSERT_NE(mem.view, nullptr);
-//   ASSERT_NE(*mem.view, nullptr);
-//   ASSERT_EQ(e, nullptr);
+  fmc_error_t *e = nullptr;
 
-//   fmc_memory_destroy(&mem, &e);
-//   ASSERT_EQ(e, nullptr);
-// }
+  struct memory mem;
+  mem.view = nullptr;
+  ASSERT_EQ(mem.view, nullptr);
 
-// TEST(fmc_memory, fmc_memory_alloc_copy) {
-//   struct pool *p = nullptr;
-//   fmc_error_t *e = nullptr;
+  std::string_view view = "valid data";
+  fmc_memory_init_view(&mem, &p, (void *)view.data(), view.size(), &e);
+  ASSERT_NE(mem.view, nullptr);
+  ASSERT_EQ(*mem.view, view.data());
+  ASSERT_EQ(e, nullptr);
 
-//   struct memory mem;
-//   mem.view = nullptr;
-//   ASSERT_EQ(mem.view, nullptr);
+  fmc_memory_destroy(&mem, &e);
+  ASSERT_EQ(e, nullptr);
+  fmc_pool_destroy(&p);
+}
 
-//   fmc_memory_init_alloc(&mem, p, 100, &e);
-//   ASSERT_NE(mem.view, nullptr);
-//   ASSERT_NE(*mem.view, nullptr);
-//   ASSERT_EQ(e, nullptr);
+TEST(fmc_memory, fmc_memory_alloc_copy) {
+  struct pool p;
+  fmc_pool_init(&p);
 
-//   struct memory dest;
-//   dest.view = nullptr;
-//   ASSERT_EQ(dest.view, nullptr);
+  fmc_error_t *e = nullptr;
 
-//   fmc_memory_init_cp(&dest, &mem);
-//   ASSERT_NE(dest.view, nullptr);
-//   ASSERT_NE(*dest.view, nullptr);
-//   ASSERT_EQ(e, nullptr);
+  struct memory mem;
+  mem.view = nullptr;
+  ASSERT_EQ(mem.view, nullptr);
 
-//   void *old_view = *dest.view;
-//   fmc_memory_destroy(&mem, &e);
-//   ASSERT_EQ(e, nullptr);
-//   void *new_view = *dest.view;
-//   ASSERT_EQ(old_view, new_view);
-//   fmc_memory_destroy(&dest, &e);
-//   ASSERT_EQ(e, nullptr);
-// }
+  fmc_memory_init_alloc(&mem, &p, 100, &e);
+  ASSERT_NE(mem.view, nullptr);
+  ASSERT_NE(*mem.view, nullptr);
+  ASSERT_EQ(e, nullptr);
 
-// TEST(fmc_memory, fmc_memory_view_copy) {
-//   struct pool *p = nullptr;
-//   fmc_error_t *e = nullptr;
+  struct memory dest;
+  dest.view = nullptr;
+  ASSERT_EQ(dest.view, nullptr);
 
-//   struct memory mem;
-//   mem.view = nullptr;
-//   ASSERT_EQ(mem.view, nullptr);
+  fmc_memory_init_cp(&dest, &mem);
+  ASSERT_NE(dest.view, nullptr);
+  ASSERT_NE(*dest.view, nullptr);
+  ASSERT_EQ(e, nullptr);
 
-//   std::string_view view = "valid data";
-//   fmc_memory_init_view(&mem, p, (void *)view.data(), view.size(), &e);
-//   ASSERT_NE(mem.view, nullptr);
-//   ASSERT_NE(*mem.view, nullptr);
-//   ASSERT_EQ(e, nullptr);
+  void *old_view = *dest.view;
+  fmc_memory_destroy(&mem, &e);
+  ASSERT_EQ(e, nullptr);
+  void *new_view = *dest.view;
+  ASSERT_EQ(old_view, new_view);
+  fmc_memory_destroy(&dest, &e);
+  ASSERT_EQ(e, nullptr);
 
-//   struct memory dest;
-//   dest.view = nullptr;
-//   ASSERT_EQ(dest.view, nullptr);
+  fmc_pool_destroy(&p);
+}
 
-//   fmc_memory_init_cp(&dest, &mem);
-//   ASSERT_NE(dest.view, nullptr);
-//   ASSERT_NE(*dest.view, nullptr);
-//   ASSERT_EQ(e, nullptr);
+TEST(fmc_memory, fmc_memory_view_copy) {
+  struct pool p;
+  fmc_pool_init(&p);
 
-//   void *old_view = *dest.view;
-//   ASSERT_EQ(old_view, view.data());
-//   fmc_memory_destroy(&mem, &e);
-//   ASSERT_EQ(e, nullptr);
-//   void *new_view = *dest.view;
-//   ASSERT_NE(old_view, new_view);
-//   fmc_memory_destroy(&dest, &e);
-//   ASSERT_EQ(e, nullptr);
-// }
+  fmc_error_t *e = nullptr;
+
+  struct memory mem;
+  mem.view = nullptr;
+  ASSERT_EQ(mem.view, nullptr);
+
+  std::string_view view = "valid data";
+  fmc_memory_init_view(&mem, &p, (void *)view.data(), view.size(), &e);
+  ASSERT_NE(mem.view, nullptr);
+  ASSERT_NE(*mem.view, nullptr);
+  ASSERT_EQ(e, nullptr);
+
+  struct memory dest;
+  dest.view = nullptr;
+  ASSERT_EQ(dest.view, nullptr);
+
+  fmc_memory_init_cp(&dest, &mem);
+  ASSERT_NE(dest.view, nullptr);
+  ASSERT_NE(*dest.view, nullptr);
+  ASSERT_EQ(e, nullptr);
+
+  void *old_view = *dest.view;
+  ASSERT_EQ(old_view, view.data());
+  fmc_memory_destroy(&mem, &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_NE(old_view, *dest.view);
+  fmc_memory_destroy(&dest, &e);
+  ASSERT_EQ(e, nullptr);
+
+  fmc_pool_destroy(&p);
+}
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

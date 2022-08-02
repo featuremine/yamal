@@ -152,10 +152,7 @@ void fmc_pool_destroy(struct pool *p) {
 void fmc_memory_init_alloc(struct memory *mem, struct pool *pool,
                            size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
-  void **view = fmc_pool_allocate(pool, sz, e);
-  if (*e)
-    return;
-  mem->view = view;
+  mem->view = fmc_pool_allocate(pool, sz, e);
 }
 
 /**
@@ -170,10 +167,7 @@ void fmc_memory_init_alloc(struct memory *mem, struct pool *pool,
 void fmc_memory_init_view(struct memory *mem, struct pool *pool, void *v,
                           size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
-  void **view = fmc_pool_view(pool, v, sz, e);
-  if (*e)
-    return;
-  mem->view = view;
+  mem->view = fmc_pool_view(pool, v, sz, e);
 }
 
 /**
@@ -187,32 +181,6 @@ void fmc_memory_init_cp(struct memory *dest, struct memory *src) {
   dest->view = src->view;
 }
 
-void fmc_pool_free(struct pool_node *p, struct memory *m, fmc_error_t **e) {
-  fmc_error_clear(e);
-  // --p->count;
-  // if (--p->count) {
-  //   if (p->owner == m) {
-  //     // if (p->owned)
-  //     //   return;
-  //     void *tmp = malloc(p->sz);
-  //     if (!tmp) {
-  //       fmc_error_set2(e, FMC_ERROR_MEMORY);
-  //       return;
-  //     }
-  //     memcpy(tmp, p->buf, p->sz);
-  //     p->buf = tmp;
-  //     // p->owned = true;
-  //   }
-  // } else {
-  //   // if (p->owned) {
-  //   //   free(p->buf);
-  //   // }
-  //   p->next->prev = p->prev;
-  //   p->prev->next = p->next;
-  //   // free(p);
-  // }
-}
-
 /**
  * @brief Destroy memory
  *
@@ -222,5 +190,22 @@ void fmc_pool_free(struct pool_node *p, struct memory *m, fmc_error_t **e) {
 void fmc_memory_destroy(struct memory *mem, fmc_error_t **e) {
   fmc_error_clear(e);
   struct pool_node *p = (struct pool_node *)mem->view;
-  fmc_pool_free(p, mem, e);
+  fmc_error_clear(e);
+  if (--p->count) {
+    if (p->owner == mem) {
+      if (p->owned)
+        return;
+      void *tmp = malloc(p->sz);
+      if (!tmp) {
+        fmc_error_set2(e, FMC_ERROR_MEMORY);
+        return;
+      }
+      memcpy(tmp, p->buf, p->sz);
+      p->buf = tmp;
+      p->owned = true;
+    }
+  } else {
+    p->next = p->pool->used;
+    p->pool->used = p;
+  }
 }
