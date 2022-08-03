@@ -1,72 +1,95 @@
+/******************************************************************************
+
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
+ *****************************************************************************/
+
+/**
+ * @file prio_queue.h
+ * @date 3 Aug 2020
+ * @brief File contains priority queue interface
+ * @see http://www.featuremine.com
+ */
+
 #include <stdlib.h>
 #include <fmc/error.h>
 
-struct prio_queue {
+struct fmc_prio_queue_t {
   size_t size;
   int *buffer;
 };
 
-void prio_queue_init(struct prio_queue *q) {
+void fmc_prio_queue_init(struct fmc_prio_queue_t *q) {
   q->size = 0;
   q->buffer = NULL;
 }
 
-void prio_queue_destroy(struct prio_queue *q) {
+void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q) {
   if (q->buffer)
     free(q->buffer);
 }
 
-void heapify_up(struct prio_queue* q, size_t i) {
-  size_t parent_index = (i - 1) / 2;
-  size_t left = 2 * parent_index;
-  size_t right = 2 * parent_index - 1;
-  if (i == left) {
-    if (q->buffer[parent_index] < q->buffer[q->size]) {
-      heapify_up(q, parent_index);
+void heapify_up(struct fmc_prio_queue_t* q, size_t i) {
+  while (i) {
+    size_t parent_index = (i - 1) / 2;
+    if (q->buffer[i] > q->buffer[parent_index]) {
       int tmp = q->buffer[i];
       q->buffer[i] = q->buffer[parent_index];
       q->buffer[parent_index] = tmp;
+      i = parent_index;
+      continue;
     }
-  } else if (q->buffer[parent_index] >= q->buffer[q->size]) {
-    int tmp = q->buffer[i];
-    q->buffer[i] = q->buffer[parent_index];
-    q->buffer[parent_index] = tmp;
-    heapify_up(q, parent_index);
+    i = 0;
   }
 }
 
-void prio_queue_push(struct prio_queue *q, int val) {
+void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val, fmc_error_t **e) {
+  fmc_error_clear(e);
   q->buffer = (int*)realloc(q->buffer, ++q->size * sizeof(int));
-  q->buffer[q->size] = val;
-  if (q->size++) {
-    heapify_up(q, q->size - 1);
+  if (!q->buffer) {
+    fmc_error_set2(e, FMC_ERROR_MEMORY);
+    return;
   }
+  q->buffer[q->size - 1] = val;
+  heapify_up(q, q->size - 1);
 }
 
-void heapify_down(struct prio_queue* q, size_t i) {
-  size_t left = 2 * i;
-  size_t right = 2 * i - 1;
-  size_t largest = i;
-  if (left <= q->size && q->buffer[left] > q->buffer[largest]) {
-    largest = left;
-  }
-  if (right <= q->size && q->buffer[right] > q->buffer[largest]) {
-    largest = right;
-  }
-  if (largest != i) {
+void heapify_down(struct fmc_prio_queue_t* q, size_t i) {
+  while (1) {
+    size_t left = 2 * i;
+    size_t right = 2 * i + 1;
+    size_t largest = i;
+    if (left <= q->size && q->buffer[left] > q->buffer[largest]) {
+      largest = left;
+    }
+    if (right <= q->size && q->buffer[right] > q->buffer[largest]) {
+      largest = right;
+    }
+    if (largest == i) {
+      break;
+    }
     int tmp = q->buffer[i];
     q->buffer[i] = q->buffer[largest];
     q->buffer[largest] = tmp;
-    heapify_down(q, largest);
   }
 }
 
-int prio_queue_pop(struct prio_queue *q) {
-  int ret = q->buffer[0];
+bool fmc_prio_queue_pop(struct fmc_prio_queue_t *q, int*out) {
+  if (!q->size) {
+    return false;
+  }
+  *out = q->buffer[0];
   q->buffer[0] = q->buffer[--q->size];
   heapify_down(q, 0);
-  q->buffer = (int*)realloc(q->buffer, q->size * sizeof(int));
-  return ret;
+  return true;
 }
 
 #define PRIO_QUEUE_NEW(type, var)                          \
@@ -105,7 +128,7 @@ int prio_queue_pop(struct prio_queue *q) {
 }
 
 #define PRIO_QUEUE_PUSH(var, val)                                                      \
-  var->buffer = (struct prio_queue*)realloc(q->buffer, ++q->size * sizeof(int)); \
+  var->buffer = (struct fmc_prio_queue_t*)realloc(q->buffer, ++q->size * sizeof(int)); \
   var->buffer[q->size] = val; \
   memcpy(&var->buffer[var->size], &val, sizeof(val));                                 \
   if (++var->size) {                                                                  \

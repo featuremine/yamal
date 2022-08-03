@@ -1,4 +1,4 @@
-tests = ['error', 'files', 'math', 'time', 'config']
+tests = ['error', 'files', 'math', 'time', 'config', 'priority_queue']
 
 foreach test : tests
     name = test
