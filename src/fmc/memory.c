@@ -23,9 +23,9 @@
 #include <fmc/error.h>
 #include <fmc/memory.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
@@ -67,7 +67,7 @@ cleanup:
 }
 
 void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
-                               fmc_error_t **e) {
+                     fmc_error_t **e) {
   fmc_error_clear(e);
   struct fmc_pool_node_t *tmp = NULL;
   if (p->free) {
@@ -131,8 +131,8 @@ void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
   p->owner = mem;
 }
 
-void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool, void *v,
-                          size_t sz, fmc_error_t **e) {
+void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
+                          void *v, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_view(pool, v, sz, e);
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
@@ -163,13 +163,13 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
     }
   } else {
     if (p->prev)
-        p->prev->next = p->next;
+      p->prev->next = p->next;
     else
-        p->pool->used = p->next;
+      p->pool->used = p->next;
     if (p->next)
-        p->next->prev = p->prev;
+      p->next->prev = p->prev;
     if (p->pool->free)
-        p->pool->free->prev = p;
+      p->pool->free->prev = p;
     p->prev = NULL;
     p->next = p->pool->free;
     p->pool->free = p;

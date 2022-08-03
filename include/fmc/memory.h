@@ -44,10 +44,9 @@ struct fmc_pool_node_t {
 };
 
 struct fmc_pool_t {
-    struct fmc_pool_node_t *used;
-    struct fmc_pool_node_t *free;
+  struct fmc_pool_node_t *used;
+  struct fmc_pool_node_t *free;
 };
-
 
 /**
  * @brief Allocates a view for an owned memory buffer
@@ -56,7 +55,8 @@ struct fmc_pool_t {
  * @param sz size of memory buffer to be allocated
  * @param e out-parameter for error handling
  */
-FMMODFUNC void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e);
+FMMODFUNC void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz,
+                                   fmc_error_t **e);
 
 /**
  * @brief Allocates a view for an external memory view
@@ -67,7 +67,7 @@ FMMODFUNC void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t 
  * @param e out-parameter for error handling
  */
 FMMODFUNC void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
-                           fmc_error_t **e);
+                               fmc_error_t **e);
 
 /**
  * @brief Initializes the pool
@@ -91,8 +91,9 @@ FMMODFUNC void fmc_pool_destroy(struct fmc_pool_t *p);
  * @param sz size of memory buffer to allocate
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
-                                 size_t sz, fmc_error_t **e);
+FMMODFUNC void fmc_memory_init_alloc(struct fmc_memory_t *mem,
+                                     struct fmc_pool_t *pool, size_t sz,
+                                     fmc_error_t **e);
 
 /**
  * @brief Initialize memory with memory view
@@ -103,8 +104,9 @@ FMMODFUNC void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool, void *v,
-                                size_t sz, fmc_error_t **e);
+FMMODFUNC void fmc_memory_init_view(struct fmc_memory_t *mem,
+                                    struct fmc_pool_t *pool, void *v, size_t sz,
+                                    fmc_error_t **e);
 
 /**
  * @brief Copy memory
@@ -113,7 +115,8 @@ FMMODFUNC void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t 
  * copy
  * @param src pointer to memory structure used as source
  */
-FMMODFUNC void fmc_memory_init_cp(struct fmc_memory_t *dest, struct fmc_memory_t *src);
+FMMODFUNC void fmc_memory_init_cp(struct fmc_memory_t *dest,
+                                  struct fmc_memory_t *src);
 
 /**
  * @brief Destroy memory
