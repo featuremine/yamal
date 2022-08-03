@@ -16,8 +16,8 @@
 
 #include <fmc/component.h>
 #include <fmc/config.h>
-#include <fmc/reactor.h>
 #include <fmc/process.h>
+#include <fmc/reactor.h>
 
 #include <fmc++/mpl.hpp>
 
@@ -49,8 +49,9 @@ struct initdestroy_t {
     fmc_component_sys_init(&sys);
     fmc_error_t *err;
     fmc_component_sys_paths_set_default(&sys, &err);
-      fmc_runtime_error_unless(!err)
-          << "Unable to set default search paths for component modules: " << fmc_error_msg(err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to set default search paths for component modules: "
+        << fmc_error_msg(err);
   }
   void destroy(struct fmc_component_sys &sys) {
     fmc_component_sys_destroy(&sys);
@@ -136,21 +137,18 @@ int main(int argc, char **argv) {
   if (affinityArg.isSet()) {
     fmc_tid threadid = fmc_tid_cur(&err);
     fmc_runtime_error_unless(!err)
-        << "Unable to get current thread id: "
-        << fmc_error_msg(err);
+        << "Unable to get current thread id: " << fmc_error_msg(err);
 
     int cpuid = affinityArg.getValue();
     fmc_set_affinity(threadid, cpuid, &err);
     fmc_runtime_error_unless(!err)
-        << "Unable to set current thread cpu affinity: "
-        << fmc_error_msg(err);
+        << "Unable to set current thread cpu affinity: " << fmc_error_msg(err);
 
     if (priorityArg.isSet()) {
       int priority = priorityArg.getValue();
       fmc_set_sched_fifo(threadid, priority, &err);
       fmc_runtime_error_unless(!err)
-          << "Unable to set current thread priority: "
-          << fmc_error_msg(err);
+          << "Unable to set current thread priority: " << fmc_error_msg(err);
     }
   }
 

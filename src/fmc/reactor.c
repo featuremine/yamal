@@ -19,9 +19,9 @@
  * @see http://www.featuremine.com
  */
 
-#include <fmc/reactor.h>
 #include <fmc/component.h>
 #include <fmc/error.h>
+#include <fmc/reactor.h>
 #include <fmc/signals.h>
 #include <fmc/time.h>
 #include <stdlib.h> // calloc() free()
