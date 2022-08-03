@@ -43,7 +43,13 @@ struct initdestroy_t {
     }
   }
 
-  void init(struct fmc_component_sys &sys) { fmc_component_sys_init(&sys); }
+  void init(struct fmc_component_sys &sys) {
+    fmc_component_sys_init(&sys);
+    fmc_error_t *err;
+    fmc_component_sys_paths_set_default(&sys, &err);
+      fmc_runtime_error_unless(!err)
+          << "Unable to set default search paths for component modules: " << fmc_error_msg(err);
+  }
   void destroy(struct fmc_component_sys &sys) {
     fmc_component_sys_destroy(&sys);
   }
