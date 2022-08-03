@@ -36,7 +36,7 @@ void heapify_up(struct prio_queue* q, size_t i) {
 }
 
 void prio_queue_push(struct prio_queue *q, int val) {
-  q->buffer = (struct prio_queue*)realloc(q->buffer, ++q->size * sizeof(int));
+  q->buffer = (int*)realloc(q->buffer, ++q->size * sizeof(int));
   q->buffer[q->size] = val;
   if (q->size++) {
     heapify_up(q, q->size - 1);
@@ -65,6 +65,7 @@ int prio_queue_pop(struct prio_queue *q) {
   int ret = q->buffer[0];
   q->buffer[0] = q->buffer[--q->size];
   heapify_down(q, 0);
+  q->buffer = (int*)realloc(q->buffer, q->size * sizeof(int));
   return ret;
 }
 
