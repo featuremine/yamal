@@ -40,14 +40,13 @@ void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q) {
 void heapify_up(struct fmc_prio_queue_t* q, size_t i) {
   while (i) {
     size_t parent_index = (i - 1) / 2;
-    if (q->buffer[i] > q->buffer[parent_index]) {
-      int tmp = q->buffer[i];
-      q->buffer[i] = q->buffer[parent_index];
-      q->buffer[parent_index] = tmp;
-      i = parent_index;
-      continue;
+    if (q->buffer[i] <= q->buffer[parent_index]) {
+      break;
     }
-    i = 0;
+    int tmp = q->buffer[i];
+    q->buffer[i] = q->buffer[parent_index];
+    q->buffer[parent_index] = tmp;
+    i = parent_index;
   }
 }
 
