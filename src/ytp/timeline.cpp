@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -10,7 +10,7 @@
         for in said License Agreement except with the prior written
         authorization from Featuremine Corporation.
 
- *****************************************************************************/
+*****************************************************************************/
 
 #include <string>
 #include <unordered_map>
