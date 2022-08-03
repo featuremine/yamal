@@ -3,19 +3,17 @@
 
 struct prio_queue {
   size_t size;
-  size_t count;
-  int buffer[];
+  int *buffer;
 };
 
-struct prio_queue * prio_queue_new(size_t initial_size) {
-  struct prio_queue * q = (struct prio_queue*)calloc(1, sizeof(prio_queue) + initial_size * sizeof(int));
-  q->size = initial_size;
-  q->count = 0;
-  return q;
+void prio_queue_init(struct prio_queue *q) {
+  q->size = 0;
+  q->buffer = NULL;
 }
 
-void prio_queue_del(struct prio_queue *q) {
-  free(q);
+void prio_queue_destroy(struct prio_queue *q) {
+  if (q->buffer)
+    free(q->buffer);
 }
 
 void heapify_up(struct prio_queue* q, size_t i) {
@@ -23,28 +21,25 @@ void heapify_up(struct prio_queue* q, size_t i) {
   size_t left = 2 * parent_index;
   size_t right = 2 * parent_index - 1;
   if (i == left) {
-    if (q->buffer[parent_index - 1] < q->buffer[q->count - 1]) {
-      heapify_up(q, parent_index - 1);
-      int tmp = q->buffer[i - 1];
-      q->buffer[i - 1] = q->buffer[parent_index - 1];
-      q->buffer[parent_index - 1] = tmp;
+    if (q->buffer[parent_index] < q->buffer[q->size]) {
+      heapify_up(q, parent_index);
+      int tmp = q->buffer[i];
+      q->buffer[i] = q->buffer[parent_index];
+      q->buffer[parent_index] = tmp;
     }
-  } else if (q->buffer[parent_index - 1] >= q->buffer[q->count - 1]) {
-    int tmp = q->buffer[i - 1];
-    q->buffer[i - 1] = q->buffer[parent_index - 1];
-    q->buffer[parent_index - 1] = tmp;
-    heapify_up(q, parent_index - 1);
+  } else if (q->buffer[parent_index] >= q->buffer[q->size]) {
+    int tmp = q->buffer[i];
+    q->buffer[i] = q->buffer[parent_index];
+    q->buffer[parent_index] = tmp;
+    heapify_up(q, parent_index);
   }
 }
 
-void prio_queue_push(struct prio_queue **q, int val) {
-  if ((*q)->count == (*q)->size) {
-    (*q)->size = (*q)->size * 2;
-    *q = (struct prio_queue*)realloc(*q, sizeof(prio_queue) + q->size * sizeof(int));
-  }
-  (*q)->buffer[(*q)->count] = val;
-  if (++(*q)->count) {
-    heapify_up((*q), (*q)->count);
+void prio_queue_push(struct prio_queue *q, int val) {
+  q->buffer = (struct prio_queue*)realloc(q->buffer, ++q->size * sizeof(int));
+  q->buffer[q->size] = val;
+  if (q->size++) {
+    heapify_up(q, q->size - 1);
   }
 }
 
@@ -52,37 +47,41 @@ void heapify_down(struct prio_queue* q, size_t i) {
   size_t left = 2 * i;
   size_t right = 2 * i - 1;
   size_t largest = i;
-  if (left <= q->count && q->buffer[left - 1] > q->buffer[largest - 1]) {
+  if (left <= q->size && q->buffer[left] > q->buffer[largest]) {
     largest = left;
   }
-  if (right <= q->count && q->buffer[right - 1] > q->buffer[largest - 1]) {
+  if (right <= q->size && q->buffer[right] > q->buffer[largest]) {
     largest = right;
   }
   if (largest != i) {
-    int tmp = q->buffer[i - 1];
-    q->buffer[i - 1] = q->buffer[largest - 1];
-    q->buffer[largest - 1] = tmp;
+    int tmp = q->buffer[i];
+    q->buffer[i] = q->buffer[largest];
+    q->buffer[largest] = tmp;
     heapify_down(q, largest);
   }
 }
 
 int prio_queue_pop(struct prio_queue *q) {
   int ret = q->buffer[0];
-  q->buffer[0] = q->buffer[--q->count];
-  heapify_down(q, 1);
+  q->buffer[0] = q->buffer[--q->size];
+  heapify_down(q, 0);
   return ret;
 }
 
-#define PRIO_QUEUE_NEW(init_size, type, var)                          \
+#define PRIO_QUEUE_NEW(type, var)                          \
   struct {                                                            \
     size_t size;                                                      \
-    size_t count;                                                     \
-    type buffer[];                                                    \
-  } *var;                                                             \
-  var = (type *)calloc(1, sizeof(*var) + initial_size * sizeof(type))
+    type *buffer;                                                     \
+  } var;                                                             \
 
-#define PRIO_QUEUE_DEL(var) \
-  free(var)
+#define PRIO_QUEUE_INIT(var) \
+  var->size = 0; \
+  var->buffer = NULL
+
+#define PRIO_QUEUE_DESTROY(var) \
+  if (var->buffer) {\
+    free(var->buffer); \
+  }
 
 #define HEAPIFY_UP(var, i)\
 {                                                                            \
@@ -90,28 +89,26 @@ int prio_queue_pop(struct prio_queue *q) {
   size_t left = 2 * parent_index;                                            \
   size_t right = 2 * parent_index - 1;                                       \
   if (i == left) {                                                           \
-    if (var->buffer[parent_index - 1] < var->buffer[var->count - 1]) {       \
-      HEAPIFY_UP(var, parent_index - 1);                                     \
-      int tmp = var->buffer[i - 1];                                          \
-      var->buffer[i - 1] = var->buffer[parent_index - 1];                    \
-      var->buffer[parent_index - 1] = tmp;                                   \
+    if (var->buffer[parent_index] < var->buffer[var->size - 1]) {       \
+      HEAPIFY_UP(var, parent_index);                                     \
+      int tmp = var->buffer[i];                                          \
+      var->buffer[i] = var->buffer[parent_index];                    \
+      var->buffer[parent_index] = tmp;                                   \
     }                                                                        \
-  } else if (var->buffer[parent_index - 1] >= var->buffer[var->count - 1]) { \
-    int tmp = var->buffer[i - 1];                                            \
-    var->buffer[i - 1] = var->buffer[parent_index - 1];                      \
-    var->buffer[parent_index - 1] = tmp;                                     \
-    HEAPIFY_UP(var, parent_index - 1);                                       \
+  } else if (var->buffer[parent_index] >= var->buffer[var->size - 1]) { \
+    int tmp = var->buffer[i];                                            \
+    var->buffer[i] = var->buffer[parent_index];                      \
+    var->buffer[parent_index] = tmp;                                     \
+    HEAPIFY_UP(var, parent_index);                                       \
   }                                                                          \
 }
 
 #define PRIO_QUEUE_PUSH(var, val)                                                      \
-  if (var->count == var->size) {                                                       \
-    var->size = var->size * 2;                                                         \
-    var = (struct prio_queue*)realloc(*q, sizeof(prio_queue) + q->size * sizeof(int)); \
-  }                                                                                    \
-  memcpy(&var->buffer[var->count], &val, sizeof(val));                                 \
-  if (++var->count) {                                                                  \
-    HEAPIFY_UP(var, var->count);                                                       \
+  var->buffer = (struct prio_queue*)realloc(q->buffer, ++q->size * sizeof(int)); \
+  var->buffer[q->size] = val; \
+  memcpy(&var->buffer[var->size], &val, sizeof(val));                                 \
+  if (++var->size) {                                                                  \
+    HEAPIFY_UP(var, var->size);                                                       \
   }
 
 #define PRIO_QUEUE_FRONT(var) \
@@ -122,20 +119,20 @@ int prio_queue_pop(struct prio_queue *q) {
   size_t left = 2 * i;                                                            \
   size_t right = 2 * i - 1;                                                       \
   size_t largest = i;                                                             \
-  if (left <= var->count && var->buffer[left - 1] > var->buffer[largest - 1]) {   \
+  if (left <= var->size && var->buffer[left] > var->buffer[largest]) {   \
     largest = left;                                                               \
   }                                                                               \
-  if (right <= var->count && var->buffer[right - 1] > var->buffer[largest - 1]) { \
+  if (right <= var->size && var->buffer[right] > var->buffer[largest]) { \
     largest = right;                                                              \
   }                                                                               \
   if (largest != i) {                                                             \
-    int tmp = var->buffer[i - 1];                                                 \
-    var->buffer[i - 1] = var->buffer[largest - 1];                                \
-    var->buffer[largest - 1] = tmp;                                               \
+    int tmp = var->buffer[i];                                                 \
+    var->buffer[i] = var->buffer[largest];                                \
+    var->buffer[largest] = tmp;                                               \
     HEAPIFY_DOWN(var, largest);                                                   \
   }                                                                               \
 }
 
 #define PRIO_QUEUE_POP(var)                   \
-  var->buffer[0] = var->buffer[--var->count]; \
+  var->buffer[0] = var->buffer[--var->size]; \
   HEAPIFY_DOWN(var, 1);
