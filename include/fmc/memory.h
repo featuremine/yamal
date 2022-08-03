@@ -50,18 +50,18 @@ struct fmc_pool_t {
 
 
 /**
- * @brief Allocates a pool owning a buffer
+ * @brief Allocates a view for an owned memory buffer
  *
- * @param p pointer to empty pointer of pool
+ * @param p pointer to pool
  * @param sz size of memory buffer to be allocated
  * @param e out-parameter for error handling
  */
 FMMODFUNC void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e);
 
 /**
- * @brief Allocates a pool for a memory view
+ * @brief Allocates a view for an external memory view
  *
- * @param p pointer to empty pointer of pool
+ * @param p pointer to pool
  * @param view pointer to memory view
  * @param sz size of memory view
  * @param e out-parameter for error handling
@@ -72,14 +72,14 @@ FMMODFUNC void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
 /**
  * @brief Initializes the pool
  *
- * @param p pointer to pointer of pool
+ * @param p pointer to pool
  */
 FMMODFUNC void fmc_pool_init(struct fmc_pool_t *p);
 
 /**
  * @brief Destroys the pool
  *
- * @param p pointer to pointer of pool
+ * @param p pointer to pool
  */
 FMMODFUNC void fmc_pool_destroy(struct fmc_pool_t *p);
 
@@ -87,7 +87,7 @@ FMMODFUNC void fmc_pool_destroy(struct fmc_pool_t *p);
  * @brief Initialize memory with allocated buffer
  *
  * @param mem pointer to memory structure to be initialized
- * @param pool pointer to pointer of empty pool to manage memory view
+ * @param pool pointer to pool
  * @param sz size of memory buffer to allocate
  * @param e out-parameter for error handling
  */
@@ -98,7 +98,7 @@ FMMODFUNC void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t
  * @brief Initialize memory with memory view
  *
  * @param mem pointer to memory structure to be initialized
- * @param pool pointer to pointer of empty pool to manage memory view
+ * @param pool pointer to pool
  * @param v address of memory view
  * @param sz size of memory view
  * @param e out-parameter for error handling
