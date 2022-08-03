@@ -97,11 +97,27 @@ TEST(utheap, heap_push) {
   UT_array a;
   utarray_init(&a, &ut_int_icd);
 
-  int val = 55;
   auto cmp = [](void *a, void *b){
-    return *(int*)a < *(int*)b;
+    return *(int*)a > *(int*)b;
   };
+
+  int val = 55;
   utheap_push(&a, (void*)&val, cmp);
+  int* buff = (int*)a.d;
+  ASSERT_EQ(buff[0], 55);
+
+  val = 99;
+  utheap_push(&a, (void*)&val, cmp);
+  buff = (int*)a.d;
+  ASSERT_EQ(buff[0], 99);
+  ASSERT_EQ(buff[1], 55);
+
+  val = 3;
+  utheap_push(&a, (void*)&val, cmp);
+  buff = (int*)a.d;
+  ASSERT_EQ(buff[0], 99);
+  ASSERT_EQ(buff[1], 55);
+  ASSERT_EQ(buff[2], 3);
 
   utarray_done(&a);
 }

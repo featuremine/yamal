@@ -26,29 +26,34 @@
 //   void *tmp;     /* buffer to allocate */
 // } UT_array;
 
-#define _utheap_heapify_up(a, i, cmp)                                             \
-  while (i) {                                                                     \
-    size_t parent_index = (i - 1) / 2;                                            \
-    if (!cmp(utarray_eltptr(a, i), utarray_eltptr(a, parent_index))) {            \
-      break;                                                                      \
-    }                                                                             \
-    void* tmp = calloc(1, (a)->icd.sz);                                           \
-    if ((a)->icd.copy) {                                                          \
-      (a)->icd.copy(tmp, utarray_eltptr(a, i));                                   \
-    } else {                                                                      \
-      memcpy(tmp, utarray_eltptr(a, i), (a)->icd.sz);                             \
-    };                                                                            \
-    if ((a)->icd.copy) {                                                          \
-      (a)->icd.copy(utarray_eltptr(a, i), utarray_eltptr(a, parent_index));       \
-    } else {                                                                      \
-      memcpy(utarray_eltptr(a, i), utarray_eltptr(a, parent_index), (a)->icd.sz); \
-    };                                                                            \
-    if ((a)->icd.copy) {                                                          \
-      (a)->icd.copy(utarray_eltptr(a, parent_index), tmp);                        \
-    } else {                                                                      \
-      memcpy(utarray_eltptr(a, parent_index), tmp, (a)->icd.sz);                  \
-    };                                                                            \
-  }
+#define _utheap_heapify_up(a, i, cmp)                                                 \
+  do {                                                                                \
+    size_t idx = i;                                                                   \
+    while (idx) {                                                                     \
+      size_t parent_index = (idx - 1) / 2;                                            \
+      if (!cmp(utarray_eltptr(a, idx), utarray_eltptr(a, parent_index))) {            \
+        break;                                                                        \
+      }                                                                               \
+      void* tmp = calloc(1, (a)->icd.sz);                                             \
+      if ((a)->icd.copy) {                                                            \
+        (a)->icd.copy(tmp, utarray_eltptr(a, idx));                                   \
+      } else {                                                                        \
+        memcpy(tmp, utarray_eltptr(a, idx), (a)->icd.sz);                             \
+      };                                                                              \
+      if ((a)->icd.copy) {                                                            \
+        (a)->icd.copy(utarray_eltptr(a, idx), utarray_eltptr(a, parent_index));       \
+      } else {                                                                        \
+        memcpy(utarray_eltptr(a, idx), utarray_eltptr(a, parent_index), (a)->icd.sz); \
+      };                                                                              \
+      if ((a)->icd.copy) {                                                            \
+        (a)->icd.copy(utarray_eltptr(a, parent_index), tmp);                          \
+      } else {                                                                        \
+        memcpy(utarray_eltptr(a, parent_index), tmp, (a)->icd.sz);                    \
+      };                                                                              \
+      free(tmp);                                                                      \
+      idx = parent_index;                                                             \
+    }                                                                                 \
+  } while (0)
 
 #define utheap_push(a, val, cmp)                                       \
 do {                                                                   \
