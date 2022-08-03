@@ -60,3 +60,7 @@ do {                                                                   \
   utarray_push_back(a, val);                                           \
   _utheap_heapify_up(a, (a)->i - 1, cmp);                              \
 } while (0)
+
+#define utheap_pop(a, val, cmp)                                        \
+do {                                                                   \
+} while (0)

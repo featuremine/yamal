@@ -54,8 +54,6 @@ TEST(prio_queue, prio_order) {
   fmc_prio_queue_t q;
   fmc_prio_queue_init(&q);
 
-  int res;
-
   fmc_error_t *e;
   fmc_prio_queue_push(&q, 55, &e);
   ASSERT_EQ(e, nullptr);
@@ -74,6 +72,8 @@ TEST(prio_queue, prio_order) {
   ASSERT_EQ(q.buffer[0], 99);
   ASSERT_EQ(q.buffer[1], 55);
   ASSERT_EQ(q.buffer[2], 3);
+
+  int res;
 
   ASSERT_TRUE(fmc_prio_queue_pop(&q, &res));
   ASSERT_EQ(res, 99);
@@ -119,6 +119,18 @@ TEST(utheap, heap_push) {
   ASSERT_EQ(buff[1], 55);
   ASSERT_EQ(buff[2], 3);
 
+  utheap_pop(&a, (void*)&val, cmp);
+  buff = (int*)a.d;
+  ASSERT_EQ(buff[0], 55);
+  ASSERT_EQ(buff[1], 3);
+
+  utheap_pop(&a, (void*)&val, cmp);
+  buff = (int*)a.d;
+  ASSERT_EQ(buff[0], 3);
+
+  utheap_pop(&a, (void*)&val, cmp);
+  ASSERT_EQ(val, 3);
+  
   utarray_done(&a);
 }
 
