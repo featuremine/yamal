@@ -222,11 +222,11 @@ if(BUILD_TOOLS)
     pkg_check_modules(TCLAP REQUIRED IMPORTED_TARGET tclap)
 
     add_executable(
-        fmc-component
-        "src/tools/fmc-component.cpp"
+        yamal-run
+        "src/tools/yamal-run.cpp"
     )
     target_link_libraries(
-        fmc-component
+        yamal-run
         PRIVATE
         ytp
         fmc++
@@ -236,15 +236,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        fmc-component
+        yamal-run
     )
 
     add_executable(
-        ytp-daemon
-        "src/tools/ytp-daemon.cpp"
+        yamal-daemon
+        "src/tools/yamal-daemon.cpp"
     )
     target_link_libraries(
-        ytp-daemon
+        yamal-daemon
         PRIVATE
         ytp
         fmc++
@@ -253,15 +253,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-daemon
+        yamal-daemon
     )
 
     add_executable(
-        ytp-tail
-        "src/tools/ytp-tail.cpp"
+        yamal-tail
+        "src/tools/yamal-tail.cpp"
     )
     target_link_libraries(
-        ytp-tail
+        yamal-tail
         PRIVATE
         ytp
         fmc++
@@ -270,15 +270,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-tail
+        yamal-tail
     )
 
     add_executable(
-        ytp-perf
-        "src/tools/ytp-perf.cpp"
+        yamal-perf
+        "src/tools/yamal-perf.cpp"
     )
     target_link_libraries(
-        ytp-perf
+        yamal-perf
         PRIVATE
         ytp
         fmc++
@@ -287,15 +287,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-perf
+        yamal-perf
     )
 
     add_executable(
-        ytp-stats
-        "src/tools/ytp-stats.cpp"
+        yamal-stats
+        "src/tools/yamal-stats.cpp"
     )
     target_link_libraries(
-        ytp-stats
+        yamal-stats
         PRIVATE
         ytp
         fmc++
@@ -304,7 +304,7 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-stats
+        yamal-stats
     )
 endif()
 if(BUILD_TESTING)
