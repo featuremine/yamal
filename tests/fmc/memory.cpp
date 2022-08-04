@@ -47,6 +47,16 @@ TEST(fmc_memory, init_allocation) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
+  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  ASSERT_NE(node->buf, nullptr);
+  ASSERT_EQ(node->count, 1);
+  ASSERT_EQ(node->next, nullptr);
+  ASSERT_EQ(node->owner, nullptr);
+  ASSERT_EQ(node->pool, &p);
+  ASSERT_EQ(node->prev, nullptr);
+  ASSERT_EQ(node->scratch, nullptr);
+  ASSERT_EQ(node->sz, 100);
+
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
   fmc_pool_destroy(&p);
@@ -67,6 +77,16 @@ TEST(fmc_memory, init_view) {
   ASSERT_NE(mem.view, nullptr);
   ASSERT_EQ(*mem.view, view.data());
   ASSERT_EQ(e, nullptr);
+
+  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  ASSERT_NE(node->buf, nullptr);
+  ASSERT_EQ(node->count, 1);
+  ASSERT_EQ(node->next, nullptr);
+  ASSERT_EQ(node->owner, &mem);
+  ASSERT_EQ(node->pool, &p);
+  ASSERT_EQ(node->prev, nullptr);
+  ASSERT_EQ(node->scratch, nullptr);
+  ASSERT_EQ(node->sz, 10);
 
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
