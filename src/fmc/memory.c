@@ -135,7 +135,6 @@ void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
                            size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_allocate(pool, sz, e);
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
 }
 
 void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
