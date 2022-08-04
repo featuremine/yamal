@@ -34,13 +34,13 @@ struct fmc_pool_t;
 
 struct fmc_pool_node_t {
   void *buf;
+  void *scratch;
   struct fmc_memory_t *owner;
   struct fmc_pool_node_t *prev;
   struct fmc_pool_node_t *next;
   struct fmc_pool_t *pool;
   size_t sz;
   int count;
-  bool owned;
 };
 
 struct fmc_pool_t {

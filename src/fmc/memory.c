@@ -27,41 +27,62 @@
 #include <stdlib.h>
 #include <string.h>
 
-void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
-  fmc_error_clear(e);
+struct fmc_pool_node_t * get_pool_node(struct fmc_pool_t *p) {
   struct fmc_pool_node_t *tmp = NULL;
   if (p->free) {
     tmp = p->free;
     p->free = tmp->next;
-    if (tmp->owned) {
-      tmp->buf = realloc(tmp->buf, sz);
-    } else {
-      tmp = (struct fmc_pool_node_t *)calloc(1, sizeof(*tmp));
-      if (!tmp)
-        goto cleanup;
+    if (p->free) {
+      p->free->prev = NULL;
     }
   } else {
-    tmp = (struct fmc_pool_node_t *)calloc(1, sizeof(*tmp));
-    if (!tmp)
-      goto cleanup;
-    tmp->buf = calloc(1, sz);
+    tmp = calloc(1, sizeof(*tmp));
+    if (!tmp) {
+      return NULL;
+    }
+    tmp->buf = NULL;
+    tmp->scratch = NULL;
   }
-  if (!tmp->buf)
-    goto cleanup;
   tmp->pool = p;
-  tmp->owned = true;
-  tmp->sz = sz;
   tmp->count = 1;
   tmp->prev = NULL;
   tmp->next = p->used;
+  tmp->owner = NULL;
   p->used = tmp;
+  return tmp;
+}
+
+void recycle_pool_node(struct fmc_pool_t *p, struct fmc_pool_node_t *node) {
+  node->next = p->free;
+  if (p->free) {
+    p->free->prev = node;
+  }
+  p->free = node;
+}
+
+void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
+  fmc_error_clear(e);
+
+  struct fmc_pool_node_t *tmp = get_pool_node(p);
+  if (!tmp) {
+    goto cleanup;
+  }
+
+  if (tmp->scratch) {
+    tmp->buf = tmp->scratch;
+    tmp->scratch = NULL;
+  }
+
+  tmp->buf = realloc(tmp->buf, sz);
+  if (!tmp->buf)
+    goto cleanup;
+
+  tmp->sz = sz;
   return &tmp->buf;
 cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
   if (tmp) {
-    if (tmp->buf)
-      free(tmp->buf);
-    free(tmp);
+    recycle_pool_node(p, tmp);
   }
   return NULL;
 }
@@ -69,31 +90,19 @@ cleanup:
 void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
                      fmc_error_t **e) {
   fmc_error_clear(e);
-  struct fmc_pool_node_t *tmp = NULL;
-  if (p->free) {
-    tmp = p->free;
-    p->free = tmp->next;
-    if (tmp->owned) {
-      free(tmp->buf);
-    }
-  } else {
-    tmp = (struct fmc_pool_node_t *)calloc(1, sizeof(*tmp));
-    if (!tmp)
-      goto cleanup;
+  struct fmc_pool_node_t *tmp = get_pool_node(p);
+  if (!tmp) {
+    goto cleanup;
   }
-  tmp->pool = p;
-  tmp->owned = false;
+
+  tmp->scratch = tmp->buf;
   tmp->buf = view;
   tmp->sz = sz;
-  tmp->count = 1;
-  tmp->prev = NULL;
-  tmp->next = p->used;
-  p->used = tmp;
   return &tmp->buf;
 cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
   if (tmp) {
-    free(tmp);
+    recycle_pool_node(p, tmp);
   }
   return NULL;
 }
@@ -103,24 +112,23 @@ void fmc_pool_init(struct fmc_pool_t *p) {
   p->used = NULL;
 }
 
+void clear_pool_node_list(struct fmc_pool_node_t *node) {
+  while (node) {
+    if (!node->owner && node->buf) {
+      free(node->buf);
+    }
+    if (node->scratch) {
+      free(node->scratch);
+    }
+    struct fmc_pool_node_t *next = node->next;
+    free(node);
+    node = next;
+  }
+}
+
 void fmc_pool_destroy(struct fmc_pool_t *p) {
-  struct fmc_pool_node_t *tmp = NULL;
-  tmp = p->free;
-  while (tmp) {
-    if (tmp->owned && tmp->buf)
-      free(tmp->buf);
-    struct fmc_pool_node_t *next = tmp->next;
-    free(tmp);
-    tmp = next;
-  }
-  tmp = p->used;
-  while (tmp) {
-    if (tmp->owned && tmp->buf)
-      free(tmp->buf);
-    struct fmc_pool_node_t *next = tmp->next;
-    free(tmp);
-    tmp = next;
-  }
+  clear_pool_node_list(p->free);
+  clear_pool_node_list(p->used);
 }
 
 void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
@@ -128,7 +136,6 @@ void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
   fmc_error_clear(e);
   mem->view = fmc_pool_allocate(pool, sz, e);
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
-  p->owner = mem;
 }
 
 void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
@@ -150,7 +157,7 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
   if (--p->count) {
     if (p->owner == mem) {
-      if (p->owned)
+      if (!p->owner)
         return;
       void *tmp = malloc(p->sz);
       if (!tmp) {
@@ -159,7 +166,7 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
       }
       memcpy(tmp, p->buf, p->sz);
       p->buf = tmp;
-      p->owned = true;
+      p->owner = NULL;
     }
   } else {
     if (p->prev)
