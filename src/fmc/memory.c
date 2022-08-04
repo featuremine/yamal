@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct fmc_pool_node_t * fmc_get_pool_node(struct fmc_pool_t *p) {
+struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
   struct fmc_pool_node_t *tmp = NULL;
   if (p->free) {
     tmp = p->free;

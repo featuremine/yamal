@@ -300,7 +300,7 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_NE(*two.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  void* two_mem = *two.view;
+  void *two_mem = *two.view;
 
   struct fmc_pool_node_t *node_two = (struct fmc_pool_node_t *)two.view;
   ASSERT_NE(node_two->buf, nullptr);
