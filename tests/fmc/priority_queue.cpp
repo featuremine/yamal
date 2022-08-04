@@ -93,60 +93,6 @@ TEST(prio_queue, prio_order) {
   fmc_prio_queue_destroy(&q);
 }
 
-template<typename A, typename I, typename CMP>
-void macro_utheap_heapify_down(A &&a, I &&i, CMP&& cmp) {
-  do {                                                                                
-    size_t idx = i;                                                                   
-    while (1) {
-      size_t left = 2 * idx;
-      size_t right = 2 * idx + 1;
-      size_t largest = idx;
-      if (left <= (a)->i && cmp(utarray_eltptr(a, left), utarray_eltptr(a, largest))) {
-        largest = left;
-      }
-      if (right <= (a)->i && cmp(utarray_eltptr(a, right), utarray_eltptr(a, largest))) {
-        largest = right;
-      }
-      if (largest == idx) {
-        break;
-      }
-      /*We would use the tmp buffer on our UT_heap here instead of allocating*/       
-      void* tmp = calloc(1, (a)->icd.sz);                                             
-      if ((a)->icd.copy) {                                                            
-        (a)->icd.copy(tmp, utarray_eltptr(a, idx));                                   
-      } else {                                                                        
-        memcpy(tmp, utarray_eltptr(a, idx), (a)->icd.sz);                             
-      };                                                                              
-      if ((a)->icd.copy) {                                                            
-        (a)->icd.copy(utarray_eltptr(a, idx), utarray_eltptr(a, largest));       
-      } else {                                                                        
-        memcpy(utarray_eltptr(a, idx), utarray_eltptr(a, largest), (a)->icd.sz); 
-      };                                                                              
-      if ((a)->icd.copy) {                                                            
-        (a)->icd.copy(utarray_eltptr(a, largest), tmp);                          
-      } else {                                                                        
-        memcpy(utarray_eltptr(a, largest), tmp, (a)->icd.sz);                    
-      };                                                                              
-      free(tmp);                                                                      
-    }
-  } while (0);
-}
-
-template<typename A, typename I, typename CMP>
-void macro_utheap_pop(A &&a, I &&i, CMP&& cmp) {
-do {                                                                   
-  if ((a)->i) {
-    if ((a)->icd.copy) {                                                            
-      (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1));                          
-    } else {                                                                        
-      memcpy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1), (a)->icd.sz);                    
-    };                                                                              
-    utarray_resize(a, (a)->i);
-    macro_utheap_heapify_down(a, 0, cmp);
-  }
-} while (0);
-}
-
 TEST(utheap, heap_push) {
   UT_array a;
   utarray_init(&a, &ut_int_icd);
@@ -173,16 +119,16 @@ TEST(utheap, heap_push) {
   ASSERT_EQ(buff[1], 55);
   ASSERT_EQ(buff[2], 3);
 
-  macro_utheap_pop(&a, (void*)&val, cmp);
+  utheap_pop(&a, (void*)&val, cmp);
   buff = (int*)a.d;
   ASSERT_EQ(buff[0], 55);
   ASSERT_EQ(buff[1], 3);
 
-  macro_utheap_pop(&a, (void*)&val, cmp);
+  utheap_pop(&a, (void*)&val, cmp);
   buff = (int*)a.d;
   ASSERT_EQ(buff[0], 3);
 
-  macro_utheap_pop(&a, (void*)&val, cmp);
+  utheap_pop(&a, (void*)&val, cmp);
   ASSERT_EQ(val, 3);
   
   utarray_done(&a);
