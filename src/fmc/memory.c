@@ -179,6 +179,7 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
     p->prev = NULL;
     p->next = p->pool->free;
     p->pool->free = p;
+    p->count = 0;
     if (p->owner) {
       p->buf = NULL;
     }
