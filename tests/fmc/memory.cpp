@@ -88,8 +88,15 @@ TEST(fmc_memory, init_view) {
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
+  ASSERT_EQ(p.used, node);
+  ASSERT_EQ(p.free, nullptr);
+
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
+
+  ASSERT_EQ(p.free, node);
+  ASSERT_EQ(p.used, nullptr);
+
   fmc_pool_destroy(&p);
 }
 
@@ -191,6 +198,16 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(*mem.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
+  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  ASSERT_NE(node->buf, nullptr);
+  ASSERT_EQ(node->count, 1);
+  ASSERT_EQ(node->next, nullptr);
+  ASSERT_EQ(node->owner, &mem);
+  ASSERT_EQ(node->pool, &p);
+  ASSERT_EQ(node->prev, nullptr);
+  ASSERT_EQ(node->scratch, nullptr);
+  ASSERT_EQ(node->sz, 10);
+
   struct fmc_memory_t dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
@@ -200,17 +217,50 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(*dest.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
+  ASSERT_NE(node->buf, nullptr);
+  ASSERT_EQ(node->count, 2);
+  ASSERT_EQ(node->next, nullptr);
+  ASSERT_EQ(node->owner, &mem);
+  ASSERT_EQ(node->pool, &p);
+  ASSERT_EQ(node->prev, nullptr);
+  ASSERT_EQ(node->scratch, nullptr);
+  ASSERT_EQ(node->sz, 10);
+
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
 
   ASSERT_NE(*dest.view, (void *)view.data());
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)dest.view;
+  ASSERT_NE(node->buf, nullptr);
+  ASSERT_EQ(node->count, 1);
+  ASSERT_EQ(node->next, nullptr);
+  ASSERT_EQ(node->owner, nullptr);
+  ASSERT_EQ(node->pool, &p);
+  ASSERT_EQ(node->prev, nullptr);
+  ASSERT_EQ(node->scratch, nullptr);
+  ASSERT_EQ(node->sz, 10);
+
+  // struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)dest.view;
   ASSERT_EQ(view.size(), node->sz);
   ASSERT_EQ(std::string_view((char *)node->buf, node->sz).compare(view), 0);
 
+  ASSERT_EQ(p.used, node);
+  ASSERT_EQ(p.free, nullptr);
+
   fmc_memory_destroy(&dest, &e);
   ASSERT_EQ(e, nullptr);
+
+  ASSERT_EQ(p.free, node);
+  ASSERT_EQ(p.used, nullptr);
+
+  ASSERT_NE(node->buf, nullptr);
+  ASSERT_EQ(node->count, 0);
+  ASSERT_EQ(node->next, nullptr);
+  ASSERT_EQ(node->owner, nullptr);
+  ASSERT_EQ(node->pool, &p);
+  ASSERT_EQ(node->prev, nullptr);
+  ASSERT_EQ(node->scratch, nullptr);
+  ASSERT_EQ(node->sz, 10);
 
   fmc_pool_destroy(&p);
 }
