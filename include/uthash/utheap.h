@@ -69,25 +69,41 @@ do {                                                                   \
       size_t left = 2 * idx;\
       size_t right = 2 * idx + 1;\
       size_t largest = idx;\
-      if (left <= (a)->i && !cmp((a)->buffer[left] > (a)->buffer[largest])) {\
+      if (left <= (a)->i && !cmp(utarray_eltptr(a, left) > utarray_eltptr(a, largest))) {\
         largest = left;\
       }\
-      if (right <= (a)->i && !cmp((a)->buffer[right] > (a)->buffer[largest])) {\
+      if (right <= (a)->i && !cmp(utarray_eltptr(a, right) > utarray_eltptr(a, largest))) {\
         largest = right;\
       }\
       if (largest == idx) {\
         break;\
       }\
-      int tmp = (a)->buffer[idx];\
-      (a)->buffer[idx] = (a)->buffer[largest];\
-      (a)->buffer[largest] = tmp;\
+      /*We would use the tmp buffer on our UT_heap here instead of allocating*/       \
+      void* tmp = calloc(1, (a)->icd.sz);                                             \
+      if ((a)->icd.copy) {                                                            \
+        (a)->icd.copy(tmp, utarray_eltptr(a, idx));                                   \
+      } else {                                                                        \
+        memcpy(tmp, utarray_eltptr(a, idx), (a)->icd.sz);                             \
+      };                                                                              \
+      if ((a)->icd.copy) {                                                            \
+        (a)->icd.copy(utarray_eltptr(a, idx), utarray_eltptr(a, largest));       \
+      } else {                                                                        \
+        memcpy(utarray_eltptr(a, idx), utarray_eltptr(a, largest), (a)->icd.sz); \
+      };                                                                              \
+      if ((a)->icd.copy) {                                                            \
+        (a)->icd.copy(utarray_eltptr(a, largest), tmp);                          \
+      } else {                                                                        \
+        memcpy(utarray_eltptr(a, largest), tmp, (a)->icd.sz);                    \
+      };                                                                              \
+      free(tmp);                                                                      \
     }\
   } while (0)
 
 #define utheap_pop(a, val, cmp)                                        \
 do {                                                                   \
   if ((a)->i) {\
-    (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (q)->i - 1)));\
+    (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1));\
+    utarray_resize(a, (a)->i - 1);\
     _utheap_heapify_down(a, 0, cmp);\
   }\
 } while (0)
