@@ -48,6 +48,9 @@ struct fmc_pool_node_t * fmc_get_pool_node(struct fmc_pool_t *p) {
   tmp->prev = NULL;
   tmp->next = p->used;
   tmp->owner = NULL;
+  if (p->used) {
+    p->used->prev = tmp;
+  }
   p->used = tmp;
   return tmp;
 }
@@ -183,5 +186,6 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
     if (p->owner) {
       p->buf = NULL;
     }
+    p->owner = NULL;
   }
 }
