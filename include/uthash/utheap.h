@@ -78,7 +78,6 @@ do {                                                                   \
       if (largest == idx) {                                                                   \
         break;                                                                                \
       }                                                                                       \
-      /*We would use the tmp buffer on our UT_heap here instead of allocating*/               \
       void* tmp = utarray_eltptr(a, (a)->i - 1);                                              \
       if ((a)->icd.copy) {                                                                    \
         (a)->icd.copy(tmp, utarray_eltptr(a, idx));                                           \
@@ -95,7 +94,7 @@ do {                                                                   \
       } else {                                                                                \
         memcpy(utarray_eltptr(a, largest), tmp, (a)->icd.sz);                                 \
       };                                                                                      \
-    }\
+    }                                                                                         \
   } while (0)
 
 #define utheap_pop(a, val, cmp)                                                 \
