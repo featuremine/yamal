@@ -30,12 +30,17 @@
 #include <string.h> // memcpy() strtok()
 #include <uthash/utlist.h>
 
+#if defined(FMC_SYS_UNIX)
+#define FMC_MOD_SEARCHPATH_CUR ""
+#define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 #if defined(FMC_SYS_LINUX)
 #define FMC_LIB_SUFFIX ".so"
-#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 #elif defined(FMC_SYS_MACH)
 #define FMC_LIB_SUFFIX ".dylib"
-#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
+#endif
 #else
 #define FMC_MOD_SEARCHPATH_ENV_SEP ";"
 #error "Unsupported operating system"
@@ -339,14 +344,26 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   struct fmc_component_list *item =
       (struct fmc_component_list *)calloc(1, sizeof(*item));
   if (item) {
+    // fmc_component_input to array of component names
+    char **inputsnames = NULL;
+    if (inps) {
+      unsigned int inputscnt = 0;
+      for (; inps[inputscnt].comp; ++inputscnt) {}
+      inputsnames = (char **)calloc(inputscnt, sizeof(*inputsnames));
+      for (unsigned int i = inputscnt; i < inputscnt; ++i) {
+        inputsnames[i] = fmc_cstr_new(inps[i].comp->_vt->tp_name, error);
+      }
+    }
+
     struct fmc_reactor_ctx ctx = {reactor, reactor->count};
-    item->comp = tp->tp_new(cfg, &ctx, intps, error);
+    item->comp = tp->tp_new(cfg, &ctx, inputsnames, error);
     fmc_reactor_component_add(reactor, item->comp, inps, error);
     if (*error) {
       free(item);
     } else {
       item->comp->_vt = tp;
       fmc_error_init_none(&item->comp->_err);
+      //  TODO: _out_tps ?
       DL_APPEND(tp->comps, item);
       return item->comp;
     }

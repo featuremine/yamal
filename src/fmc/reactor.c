@@ -47,23 +47,15 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
 }
 
 void fmc_reactor_component_add(struct fmc_reactor *reactor,
-                               struct fmc_component *comp, int priority,
+                               struct fmc_component *comp,
+                               struct fmc_component_input *inps,
                                fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_reactor_component_list *add =
       (struct fmc_reactor_component_list *)calloc(1, sizeof(*add));
   if (add) {
     add->comp = comp;
-    add->priority = priority;
     add->sched = fmc_time64_end();
-    struct fmc_reactor_component_list *head = reactor->comps;
-    struct fmc_reactor_component_list *item;
-    DL_FOREACH(head, item) {
-      if (priority > item->priority) {
-        DL_PREPEND_ELEM(reactor->comps, item, add);
-        return;
-      }
-    }
     DL_APPEND(reactor->comps, add);
   } else {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
@@ -76,6 +68,7 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   struct fmc_reactor_component_list *item;
   bool realtime = false;
   DL_FOREACH(head, item) {
+    /*
     if (!item->comp->_vt->tp_sched) {
       realtime = true;
       continue;
@@ -83,6 +76,7 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
     if (fmc_time64_is_end(item->sched)) {
       item->sched = item->comp->_vt->tp_sched(item->comp);
     }
+    */
     ret = fmc_time64_min(item->sched, ret);
   }
   return realtime ? fmc_time64_from_nanos(fmc_cur_time_ns()) : ret;
@@ -98,6 +92,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     struct fmc_component *comp = (*it)->comp;
     bool stop = reactor->stop;
     if (!fmc_error_has(&comp->_err)) {
+      /*
       if (!comp->_vt->tp_sched || fmc_time64_less_or_equal((*it)->sched, now)) {
         if (comp->_vt->tp_proc(comp, now, &stop)) {
           complete = true;
@@ -108,6 +103,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
           reactor->stop = reactor->stop || fmc_error_has(&comp->_err);
         }
       }
+      */
     }
     it = &(*it)->next;
     done = done && stop;

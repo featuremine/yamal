@@ -46,7 +46,6 @@ extern "C" {
 struct fmc_reactor_component_list {
   struct fmc_component *comp;
   fmc_time64_t sched;
-  int priority;
   struct fmc_reactor_component_list *next, *prev;
 };
 
@@ -66,6 +65,8 @@ struct fmc_reactor {
   volatile bool stop;
   bool done;
 };
+
+struct fmc_component_input;
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
