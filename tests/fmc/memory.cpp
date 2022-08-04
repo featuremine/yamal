@@ -393,6 +393,48 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
+  fmc_memory_destroy(&one, &e);
+  fmc_memory_destroy(&two, &e);
+
+  ASSERT_EQ(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 0);
+  ASSERT_EQ(node_two->next, node_one);
+  ASSERT_EQ(node_two->owner, nullptr);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->prev, nullptr);
+  ASSERT_EQ(node_two->scratch, two_mem);
+  ASSERT_EQ(node_two->sz, 10);
+
+  ASSERT_EQ(node_one->buf, nullptr);
+  ASSERT_EQ(node_one->count, 0);
+  ASSERT_EQ(node_one->next, nullptr);
+  ASSERT_EQ(node_one->owner, nullptr);
+  ASSERT_EQ(node_one->pool, &p);
+  ASSERT_EQ(node_one->prev, node_two);
+  ASSERT_EQ(node_one->scratch, nullptr);
+  ASSERT_EQ(node_one->sz, 10);
+
+  fmc_memory_init_alloc(&one, &p, 100, &e);
+  fmc_memory_init_alloc(&two, &p, 100, &e);
+
+  ASSERT_EQ(node_two->buf, two_mem);
+  ASSERT_EQ(node_two->count, 1);
+  ASSERT_EQ(node_two->next, nullptr);
+  ASSERT_EQ(node_two->owner, nullptr);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->prev, node_one);
+  ASSERT_EQ(node_two->scratch, nullptr);
+  ASSERT_EQ(node_two->sz, 100);
+
+  ASSERT_NE(node_one->buf, nullptr);
+  ASSERT_EQ(node_one->count, 1);
+  ASSERT_EQ(node_one->next, node_two);
+  ASSERT_EQ(node_one->owner, nullptr);
+  ASSERT_EQ(node_one->pool, &p);
+  ASSERT_EQ(node_one->prev, nullptr);
+  ASSERT_EQ(node_one->scratch, nullptr);
+  ASSERT_EQ(node_one->sz, 100);
+
   fmc_pool_destroy(&p);
 }
 
