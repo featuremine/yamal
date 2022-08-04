@@ -19,8 +19,8 @@
  * @see http://www.featuremine.com
  */
 
-#include <stdlib.h>
 #include <fmc/error.h>
+#include <stdlib.h>
 
 struct fmc_prio_queue_t {
   size_t size;
@@ -37,7 +37,7 @@ void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q) {
     free(q->buffer);
 }
 
-void heapify_up(struct fmc_prio_queue_t* q, size_t i) {
+void heapify_up(struct fmc_prio_queue_t *q, size_t i) {
   while (i) {
     size_t parent_index = (i - 1) / 2;
     if (q->buffer[i] <= q->buffer[parent_index]) {
@@ -52,7 +52,7 @@ void heapify_up(struct fmc_prio_queue_t* q, size_t i) {
 
 void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val, fmc_error_t **e) {
   fmc_error_clear(e);
-  q->buffer = (int*)realloc(q->buffer, ++q->size * sizeof(int));
+  q->buffer = (int *)realloc(q->buffer, ++q->size * sizeof(int));
   if (!q->buffer) {
     fmc_error_set2(e, FMC_ERROR_MEMORY);
     return;
@@ -61,7 +61,7 @@ void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val, fmc_error_t **e) {
   heapify_up(q, q->size - 1);
 }
 
-void heapify_down(struct fmc_prio_queue_t* q, size_t i) {
+void heapify_down(struct fmc_prio_queue_t *q, size_t i) {
   while (1) {
     size_t left = 2 * i;
     size_t right = 2 * i + 1;
@@ -81,7 +81,7 @@ void heapify_down(struct fmc_prio_queue_t* q, size_t i) {
   }
 }
 
-bool fmc_prio_queue_pop(struct fmc_prio_queue_t *q, int*out) {
+bool fmc_prio_queue_pop(struct fmc_prio_queue_t *q, int *out) {
   if (!q->size) {
     return false;
   }
@@ -91,71 +91,71 @@ bool fmc_prio_queue_pop(struct fmc_prio_queue_t *q, int*out) {
   return true;
 }
 
-#define PRIO_QUEUE_NEW(type, var)                          \
-  struct {                                                            \
-    size_t size;                                                      \
-    type *buffer;                                                     \
-  } var;                                                             \
+#define PRIO_QUEUE_NEW(type, var)                                              \
+  struct {                                                                     \
+    size_t size;                                                               \
+    type *buffer;                                                              \
+  } var;
 
-#define PRIO_QUEUE_INIT(var) \
-  var->size = 0; \
+#define PRIO_QUEUE_INIT(var)                                                   \
+  var->size = 0;                                                               \
   var->buffer = NULL
 
-#define PRIO_QUEUE_DESTROY(var) \
-  if (var->buffer) {\
-    free(var->buffer); \
+#define PRIO_QUEUE_DESTROY(var)                                                \
+  if (var->buffer) {                                                           \
+    free(var->buffer);                                                         \
   }
 
-#define HEAPIFY_UP(var, i)\
-{                                                                            \
-  size_t parent_index = (i - 1) / 2;                                         \
-  size_t left = 2 * parent_index;                                            \
-  size_t right = 2 * parent_index - 1;                                       \
-  if (i == left) {                                                           \
-    if (var->buffer[parent_index] < var->buffer[var->size - 1]) {       \
-      HEAPIFY_UP(var, parent_index);                                     \
-      int tmp = var->buffer[i];                                          \
-      var->buffer[i] = var->buffer[parent_index];                    \
-      var->buffer[parent_index] = tmp;                                   \
-    }                                                                        \
-  } else if (var->buffer[parent_index] >= var->buffer[var->size - 1]) { \
-    int tmp = var->buffer[i];                                            \
-    var->buffer[i] = var->buffer[parent_index];                      \
-    var->buffer[parent_index] = tmp;                                     \
-    HEAPIFY_UP(var, parent_index);                                       \
-  }                                                                          \
-}
-
-#define PRIO_QUEUE_PUSH(var, val)                                                      \
-  var->buffer = (struct fmc_prio_queue_t*)realloc(q->buffer, ++q->size * sizeof(int)); \
-  var->buffer[q->size] = val; \
-  memcpy(&var->buffer[var->size], &val, sizeof(val));                                 \
-  if (++var->size) {                                                                  \
-    HEAPIFY_UP(var, var->size);                                                       \
+#define HEAPIFY_UP(var, i)                                                     \
+  {                                                                            \
+    size_t parent_index = (i - 1) / 2;                                         \
+    size_t left = 2 * parent_index;                                            \
+    size_t right = 2 * parent_index - 1;                                       \
+    if (i == left) {                                                           \
+      if (var->buffer[parent_index] < var->buffer[var->size - 1]) {            \
+        HEAPIFY_UP(var, parent_index);                                         \
+        int tmp = var->buffer[i];                                              \
+        var->buffer[i] = var->buffer[parent_index];                            \
+        var->buffer[parent_index] = tmp;                                       \
+      }                                                                        \
+    } else if (var->buffer[parent_index] >= var->buffer[var->size - 1]) {      \
+      int tmp = var->buffer[i];                                                \
+      var->buffer[i] = var->buffer[parent_index];                              \
+      var->buffer[parent_index] = tmp;                                         \
+      HEAPIFY_UP(var, parent_index);                                           \
+    }                                                                          \
   }
 
-#define PRIO_QUEUE_FRONT(var) \
-  var->buffer[0]
+#define PRIO_QUEUE_PUSH(var, val)                                              \
+  var->buffer =                                                                \
+      (struct fmc_prio_queue_t *)realloc(q->buffer, ++q->size * sizeof(int));  \
+  var->buffer[q->size] = val;                                                  \
+  memcpy(&var->buffer[var->size], &val, sizeof(val));                          \
+  if (++var->size) {                                                           \
+    HEAPIFY_UP(var, var->size);                                                \
+  }
 
-#define HEAPIFY_DOWN(var, i)                                                      \
-{                                                                                 \
-  size_t left = 2 * i;                                                            \
-  size_t right = 2 * i - 1;                                                       \
-  size_t largest = i;                                                             \
-  if (left <= var->size && var->buffer[left] > var->buffer[largest]) {   \
-    largest = left;                                                               \
-  }                                                                               \
-  if (right <= var->size && var->buffer[right] > var->buffer[largest]) { \
-    largest = right;                                                              \
-  }                                                                               \
-  if (largest != i) {                                                             \
-    int tmp = var->buffer[i];                                                 \
-    var->buffer[i] = var->buffer[largest];                                \
-    var->buffer[largest] = tmp;                                               \
-    HEAPIFY_DOWN(var, largest);                                                   \
-  }                                                                               \
-}
+#define PRIO_QUEUE_FRONT(var) var->buffer[0]
 
-#define PRIO_QUEUE_POP(var)                   \
-  var->buffer[0] = var->buffer[--var->size]; \
+#define HEAPIFY_DOWN(var, i)                                                   \
+  {                                                                            \
+    size_t left = 2 * i;                                                       \
+    size_t right = 2 * i - 1;                                                  \
+    size_t largest = i;                                                        \
+    if (left <= var->size && var->buffer[left] > var->buffer[largest]) {       \
+      largest = left;                                                          \
+    }                                                                          \
+    if (right <= var->size && var->buffer[right] > var->buffer[largest]) {     \
+      largest = right;                                                         \
+    }                                                                          \
+    if (largest != i) {                                                        \
+      int tmp = var->buffer[i];                                                \
+      var->buffer[i] = var->buffer[largest];                                   \
+      var->buffer[largest] = tmp;                                              \
+      HEAPIFY_DOWN(var, largest);                                              \
+    }                                                                          \
+  }
+
+#define PRIO_QUEUE_POP(var)                                                    \
+  var->buffer[0] = var->buffer[--var->size];                                   \
   HEAPIFY_DOWN(var, 1);

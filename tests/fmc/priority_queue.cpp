@@ -20,8 +20,8 @@
  * @see http://www.featuremine.com
  */
 
-#include <fmc/prio_queue.h>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc/prio_queue.h>
 #include <uthash/utheap.h>
 
 TEST(prio_queue, allocation) {
@@ -97,40 +97,38 @@ TEST(utheap, heap_push) {
   UT_array a;
   utarray_init(&a, &ut_int_icd);
 
-  auto cmp = [](void *a, void *b){
-    return *(int*)a > *(int*)b;
-  };
+  auto cmp = [](void *a, void *b) { return *(int *)a > *(int *)b; };
 
   int val = 55;
-  utheap_push(&a, (void*)&val, cmp);
-  int* buff = (int*)a.d;
+  utheap_push(&a, (void *)&val, cmp);
+  int *buff = (int *)a.d;
   ASSERT_EQ(buff[0], 55);
 
   val = 99;
-  utheap_push(&a, (void*)&val, cmp);
-  buff = (int*)a.d;
+  utheap_push(&a, (void *)&val, cmp);
+  buff = (int *)a.d;
   ASSERT_EQ(buff[0], 99);
   ASSERT_EQ(buff[1], 55);
 
   val = 3;
-  utheap_push(&a, (void*)&val, cmp);
-  buff = (int*)a.d;
+  utheap_push(&a, (void *)&val, cmp);
+  buff = (int *)a.d;
   ASSERT_EQ(buff[0], 99);
   ASSERT_EQ(buff[1], 55);
   ASSERT_EQ(buff[2], 3);
 
-  utheap_pop(&a, (void*)&val, cmp);
-  buff = (int*)a.d;
+  utheap_pop(&a, (void *)&val, cmp);
+  buff = (int *)a.d;
   ASSERT_EQ(buff[0], 55);
   ASSERT_EQ(buff[1], 3);
 
-  utheap_pop(&a, (void*)&val, cmp);
-  buff = (int*)a.d;
+  utheap_pop(&a, (void *)&val, cmp);
+  buff = (int *)a.d;
   ASSERT_EQ(buff[0], 3);
 
-  utheap_pop(&a, (void*)&val, cmp);
+  utheap_pop(&a, (void *)&val, cmp);
   ASSERT_EQ(val, 3);
-  
+
   utarray_done(&a);
 }
 
