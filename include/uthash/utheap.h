@@ -24,7 +24,7 @@
 // Potential improvement to avoid tmp allocation upon insertion for sorting
 // typedef struct : UT_array {
 //   void *tmp;     /* buffer to allocate */
-// } UT_array;
+// } UT_heap;
 
 #define _utheap_heapify_up(a, i, cmp)                                                 \
   do {                                                                                \
@@ -34,6 +34,7 @@
       if (!cmp(utarray_eltptr(a, idx), utarray_eltptr(a, parent_index))) {            \
         break;                                                                        \
       }                                                                               \
+      /*We would use the tmp buffer on our UT_heap here instead of allocating*/       \
       void* tmp = calloc(1, (a)->icd.sz);                                             \
       if ((a)->icd.copy) {                                                            \
         (a)->icd.copy(tmp, utarray_eltptr(a, idx));                                   \
@@ -61,6 +62,32 @@ do {                                                                   \
   _utheap_heapify_up(a, (a)->i - 1, cmp);                              \
 } while (0)
 
+#define _utheap_heapify_down(a, i, cmp) \
+  do {                                                                                \
+    size_t idx = i;                                                                   \
+    while (1) {\
+      size_t left = 2 * idx;\
+      size_t right = 2 * idx + 1;\
+      size_t largest = idx;\
+      if (left <= (a)->i && !cmp((a)->buffer[left] > (a)->buffer[largest])) {\
+        largest = left;\
+      }\
+      if (right <= (a)->i && !cmp((a)->buffer[right] > (a)->buffer[largest])) {\
+        largest = right;\
+      }\
+      if (largest == idx) {\
+        break;\
+      }\
+      int tmp = (a)->buffer[idx];\
+      (a)->buffer[idx] = (a)->buffer[largest];\
+      (a)->buffer[largest] = tmp;\
+    }\
+  } while (0)
+
 #define utheap_pop(a, val, cmp)                                        \
 do {                                                                   \
+  if ((a)->i) {\
+    (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (q)->i - 1)));\
+    _utheap_heapify_down(a, 0, cmp);\
+  }\
 } while (0)
