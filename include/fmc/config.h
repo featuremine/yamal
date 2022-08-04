@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -148,6 +148,11 @@ fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
 FMMODFUNC void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
                                        struct fmc_cfg_sect_item *cfg,
                                        fmc_error_t **err);
+
+FMMODFUNC const char *fmc_cfg_type_name(FMC_CFG_TYPE type);
+
+FMMODFUNC struct fmc_cfg_sect_item *
+fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, const char *key);
 
 #ifdef __cplusplus
 }

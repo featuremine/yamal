@@ -22,15 +22,20 @@
 #include <fmc/component.h>
 #include <fmc/error.h>
 #include <fmc/reactor.h>
+#include <fmc/signals.h>
 #include <fmc/time.h>
 #include <stdlib.h> // calloc() free()
 #include <uthash/utlist.h>
+
+static volatile bool stop_signal = false;
+static void sig_handler(int s) { stop_signal = true; }
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
   reactor->comps = NULL;
   reactor->stop = false;
   reactor->done = true;
+  fmc_set_signal_handler(sig_handler);
 }
 
 void fmc_reactor_destroy(struct fmc_reactor *reactor) {
@@ -90,7 +95,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   bool done = true;
   while (*it) {
     struct fmc_component *comp = (*it)->comp;
-    bool stop = reactor->stop;
+    bool stop = reactor->stop || stop_signal;
     if (!fmc_error_has(&comp->_err)) {
       /*
       if (!comp->_vt->tp_sched || fmc_time64_less_or_equal((*it)->sched, now)) {
