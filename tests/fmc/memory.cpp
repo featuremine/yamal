@@ -372,6 +372,27 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
+  fmc_memory_init_view(&one, &p, (void *)view.data(), view.size(), &e);
+  fmc_memory_init_view(&two, &p, (void *)view.data(), view.size(), &e);
+
+  ASSERT_NE(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 1);
+  ASSERT_EQ(node_two->next, node_one);
+  ASSERT_EQ(node_two->owner, &two);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->prev, nullptr);
+  ASSERT_EQ(node_two->scratch, two_mem);
+  ASSERT_EQ(node_two->sz, 10);
+
+  ASSERT_NE(node_one->buf, nullptr);
+  ASSERT_EQ(node_one->count, 1);
+  ASSERT_EQ(node_one->next, nullptr);
+  ASSERT_EQ(node_one->owner, &one);
+  ASSERT_EQ(node_one->pool, &p);
+  ASSERT_EQ(node_one->prev, node_two);
+  ASSERT_EQ(node_one->scratch, nullptr);
+  ASSERT_EQ(node_one->sz, 10);
+
   fmc_pool_destroy(&p);
 }
 
