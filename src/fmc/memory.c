@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct fmc_pool_node_t * get_pool_node(struct fmc_pool_t *p) {
+struct fmc_pool_node_t * fmc_get_pool_node(struct fmc_pool_t *p) {
   struct fmc_pool_node_t *tmp = NULL;
   if (p->free) {
     tmp = p->free;
@@ -52,7 +52,7 @@ struct fmc_pool_node_t * get_pool_node(struct fmc_pool_t *p) {
   return tmp;
 }
 
-void recycle_pool_node(struct fmc_pool_t *p, struct fmc_pool_node_t *node) {
+void fmc_recycle_pool_node(struct fmc_pool_t *p, struct fmc_pool_node_t *node) {
   node->next = p->free;
   if (p->free) {
     p->free->prev = node;
@@ -63,7 +63,7 @@ void recycle_pool_node(struct fmc_pool_t *p, struct fmc_pool_node_t *node) {
 void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
 
-  struct fmc_pool_node_t *tmp = get_pool_node(p);
+  struct fmc_pool_node_t *tmp = fmc_get_pool_node(p);
   if (!tmp) {
     goto cleanup;
   }
@@ -82,7 +82,7 @@ void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
 cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
   if (tmp) {
-    recycle_pool_node(p, tmp);
+    fmc_recycle_pool_node(p, tmp);
   }
   return NULL;
 }
@@ -90,7 +90,7 @@ cleanup:
 void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
                      fmc_error_t **e) {
   fmc_error_clear(e);
-  struct fmc_pool_node_t *tmp = get_pool_node(p);
+  struct fmc_pool_node_t *tmp = fmc_get_pool_node(p);
   if (!tmp) {
     goto cleanup;
   }
@@ -102,7 +102,7 @@ void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
 cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
   if (tmp) {
-    recycle_pool_node(p, tmp);
+    fmc_recycle_pool_node(p, tmp);
   }
   return NULL;
 }
@@ -112,7 +112,7 @@ void fmc_pool_init(struct fmc_pool_t *p) {
   p->used = NULL;
 }
 
-void clear_pool_node_list(struct fmc_pool_node_t *node) {
+void fmc_pool_node_list_destroy(struct fmc_pool_node_t *node) {
   while (node) {
     if (!node->owner && node->buf) {
       free(node->buf);
@@ -127,8 +127,8 @@ void clear_pool_node_list(struct fmc_pool_node_t *node) {
 }
 
 void fmc_pool_destroy(struct fmc_pool_t *p) {
-  clear_pool_node_list(p->free);
-  clear_pool_node_list(p->used);
+  fmc_pool_node_list_destroy(p->free);
+  fmc_pool_node_list_destroy(p->used);
 }
 
 void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
