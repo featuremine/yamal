@@ -32,35 +32,6 @@ TEST(fmc_pool, allocation_no_pools_created) {
   fmc_pool_destroy(&p);
 }
 
-TEST(fmc_pool, owned_view_allocation_pool_cleanup) {
-  struct fmc_pool_t p;
-  fmc_pool_init(&p);
-
-  size_t sz = 100;
-  fmc_error_t *e = nullptr;
-  void **view = fmc_pool_allocate(&p, sz, &e);
-  ASSERT_NE(view, nullptr);
-  ASSERT_NE(*view, nullptr);
-  ASSERT_EQ(e, nullptr);
-
-  fmc_pool_destroy(&p);
-}
-
-TEST(fmc_pool, not_owned_view_allocation) {
-  struct fmc_pool_t p;
-  fmc_pool_init(&p);
-
-  std::string_view view = "data string";
-
-  fmc_error_t *e = nullptr;
-  void **pview = fmc_pool_view(&p, (void *)view.data(), view.size(), &e);
-  ASSERT_NE(pview, nullptr);
-  ASSERT_EQ(*pview, (void *)view.data());
-  ASSERT_EQ(e, nullptr);
-
-  fmc_pool_destroy(&p);
-}
-
 TEST(fmc_memory, init_allocation) {
   struct fmc_pool_t p;
   fmc_pool_init(&p);

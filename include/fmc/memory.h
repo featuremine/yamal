@@ -34,40 +34,19 @@ struct fmc_pool_t;
 
 struct fmc_pool_node_t {
   void *buf;
-  size_t sz;
-  int count;
   struct fmc_memory_t *owner;
-  bool owned;
   struct fmc_pool_node_t *prev;
   struct fmc_pool_node_t *next;
   struct fmc_pool_t *pool;
+  size_t sz;
+  int count;
+  bool owned;
 };
 
 struct fmc_pool_t {
   struct fmc_pool_node_t *used;
   struct fmc_pool_node_t *free;
 };
-
-/**
- * @brief Allocates a view for an owned memory buffer
- *
- * @param p pointer to pool
- * @param sz size of memory buffer to be allocated
- * @param e out-parameter for error handling
- */
-FMMODFUNC void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz,
-                                   fmc_error_t **e);
-
-/**
- * @brief Allocates a view for an external memory view
- *
- * @param p pointer to pool
- * @param view pointer to memory view
- * @param sz size of memory view
- * @param e out-parameter for error handling
- */
-FMMODFUNC void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
-                               fmc_error_t **e);
 
 /**
  * @brief Initializes the pool
