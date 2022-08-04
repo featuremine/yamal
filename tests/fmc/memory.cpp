@@ -373,7 +373,14 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->sz, 10);
 
   fmc_memory_init_view(&one, &p, (void *)view.data(), view.size(), &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_EQ(p.free, node_two);
+  ASSERT_EQ(p.used, node_one);
+
   fmc_memory_init_view(&two, &p, (void *)view.data(), view.size(), &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_EQ(p.free, nullptr);
+  ASSERT_EQ(p.used, node_two);
 
   ASSERT_NE(node_two->buf, nullptr);
   ASSERT_EQ(node_two->count, 1);
@@ -394,7 +401,14 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->sz, 10);
 
   fmc_memory_destroy(&one, &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_EQ(p.free, node_one);
+  ASSERT_EQ(p.used, node_two);
+
   fmc_memory_destroy(&two, &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_EQ(p.free, node_two);
+  ASSERT_EQ(p.used, nullptr);
 
   ASSERT_EQ(node_two->buf, nullptr);
   ASSERT_EQ(node_two->count, 0);
@@ -415,7 +429,14 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->sz, 10);
 
   fmc_memory_init_alloc(&one, &p, 100, &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_EQ(p.free, node_one);
+  ASSERT_EQ(p.used, node_two);
+
   fmc_memory_init_alloc(&two, &p, 100, &e);
+  ASSERT_EQ(e, nullptr);
+  ASSERT_EQ(p.free, nullptr);
+  ASSERT_EQ(p.used, node_one);
 
   ASSERT_EQ(node_two->buf, two_mem);
   ASSERT_EQ(node_two->count, 1);
