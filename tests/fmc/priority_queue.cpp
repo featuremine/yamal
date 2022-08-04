@@ -136,8 +136,12 @@ template<typename A, typename I, typename CMP>
 void macro_utheap_pop(A &&a, I &&i, CMP&& cmp) {
 do {                                                                   
   if ((a)->i) {
-    (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1));
-    utarray_resize(a, (a)->i - 1);
+    if ((a)->icd.copy) {                                                            
+      (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1));                          
+    } else {                                                                        
+      memcpy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1), (a)->icd.sz);                    
+    };                                                                              
+    utarray_resize(a, (a)->i);
     macro_utheap_heapify_down(a, 0, cmp);
   }
 } while (0);
