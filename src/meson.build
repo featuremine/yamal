@@ -14,7 +14,8 @@ srcs_c = files(
     'fmc/component.c',
     'fmc/reactor.c',
     'fmc/string.c',
-    'fmc/prio_queue.c'
+    'fmc/prio_queue.c',
+    'fmc/memory.c'
 )
 
 srcs_cpp = files(

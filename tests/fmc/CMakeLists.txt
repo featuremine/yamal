@@ -97,3 +97,15 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME fmc_time COMMAND tests_fmc_time)
+
+add_executable(
+    tests_fmc_memory
+    "memory.cpp"
+)
+target_link_libraries(
+    tests_fmc_memory
+    PRIVATE
+    fmc
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_memory COMMAND tests_fmc_memory)
