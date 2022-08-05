@@ -280,17 +280,11 @@ typedef struct {
     char tmp[(a)->icd.sz];                                                     \
     if ((a)->icd.copy) {                                                       \
       (a)->icd.copy(&tmp, utarray_eltptr(a, lhs));                             \
-    } else {                                                                   \
-      memcpy(&tmp, _utarray_eltptr(a, lhs), (a)->icd.sz);                      \
-    };                                                                         \
-    if ((a)->icd.copy) {                                                       \
       (a)->icd.copy(utarray_eltptr(a, lhs), utarray_eltptr(a, rhs));           \
-    } else {                                                                   \
-      memcpy(_utarray_eltptr(a, lhs), _utarray_eltptr(a, rhs), (a)->icd.sz);   \
-    };                                                                         \
-    if ((a)->icd.copy) {                                                       \
       (a)->icd.copy(utarray_eltptr(a, rhs), &tmp);                             \
     } else {                                                                   \
+      memcpy(&tmp, _utarray_eltptr(a, lhs), (a)->icd.sz);                      \
+      memcpy(_utarray_eltptr(a, lhs), _utarray_eltptr(a, rhs), (a)->icd.sz);   \
       memcpy(_utarray_eltptr(a, rhs), &tmp, (a)->icd.sz);                      \
     };                                                                         \
   } while (0)
