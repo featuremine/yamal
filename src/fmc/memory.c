@@ -27,14 +27,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <uthash/utlist.h>
+
 struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
   struct fmc_pool_node_t *tmp = NULL;
   if (p->free) {
     tmp = p->free;
-    p->free = tmp->next;
-    if (p->free) {
-      p->free->prev = NULL;
-    }
+    DL_DELETE(p->free, tmp);
   } else {
     tmp = calloc(1, sizeof(*tmp));
     if (!tmp) {
@@ -42,16 +41,13 @@ struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
     }
     tmp->buf = NULL;
     tmp->scratch = NULL;
+    tmp->owner = NULL;
+    tmp->pool = p;
   }
-  tmp->pool = p;
-  tmp->count = 1;
   tmp->prev = NULL;
-  tmp->next = p->used;
-  tmp->owner = NULL;
-  if (p->used) {
-    p->used->prev = tmp;
-  }
-  p->used = tmp;
+  tmp->next = NULL;
+  tmp->count = 1;
+  DL_PREPEND(p->used, tmp);
   return tmp;
 }
 
@@ -171,17 +167,8 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
       p->owner = NULL;
     }
   } else {
-    if (p->prev)
-      p->prev->next = p->next;
-    else
-      p->pool->used = p->next;
-    if (p->next)
-      p->next->prev = p->prev;
-    if (p->pool->free)
-      p->pool->free->prev = p;
-    p->prev = NULL;
-    p->next = p->pool->free;
-    p->pool->free = p;
+    DL_DELETE(p->pool->used, p);
+    DL_PREPEND(p->pool->free, p);
     p->count = 0;
     if (p->owner) {
       p->buf = NULL;

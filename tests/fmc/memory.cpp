@@ -26,6 +26,8 @@
 #include <fmc++/gtestwrap.hpp>
 #include <string_view>
 
+#include <uthash/utlist.h>
+
 TEST(fmc_pool, allocation_no_pools_created) {
   struct fmc_pool_t p;
   fmc_pool_init(&p);
@@ -53,7 +55,6 @@ TEST(fmc_memory, init_allocation) {
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
 
@@ -84,15 +85,26 @@ TEST(fmc_memory, init_view) {
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, &mem);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
+
+  struct fmc_pool_node_t *tmp;
+  size_t counter = 0;
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
 
   ASSERT_EQ(p.free, nullptr);
   ASSERT_EQ(p.used, node);
 
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 0);
 
   ASSERT_EQ(p.free, node);
   ASSERT_EQ(p.used, nullptr);
@@ -115,13 +127,19 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
+  struct fmc_pool_node_t *tmp;
+  size_t counter = 0;
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
 
@@ -134,6 +152,11 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
   ASSERT_NE(*dest.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   ASSERT_EQ(*mem.view, *dest.view);
 
   ASSERT_NE(node->buf, nullptr);
@@ -141,7 +164,6 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
 
@@ -154,9 +176,13 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
 
   ASSERT_EQ(old_view, *dest.view);
 
@@ -169,12 +195,16 @@ TEST(fmc_memory, fmc_memory_alloc_copy) {
   ASSERT_EQ(p.free, node);
   ASSERT_EQ(p.used, nullptr);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 0);
+
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 0);
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
 
@@ -198,13 +228,19 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(*mem.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
+  struct fmc_pool_node_t *tmp;
+  size_t counter = 0;
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, &mem);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
@@ -217,17 +253,26 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(*dest.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 2);
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, &mem);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
   fmc_memory_destroy(&mem, &e);
   ASSERT_EQ(e, nullptr);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
 
   ASSERT_NE(*dest.view, (void *)view.data());
 
@@ -236,7 +281,6 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
@@ -249,6 +293,11 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   fmc_memory_destroy(&dest, &e);
   ASSERT_EQ(e, nullptr);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 0);
+
   ASSERT_EQ(p.free, node);
   ASSERT_EQ(p.used, nullptr);
 
@@ -257,7 +306,6 @@ TEST(fmc_memory, fmc_memory_view_copy) {
   ASSERT_EQ(node->next, nullptr);
   ASSERT_EQ(node->owner, nullptr);
   ASSERT_EQ(node->pool, &p);
-  ASSERT_EQ(node->prev, nullptr);
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
@@ -281,13 +329,19 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(*one.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
+  struct fmc_pool_node_t *tmp;
+  size_t counter = 0;
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   struct fmc_pool_node_t *node_one = (struct fmc_pool_node_t *)one.view;
   ASSERT_NE(node_one->buf, nullptr);
   ASSERT_EQ(node_one->count, 1);
   ASSERT_EQ(node_one->next, nullptr);
   ASSERT_EQ(node_one->owner, &one);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, nullptr);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
@@ -300,6 +354,11 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_NE(*two.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 2);
+
   void *two_mem = *two.view;
 
   struct fmc_pool_node_t *node_two = (struct fmc_pool_node_t *)two.view;
@@ -308,7 +367,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_two->next, node_one);
   ASSERT_EQ(node_two->owner, nullptr);
   ASSERT_EQ(node_two->pool, &p);
-  ASSERT_EQ(node_two->prev, nullptr);
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 100);
 
@@ -317,7 +375,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->next, nullptr);
   ASSERT_EQ(node_one->owner, &one);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, node_two);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
@@ -327,6 +384,11 @@ TEST(fmc_memory, multiple_nodes) {
   fmc_memory_destroy(&two, &e);
   ASSERT_EQ(e, nullptr);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   ASSERT_EQ(p.free, node_two);
   ASSERT_EQ(p.used, node_one);
 
@@ -335,7 +397,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_two->next, nullptr);
   ASSERT_EQ(node_two->owner, nullptr);
   ASSERT_EQ(node_two->pool, &p);
-  ASSERT_EQ(node_two->prev, nullptr);
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 100);
 
@@ -344,12 +405,16 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->next, nullptr);
   ASSERT_EQ(node_one->owner, &one);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, nullptr);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
   fmc_memory_destroy(&one, &e);
   ASSERT_EQ(e, nullptr);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 2);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 0);
 
   ASSERT_EQ(p.free, node_one);
   ASSERT_EQ(p.used, nullptr);
@@ -359,7 +424,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_two->next, nullptr);
   ASSERT_EQ(node_two->owner, nullptr);
   ASSERT_EQ(node_two->pool, &p);
-  ASSERT_EQ(node_two->prev, node_one);
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 100);
 
@@ -368,7 +432,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->next, node_two);
   ASSERT_EQ(node_one->owner, nullptr);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, nullptr);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
@@ -377,17 +440,26 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(p.free, node_two);
   ASSERT_EQ(p.used, node_one);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   fmc_memory_init_view(&two, &p, (void *)view.data(), view.size(), &e);
   ASSERT_EQ(e, nullptr);
   ASSERT_EQ(p.free, nullptr);
   ASSERT_EQ(p.used, node_two);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 2);
 
   ASSERT_NE(node_two->buf, nullptr);
   ASSERT_EQ(node_two->count, 1);
   ASSERT_EQ(node_two->next, node_one);
   ASSERT_EQ(node_two->owner, &two);
   ASSERT_EQ(node_two->pool, &p);
-  ASSERT_EQ(node_two->prev, nullptr);
   ASSERT_EQ(node_two->scratch, two_mem);
   ASSERT_EQ(node_two->sz, 10);
 
@@ -396,7 +468,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->next, nullptr);
   ASSERT_EQ(node_one->owner, &one);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, node_two);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
@@ -405,17 +476,26 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(p.free, node_one);
   ASSERT_EQ(p.used, node_two);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   fmc_memory_destroy(&two, &e);
   ASSERT_EQ(e, nullptr);
   ASSERT_EQ(p.free, node_two);
   ASSERT_EQ(p.used, nullptr);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 2);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 0);
 
   ASSERT_EQ(node_two->buf, nullptr);
   ASSERT_EQ(node_two->count, 0);
   ASSERT_EQ(node_two->next, node_one);
   ASSERT_EQ(node_two->owner, nullptr);
   ASSERT_EQ(node_two->pool, &p);
-  ASSERT_EQ(node_two->prev, nullptr);
   ASSERT_EQ(node_two->scratch, two_mem);
   ASSERT_EQ(node_two->sz, 10);
 
@@ -424,7 +504,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->next, nullptr);
   ASSERT_EQ(node_one->owner, nullptr);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, node_two);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
@@ -433,17 +512,26 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(p.free, node_one);
   ASSERT_EQ(p.used, node_two);
 
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 1);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 1);
+
   fmc_memory_init_alloc(&two, &p, 100, &e);
   ASSERT_EQ(e, nullptr);
   ASSERT_EQ(p.free, nullptr);
   ASSERT_EQ(p.used, node_one);
+
+  DL_COUNT(p.free, tmp, counter);
+  ASSERT_EQ(counter, 0);
+  DL_COUNT(p.used, tmp, counter);
+  ASSERT_EQ(counter, 2);
 
   ASSERT_EQ(node_two->buf, two_mem);
   ASSERT_EQ(node_two->count, 1);
   ASSERT_EQ(node_two->next, nullptr);
   ASSERT_EQ(node_two->owner, nullptr);
   ASSERT_EQ(node_two->pool, &p);
-  ASSERT_EQ(node_two->prev, node_one);
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 100);
 
@@ -452,7 +540,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->next, node_two);
   ASSERT_EQ(node_one->owner, nullptr);
   ASSERT_EQ(node_one->pool, &p);
-  ASSERT_EQ(node_one->prev, nullptr);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 100);
 
