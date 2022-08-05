@@ -39,24 +39,11 @@ struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
     if (!tmp) {
       return NULL;
     }
-    tmp->buf = NULL;
-    tmp->scratch = NULL;
-    tmp->owner = NULL;
     tmp->pool = p;
   }
-  tmp->prev = NULL;
-  tmp->next = NULL;
   tmp->count = 1;
   DL_PREPEND(p->used, tmp);
   return tmp;
-}
-
-void fmc_recycle_pool_node(struct fmc_pool_t *p, struct fmc_pool_node_t *node) {
-  node->next = p->free;
-  if (p->free) {
-    p->free->prev = node;
-  }
-  p->free = node;
 }
 
 void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
@@ -81,7 +68,8 @@ void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
 cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
   if (tmp) {
-    fmc_recycle_pool_node(p, tmp);
+    DL_DELETE(p->used, tmp);
+    DL_PREPEND(p->free, tmp);
   }
   return NULL;
 }
@@ -94,14 +82,18 @@ void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
     goto cleanup;
   }
 
-  tmp->scratch = tmp->buf;
+  if (tmp->buf) {
+    tmp->scratch = tmp->buf;
+  }
+
   tmp->buf = view;
   tmp->sz = sz;
   return &tmp->buf;
 cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
   if (tmp) {
-    fmc_recycle_pool_node(p, tmp);
+    DL_DELETE(p->used, tmp);
+    DL_PREPEND(p->free, tmp);
   }
   return NULL;
 }
@@ -178,5 +170,5 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
 }
 
 void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e) {
-  
+
 }
