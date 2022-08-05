@@ -147,12 +147,21 @@ void fmc_memory_init_cp(struct fmc_memory_t *dest, struct fmc_memory_t *src) {
 void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
   fmc_error_clear(e);
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
+  void* tmp = NULL;
   if (--p->count) {
     if (p->owner == mem) {
-      void *tmp = malloc(p->sz);
+      if (p->scratch) {
+        tmp = realloc(p->scratch, p->sz);
+      } else {
+        tmp = malloc(p->sz);
+      }
       if (!tmp) {
+        ++p->count;
         fmc_error_set2(e, FMC_ERROR_MEMORY);
         return;
+      }
+      if (p->scratch) {
+        p->scratch = NULL;
       }
       memcpy(tmp, p->buf, p->sz);
       p->buf = tmp;
@@ -169,5 +178,39 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
 }
 
 void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e) {
+  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
+  void *tmp_view = NULL;
 
+  if (p->owner) {
+    if (p->owner == mem) {
+      if (p->scratch) {
+        tmp_view = p->buf;
+        p->buf = p->scratch;
+        p->scratch = NULL;
+      } else {
+        void *tmp = malloc(p->sz);
+        if (!tmp) {
+          fmc_error_set2(e, FMC_ERROR_MEMORY);
+          return;
+        }
+        memcpy(tmp, p->buf, p->sz);
+        p->buf = tmp;
+      }
+      p->owner = NULL;
+    } else {
+      // What to do here
+    }
+  }
+  void* temp_mem = realloc(p->buf, sz);
+  if (!temp_mem) {
+    if (tmp_view) {
+      p->scratch = p->buf;
+      p->buf = tmp_view;
+      p->owner = mem;
+    }
+    fmc_error_set2(e, FMC_ERROR_MEMORY);
+    return;
+  }
+  p->buf = temp_mem;
+  p->sz = sz;
 }

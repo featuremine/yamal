@@ -309,8 +309,6 @@ TEST(fmc_memory, multiple_nodes) {
   fmc_error_t *e = nullptr;
 
   struct fmc_memory_t one;
-  one.view = nullptr;
-  ASSERT_EQ(one.view, nullptr);
 
   std::string_view view = "valid data";
   fmc_memory_init_view(&one, &p, (void *)view.data(), view.size(), &e);
@@ -335,8 +333,6 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->sz, 10);
 
   struct fmc_memory_t two;
-  two.view = nullptr;
-  ASSERT_EQ(two.view, nullptr);
 
   fmc_memory_init_alloc(&two, &p, 100, &e);
   ASSERT_NE(two.view, nullptr);
@@ -519,6 +515,102 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->pool, &p);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 100);
+
+  fmc_pool_destroy(&p);
+}
+
+TEST(fmc_memory, resize) {
+  struct fmc_pool_t p;
+  fmc_pool_init(&p);
+
+  fmc_error_t *e = nullptr;
+
+  struct fmc_memory_t one;
+
+  std::string_view view = "valid data";
+  fmc_memory_init_view(&one, &p, (void *)view.data(), view.size(), &e);
+  ASSERT_NE(one.view, nullptr);
+  ASSERT_NE(*one.view, nullptr);
+  ASSERT_EQ(*one.view, (void *)view.data());
+  ASSERT_EQ(e, nullptr);
+
+  struct fmc_memory_t two;
+
+  fmc_memory_init_alloc(&two, &p, 100, &e);
+  ASSERT_NE(two.view, nullptr);
+  ASSERT_NE(*two.view, nullptr);
+  ASSERT_EQ(e, nullptr);
+
+  struct fmc_pool_node_t *node_one = (struct fmc_pool_node_t *)one.view;
+  ASSERT_NE(node_one->buf, nullptr);
+  ASSERT_EQ(node_one->count, 1);
+  ASSERT_EQ(node_one->owner, &one);
+  ASSERT_EQ(node_one->pool, &p);
+  ASSERT_EQ(node_one->scratch, nullptr);
+  ASSERT_EQ(node_one->sz, 10);
+
+  struct fmc_pool_node_t *node_two = (struct fmc_pool_node_t *)two.view;
+  ASSERT_NE(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 1);
+  ASSERT_EQ(node_two->owner, nullptr);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->scratch, nullptr);
+  ASSERT_EQ(node_two->sz, 100);
+
+  // resize allocated memory
+  fmc_memory_realloc(&two, 200, &e);
+  ASSERT_NE(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 1);
+  ASSERT_EQ(node_two->owner, nullptr);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->scratch, nullptr);
+  ASSERT_EQ(node_two->sz, 200);
+
+  // resize view
+  fmc_memory_realloc(&one, 200, &e);
+  ASSERT_NE(node_one->buf, nullptr);
+  ASSERT_EQ(node_one->count, 1);
+  ASSERT_EQ(node_one->owner, nullptr);
+  ASSERT_EQ(node_one->pool, &p);
+  ASSERT_EQ(node_one->scratch, nullptr);
+  ASSERT_EQ(node_one->sz, 200);
+
+  // delete a node with allocated memory (would work with either one or two)
+  fmc_memory_destroy(&two, &e);
+  ASSERT_EQ(e, nullptr);
+
+  ASSERT_NE(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 0);
+  ASSERT_EQ(node_two->owner, nullptr);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->scratch, nullptr);
+  ASSERT_EQ(node_two->sz, 200);
+
+  // create a view to reuse allocated memory node as scratch
+  struct fmc_memory_t three;
+
+  fmc_memory_init_view(&three, &p, (void *)view.data(), view.size(), &e);
+  ASSERT_NE(three.view, nullptr);
+  ASSERT_NE(*three.view, nullptr);
+  ASSERT_EQ(*three.view, (void *)view.data());
+  ASSERT_EQ(e, nullptr);
+
+  ASSERT_NE(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 1);
+  ASSERT_EQ(node_two->owner, &three);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_NE(node_two->scratch, nullptr);
+  ASSERT_EQ(node_two->sz, 10);
+
+  // reallocate and use scratch
+  fmc_memory_realloc(&three, 200, &e);
+
+  ASSERT_NE(node_two->buf, nullptr);
+  ASSERT_EQ(node_two->count, 1);
+  ASSERT_EQ(node_two->owner, nullptr);
+  ASSERT_EQ(node_two->pool, &p);
+  ASSERT_EQ(node_two->scratch, nullptr);
+  ASSERT_EQ(node_two->sz, 200);
 
   fmc_pool_destroy(&p);
 }
