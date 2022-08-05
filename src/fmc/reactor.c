@@ -86,9 +86,10 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   return item ? item->t : fmc_time64_end();
 }
 
-bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
+size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                           fmc_error_t **error) {
   fmc_error_clear(error);
+  size_t completed = 0;
 
   do {
     struct sched_item *item = (struct sched_item *)utarray_front(&reactor->sched);
@@ -100,44 +101,38 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   do {
     size_t *item = (size_t *)utarray_front(&reactor->queued);
     if (!item) break;
-    reactor->ctxs[*item]
+    struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
+    if(ctx->exec) {
+      ctx->exec(ctx->comp, now, ctx);
+      if (fmc_error_has(ctx->comp._err)) {
+        fmc_error_set_copy(error, ctx->comp._err);
+        return completed;
+      }
+    }
+    ++completed;
   } while (true);
 
-  struct fmc_reactor_component_list **it = &reactor->comps;
-  bool complete = false;
-  bool done = true;
-  while (*it) {
-    struct fmc_component *comp = (*it)->comp;
-    bool stop = reactor->stop || stop_signal;
-    if (!fmc_error_has(&comp->_err)) {
-      /*
-      if (!comp->_vt->tp_sched || fmc_time64_less_or_equal((*it)->sched, now)) {
-        if (comp->_vt->tp_proc(comp, now, &stop)) {
-          complete = true;
-          (*it)->sched = fmc_time64_end();
-          it = &reactor->comps;
-          continue;
-        } else {
-          reactor->stop = reactor->stop || fmc_error_has(&comp->_err);
-        }
-      }
-      */
-    }
-    it = &(*it)->next;
-    done = done && stop;
-  }
-  reactor->done = done;
-  return complete;
+  ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
+  return completed;
 }
 
-void fmc_reactor_run(struct fmc_reactor *reactor, fmc_error_t **error) {
+void fmc_reactor_run_sched(struct fmc_reactor *reactor, fmc_error_t **error) {
   fmc_error_clear(error);
-  reactor->done = false;
-  fmc_time64_t now = fmc_reactor_sched(reactor);
-  while (!reactor->done && !fmc_time64_is_end(now)) {
+  do {
+    fmc_time64_t now = fmc_reactor_sched(reactor);
+    if (reactor->done || fmc_time64_is_end(now)) break;
     fmc_reactor_run_once(reactor, now, error);
-    now = fmc_time64_max(now, fmc_reactor_sched(reactor));
-  }
+  } while(true);
+  reactor->done = true;
+}
+
+void fmc_reactor_run_live(struct fmc_reactor *reactor, fmc_error_t **error) {
+  fmc_error_clear(error);
+  do {
+    fmc_time64_t now = fmc_time64_from_nanos(fmc_cur_time_ns());
+    if (reactor->done) break;
+    fmc_reactor_run_once(reactor, now, error);
+  } while(true);
   reactor->done = true;
 }
 

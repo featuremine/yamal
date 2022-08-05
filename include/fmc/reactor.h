@@ -49,10 +49,16 @@ struct fmc_reactor_component_list {
   struct fmc_reactor_component_list *next, *prev;
 };
 
+typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
+                                       fmc_time64_t now,
+                                       struct fmc_reactor_ctx *ctx);
+
 struct fmc_reactor_ctx {
   struct fmc_reactor *reactor;
-  struct f
+  struct fmc_component *comp;
+  fmc_reactor_exec_clbck exec;
   size_t idx;
+  struct fmc_shmem *inp;
   size_t *deps[];
 };
 
@@ -68,8 +74,6 @@ struct fmc_reactor {
 };
 
 struct fmc_component_input;
-
-void fmc_reactor_exec_clbck(struct fmc_reactor_ctx *ctx)
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
