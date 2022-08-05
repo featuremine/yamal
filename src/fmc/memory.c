@@ -199,6 +199,7 @@ void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e) {
       p->owner = NULL;
     } else {
       // What to do here
+      assert(false);
     }
   }
   void* temp_mem = realloc(p->buf, sz);
