@@ -30,8 +30,8 @@
 
 #include <uthash/utlist.h>
 
-struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
-  struct fmc_pool_node_t *tmp = NULL;
+struct fmc_pool_node *fmc_get_pool_node(struct fmc_pool *p) {
+  struct fmc_pool_node *tmp = NULL;
   if (p->free) {
     tmp = p->free;
     DL_DELETE(p->free, tmp);
@@ -47,10 +47,10 @@ struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
   return tmp;
 }
 
-void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
+void **fmc_pool_allocate(struct fmc_pool *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
 
-  struct fmc_pool_node_t *tmp = fmc_get_pool_node(p);
+  struct fmc_pool_node *tmp = fmc_get_pool_node(p);
   if (!tmp) {
     goto cleanup;
   }
@@ -77,10 +77,10 @@ cleanup:
   return NULL;
 }
 
-void **fmc_pool_view(struct fmc_pool_t *p, void *view, size_t sz,
+void **fmc_pool_view(struct fmc_pool *p, void *view, size_t sz,
                      fmc_error_t **e) {
   fmc_error_clear(e);
-  struct fmc_pool_node_t *tmp = fmc_get_pool_node(p);
+  struct fmc_pool_node *tmp = fmc_get_pool_node(p);
   if (!tmp) {
     goto cleanup;
   }
@@ -101,12 +101,12 @@ cleanup:
   return NULL;
 }
 
-void fmc_pool_init(struct fmc_pool_t *p) {
+void fmc_pool_init(struct fmc_pool *p) {
   p->free = NULL;
   p->used = NULL;
 }
 
-void fmc_pool_node_list_destroy(struct fmc_pool_node_t *node) {
+void fmc_pool_node_list_destroy(struct fmc_pool_node *node) {
   while (node) {
     if (!node->owner && node->buf) {
       free(node->buf);
@@ -114,39 +114,39 @@ void fmc_pool_node_list_destroy(struct fmc_pool_node_t *node) {
     if (node->scratch) {
       free(node->scratch);
     }
-    struct fmc_pool_node_t *next = node->next;
+    struct fmc_pool_node *next = node->next;
     free(node);
     node = next;
   }
 }
 
-void fmc_pool_destroy(struct fmc_pool_t *p) {
+void fmc_pool_destroy(struct fmc_pool *p) {
   fmc_pool_node_list_destroy(p->free);
   fmc_pool_node_list_destroy(p->used);
 }
 
-void fmc_shmem_init_alloc(struct fmc_shmem_t *mem, struct fmc_pool_t *pool,
+void fmc_shmem_init_alloc(struct fmc_shmem *mem, struct fmc_pool *pool,
                            size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_allocate(pool, sz, e);
 }
 
-void fmc_shmem_init_view(struct fmc_shmem_t *mem, struct fmc_pool_t *pool,
+void fmc_shmem_init_view(struct fmc_shmem *mem, struct fmc_pool *pool,
                           void *v, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_view(pool, v, sz, e);
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
+  struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
   p->owner = mem;
 }
 
-void fmc_shmem_init_share(struct fmc_shmem_t *dest, struct fmc_shmem_t *src) {
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)src->view;
+void fmc_shmem_init_share(struct fmc_shmem *dest, struct fmc_shmem *src) {
+  struct fmc_pool_node *p = (struct fmc_pool_node *)src->view;
   ++p->count;
   dest->view = src->view;
 }
 
-void fmc_shmem_init_clone(struct fmc_shmem_t *dest, struct fmc_shmem_t *src, fmc_error_t **e) {
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)src->view;
+void fmc_shmem_init_clone(struct fmc_shmem *dest, struct fmc_shmem *src, fmc_error_t **e) {
+  struct fmc_pool_node *p = (struct fmc_pool_node *)src->view;
   dest->view = fmc_pool_allocate(p->pool, p->sz, e);
   if (e) {
     return;
@@ -154,9 +154,9 @@ void fmc_shmem_init_clone(struct fmc_shmem_t *dest, struct fmc_shmem_t *src, fmc
   memcpy(*dest->view, *src->view, p->sz);
 }
 
-void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e) {
+void fmc_shmem_destroy(struct fmc_shmem *mem, fmc_error_t **e) {
   fmc_error_clear(e);
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
+  struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
   if (--p->count) {
     if (p->owner == mem) {
       void* tmp = realloc(p->scratch, p->sz);
@@ -180,7 +180,7 @@ void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e) {
   }
 }
 
-void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e) {
+void fmc_pool_node_realloc(struct fmc_pool_node *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   void *tmp = realloc(p->owner ? p->scratch : p->buf, sz);
   if (!tmp) goto cleanup;
@@ -195,8 +195,8 @@ cleanup:
   fmc_error_set2(e, FMC_ERROR_MEMORY);
 }
 
-void fmc_shmem_realloc(struct fmc_shmem_t *mem, size_t sz, fmc_error_t **e) {
+void fmc_shmem_realloc(struct fmc_shmem *mem, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
+  struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
   fmc_pool_node_realloc(p, sz, e);
 }
