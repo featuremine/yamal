@@ -21,17 +21,17 @@
 
 #include <uthash/utarray.h>
 
-#define _utheap_heapify_up(a, index, cmp)                                      \
-  do {                                                                         \
-    size_t idx = index;                                                        \
-    while (idx) {                                                              \
-      size_t parent_index = (idx - 1) / 2;                                     \
-      if (!cmp(utarray_eltptr(a, idx), utarray_eltptr(a, parent_index))) {     \
-        break;                                                                 \
-      }                                                                        \
-      utarray_swap(a, idx, parent_index);                                      \
-      idx = parent_index;                                                      \
-    }                                                                          \
+#define _utheap_heapify_up(a, index, cmp)                                              \
+  do {                                                                                 \
+    size_t idx = index;                                                                \
+    while (idx) {                                                                      \
+      size_t parent_index = (idx - 1) / 2;                                             \
+      if (!cmp(utarray_eltptr(a, idx), utarray_eltptr(a, parent_index))) {             \
+        break;                                                                         \
+      }                                                                                \
+      ut_swap(_utarray_eltptr(a, idx), _utarray_eltptr(a, parent_index), (a)->icd.sz); \
+      idx = parent_index;                                                              \
+    }                                                                                  \
   } while (0)
 
 #define utheap_push(a, val, cmp)                                               \
@@ -40,26 +40,26 @@
     _utheap_heapify_up(a, (a)->i - 1, cmp);                                    \
   } while (0)
 
-#define _utheap_heapify_down(a, index, cmp)                                    \
-  do {                                                                         \
-    size_t idx = index;                                                        \
-    while (1) {                                                                \
-      size_t left = 2 * idx;                                                   \
-      size_t right = 2 * idx + 1;                                              \
-      size_t largest = idx;                                                    \
-      if (left <= (a)->i - 1 &&                                                \
-          cmp(utarray_eltptr(a, left), utarray_eltptr(a, largest))) {          \
-        largest = left;                                                        \
-      }                                                                        \
-      if (right <= (a)->i - 1 &&                                               \
-          cmp(utarray_eltptr(a, right), utarray_eltptr(a, largest))) {         \
-        largest = right;                                                       \
-      }                                                                        \
-      if (largest == idx) {                                                    \
-        break;                                                                 \
-      }                                                                        \
-      utarray_swap(a, idx, largest);                                           \
-    }                                                                          \
+#define _utheap_heapify_down(a, index, cmp)                                       \
+  do {                                                                            \
+    size_t idx = index;                                                           \
+    while (1) {                                                                   \
+      size_t left = 2 * idx;                                                      \
+      size_t right = 2 * idx + 1;                                                 \
+      size_t largest = idx;                                                       \
+      if (left <= (a)->i - 1 &&                                                   \
+          cmp(utarray_eltptr(a, left), utarray_eltptr(a, largest))) {             \
+        largest = left;                                                           \
+      }                                                                           \
+      if (right <= (a)->i - 1 &&                                                  \
+          cmp(utarray_eltptr(a, right), utarray_eltptr(a, largest))) {            \
+        largest = right;                                                          \
+      }                                                                           \
+      if (largest == idx) {                                                       \
+        break;                                                                    \
+      }                                                                           \
+      ut_swap(_utarray_eltptr(a, idx), _utarray_eltptr(a, largest), (a)->icd.sz); \
+    }                                                                             \
   } while (0)
 
 #define utheap_pop(a, val, cmp)                                                \
