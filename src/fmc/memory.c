@@ -176,3 +176,7 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
     p->owner = NULL;
   }
 }
+
+void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e) {
+  
+}

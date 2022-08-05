@@ -105,6 +105,15 @@ FMMODFUNC void fmc_memory_init_cp(struct fmc_memory_t *dest,
  */
 FMMODFUNC void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e);
 
+/**
+ * @brief Resize memory
+ *
+ * @param mem pointer to memory to be destroyed
+ * @param sz desired size of buffer
+ * @param e out-parameter for error handling
+ */
+FMMODFUNC void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e);
+
 #ifdef __cplusplus
 }
 #endif
