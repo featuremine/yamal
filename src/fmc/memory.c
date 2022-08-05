@@ -124,13 +124,13 @@ void fmc_pool_destroy(struct fmc_pool_t *p) {
   fmc_pool_node_list_destroy(p->used);
 }
 
-void fmc_memory_init_alloc(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
+void fmc_shmem_init_alloc(struct fmc_shmem_t *mem, struct fmc_pool_t *pool,
                            size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_allocate(pool, sz, e);
 }
 
-void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
+void fmc_shmem_init_view(struct fmc_shmem_t *mem, struct fmc_pool_t *pool,
                           void *v, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_view(pool, v, sz, e);
@@ -138,13 +138,22 @@ void fmc_memory_init_view(struct fmc_memory_t *mem, struct fmc_pool_t *pool,
   p->owner = mem;
 }
 
-void fmc_memory_init_cp(struct fmc_memory_t *dest, struct fmc_memory_t *src) {
+void fmc_shmem_init_share(struct fmc_shmem_t *dest, struct fmc_shmem_t *src) {
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)src->view;
   ++p->count;
   dest->view = src->view;
 }
 
-void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
+void fmc_shmem_init_clone(struct fmc_shmem_t *dest, struct fmc_shmem_t *src, fmc_error_t **e) {
+  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)src->view;
+  dest->view = fmc_pool_allocate(p->pool, p->sz, e);
+  if (e) {
+    return;
+  }
+  memcpy(*dest->view, *src->view, p->sz);
+}
+
+void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e) {
   fmc_error_clear(e);
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
   void* tmp = NULL;
@@ -177,44 +186,39 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
   }
 }
 
-void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e) {
-  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
-  void *tmp_view = NULL;
-
+void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e) {
+  fmc_error_clear(e);
+  void* tmp_view = NULL;
+  size_t initial_size = 0;
   if (p->owner) {
-    if (p->owner == mem) {
-      if (p->scratch) {
-        tmp_view = p->buf;
-        p->buf = p->scratch;
-        p->scratch = NULL;
-        memcpy(p->buf, tmp_view, p->sz);
-        p->buf = p->buf;
-      } else {
-        void *tmp = malloc(p->sz);
-        if (!tmp) {
-          fmc_error_set2(e, FMC_ERROR_MEMORY);
-          return;
-        }
-        tmp_view = p->buf;
-        memcpy(tmp, p->buf, p->sz);
-        p->buf = tmp;
-      }
-      p->owner = NULL;
-    } else {
-      // What to do here
-      assert(false);
+    void *tmp = realloc(p->scratch, p->sz);
+    if (!tmp) {
+      fmc_error_set2(e, FMC_ERROR_MEMORY);
+      return;
     }
+    memcpy(tmp, p->buf, p->sz);
+    tmp_view = p->buf;
+    initial_size = p->sz;
+    p->buf = p->scratch;
+    p->scratch = NULL;
   }
   void* temp_mem = realloc(p->buf, sz);
   if (!temp_mem) {
     if (tmp_view) {
       p->scratch = p->buf;
       p->buf = tmp_view;
-      p->owner = mem;
+      p->sz = initial_size;
     }
     fmc_error_set2(e, FMC_ERROR_MEMORY);
     return;
   }
   p->buf = temp_mem;
   p->sz = sz;
+  p->owner = NULL;
+}
+
+void fmc_shmem_realloc(struct fmc_shmem_t *mem, size_t sz, fmc_error_t **e) {
+  fmc_error_clear(e);
+  struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
+  fmc_pool_node_realloc(p, sz, e);
 }
