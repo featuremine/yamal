@@ -33,12 +33,36 @@ struct fmc_prio_queue_t {
   int *buffer;
 };
 
+/**
+ * @brief Initialize priority queue
+ *
+ * @param q pointer to priority queue to be initialized
+ */
 FMMODFUNC void fmc_prio_queue_init(struct fmc_prio_queue_t *q);
 
+/**
+ * @brief Destroy priority queue
+ *
+ * @param q pointer to priority queue to be destroyed
+ */
 FMMODFUNC void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q);
 
+/**
+ * @brief Push element to priority queue
+ *
+ * @param q priority queue pointer
+ * @param val value to be inserted
+ * @param e out-parameter for error handling
+ */
 FMMODFUNC void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val, fmc_error_t **e);
 
+/**
+ * @brief Pop element from queue
+ *
+ * @param q priority queue pointer
+ * @param out out-parameter for value to pop
+ * @return true if a value was popped, false otherwise
+ */
 FMMODFUNC bool fmc_prio_queue_pop(struct fmc_prio_queue_t *q, int *out);
 
 #ifdef __cplusplus
