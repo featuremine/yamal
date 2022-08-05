@@ -61,6 +61,7 @@ void fmc_reactor_component_add(struct fmc_reactor *reactor,
   if (add) {
     add->comp = comp;
     add->sched = fmc_time64_end();
+    // TODO: reactor->ctxs (struct fmc_reactor_ctx **ctxs) with inps
     DL_APPEND(reactor->comps, add);
   } else {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
