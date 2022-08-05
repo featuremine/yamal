@@ -24,17 +24,30 @@
 #include <fmc/reactor.h>
 #include <fmc/signals.h>
 #include <fmc/time.h>
+#include <fmc/math.h>
 #include <stdlib.h> // calloc() free()
 #include <uthash/utlist.h>
+#include <uthash/utarray.h>
+#include <uthash/utheap.h>
 
 static volatile bool stop_signal = false;
 static void sig_handler(int s) { stop_signal = true; }
+
+struct sched_item {
+  fmc_time64_t t;
+  size_t idx;
+};
+
+UT_icd sched_item_icd = {
+  .sz = sizeof(struct sched_item)
+};
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
   reactor->comps = NULL;
   reactor->stop = false;
   reactor->done = true;
+  utarray_init(&reactor->sched, &sched_item_icd);
   fmc_set_signal_handler(sig_handler);
 }
 
@@ -69,28 +82,27 @@ void fmc_reactor_component_add(struct fmc_reactor *reactor,
 }
 
 fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
-  fmc_time64_t ret = fmc_time64_end();
-  struct fmc_reactor_component_list *head = reactor->comps;
-  struct fmc_reactor_component_list *item;
-  bool realtime = false;
-  DL_FOREACH(head, item) {
-    /*
-    if (!item->comp->_vt->tp_sched) {
-      realtime = true;
-      continue;
-    }
-    if (fmc_time64_is_end(item->sched)) {
-      item->sched = item->comp->_vt->tp_sched(item->comp);
-    }
-    */
-    ret = fmc_time64_min(item->sched, ret);
-  }
-  return realtime ? fmc_time64_from_nanos(fmc_cur_time_ns()) : ret;
+  struct sched_item *item = utarray_front(reactor->sched);
+  return item ? item->t : fmc_time64_end();
 }
 
 bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                           fmc_error_t **error) {
   fmc_error_clear(error);
+
+  do {
+    struct sched_item *item = (struct sched_item *)utarray_front(&reactor->sched);
+    if (!item || fmc_time64_greater(item->t, now)) break;
+    utheap_push(&reactor->queued, item->idx, FMC_LESS);
+    utheap_pop(&reactor->sched);
+  } while (true);
+  
+  do {
+    size_t *item = (size_t *)utarray_front(&reactor->queued);
+    if (!item) break;
+    reactor->ctxs[*item]
+  } while (true);
+
   struct fmc_reactor_component_list **it = &reactor->comps;
   bool complete = false;
   bool done = true;

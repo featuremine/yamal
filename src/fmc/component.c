@@ -92,6 +92,7 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
       &mod->error, "component API version is higher than the system version");
 }
 
+
 struct fmc_component_api api = {
     .components_add_v1 = components_add_v1,
     .components_add_v2 = incompatible,

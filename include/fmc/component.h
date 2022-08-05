@@ -123,8 +123,7 @@ struct fmc_reactor_api_v1 {
    void (*queue)(struct fmc_reactor_ctx *);
    void (*schedule)(struct fmc_reactor_ctx *, fmc_time64_t);
    // void (*notify)(struct fmc_reactor_ctx *, int, fmc_memory_t); // notify the system that output have been updated
-   // void (*on_input)(struct fmc_reactor_ctx *, fmc_input_clbck); // one of the input components have been updated
-   // void (*on_exec)(struct fmc_reactor_ctx *, fmc_exec_clbck); // all input components have been updated
+   // void (*on_exec)(struct fmc_reactor_ctx *, fmc_reactor_exec_clbck); // all input components have been updated
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.

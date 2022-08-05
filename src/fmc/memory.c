@@ -185,7 +185,7 @@ void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e
   void *tmp = realloc(p->owner ? p->scratch : p->buf, sz);
   if (!tmp) goto cleanup;
   if (p->owner)
-    memcpy(tmp, p->buf, MIN(sz, p->sz));
+    memcpy(tmp, p->buf, FMC_MIN(sz, p->sz));
   p->owner = NULL;
   p->sz = sz;
   p->scratch = NULL;

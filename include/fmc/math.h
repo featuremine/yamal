@@ -31,15 +31,20 @@
 extern "C" {
 #endif
 
-#define MAX(a,b) \
+#define FMC_MAX(a,b) \
   ({ __typeof__ (a) _a = (a); \
      __typeof__ (b) _b = (b); \
      _a > _b ? _a : _b; })
 
-#define MIN(a,b) \
+#define FMC_MIN(a,b) \
   ({ __typeof__ (a) _a = (a); \
      __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
+
+#define FMC_LESS(a,b) \
+  ({ __typeof__ (a) _a = (a); \
+     __typeof__ (b) _b = (b); \
+     _a < _b; })
 
 #define fmc_sign(x) (((x) > 0) - ((x) < 0))
 

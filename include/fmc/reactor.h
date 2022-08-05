@@ -51,6 +51,7 @@ struct fmc_reactor_component_list {
 
 struct fmc_reactor_ctx {
   struct fmc_reactor *reactor;
+  struct f
   size_t idx;
   size_t *deps[];
 };
@@ -59,14 +60,16 @@ struct fmc_reactor {
   struct fmc_reactor_component_list *comps;
   size_t count;
   struct fmc_reactor_ctx **ctxs;
-  struct fmc_reactor_time_queue *sched;
-  struct fmc_reactor_call_queue *queued;
-  struct fmc_reactor_call_queue *toqueue;
+  UT_array sched;
+  UT_array queued;
+  UT_array toqueue;
   volatile bool stop;
   bool done;
 };
 
 struct fmc_component_input;
+
+void fmc_reactor_exec_clbck(struct fmc_reactor_ctx *ctx)
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
