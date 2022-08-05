@@ -189,7 +189,6 @@ void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e) {
 void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   void* tmp_view = NULL;
-  size_t initial_size = 0;
   if (p->owner) {
     void *tmp = realloc(p->scratch, p->sz);
     if (!tmp) {
@@ -198,7 +197,6 @@ void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e
     }
     memcpy(tmp, p->buf, p->sz > sz ? sz : p->sz);
     tmp_view = p->buf;
-    initial_size = p->sz;
     p->buf = tmp;
     p->scratch = NULL;
   }
@@ -207,7 +205,6 @@ void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e
     if (tmp_view) {
       p->scratch = p->buf;
       p->buf = tmp_view;
-      p->sz = initial_size;
     }
     fmc_error_set2(e, FMC_ERROR_MEMORY);
     return;
