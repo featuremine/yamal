@@ -59,9 +59,11 @@ void **fmc_pool_allocate(struct fmc_pool_t *p, size_t sz, fmc_error_t **e) {
     tmp->scratch = NULL;
   }
 
-  tmp->buf = realloc(tmp->buf, sz);
-  if (!tmp->buf)
+  void* temp_mem = realloc(tmp->buf, sz);
+  if (!temp_mem) {
     goto cleanup;
+  }
+  tmp->buf = temp_mem;
 
   tmp->sz = sz;
   return &tmp->buf;
@@ -147,8 +149,6 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
   if (--p->count) {
     if (p->owner == mem) {
-      if (!p->owner)
-        return;
       void *tmp = malloc(p->sz);
       if (!tmp) {
         fmc_error_set2(e, FMC_ERROR_MEMORY);
@@ -161,7 +161,6 @@ void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e) {
   } else {
     DL_DELETE(p->pool->used, p);
     DL_PREPEND(p->pool->free, p);
-    p->count = 0;
     if (p->owner) {
       p->buf = NULL;
     }
