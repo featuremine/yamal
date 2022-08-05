@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-struct fmc_memory_t {
+struct fmc_shmem_t {
   void **view;
 };
 
@@ -35,7 +35,7 @@ struct fmc_pool_t;
 struct fmc_pool_node_t {
   void *buf;
   void *scratch;
-  struct fmc_memory_t *owner;
+  struct fmc_shmem_t *owner;
   struct fmc_pool_node_t *prev;
   struct fmc_pool_node_t *next;
   struct fmc_pool_t *pool;
@@ -70,7 +70,7 @@ FMMODFUNC void fmc_pool_destroy(struct fmc_pool_t *p);
  * @param sz size of memory buffer to allocate
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_memory_init_alloc(struct fmc_memory_t *mem,
+FMMODFUNC void fmc_shmem_init_alloc(struct fmc_shmem_t *mem,
                                      struct fmc_pool_t *pool, size_t sz,
                                      fmc_error_t **e);
 
@@ -83,19 +83,29 @@ FMMODFUNC void fmc_memory_init_alloc(struct fmc_memory_t *mem,
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_memory_init_view(struct fmc_memory_t *mem,
+FMMODFUNC void fmc_shmem_init_view(struct fmc_shmem_t *mem,
                                     struct fmc_pool_t *pool, void *v, size_t sz,
                                     fmc_error_t **e);
 
 /**
- * @brief Copy memory
+ * @brief Share memory view with destination
  *
  * @param dest out-parameter pointer to memory structure to be initialized with
  * copy
  * @param src pointer to memory structure used as source
  */
-FMMODFUNC void fmc_memory_init_cp(struct fmc_memory_t *dest,
-                                  struct fmc_memory_t *src);
+FMMODFUNC void fmc_shmem_init_share(struct fmc_shmem_t *dest,
+                                    struct fmc_shmem_t *src);
+
+/**
+ * @brief Clone shared memory
+ * Make a deep copy of the source shared memory into a new node
+ *
+ * @param dest out-parameter pointer to memory structure to be initialized with
+ * copy
+ * @param src pointer to memory structure used as source
+ */
+FMMODFUNC void fmc_shmem_init_clone(struct fmc_shmem_t *dest, struct fmc_shmem_t *src, fmc_error_t **e);
 
 /**
  * @brief Destroy memory
@@ -103,7 +113,7 @@ FMMODFUNC void fmc_memory_init_cp(struct fmc_memory_t *dest,
  * @param mem pointer to memory to be destroyed
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e);
+FMMODFUNC void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e);
 
 /**
  * @brief Resize memory
@@ -112,7 +122,7 @@ FMMODFUNC void fmc_memory_destroy(struct fmc_memory_t *mem, fmc_error_t **e);
  * @param sz desired size of buffer
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e);
+FMMODFUNC void fmc_shmem_realloc(struct fmc_shmem_t *mem, size_t sz, fmc_error_t **e);
 
 #ifdef __cplusplus
 }
