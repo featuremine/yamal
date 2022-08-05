@@ -19,6 +19,12 @@
  * @see http://www.featuremine.com
  */
 
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <fmc/error.h>
 #include <stdlib.h>
 
@@ -27,17 +33,6 @@ struct fmc_prio_queue_t {
   int *buffer;
 };
 
-/**
- * @brief Join two paths.
- * If sz if 0, it resturns the size of the result string.
- *
- * @param dest buffer to store the string with the final path.
- * @param sz size of dest buffer.
- * @param p1 base path to join
- * @param p2 last part of the path to join
- * @return the number of characters that would have been written on the
- * buffer, if ‘sz’ had been sufficiently large
- */
 FMMODFUNC void fmc_prio_queue_init(struct fmc_prio_queue_t *q);
 
 FMMODFUNC void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q);
@@ -45,3 +40,7 @@ FMMODFUNC void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q);
 FMMODFUNC void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val, fmc_error_t **e);
 
 FMMODFUNC bool fmc_prio_queue_pop(struct fmc_prio_queue_t *q, int *out);
+
+#ifdef __cplusplus
+}
+#endif
