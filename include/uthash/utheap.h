@@ -62,7 +62,7 @@
     }                                                                             \
   } while (0)
 
-#define utheap_pop(a, val, cmp)                                                \
+#define utheap_pop(a, cmp)                                                     \
   do {                                                                         \
     if ((a)->i) {                                                              \
       if ((a)->icd.copy) {                                                     \
