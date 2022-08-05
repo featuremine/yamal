@@ -22,6 +22,7 @@
 
 #include <fmc/error.h>
 #include <fmc/memory.h>
+#include <fmc/math.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -188,30 +189,17 @@ void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e) {
 
 void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
-  void* tmp_view = NULL;
-  if (p->owner) {
-    void *tmp = realloc(p->scratch, p->sz);
-    if (!tmp) {
-      fmc_error_set2(e, FMC_ERROR_MEMORY);
-      return;
-    }
-    memcpy(tmp, p->buf, p->sz > sz ? sz : p->sz);
-    tmp_view = p->buf;
-    p->buf = tmp;
-    p->scratch = NULL;
-  }
-  void* temp_mem = realloc(p->buf, sz);
-  if (!temp_mem) {
-    if (tmp_view) {
-      p->scratch = p->buf;
-      p->buf = tmp_view;
-    }
-    fmc_error_set2(e, FMC_ERROR_MEMORY);
-    return;
-  }
-  p->buf = temp_mem;
-  p->sz = sz;
+  void *tmp = realloc(p->owner ? p->scratch : p->buf, sz);
+  if (!tmp) goto cleanup;
+  if (p->owner)
+    memcpy(tmp, p->buf, MIN(sz, p->sz));
   p->owner = NULL;
+  p->sz = sz;
+  p->scratch = NULL;
+  p->buf = tmp;
+  return;
+cleanup:
+  fmc_error_set2(e, FMC_ERROR_MEMORY);
 }
 
 void fmc_shmem_realloc(struct fmc_shmem_t *mem, size_t sz, fmc_error_t **e) {
