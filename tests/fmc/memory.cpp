@@ -574,8 +574,8 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_one->pool, &p);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 200);
+  ASSERT_EQ(view.compare(std::string_view((char*)node_one->buf, view.size())), 0);
 
-  // delete a node with allocated memory (would work with either one or two)
   fmc_memory_destroy(&two, &e);
   ASSERT_EQ(e, nullptr);
 
@@ -586,7 +586,6 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 200);
 
-  // create a view to reuse allocated memory node as scratch
   struct fmc_memory_t three;
 
   fmc_memory_init_view(&three, &p, (void *)view.data(), view.size(), &e);
@@ -602,7 +601,6 @@ TEST(fmc_memory, resize) {
   ASSERT_NE(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 10);
 
-  // reallocate and use scratch
   fmc_memory_realloc(&three, 200, &e);
 
   ASSERT_NE(node_two->buf, nullptr);
@@ -611,6 +609,7 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_two->pool, &p);
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 200);
+  ASSERT_EQ(view.compare(std::string_view((char*)node_two->buf, view.size())), 0);
 
   fmc_pool_destroy(&p);
 }

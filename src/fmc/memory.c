@@ -187,12 +187,15 @@ void fmc_memory_realloc(struct fmc_memory_t *mem, size_t sz, fmc_error_t **e) {
         tmp_view = p->buf;
         p->buf = p->scratch;
         p->scratch = NULL;
+        memcpy(p->buf, tmp_view, p->sz);
+        p->buf = p->buf;
       } else {
         void *tmp = malloc(p->sz);
         if (!tmp) {
           fmc_error_set2(e, FMC_ERROR_MEMORY);
           return;
         }
+        tmp_view = p->buf;
         memcpy(tmp, p->buf, p->sz);
         p->buf = tmp;
       }
