@@ -117,16 +117,16 @@ TEST(utheap, heap_push) {
   ASSERT_EQ(buff[1], 55);
   ASSERT_EQ(buff[2], 3);
 
-  utheap_pop(&a, (void *)&val, cmp);
+  utheap_pop(&a, cmp);
   buff = (int *)a.d;
   ASSERT_EQ(buff[0], 55);
   ASSERT_EQ(buff[1], 3);
 
-  utheap_pop(&a, (void *)&val, cmp);
+  utheap_pop(&a, cmp);
   buff = (int *)a.d;
   ASSERT_EQ(buff[0], 3);
 
-  utheap_pop(&a, (void *)&val, cmp);
+  utheap_pop(&a, cmp);
   ASSERT_EQ(val, 3);
 
   utarray_done(&a);
@@ -149,7 +149,8 @@ TEST(utheap, heap_random) {
   
   int last = upper;
   for (int i = 0; i < total; i++) {
-    utheap_pop(&a, (void *)&val, cmp);
+    val = *(int*)utarray_front(&a);
+    utheap_pop(&a, cmp);
     ASSERT_TRUE(val <= last);
     last = val;
   }
