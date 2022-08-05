@@ -196,7 +196,7 @@ void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e
       fmc_error_set2(e, FMC_ERROR_MEMORY);
       return;
     }
-    memcpy(tmp, p->buf, p->sz);
+    memcpy(tmp, p->buf, p->sz > sz ? sz : p->sz);
     tmp_view = p->buf;
     initial_size = p->sz;
     p->buf = tmp;
