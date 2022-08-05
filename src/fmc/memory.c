@@ -199,7 +199,7 @@ void fmc_pool_node_realloc(struct fmc_pool_node_t *p, size_t sz, fmc_error_t **e
     memcpy(tmp, p->buf, p->sz);
     tmp_view = p->buf;
     initial_size = p->sz;
-    p->buf = p->scratch;
+    p->buf = tmp;
     p->scratch = NULL;
   }
   void* temp_mem = realloc(p->buf, sz);
