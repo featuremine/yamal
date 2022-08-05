@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define utarray_oom() {fmc_error_set2(e, FMC_ERROR_MEMORY);}
+
 #include <uthash/utlist.h>
 
 struct fmc_pool_node_t *fmc_get_pool_node(struct fmc_pool_t *p) {
@@ -200,3 +202,5 @@ void fmc_shmem_realloc(struct fmc_shmem_t *mem, size_t sz, fmc_error_t **e) {
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
   fmc_pool_node_realloc(p, sz, e);
 }
+
+#undef utarray_oom
