@@ -132,6 +132,31 @@ TEST(utheap, heap_push) {
   utarray_done(&a);
 }
 
+TEST(utheap, heap_random) {
+  UT_array a;
+  utarray_init(&a, &ut_int_icd);
+
+  auto cmp = [](void *a, void *b) { return *(int *)a > *(int *)b; };
+
+  int val = 0;
+  int upper = 100;
+  int total = 500;
+  srand(time(0));
+  for (int i = 0; i < total; i++) {
+    int inval = rand() % upper;
+    utheap_push(&a, (void *)&inval, cmp);
+  }
+  
+  int last = upper;
+  for (int i = 0; i < total; i++) {
+    utheap_pop(&a, (void *)&val, cmp);
+    ASSERT_TRUE(val <= last);
+    last = val;
+  }
+
+  utarray_done(&a);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
