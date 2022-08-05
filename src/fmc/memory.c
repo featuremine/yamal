@@ -157,22 +157,15 @@ void fmc_shmem_init_clone(struct fmc_shmem_t *dest, struct fmc_shmem_t *src, fmc
 void fmc_shmem_destroy(struct fmc_shmem_t *mem, fmc_error_t **e) {
   fmc_error_clear(e);
   struct fmc_pool_node_t *p = (struct fmc_pool_node_t *)mem->view;
-  void* tmp = NULL;
   if (--p->count) {
     if (p->owner == mem) {
-      if (p->scratch) {
-        tmp = realloc(p->scratch, p->sz);
-      } else {
-        tmp = malloc(p->sz);
-      }
+      void* tmp = realloc(p->scratch, p->sz);
       if (!tmp) {
         ++p->count;
         fmc_error_set2(e, FMC_ERROR_MEMORY);
         return;
       }
-      if (p->scratch) {
-        p->scratch = NULL;
-      }
+      p->scratch = NULL;
       memcpy(tmp, p->buf, p->sz);
       p->buf = tmp;
       p->owner = NULL;
