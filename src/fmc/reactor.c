@@ -43,11 +43,7 @@ UT_icd size_t_icd = {
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
-  reactor->comps = NULL;
-  reactor->stop = false;
-  reactor->done = false;
-  reactor->ctxs = NULL;
-  reactor->count = 0;
+  memset(reactor, 0, sizeof(*reactor));
   utarray_init(&reactor->sched, &sched_item_icd);
   utarray_init(&reactor->queued, &size_t_icd);
   utarray_init(&reactor->toqueue, &size_t_icd);
@@ -87,8 +83,9 @@ void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
   if (!add) goto cleanup;
   ctxtmp = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctxtmp));
   if(!ctxtmp) goto cleanup;
-  struct fmc_reactor_ctx **ctxstmp = (struct fmc_reactor_ctx **)realloc(r->ctxs,
-                                               sizeof(*r->ctxs)*(r->count+1));
+  struct fmc_reactor_ctx **ctxstmp =
+      (struct fmc_reactor_ctx **)realloc(r->ctxs,
+                                         sizeof(*r->ctxs)*(r->count+1));
   if(!ctxstmp) goto cleanup;
   add->comp = ctx->comp;
   add->sched = fmc_time64_end();
@@ -146,7 +143,7 @@ void fmc_reactor_run_sched(struct fmc_reactor *reactor, fmc_error_t **error) {
   fmc_error_clear(error);
   do {
     fmc_time64_t now = fmc_reactor_sched(reactor);
-    if (reactor->done || reactor->stop || fmc_time64_is_end(now)) break;
+    if (reactor->done || reactor->stop || stop_signal || fmc_time64_is_end(now)) break;
     fmc_reactor_run_once(reactor, now, error);
   } while(true);
   reactor->done = true;
@@ -156,7 +153,7 @@ void fmc_reactor_run_live(struct fmc_reactor *reactor, fmc_error_t **error) {
   fmc_error_clear(error);
   do {
     fmc_time64_t now = fmc_time64_from_nanos(fmc_cur_time_ns());
-    if (reactor->done || reactor->stop) break;
+    if (reactor->done || reactor->stop || stop_signal) break;
     fmc_reactor_run_once(reactor, now, error);
   } while(true);
   reactor->done = true;
