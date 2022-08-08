@@ -94,6 +94,16 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
       &mod->error, "component API version is higher than the system version");
 }
 
+static int size_t_less(const void *a, const void *b) {
+  return FMC_SIZE_T_PTR_LESS(a, b);
+}
+
+static int sched_item_less(const void *a, const void *b) {
+  struct sched_item *_a = (struct sched_item*) a;
+  struct sched_item *_b = (struct sched_item*) b;
+  return (int)fmc_time64_less(_a->t, _b->t);
+}
+
 void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
   if (!utarray_find(&ctx->reactor->toqueue, &ctx->idx, size_t_less)) {
     utheap_push(&ctx->reactor->toqueue, &ctx->idx, size_t_less);
