@@ -39,10 +39,16 @@ fmc_reactor_destroy(&loop);
 #include <fmc/platform.h>
 #include <fmc/time.h>
 #include <uthash/utarray.h>
+#include <fmc/math.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct sched_item {
+  fmc_time64_t t;
+  size_t idx;
+};
 
 struct fmc_reactor_component_list {
   struct fmc_component *comp;
@@ -92,6 +98,10 @@ FMMODFUNC void fmc_reactor_run_live(struct fmc_reactor *reactor,
                                fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);
+
+FMMODFUNC bool sched_item_less(void*a, void*b);
+
+FMMODFUNC bool size_t_less(void *a, void* b);
 
 #ifdef __cplusplus
 }

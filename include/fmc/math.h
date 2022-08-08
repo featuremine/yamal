@@ -46,6 +46,11 @@ extern "C" {
      __typeof__ (b) _b = (b); \
      _a < _b; })
 
+#define FMC_TYPED_PTR_LESS(type, a, b) \
+  ({ type _a = *((type*)a); \
+     type _b = *((type*)b); \
+     _a < _b; })
+
 #define fmc_sign(x) (((x) > 0) - ((x) < 0))
 
 /**

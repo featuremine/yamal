@@ -111,7 +111,6 @@ struct fmc_component {
 
 //TODO: Complete
 struct fmc_reactor_api_v1 {
-   fmc_time64_t (*now)(struct fmc_reactor_ctx *);
    void (*queue)(struct fmc_reactor_ctx *);
    void (*schedule)(struct fmc_reactor_ctx *, fmc_time64_t);
    // void (*notify)(struct fmc_reactor_ctx *, int, fmc_memory_t); // notify the system that output have been updated

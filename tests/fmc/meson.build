@@ -26,10 +26,10 @@ shared_test_component = shared_library('testcomponent', [files('testcomponent.c'
                                         link_language: 'c',
                                         install: false)
 
-# test_component = executable(
-#     'common_component', 'component.cpp',
-#     dependencies : [static_fmc_dep, gtest])
-# test('common_component', test_component, args: [shared_test_component.full_path()], is_parallel: false)
+test_component = executable(
+    'common_component', 'component.cpp',
+    dependencies : [static_fmc_dep, gtest])
+test('common_component', test_component, args: [shared_test_component.full_path()], is_parallel: false)
 
 memory = executable(
     'common_memory', 'memory.cpp',

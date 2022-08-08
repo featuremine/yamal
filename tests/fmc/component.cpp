@@ -29,6 +29,22 @@
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 
+#if defined(FMC_SYS_UNIX)
+#define FMC_MOD_SEARCHPATH_CUR ""
+#define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
+#if defined(FMC_SYS_LINUX)
+#define FMC_LIB_SUFFIX ".so"
+#elif defined(FMC_SYS_MACH)
+#define FMC_LIB_SUFFIX ".dylib"
+#endif
+#else
+#define FMC_MOD_SEARCHPATH_ENV_SEP ";"
+#error "Unsupported operating system"
+#endif
+
 struct test_component {
   fmc_component_HEAD;
   char *teststr;
@@ -191,6 +207,9 @@ TEST(component, module) {
 }
 
 TEST(component, component) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
   fmc_error_t *err;
   fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
@@ -232,20 +251,22 @@ TEST(component, component) {
   struct fmc_cfg_sect_item *cfginvalid =
       fmc_cfg_sect_item_add_str(nullptr, "invalidkey", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *compinvalid = fmc_component_new(tp, cfginvalid, &err);
+  struct fmc_component *compinvalid = fmc_component_new(&r, tp, cfginvalid, nullptr, &err);
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(compinvalid, nullptr);
 
   struct fmc_cfg_sect_item *cfg =
       fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
+  struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
+
+  fmc_reactor_destroy(&r);
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfginvalid);
@@ -260,6 +281,9 @@ TEST(component, component) {
 }
 
 TEST(reactor, reactor) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
   fmc_error_t *err;
   fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
@@ -295,7 +319,7 @@ TEST(reactor, reactor) {
   struct fmc_cfg_sect_item *cfg =
       fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
+  struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
   ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
@@ -303,15 +327,13 @@ TEST(reactor, reactor) {
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
 
-  struct fmc_reactor r;
-  fmc_reactor_init(&r);
-  fmc_reactor_component_add(&r, comp, 99, &err);
+  fmc_reactor_component_add(&r, comp, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(r.stop, false);
   ASSERT_EQ(r.done, true);
   ASSERT_EQ(r.comps->comp, comp);
 
-  fmc_reactor_run(&r, &err);
+  fmc_reactor_run_live(&r, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(r.done, true);
   ASSERT_TRUE(fmc_time64_equal(
