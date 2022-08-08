@@ -51,6 +51,8 @@ extern "C" {
      type _b = *((type*)b); \
      _a < _b; })
 
+#define FMC_SIZE_T_PTR_LESS(a, b) FMC_TYPED_PTR_LESS(size_t, a, b)
+
 #define fmc_sign(x) (((x) > 0) - ((x) < 0))
 
 /**

@@ -33,18 +33,6 @@
 static volatile bool stop_signal = false;
 static void sig_handler(int s) { stop_signal = true; }
 
-bool sched_item_less (void*a, void*b) {
-  struct sched_item *_a = (struct sched_item*) a;
-  struct sched_item *_b = (struct sched_item*) b;
-  return fmc_time64_less(_a->t, _b->t);
-}
-
-bool size_t_less(void *a, void* b) {
-  size_t *_a = (size_t*) (a);
-  size_t *_b = (size_t*) (b);
-  return *_a < *_b;
-}
-
 UT_icd sched_item_icd = {
   .sz = sizeof(struct sched_item)
 };
@@ -121,7 +109,6 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   return item ? item->t : fmc_time64_end();
 }
 
-#define size_t_less(a, b) FMC_TYPED_PTR_LESS(size_t, a, b)
 
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                           fmc_error_t **error) {
@@ -131,8 +118,8 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   do {
     struct sched_item *item = (struct sched_item *)utarray_front(&reactor->sched);
     if (!item || fmc_time64_greater(item->t, now)) break;
-    utheap_push(&reactor->queued, &item->idx, size_t_less);
-    utheap_pop(&reactor->sched, size_t_less);
+    utheap_push(&reactor->queued, &item->idx, FMC_SIZE_T_PTR_LESS);
+    utheap_pop(&reactor->sched, FMC_SIZE_T_PTR_LESS);
   } while (true);
   
   do {
@@ -148,7 +135,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
       }
     }
     ++completed;
-    utheap_pop(&reactor->queued, size_t_less);
+    utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
   } while (true);
 
   ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));

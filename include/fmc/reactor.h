@@ -100,10 +100,6 @@ FMMODFUNC void fmc_reactor_run_live(struct fmc_reactor *reactor,
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
 FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);
 
-FMMODFUNC bool sched_item_less(void*a, void*b);
-
-FMMODFUNC bool size_t_less(void *a, void* b);
-
 #ifdef __cplusplus
 }
 #endif
