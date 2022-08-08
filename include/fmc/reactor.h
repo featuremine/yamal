@@ -50,6 +50,7 @@ struct fmc_reactor_component_list {
   struct fmc_reactor_component_list *next, *prev;
 };
 
+struct fmc_reactor_ctx;
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        fmc_time64_t now,
                                        struct fmc_reactor_ctx *ctx);

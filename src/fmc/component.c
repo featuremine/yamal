@@ -356,7 +356,13 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
       }
     }
 
-    struct fmc_reactor_ctx ctx = {reactor, reactor->count};
+    struct fmc_reactor_ctx ctx = {
+      .reactor = reactor,
+      .comp = NULL,
+      .exec = NULL,
+      .idx = reactor->count,
+      .inp = NULL
+      };
     item->comp = tp->tp_new(cfg, &ctx, inputsnames, error);
     fmc_reactor_component_add(reactor, item->comp, inps, error);
     if (*error) {
