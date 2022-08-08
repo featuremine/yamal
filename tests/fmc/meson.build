@@ -31,6 +31,13 @@ test_component = executable(
     dependencies : [static_fmc_dep, gtest])
 test('common_component', test_component, args: [shared_test_component.full_path()], is_parallel: false)
 
+shared_io_component = shared_library('iocomponent', [files('iocomponent.c')],
+                                     name_prefix : '',
+                                     include_directories : [inc],
+                                     dependencies : [shared_fmc_dep],
+                                     link_language: 'c',
+                                     install: false)
+
 memory = executable(
     'common_memory', 'memory.cpp',
     dependencies : [static_fmc_dep, gtest])
