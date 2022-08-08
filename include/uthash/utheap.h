@@ -71,7 +71,9 @@
         memcpy(_utarray_eltptr(a, 0), _utarray_eltptr(a, (a)->i - 1),          \
                (a)->icd.sz);                                                   \
       };                                                                       \
-      utarray_resize(a, (a)->i);                                               \
-      _utheap_heapify_down(a, 0, cmp);                                         \
+      utarray_resize(a, (a)->i-1);                                             \
+      if (utarray_len(a)) {                                                    \
+        _utheap_heapify_down(a, 0, cmp);                                       \
+      }                                                                        \
     }                                                                          \
   } while (0)
