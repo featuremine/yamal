@@ -133,9 +133,13 @@ struct fmc_reactor_api_v1 reactor_v1 = {
 struct fmc_component_api api = {
     .reactor_v1 = &reactor_v1,
     .components_add_v1 = components_add_v1,
+    .reactor_v2 = NULL,
     .components_add_v2 = incompatible,
+    .reactor_v3 = NULL,
     .components_add_v3 = incompatible,
+    .reactor_v4 = NULL,
     .components_add_v4 = incompatible,
+    .reactor_v5 = NULL,
     .components_add_v5 = incompatible,
     ._zeros = {NULL},
 };
@@ -376,29 +380,26 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_input *inps,
                                         fmc_error_t **error) {
   fmc_error_clear(error);
-  fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
-  if (*error)
-    return NULL;
-
-  struct fmc_component_list *item =
-      (struct fmc_component_list *)calloc(1, sizeof(*item));
-  if(!item) {
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
-    return NULL;
-  }
-  // fmc_component_input to array of component names
+  struct fmc_component_list *item = NULL;
   unsigned int in_sz = 0;
   for (; inps && inps[in_sz].comp; ++in_sz) {}
   char *in_names[in_sz];
+  fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
+  if (*error) goto cleanup;
+  item = (struct fmc_component_list *)calloc(1, sizeof(*item));
+  if (!item) goto cleanup;
+  // fmc_component_input to array of component names
   for (unsigned int i = 0; i < in_sz; ++i) {
-    if(!inps[i].comp->_out_tps) {
-      // TODO: error the outputs of the components are not set
+    if (!inps[i].comp->_out_tps) {
+      fmc_error_set(error, "the outputs of the input component %s are not set",
+                    inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     unsigned int out_sz = 0;
     for (; inps[i].comp->_out_tps && inps[i].comp->_out_tps[out_sz]; ++out_sz) {}
-    if(inps[i].idx < 0 || out_sz <= inps[i].idx) {
-      // TODO: error
+    if (inps[i].idx < 0 || out_sz <= inps[i].idx) {
+      fmc_error_set(error, "invalid index for the component %s",
+                    inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     in_names[i] = inps[i].comp->_out_tps[inps[i].idx];
@@ -418,8 +419,12 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   DL_APPEND(tp->comps, item);
   return item->comp;
 cleanup:
-// TODO: implement cleanup
-  return NULL;  
+  if (!*error) fmc_error_set2(error, FMC_ERROR_MEMORY);
+  if(item) {
+    free(item);
+    if(item->comp) item->comp->_vt->tp_del(item->comp);
+  }
+  return NULL;
 }
 
 void fmc_component_del(struct fmc_component *comp) {
