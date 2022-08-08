@@ -59,21 +59,17 @@
         break;                                                                    \
       }                                                                           \
       ut_swap(_utarray_eltptr(a, idx), _utarray_eltptr(a, largest), (a)->icd.sz); \
+      idx = largest;                                                              \
     }                                                                             \
   } while (0)
 
-#define utheap_pop(a, cmp)                                                     \
-  do {                                                                         \
-    if ((a)->i) {                                                              \
-      if ((a)->icd.copy) {                                                     \
-        (a)->icd.copy(utarray_eltptr(a, 0), utarray_eltptr(a, (a)->i - 1));    \
-      } else {                                                                 \
-        memcpy(_utarray_eltptr(a, 0), _utarray_eltptr(a, (a)->i - 1),          \
-               (a)->icd.sz);                                                   \
-      };                                                                       \
-      utarray_resize(a, (a)->i-1);                                             \
-      if (utarray_len(a)) {                                                    \
-        _utheap_heapify_down(a, 0, cmp);                                       \
-      }                                                                        \
-    }                                                                          \
+#define utheap_pop(a, cmp)                                                         \
+  do {                                                                             \
+    if ((a)->i) {                                                                  \
+      ut_swap(_utarray_eltptr(a, 0), _utarray_eltptr(a, (a)->i - 1), (a)->icd.sz); \
+      utarray_resize(a, (a)->i - 1);                                               \
+      if (utarray_len(a)) {                                                        \
+        _utheap_heapify_down(a, 0, cmp);                                           \
+      }                                                                            \
+    }                                                                              \
   } while (0)
