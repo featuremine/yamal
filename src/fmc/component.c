@@ -92,8 +92,30 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
       &mod->error, "component API version is higher than the system version");
 }
 
+fmc_time64_t reactor_now_v1(struct fmc_reactor_ctx *ctx) {
+}
+
+void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
+
+}
+void reactor_schedule_v1(struct fmc_reactor_ctx *ctx, fmc_time64_t now) {
+
+}
+
+void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_exec_clbck cl) {
+
+}
+
+struct fmc_reactor_api_v1 reactor_v1 = {
+  .now = reactor_now_v1,
+  .queue = reactor_queue_v1,
+  .schedule = reactor_schedule_v1,
+   // void (*notify)(struct fmc_reactor_ctx *, int, fmc_memory_t); // notify the system that output have been updated
+   .on_exec = reactor_on_exec_v1 // all input components have been updated
+};
 
 struct fmc_component_api api = {
+    .reactor_v1 = &reactor_v1,
     .components_add_v1 = components_add_v1,
     .components_add_v2 = incompatible,
     .components_add_v3 = incompatible,

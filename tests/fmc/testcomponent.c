@@ -21,6 +21,8 @@
 #include <string.h>
 #include <uthash/utlist.h>
 
+struct fmc_reactor_api_v1 *_reactor;
+
 struct test_component {
   fmc_component_HEAD;
   char *teststr;
@@ -32,7 +34,23 @@ static void test_component_del(struct test_component *comp) {
   free(comp);
 };
 
+static void test_component_process_one(struct fmc_component *self,
+                                       fmc_time64_t time,
+                                       struct fmc_reactor_ctx *ctx) {
+  struct test_component *comp = (struct test_component *)self;
+
+  if (fmc_time64_less(
+          comp->timesim,
+          fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100)))) {
+    fmc_time64_inc(&comp->timesim, fmc_time64_from_nanos(10));
+    _reactor->schedule(ctx, comp->timesim);
+  }
+
+};
+
 static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
+                                                 struct fmc_reactor_ctx *ctx,
+                                                 char **inp_tps,
                                                  fmc_error_t **err) {
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
   if (!c) {
@@ -45,31 +63,12 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
   if (*err)
     goto cleanup;
   c->timesim = fmc_time64_start();
+  _reactor->on_exec(ctx, &test_component_process_one);
+  _reactor->queue(ctx);
   return c;
 cleanup:
   test_component_del(c);
   return NULL;
-};
-
-static fmc_time64_t test_component_sched(struct test_component *comp) {
-  if (fmc_time64_greater(
-          comp->timesim,
-          fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(95)))) {
-    return fmc_time64_end();
-  }
-  return comp->timesim;
-}
-
-static bool test_component_process_one(struct test_component *comp,
-                                       fmc_time64_t time) {
-  static bool ret = false;
-  if (fmc_time64_less(
-          comp->timesim,
-          fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100)))) {
-    fmc_time64_inc(&comp->timesim, fmc_time64_from_nanos(10));
-  }
-  ret = !ret;
-  return ret;
 };
 
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
@@ -91,4 +90,8 @@ FMCOMPMODINITFUNC void
 FMCompInit_testcomponent(struct fmc_component_api *api,
                          struct fmc_component_module *mod) {
   api->components_add_v1(mod, components);
+  if (!api->reactor_v1) {
+    fmc_error_init_sprintf(&mod->error, "Unable to find reactor api v1");
+  }
+  _reactor = api->reactor_v1;
 }
