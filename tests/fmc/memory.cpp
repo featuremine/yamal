@@ -29,18 +29,18 @@
 #include <uthash/utlist.h>
 
 TEST(fmc_pool, allocation_no_pools_created) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
   fmc_pool_destroy(&p);
 }
 
 TEST(fmc_memory, init_allocation) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t mem;
+  struct fmc_shmem mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -49,7 +49,7 @@ TEST(fmc_memory, init_allocation) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  struct fmc_pool_node *node = (struct fmc_pool_node *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->owner, nullptr);
@@ -63,12 +63,12 @@ TEST(fmc_memory, init_allocation) {
 }
 
 TEST(fmc_memory, init_view) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t mem;
+  struct fmc_shmem mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -78,7 +78,7 @@ TEST(fmc_memory, init_view) {
   ASSERT_EQ(*mem.view, view.data());
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  struct fmc_pool_node *node = (struct fmc_pool_node *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->owner, &mem);
@@ -86,7 +86,7 @@ TEST(fmc_memory, init_view) {
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
-  struct fmc_pool_node_t *tmp;
+  struct fmc_pool_node *tmp;
   size_t counter = 0;
   DL_COUNT(p.free, tmp, counter);
   ASSERT_EQ(counter, 0);
@@ -111,12 +111,12 @@ TEST(fmc_memory, init_view) {
 }
 
 TEST(fmc_memory, fmc_shmem_alloc_share) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t mem;
+  struct fmc_shmem mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -125,14 +125,14 @@ TEST(fmc_memory, fmc_shmem_alloc_share) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *tmp;
+  struct fmc_pool_node *tmp;
   size_t counter = 0;
   DL_COUNT(p.free, tmp, counter);
   ASSERT_EQ(counter, 0);
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 1);
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  struct fmc_pool_node *node = (struct fmc_pool_node *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->owner, nullptr);
@@ -140,7 +140,7 @@ TEST(fmc_memory, fmc_shmem_alloc_share) {
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
 
-  struct fmc_shmem_t dest;
+  struct fmc_shmem dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
 
@@ -206,12 +206,12 @@ TEST(fmc_memory, fmc_shmem_alloc_share) {
 }
 
 TEST(fmc_memory, fmc_shmem_alloc_clone) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t mem;
+  struct fmc_shmem mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -220,14 +220,14 @@ TEST(fmc_memory, fmc_shmem_alloc_clone) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *tmp;
+  struct fmc_pool_node *tmp;
   size_t counter = 0;
   DL_COUNT(p.free, tmp, counter);
   ASSERT_EQ(counter, 0);
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 1);
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  struct fmc_pool_node *node = (struct fmc_pool_node *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->owner, nullptr);
@@ -235,7 +235,7 @@ TEST(fmc_memory, fmc_shmem_alloc_clone) {
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 100);
 
-  struct fmc_shmem_t dest;
+  struct fmc_shmem dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
 
@@ -249,7 +249,7 @@ TEST(fmc_memory, fmc_shmem_alloc_clone) {
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 2);
 
-  struct fmc_pool_node_t *dest_node = (struct fmc_pool_node_t *)dest.view;
+  struct fmc_pool_node *dest_node = (struct fmc_pool_node *)dest.view;
   ASSERT_NE(dest_node->buf, nullptr);
   ASSERT_EQ(dest_node->count, 1);
   ASSERT_EQ(dest_node->owner, nullptr);
@@ -323,12 +323,12 @@ TEST(fmc_memory, fmc_shmem_alloc_clone) {
 }
 
 TEST(fmc_memory, fmc_shmem_view_copy) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t mem;
+  struct fmc_shmem mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -339,14 +339,14 @@ TEST(fmc_memory, fmc_shmem_view_copy) {
   ASSERT_EQ(*mem.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *tmp;
+  struct fmc_pool_node *tmp;
   size_t counter = 0;
   DL_COUNT(p.free, tmp, counter);
   ASSERT_EQ(counter, 0);
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 1);
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  struct fmc_pool_node *node = (struct fmc_pool_node *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->owner, &mem);
@@ -354,7 +354,7 @@ TEST(fmc_memory, fmc_shmem_view_copy) {
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
-  struct fmc_shmem_t dest;
+  struct fmc_shmem dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
 
@@ -420,12 +420,12 @@ TEST(fmc_memory, fmc_shmem_view_copy) {
 }
 
 TEST(fmc_memory, fmc_shmem_view_clone) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t mem;
+  struct fmc_shmem mem;
   mem.view = nullptr;
   ASSERT_EQ(mem.view, nullptr);
 
@@ -435,14 +435,14 @@ TEST(fmc_memory, fmc_shmem_view_clone) {
   ASSERT_NE(*mem.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *tmp;
+  struct fmc_pool_node *tmp;
   size_t counter = 0;
   DL_COUNT(p.free, tmp, counter);
   ASSERT_EQ(counter, 0);
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 1);
 
-  struct fmc_pool_node_t *node = (struct fmc_pool_node_t *)mem.view;
+  struct fmc_pool_node *node = (struct fmc_pool_node *)mem.view;
   ASSERT_NE(node->buf, nullptr);
   ASSERT_EQ(node->count, 1);
   ASSERT_EQ(node->owner, &mem);
@@ -450,7 +450,7 @@ TEST(fmc_memory, fmc_shmem_view_clone) {
   ASSERT_EQ(node->scratch, nullptr);
   ASSERT_EQ(node->sz, 10);
 
-  struct fmc_shmem_t dest;
+  struct fmc_shmem dest;
   dest.view = nullptr;
   ASSERT_EQ(dest.view, nullptr);
 
@@ -464,7 +464,7 @@ TEST(fmc_memory, fmc_shmem_view_clone) {
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 2);
 
-  struct fmc_pool_node_t *dest_node = (struct fmc_pool_node_t *)dest.view;
+  struct fmc_pool_node *dest_node = (struct fmc_pool_node *)dest.view;
   ASSERT_NE(dest_node->buf, nullptr);
   ASSERT_EQ(dest_node->count, 1);
   ASSERT_EQ(dest_node->owner, nullptr);
@@ -524,12 +524,12 @@ TEST(fmc_memory, fmc_shmem_view_clone) {
 }
 
 TEST(fmc_memory, multiple_nodes) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t one;
+  struct fmc_shmem one;
 
   std::string_view view = "valid data";
   fmc_shmem_init_view(&one, &p, (void *)view.data(), view.size(), &e);
@@ -538,14 +538,14 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(*one.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *tmp;
+  struct fmc_pool_node *tmp;
   size_t counter = 0;
   DL_COUNT(p.free, tmp, counter);
   ASSERT_EQ(counter, 0);
   DL_COUNT(p.used, tmp, counter);
   ASSERT_EQ(counter, 1);
 
-  struct fmc_pool_node_t *node_one = (struct fmc_pool_node_t *)one.view;
+  struct fmc_pool_node *node_one = (struct fmc_pool_node *)one.view;
   ASSERT_NE(node_one->buf, nullptr);
   ASSERT_EQ(node_one->count, 1);
   ASSERT_EQ(node_one->owner, &one);
@@ -553,7 +553,7 @@ TEST(fmc_memory, multiple_nodes) {
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
-  struct fmc_shmem_t two;
+  struct fmc_shmem two;
 
   fmc_shmem_init_alloc(&two, &p, 100, &e);
   ASSERT_NE(two.view, nullptr);
@@ -567,7 +567,7 @@ TEST(fmc_memory, multiple_nodes) {
 
   void *two_mem = *two.view;
 
-  struct fmc_pool_node_t *node_two = (struct fmc_pool_node_t *)two.view;
+  struct fmc_pool_node *node_two = (struct fmc_pool_node *)two.view;
   ASSERT_NE(node_two->buf, nullptr);
   ASSERT_EQ(node_two->count, 1);
   ASSERT_EQ(node_two->owner, nullptr);
@@ -741,12 +741,12 @@ TEST(fmc_memory, multiple_nodes) {
 }
 
 TEST(fmc_memory, resize) {
-  struct fmc_pool_t p;
+  struct fmc_pool p;
   fmc_pool_init(&p);
 
   fmc_error_t *e = nullptr;
 
-  struct fmc_shmem_t one;
+  struct fmc_shmem one;
 
   std::string_view view = "valid data";
   fmc_shmem_init_view(&one, &p, (void *)view.data(), view.size(), &e);
@@ -755,14 +755,14 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(*one.view, (void *)view.data());
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_shmem_t two;
+  struct fmc_shmem two;
 
   fmc_shmem_init_alloc(&two, &p, 100, &e);
   ASSERT_NE(two.view, nullptr);
   ASSERT_NE(*two.view, nullptr);
   ASSERT_EQ(e, nullptr);
 
-  struct fmc_pool_node_t *node_one = (struct fmc_pool_node_t *)one.view;
+  struct fmc_pool_node *node_one = (struct fmc_pool_node *)one.view;
   ASSERT_NE(node_one->buf, nullptr);
   ASSERT_EQ(node_one->count, 1);
   ASSERT_EQ(node_one->owner, &one);
@@ -770,7 +770,7 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 10);
 
-  struct fmc_pool_node_t *node_two = (struct fmc_pool_node_t *)two.view;
+  struct fmc_pool_node *node_two = (struct fmc_pool_node *)two.view;
   ASSERT_NE(node_two->buf, nullptr);
   ASSERT_EQ(node_two->count, 1);
   ASSERT_EQ(node_two->owner, nullptr);
@@ -807,7 +807,7 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 200);
 
-  struct fmc_shmem_t three;
+  struct fmc_shmem three;
 
   fmc_shmem_init_view(&three, &p, (void *)view.data(), view.size(), &e);
   ASSERT_NE(three.view, nullptr);

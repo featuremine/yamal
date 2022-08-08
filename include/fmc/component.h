@@ -54,8 +54,6 @@ struct fmc_component_def_v1 components[] = {
       .tp_cfgspec = gateway_cfg_spec;
       .tp_new = (fmc_newfunc)gateway_comp_new,
       .tp_del = (fmc_delfunc)gateway_comp_del,
-      .tp_sched = (fmc_schedfunc)NULL,
-      .tp_proc = (fmc_procfunc)gateway_comp_process_one,
    },
    {
       .tp_name = "sched-gateway",
@@ -63,24 +61,18 @@ struct fmc_component_def_v1 components[] = {
       .tp_cfgspec = gateway_cfg_spec;
       .tp_new = (fmc_newfunc)gateway_comp_new,
       .tp_del = (fmc_delfunc)gateway_comp_del,
-      .tp_sched = (fmc_schedfunc)gateway_comp_sched,
-      .tp_proc = (fmc_procfunc)gateway_comp_process_one,
    },
    {
       .tp_name = "live-oms",
       .tp_size = sizeof(manager_comp),
       .tp_new = (fmc_newfunc)oms_comp_new,
       .tp_del = (fmc_delfunc)oms_comp_del,
-      .tp_sched = (fmc_schedfunc)NULL,
-      .tp_proc = (fmc_procfunc)oms_comp_process_one,
    },
    {
       .tp_name = "sched-oms",
       .tp_size = sizeof(manager_comp),
       .tp_new = (fmc_newfunc)oms_comp_new,
       .tp_del = (fmc_delfunc)oms_comp_del,
-      .tp_sched = (fmc_schedfunc)oms_comp_sched,
-      .tp_proc = (fmc_procfunc)oms_comp_process_one,
    },
    { NULL },
 };

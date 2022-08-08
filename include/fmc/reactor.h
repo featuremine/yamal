@@ -38,6 +38,7 @@ fmc_reactor_destroy(&loop);
 #include <fmc/error.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
+#include <uthash/utarray.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,8 +83,8 @@ FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
                                     struct fmc_component_input *inps,
                                     fmc_error_t **error);
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
-FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
-                                    fmc_time64_t now, fmc_error_t **error);
+FMMODFUNC size_t fmc_reactor_run_once(struct fmc_reactor *reactor,
+                                      fmc_time64_t now, fmc_error_t **error);
 FMMODFUNC void fmc_reactor_run_sched(struct fmc_reactor *reactor,
                                fmc_error_t **error);
 FMMODFUNC void fmc_reactor_run_live(struct fmc_reactor *reactor,

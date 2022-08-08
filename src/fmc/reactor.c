@@ -82,7 +82,7 @@ void fmc_reactor_component_add(struct fmc_reactor *reactor,
 }
 
 fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
-  struct sched_item *item = utarray_front(reactor->sched);
+  struct sched_item *item = (struct sched_item *)utarray_front(&(reactor->sched));
   return item ? item->t : fmc_time64_end();
 }
 
@@ -94,8 +94,9 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   do {
     struct sched_item *item = (struct sched_item *)utarray_front(&reactor->sched);
     if (!item || fmc_time64_greater(item->t, now)) break;
-    utheap_push(&reactor->queued, item->idx, FMC_LESS);
-    utheap_pop(&reactor->sched);
+    // TODO: type error
+    // utheap_push(&reactor->queued, item->idx, FMC_LESS);
+    // utheap_pop(&reactor->sched);
   } while (true);
   
   do {
@@ -104,8 +105,9 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
     if(ctx->exec) {
       ctx->exec(ctx->comp, now, ctx);
-      if (fmc_error_has(ctx->comp._err)) {
-        fmc_error_set_copy(error, ctx->comp._err);
+      if (fmc_error_has(&ctx->comp->_err)) {
+        fmc_error_set(error, "failed to run component %s with error: %s", ctx->comp->_vt->tp_name,
+                      fmc_error_msg(&ctx->comp->_err));
         return completed;
       }
     }
