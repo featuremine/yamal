@@ -129,6 +129,8 @@ TEST(utheap, heap_push) {
   utheap_pop(&a, cmp);
   ASSERT_EQ(val, 3);
 
+  ASSERT_EQ(utarray_front(&a), nullptr);
+
   utarray_done(&a);
 }
 
