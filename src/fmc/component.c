@@ -95,8 +95,8 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
 }
 
 void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
-  if (!utarray_find(&ctx->reactor->toqueue, ctx->idx, size_t_less)) {
-    utheap_push(&ctx->reactor->toqueue, ctx->idx, size_t_less);
+  if (!utarray_find(&ctx->reactor->toqueue, &ctx->idx, size_t_less)) {
+    utheap_push(&ctx->reactor->toqueue, &ctx->idx, size_t_less);
   }
 }
 
@@ -373,40 +373,44 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
 
   struct fmc_component_list *item =
       (struct fmc_component_list *)calloc(1, sizeof(*item));
-  if (item) {
-    // fmc_component_input to array of component names
-    char **inputsnames = NULL;
-    if (inps) {
-      unsigned int inputscnt = 0;
-      for (; inps[inputscnt].comp; ++inputscnt) {}
-      inputsnames = (char **)calloc(inputscnt, sizeof(*inputsnames));
-      for (unsigned int i = inputscnt; i < inputscnt; ++i) {
-        inputsnames[i] = fmc_cstr_new(inps[i].comp->_vt->tp_name, error);
-      }
-    }
-
-    struct fmc_reactor_ctx ctx = {
-      .reactor = reactor,
-      .comp = NULL,
-      .exec = NULL,
-      .idx = reactor->count,
-      .inp = NULL
-      };
-    item->comp = tp->tp_new(cfg, &ctx, inputsnames, error);
-    fmc_reactor_component_add(reactor, item->comp, inps, error);
-    if (*error) {
-      free(item);
-    } else {
-      item->comp->_vt = tp;
-      fmc_error_init_none(&item->comp->_err);
-      //  TODO: _out_tps ?
-      DL_APPEND(tp->comps, item);
-      return item->comp;
-    }
-  } else {
+  if(!item) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return NULL;
   }
-  return NULL;
+  // fmc_component_input to array of component names
+  unsigned int in_sz = 0;
+  for (; inps && inps[in_sz].comp; ++in_sz) {}
+  char *in_names[in_sz];
+  for (unsigned int i = 0; i < in_sz; ++i) {
+    if(!inps[i].comp->_out_tps) {
+      // TODO: error the outputs of the components are not set
+      goto cleanup;
+    }
+    unsigned int out_sz = 0;
+    for (; inps[i].comp->_out_tps && inps[i].comp->_out_tps[out_sz]; ++out_sz) {}
+    if(inps[i].idx < 0 || out_sz <= inps[i].idx) {
+      // TODO: error
+      goto cleanup;
+    }
+    in_names[i] = inps[i].comp->_out_tps[inps[i].idx];
+  }
+  in_names[in_sz] = NULL;
+
+  struct fmc_reactor_ctx ctx;
+  fmc_reactor_ctx_init(reactor, &ctx);
+  item->comp = tp->tp_new(cfg, &ctx, in_names, error);
+  if (*error) goto cleanup;
+  ctx.comp = item->comp;
+  fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
+  if (*error) goto cleanup;
+  item->comp->_vt = tp;
+  fmc_error_init_none(&item->comp->_err);
+  //  TODO: _out_tps ?
+  DL_APPEND(tp->comps, item);
+  return item->comp;
+cleanup:
+// TODO: implement cleanup
+  return NULL;  
 }
 
 void fmc_component_del(struct fmc_component *comp) {

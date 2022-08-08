@@ -327,13 +327,7 @@ TEST(reactor, reactor) {
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
 
-  fmc_reactor_component_add(&r, comp, nullptr, &err);
-  ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(r.stop, false);
-  ASSERT_EQ(r.done, true);
-  ASSERT_EQ(r.comps->comp, comp);
-
-  fmc_reactor_run_live(&r, &err);
+  fmc_reactor_run_sched(&r, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(r.done, true);
   ASSERT_TRUE(fmc_time64_equal(

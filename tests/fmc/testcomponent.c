@@ -43,9 +43,12 @@ static void test_component_process_one(struct fmc_component *self,
           comp->timesim,
           fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100)))) {
     fmc_time64_inc(&comp->timesim, fmc_time64_from_nanos(10));
+  }
+  if (!fmc_time64_greater(
+          comp->timesim,
+          fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(95)))) {
     _reactor->schedule(ctx, comp->timesim);
   }
-
 };
 
 static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
@@ -64,7 +67,7 @@ static struct test_component *test_component_new(struct fmc_cfg_sect_item *cfg,
     goto cleanup;
   c->timesim = fmc_time64_start();
   _reactor->on_exec(ctx, &test_component_process_one);
-  _reactor->queue(ctx);
+  _reactor->schedule(ctx, c->timesim);
   return c;
 cleanup:
   test_component_del(c);
