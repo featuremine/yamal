@@ -83,8 +83,7 @@ static void components_add_v1(struct fmc_component_module *mod,
       fmc_error_reset(&mod->error, FMC_ERROR_MEMORY, NULL);
       break;
     }
-    memcpy(tp, d, sizeof(*d));
-    tp->comps = NULL;
+    memcpy(tp, &d[i], sizeof(d[0]));
     DL_APPEND(mod->types, tp);
   }
 }

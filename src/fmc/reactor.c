@@ -146,7 +146,7 @@ void fmc_reactor_run_sched(struct fmc_reactor *reactor, fmc_error_t **error) {
   fmc_error_clear(error);
   do {
     fmc_time64_t now = fmc_reactor_sched(reactor);
-    if (reactor->done || fmc_time64_is_end(now)) break;
+    if (reactor->done || reactor->stop || fmc_time64_is_end(now)) break;
     fmc_reactor_run_once(reactor, now, error);
   } while(true);
   reactor->done = true;
@@ -156,7 +156,7 @@ void fmc_reactor_run_live(struct fmc_reactor *reactor, fmc_error_t **error) {
   fmc_error_clear(error);
   do {
     fmc_time64_t now = fmc_time64_from_nanos(fmc_cur_time_ns());
-    if (reactor->done) break;
+    if (reactor->done || reactor->stop) break;
     fmc_reactor_run_once(reactor, now, error);
   } while(true);
   reactor->done = true;
