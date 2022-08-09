@@ -85,13 +85,10 @@ static void consumer_component_process_one(struct fmc_component *self,
                                            fmc_time64_t now,
                                            int argc, struct fmc_shmem argv[]) {
   struct consumer_component* comp = (struct consumer_component*)self;
-  char* data = (char*)*argv[0].view;
-
-  // Validate input contains expected output, generate error if input
-  
-  // Increase count or generate error otherwise
+  size_t* data = (size_t*)*argv[0].view;
+  if (*data != comp->proc)
+    comp->valid_values = false;
   ++comp->proc;
-  // Set output to current count
 };
 
 static struct consumer_component *consumer_component_new(struct fmc_cfg_sect_item *cfg,
@@ -110,6 +107,7 @@ static struct consumer_component *consumer_component_new(struct fmc_cfg_sect_ite
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_process_one);
+  c->valid_values = true;
   return c;
 cleanup:
   if (c) free(c);
