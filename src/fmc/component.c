@@ -416,7 +416,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
   if (*error) goto cleanup;
   item->comp->_vt = tp;
-  //  TODO: _ctx ?
+  item->comp->_ctx = reactor->ctxs[reactor->size-1];
   DL_APPEND(tp->comps, item);
   return item->comp;
 cleanup:
