@@ -30,8 +30,7 @@
 #include <uthash/utarray.h>
 #include <uthash/utheap.h>
 
-static volatile bool stop_signal = false;
-static void sig_handler(int s) { stop_signal = true; }
+#define FMC_REACTOR_HARD_STOP 3
 
 UT_icd sched_item_icd = {
   .sz = sizeof(struct sched_item)
@@ -47,7 +46,6 @@ void fmc_reactor_init(struct fmc_reactor *reactor) {
   utarray_init(&reactor->sched, &sched_item_icd);
   utarray_init(&reactor->queued, &size_t_icd);
   utarray_init(&reactor->toqueue, &size_t_icd);
-  fmc_set_signal_handler(sig_handler);
 }
 
 void fmc_reactor_destroy(struct fmc_reactor *reactor) {
@@ -123,31 +121,34 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     ++completed;
     utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
   } while (true);
-
-  ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
   return completed;
 }
 
-void fmc_reactor_run_sched(struct fmc_reactor *reactor, fmc_error_t **error) {
+void fmc_reactor_run(struct fmc_reactor *reactor, bool live, fmc_error_t **error) {
   fmc_error_clear(error);
   do {
-    fmc_time64_t now = fmc_reactor_sched(reactor);
-    if (reactor->done || reactor->stop || stop_signal || fmc_time64_is_end(now)) break;
+    ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
+    fmc_time64_t next = fmc_reactor_sched(reactor);
+    fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
+    if ((!utarray_len(&reactor->queued) && fmc_time64_is_end(next)) ||
+        (reactor->stop && !reactor->finishing) ||
+        reactor->stop >= FMC_REACTOR_HARD_STOP)
+    {
+          break;
+    }
+    // TODO: handle component error
     fmc_reactor_run_once(reactor, now, error);
   } while(true);
-  reactor->done = true;
 }
 
-void fmc_reactor_run_live(struct fmc_reactor *reactor, fmc_error_t **error) {
-  fmc_error_clear(error);
-  do {
-    fmc_time64_t now = fmc_time64_from_nanos(fmc_cur_time_ns());
-    if (reactor->done || reactor->stop || stop_signal) break;
-    fmc_reactor_run_once(reactor, now, error);
-  } while(true);
-  reactor->done = true;
+void fmc_reactor_stop(struct fmc_reactor *reactor) {
+  if (!reactor->stop++) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item *tmp = NULL;
+    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
+      item->ctx->finishing;
+      ++reactor->finishing;
+      item->ctx->shutdown(item->ctx->comp, item->ctx);
+    }
+  }
 }
-
-void fmc_reactor_stop(struct fmc_reactor *reactor) { reactor->stop = true; }
-
-bool fmc_reactor_done(struct fmc_reactor *reactor) { return reactor->done; }

@@ -73,15 +73,26 @@ typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        fmc_time64_t now,
                                        int argc, struct fmc_shmem a[]);
 
+typedef void (*fmc_reactor_shutdown_clbck)(struct fmc_component *self,
+                                           struct fmc_reactor_ctx *ctx);
+
 struct fmc_reactor_ctx {
   struct fmc_reactor *reactor;
   struct fmc_component *comp;
   fmc_error_t err;
   fmc_reactor_exec_clbck exec;
+  fmc_reactor_shutdown_clbck shutdown;
   size_t idx;
   struct fmc_shmem *inp;
+  bool finishing;
   char **out_tps;
   size_t *deps[];
+};
+
+struct fmc_reactor_stop_item {
+  struct fmc_reactor_stop_item *next;
+  struct fmc_reactor_stop_item *prev;
+  struct fmc_reactor_ctx *ctx;
 };
 
 struct fmc_reactor {
@@ -90,8 +101,9 @@ struct fmc_reactor {
   UT_array sched;
   UT_array queued;
   UT_array toqueue;
-  volatile bool stop;
-  bool done;
+  size_t finishing;
+  volatile int stop;
+  struct fmc_reactor_stop_item *stop_list;
 };
 
 struct fmc_component_input;
@@ -106,12 +118,9 @@ FMMODFUNC void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
 FMMODFUNC size_t fmc_reactor_run_once(struct fmc_reactor *reactor,
                                       fmc_time64_t now, fmc_error_t **error);
-FMMODFUNC void fmc_reactor_run_sched(struct fmc_reactor *reactor,
-                               fmc_error_t **error);
-FMMODFUNC void fmc_reactor_run_live(struct fmc_reactor *reactor,
+FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                                fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
-FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);
 
 #ifdef __cplusplus
 }
