@@ -22,6 +22,7 @@
 #include <uthash/utlist.h>
 #include <fmc/reactor.h>
 #include <fmc/memory.h>
+#include <iocomponent.h>
 
 struct fmc_reactor_api_v1 *_reactor;
 
@@ -69,12 +70,6 @@ cleanup:
 };
 
 struct fmc_cfg_node_spec producer_component_cfg_spec[] = {{NULL}};
-
-struct consumer_component {
-  fmc_component_HEAD;
-  size_t proc;
-  bool valid_values;
-};
 
 static void consumer_component_del(struct consumer_component *comp) {
   free(comp);
