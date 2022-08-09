@@ -98,6 +98,9 @@ cleanup:
   return NULL;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
     {"teststr", "Test string", true, {FMC_CFG_STR, {NULL}}}, {NULL}};
@@ -131,3 +134,7 @@ FMCompInit_testcomponent(struct fmc_component_api *api,
   }
   _reactor = api->reactor_v1;
 }
+
+#ifdef __cplusplus
+}
+#endif
