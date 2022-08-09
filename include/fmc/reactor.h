@@ -59,16 +59,18 @@ struct sched_item {
   size_t idx;
 };
 
-struct fmc_reactor_component_list {
-  struct fmc_component *comp;
-  fmc_time64_t sched;
-  struct fmc_reactor_component_list *next, *prev;
-};
-
 struct fmc_reactor_ctx;
+
+typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
+                                      struct fmc_reactor_ctx *ctx,
+                                      fmc_time64_t now,
+                                      int idx,
+                                      struct fmc_shmem in);
+
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
+                                       struct fmc_reactor_ctx *ctx,
                                        fmc_time64_t now,
-                                       struct fmc_reactor_ctx *ctx);
+                                       int argc, struct fmc_shmem[]);
 
 struct fmc_reactor_ctx {
   struct fmc_reactor *reactor;
@@ -80,9 +82,8 @@ struct fmc_reactor_ctx {
 };
 
 struct fmc_reactor {
-  struct fmc_reactor_component_list *comps;
-  size_t count;
   struct fmc_reactor_ctx **ctxs;
+  size_t size;
   UT_array sched;
   UT_array queued;
   UT_array toqueue;

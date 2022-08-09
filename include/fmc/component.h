@@ -136,8 +136,7 @@ extern "C" {
 
 #define fmc_component_HEAD                                                     \
   struct fmc_component_type *_vt;                                              \
-  char **_out_tps;                                                             \
-  struct fmc_error _err
+  struct fmc_reactor_ctx *_ctx;
 
 struct fmc_component {
   fmc_component_HEAD;
@@ -147,7 +146,10 @@ struct fmc_component {
 struct fmc_reactor_api_v1 {
    void (*queue)(struct fmc_reactor_ctx *);
    void (*schedule)(struct fmc_reactor_ctx *, fmc_time64_t);
-   // void (*notify)(struct fmc_reactor_ctx *, int, fmc_memory_t); // notify the system that output have been updated
+   void (*notify)(struct fmc_reactor_ctx *, int, struct fmc_shmem); // notify the system that output have been updated
+   void (*set_error)(struct fmc_reactor_ctx *, fmc_error_t *err);
+   void (*add_output)(struct fmc_reactor_ctx *, const char *name, const char *type);
+   void (*on_dep)(struct fmc_reactor_ctx *, fmc_reactor_dep_clbck); // a dependency has been updated
    void (*on_exec)(struct fmc_reactor_ctx *, fmc_reactor_exec_clbck); // all input components have been updated
 };
 
