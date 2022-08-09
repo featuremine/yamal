@@ -320,9 +320,8 @@ TEST(reactor, reactorsched) {
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
 
-  fmc_reactor_run_sched(&r, &err);
+  fmc_reactor_run(&r, false, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(r.done, true);
   ASSERT_TRUE(fmc_time64_equal(
       testcomp->timesim,
       fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
@@ -394,10 +393,9 @@ TEST(reactor, reactorlive) {
     fmc_reactor_stop(rptr);
   });
 
-  fmc_reactor_run_live(&r, &err);
+  fmc_reactor_run(&r, true, &err);
   thr.join();
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(r.done, true);
   ASSERT_TRUE(fmc_time64_equal(
       testcomp->timesim,
       fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
