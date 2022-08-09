@@ -147,13 +147,13 @@ struct fmc_component {
 struct fmc_reactor_api_v1 {
    void (*queue)(struct fmc_reactor_ctx *);
    void (*schedule)(struct fmc_reactor_ctx *, fmc_time64_t);
-   void (*notify)(struct fmc_reactor_ctx *, int, struct fmc_shmem); // notify the system that output have been updated
-   void (*finished)(struct fmc_reactor_ctx *); // notify the system that component is finished
    void (*set_error)(struct fmc_reactor_ctx *, const char *fmt, ...); // set the component error
-   void (*add_output)(struct fmc_reactor_ctx *, const char *type, const char *name);
-   void (*on_dep)(struct fmc_reactor_ctx *, fmc_reactor_dep_clbck); // a dependency has been updated
-   void (*on_exec)(struct fmc_reactor_ctx *, fmc_reactor_exec_clbck); // all input components have been updated
    void (*on_shutdown)(struct fmc_reactor_ctx *, fmc_reactor_shutdown_clbck); // system shutting down
+   void (*finished)(struct fmc_reactor_ctx *); // notify the system that component is finished
+   void (*on_exec)(struct fmc_reactor_ctx *, fmc_reactor_exec_clbck); // all input components have been updated
+   void (*on_dep)(struct fmc_reactor_ctx *, fmc_reactor_dep_clbck); // a dependency has been updated
+   void (*add_output)(struct fmc_reactor_ctx *, const char *type, const char *name);
+   void (*notify)(struct fmc_reactor_ctx *, int, struct fmc_shmem); // notify the system that output have been updated
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
