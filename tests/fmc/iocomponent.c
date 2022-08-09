@@ -40,6 +40,11 @@ static struct producer_component *producer_component_new(struct fmc_cfg_sect_ite
                                                  struct fmc_reactor_ctx *ctx,
                                                  char **inp_tps,
                                                  fmc_error_t **err) {
+  if (inp_tps && inp_tps[0]) {
+    fmc_error_set(err, "Invalid number of inputs, expected 0");    
+    return NULL;
+  }
+
   struct producer_component *c = (struct producer_component *)calloc(1, sizeof(*c));
   if (!c) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
@@ -69,6 +74,16 @@ static struct consumer_component *consumer_component_new(struct fmc_cfg_sect_ite
                                                  struct fmc_reactor_ctx *ctx,
                                                  char **inp_tps,
                                                  fmc_error_t **err) {
+  if (!inp_tps || !inp_tps[0] || inp_tps[1]) {
+    fmc_error_set(err, "Invalid number of inputs, expected 1");    
+    return NULL;
+  }
+
+  if (strncmp(inp_tps[0], "valid input type", 16) != 0) {
+    fmc_error_set(err, "Invalid input type %s, expected 'valid input type'", inp_tps[0]);    
+    return NULL;
+  }
+
   struct consumer_component *c = (struct consumer_component *)calloc(1, sizeof(*c));
   if (!c) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
@@ -76,6 +91,9 @@ static struct consumer_component *consumer_component_new(struct fmc_cfg_sect_ite
   }
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_process_one);
+  // TODO: Set up output
+  // Number of outputs: 1
+  // Output[0]: Number of valid entries processed
   return c;
 };
 
