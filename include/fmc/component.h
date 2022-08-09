@@ -31,8 +31,38 @@ struct manager_comp {
 
 struct fmc_reactor_api_v1 *_reactor;
 
-gateway_comp_process_one(gateway_comp *comp) {
-   gateway_comp *c = (gateway_comp *)comp;
+static void gateway_comp_del(struct gateway_comp *comp) {
+  free(comp);
+};
+
+static struct gateway_comp *
+gateway_comp_new_live(struct fmc_cfg_sect_item *cfg,
+                       struct fmc_reactor_ctx *ctx,
+                       char **inp_tps,
+                       fmc_error_t **err) {
+  struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  _reactor->on_exec(ctx, &gateway_comp_process_one_live);
+  _reactor->queue(ctx);
+  return c;
+cleanup:
+  fmc_error_set2(err, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
+static struct gateway_comp *
+gateway_comp_new_sched(struct fmc_cfg_sect_item *cfg,
+                       struct fmc_reactor_ctx *ctx,
+                       char **inp_tps,
+                       fmc_error_t **err) {
+  struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  _reactor->on_exec(ctx, &gateway_comp_process_one_sched);
+  _reactor->schedule(ctx, start_time);
+  return c;
+cleanup:
+  fmc_error_set2(err, FMC_ERROR_MEMORY);
+  return NULL;
 };
 
 fmc_cfg_node_spec session_cfg_spec[] = {
@@ -50,26 +80,30 @@ fmc_cfg_node_spec gateway_cfg_spec[] = {
 struct fmc_component_def_v1 components[] = {
    {
       .tp_name = "live-gateway",
+      .tp_descr = "Gateway live component",
       .tp_size = sizeof(gateway_comp),
       .tp_cfgspec = gateway_cfg_spec;
-      .tp_new = (fmc_newfunc)gateway_comp_new,
+      .tp_new = (fmc_newfunc)gateway_comp_new_live,
       .tp_del = (fmc_delfunc)gateway_comp_del,
    },
    {
       .tp_name = "sched-gateway",
+      .tp_descr = "Gateway scheduled component",
       .tp_size = sizeof(gateway_comp),
       .tp_cfgspec = gateway_cfg_spec;
-      .tp_new = (fmc_newfunc)gateway_comp_new,
+      .tp_new = (fmc_newfunc)gateway_comp_new_sched,
       .tp_del = (fmc_delfunc)gateway_comp_del,
    },
    {
       .tp_name = "live-oms",
+      .tp_descr = "OMS live component",
       .tp_size = sizeof(manager_comp),
       .tp_new = (fmc_newfunc)oms_comp_new,
       .tp_del = (fmc_delfunc)oms_comp_del,
    },
    {
       .tp_name = "sched-oms",
+      .tp_descr = "OMS scheduled component",
       .tp_size = sizeof(manager_comp),
       .tp_new = (fmc_newfunc)oms_comp_new,
       .tp_del = (fmc_delfunc)oms_comp_del,

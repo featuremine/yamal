@@ -53,7 +53,6 @@ test_component_new_sched(struct fmc_cfg_sect_item *cfg,
                          fmc_error_t **err) {
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
-  memset(c, 0, sizeof(*c));
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "teststr");
   c->teststr = fmc_cstr_new(item->node.value.str, err);
   if (*err) goto cleanup;
@@ -86,7 +85,6 @@ test_component_new_live(struct fmc_cfg_sect_item *cfg,
                         fmc_error_t **err) {
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
-  memset(c, 0, sizeof(*c));
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "teststr");
   c->teststr = fmc_cstr_new(item->node.value.str, err);
   if (*err) goto cleanup;
