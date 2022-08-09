@@ -129,9 +129,6 @@ FMCOMPMODINITFUNC void
 FMCompInit_testcomponent(struct fmc_component_api *api,
                          struct fmc_component_module *mod) {
   api->components_add_v1(mod, components);
-  if (!api->reactor_v1) {
-    fmc_error_init_sprintf(&mod->error, "Unable to find reactor api v1");
-  }
   _reactor = api->reactor_v1;
 }
 
