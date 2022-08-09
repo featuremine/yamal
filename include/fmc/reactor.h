@@ -45,6 +45,7 @@ fmc_reactor_destroy(&loop);
 #include <fmc/time.h>
 #include <uthash/utarray.h>
 #include <fmc/math.h>
+#include <fmc/memory.h>
 
 #ifdef __cplusplus
 extern "C" {
