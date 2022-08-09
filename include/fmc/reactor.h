@@ -45,6 +45,7 @@ fmc_component_sys_destroy(&sys);
 
 #include <fmc/component.h>
 #include <fmc/error.h>
+#include <fmc/memory.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
 #include <uthash/utarray.h>
@@ -70,14 +71,16 @@ typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        struct fmc_reactor_ctx *ctx,
                                        fmc_time64_t now,
-                                       int argc, struct fmc_shmem[]);
+                                       int argc, struct fmc_shmem a[]);
 
 struct fmc_reactor_ctx {
   struct fmc_reactor *reactor;
   struct fmc_component *comp;
+  fmc_error_t err;
   fmc_reactor_exec_clbck exec;
   size_t idx;
   struct fmc_shmem *inp;
+  char **out_tps;
   size_t *deps[];
 };
 

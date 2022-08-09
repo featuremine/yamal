@@ -54,7 +54,6 @@ static void components_del(struct fmc_component_list **comps) {
   struct fmc_component_list *tmp;
   DL_FOREACH_SAFE(head, item, tmp) {
     DL_DELETE(head, item);
-    fmc_error_destroy(&item->comp->_err);
     item->comp->_vt->tp_del(item->comp);
     free(item);
   }
@@ -390,19 +389,19 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   if (!item) goto cleanup;
   // fmc_component_input to array of component names
   for (unsigned int i = 0; i < in_sz; ++i) {
-    if (!inps[i].comp->_out_tps) {
+    if (!inps[i].comp->_ctx->out_tps) {
       fmc_error_set(error, "the outputs of the input component %s are not set",
                     inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     unsigned int out_sz = 0;
-    for (; inps[i].comp->_out_tps && inps[i].comp->_out_tps[out_sz]; ++out_sz) {}
+    for (; inps[i].comp->_ctx->out_tps && inps[i].comp->_ctx->out_tps[out_sz]; ++out_sz) {}
     if (inps[i].idx < 0 || out_sz <= inps[i].idx) {
       fmc_error_set(error, "invalid index for the component %s",
                     inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
-    in_names[i] = inps[i].comp->_out_tps[inps[i].idx];
+    in_names[i] = inps[i].comp->_ctx->out_tps[inps[i].idx];
   }
   in_names[in_sz] = NULL;
 
@@ -414,8 +413,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
   if (*error) goto cleanup;
   item->comp->_vt = tp;
-  fmc_error_init_none(&item->comp->_err);
-  //  TODO: _out_tps ?
+  //  TODO: _ctx ?
   DL_APPEND(tp->comps, item);
   return item->comp;
 cleanup:
@@ -437,7 +435,6 @@ void fmc_component_del(struct fmc_component *comp) {
       break;
     }
   }
-  fmc_error_destroy(&comp->_err);
   comp->_vt->tp_del(comp);
 }
 

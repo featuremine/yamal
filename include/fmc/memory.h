@@ -20,6 +20,8 @@
  * @see http://www.featuremine.com
  */
 
+#pragma once
+
 #include <fmc/error.h>
 
 #ifdef __cplusplus

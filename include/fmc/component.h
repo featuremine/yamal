@@ -123,6 +123,7 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
 
 #include <fmc/reactor.h>
 #include <fmc/config.h>
+#include <fmc/memory.h>
 #include <fmc/extension.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
