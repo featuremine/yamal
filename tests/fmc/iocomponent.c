@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <uthash/utlist.h>
+#include <fmc/reactor.h>
 
 struct fmc_reactor_api_v1 *_reactor;
 
@@ -59,6 +60,7 @@ struct fmc_cfg_node_spec producer_component_cfg_spec[] = {{NULL}};
 
 struct consumer_component {
   fmc_component_HEAD;
+  size_t count;
 };
 
 static void consumer_component_del(struct consumer_component *comp) {
@@ -68,12 +70,24 @@ static void consumer_component_del(struct consumer_component *comp) {
 static void consumer_component_process_one(struct fmc_component *self,
                                        fmc_time64_t time,
                                        struct fmc_reactor_ctx *ctx) {
+  struct consumer_component* comp = (struct consumer_component*)self;
+  if (!ctx->inp) {
+    fmc_error_init_sprintf(&self->_err, "Invalid number of inputs, expected 1");    
+    return;
+  }
+  char* data = (char*)*ctx->inp[0].view;
+
+  // Validate input contains expected output, generate error if input
+  
+  // Increase count or generate error otherwise
+  ++comp->count;
+  // Set output to current count
 };
 
 static struct consumer_component *consumer_component_new(struct fmc_cfg_sect_item *cfg,
-                                                 struct fmc_reactor_ctx *ctx,
-                                                 char **inp_tps,
-                                                 fmc_error_t **err) {
+                                                         struct fmc_reactor_ctx *ctx,
+                                                         char **inp_tps,
+                                                         fmc_error_t **err) {
   if (!inp_tps || !inp_tps[0] || inp_tps[1]) {
     fmc_error_set(err, "Invalid number of inputs, expected 1");    
     return NULL;

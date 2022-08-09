@@ -49,6 +49,7 @@ fmc_component_sys_destroy(&sys);
 #include <fmc/time.h>
 #include <uthash/utarray.h>
 #include <fmc/math.h>
+#include <fmc/memory.h>
 
 #ifdef __cplusplus
 extern "C" {
