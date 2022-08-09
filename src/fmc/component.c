@@ -103,13 +103,13 @@ static int sched_item_less(const void *a, const void *b) {
   return (int)fmc_time64_less(_a->t, _b->t);
 }
 
-void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
+static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
   if (!utarray_find(&ctx->reactor->toqueue, &ctx->idx, size_t_less)) {
     utheap_push(&ctx->reactor->toqueue, &ctx->idx, size_t_less);
   }
 }
 
-void reactor_schedule_v1(struct fmc_reactor_ctx *ctx, fmc_time64_t time) {
+static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx, fmc_time64_t time) {
   struct sched_item item = {
     .idx = ctx->idx,
     .t = time
@@ -119,18 +119,18 @@ void reactor_schedule_v1(struct fmc_reactor_ctx *ctx, fmc_time64_t time) {
   }
 }
 
-void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_exec_clbck cl) {
+static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_exec_clbck cl) {
   ctx->exec = cl;
 }
 
-struct fmc_reactor_api_v1 reactor_v1 = {
+static struct fmc_reactor_api_v1 reactor_v1 = {
   .queue = reactor_queue_v1,
   .schedule = reactor_schedule_v1,
    // void (*notify)(struct fmc_reactor_ctx *, int, fmc_memory_t); // notify the system that output have been updated
    .on_exec = reactor_on_exec_v1 // all input components have been updated
 };
 
-struct fmc_component_api api = {
+static struct fmc_component_api api = {
     .reactor_v1 = &reactor_v1,
     .components_add_v1 = components_add_v1,
     .reactor_v2 = NULL,

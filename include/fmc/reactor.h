@@ -24,11 +24,16 @@
 fmc_error_t *error;
 fmc_reactor loop;
 fmc_reactor_init(&loop);
-fmc_reactor_component_add(&loop, gateway, 99, &error);
-if(error) { fmc_reactor_destroy(&loop); return; }
-fmc_reactor_component_add(&loop, manager, 98, &error);
-if(error) { fmc_reactor_destroy(&loop); return; }
-fmc_reactor_run(&loop, &error);
+struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "my_components_module", &error);
+if(error) { ...; }
+struct fmc_component_type *tp =
+    fmc_component_module_type_get(mod, "my_component", &error);
+if(error) { ...; }
+struct fmc_component *comp =
+    fmc_component_new(&loop, tp, cfg, nullptr, &error);
+if(error) { ...; }
+fmc_reactor_run_live(&loop, &error);
 fmc_reactor_destroy(&loop);
 */
 
