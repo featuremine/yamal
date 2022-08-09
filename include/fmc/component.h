@@ -126,6 +126,7 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
 #include <fmc/extension.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
+#include <fmc/memory.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -151,6 +152,7 @@ struct fmc_reactor_api_v1 {
    void (*add_output)(struct fmc_reactor_ctx *, const char *name, const char *type);
    void (*on_dep)(struct fmc_reactor_ctx *, fmc_reactor_dep_clbck); // a dependency has been updated
    void (*on_exec)(struct fmc_reactor_ctx *, fmc_reactor_exec_clbck); // all input components have been updated
+   struct fmc_pool* (*get_pool)(struct fmc_reactor_ctx *);
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.

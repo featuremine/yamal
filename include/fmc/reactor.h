@@ -90,6 +90,7 @@ struct fmc_reactor {
   UT_array toqueue;
   volatile bool stop;
   bool done;
+  struct fmc_pool pool;
 };
 
 struct fmc_component_input;
