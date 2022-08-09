@@ -52,7 +52,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->sched);
   utarray_done(&reactor->queued);
   utarray_done(&reactor->toqueue);
-  for (unsigned int i = 0; reactor->ctxs && reactor->ctxs[i]; ++i) {
+  for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     free(reactor->ctxs[i]);
   }
   free(reactor->ctxs);
@@ -76,12 +76,11 @@ void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
   if(!ctxtmp) goto cleanup;
   struct fmc_reactor_ctx **ctxstmp =
       (struct fmc_reactor_ctx **)realloc(r->ctxs,
-                                         sizeof(*r->ctxs)*(r->size+2));
+                                         sizeof(*r->ctxs) * (r->size + 1));
   if(!ctxstmp) goto cleanup;
   r->ctxs = ctxstmp;
   r->ctxs[r->size] = ctxtmp;
   memcpy(r->ctxs[r->size], ctx, sizeof(*ctx));
-  r->ctxs[r->size+1] = NULL;
   ++r->size;
   return;
 cleanup:
