@@ -22,7 +22,9 @@
 
 /* Usage example:
 fmc_error_t *error;
-fmc_reactor loop;
+struct fmc_component_sys sys;
+struct fmc_reactor loop;
+fmc_component_sys_init(&sys);
 fmc_reactor_init(&loop);
 struct fmc_component_module *mod =
       fmc_component_module_get(&sys, "my_components_module", &error);
@@ -34,7 +36,9 @@ struct fmc_component *comp =
     fmc_component_new(&loop, tp, cfg, nullptr, &error);
 if(error) { ...; }
 fmc_reactor_run_live(&loop, &error);
+if(error) { ...; }
 fmc_reactor_destroy(&loop);
+fmc_component_sys_destroy(&sys);
 */
 
 #pragma once
