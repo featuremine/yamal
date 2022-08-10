@@ -53,6 +53,13 @@ void fmc_error_reset(fmc_error_t *err, FMC_ERROR_CODE code, const char *buf) {
   fmc_error_init(err, code, buf);
 }
 
+void fmc_error_init_mov(fmc_error_t *err, fmc_error_t *from) {
+  err->code = from->code;
+  err->buf = from->buf;
+  from->code = FMC_ERROR_NONE;
+  from->buf = NULL;
+}
+
 void fmc_error_init_none(fmc_error_t *err) {
   fmc_error_init(err, FMC_ERROR_NONE, NULL);
 }
@@ -84,10 +91,17 @@ void fmc_error_reset_sprintf(fmc_error_t *err, const char *fmt, ...) {
   FMC_ERROR_FORMAT(err, fmt);
 }
 
+void fmc_error_mov(fmc_error_t *err1, fmc_error_t *err2) {
+  fmc_error_destroy(err1);
+  fmc_error_init_mov(err1, err2);
+}
+
 void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
+  fmc_error_t res;
+  FMC_ERROR_FORMAT(&res, fmt);
   fmc_error_t *err = fmc_error_inst();
-  fmc_error_destroy(err);
-  FMC_ERROR_FORMAT(err, fmt);
+  fmc_error_mov(err, &res);
+  fmc_error_destroy(&res);
   *err_ptr = err;
 }
 
@@ -110,6 +124,11 @@ void fmc_error_clear(fmc_error_t **err) { *err = NULL; }
 
 const char *fmc_error_msg(fmc_error_t *err) {
   return err->code == FMC_ERROR_CUSTOM ? err->buf : error_msgs[err->code];
+}
+
+void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
+  fmc_error_destroy(err1);
+  fmc_error_init(err1, err2->code, err2->buf);
 }
 
 void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
