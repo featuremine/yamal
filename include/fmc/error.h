@@ -25,6 +25,7 @@
 #pragma once
 
 #include <fmc/platform.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -197,6 +198,26 @@ FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
  * @param code FMC_ERROR_CODE
  */
 FMMODFUNC void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code);
+
+/**
+ * @brief Macro to populate error with parameter expansion
+ *
+ * @param err error pointer
+ * @param fmt format string
+ */
+#define FMC_ERROR_FORMAT(err, fmt)                                             \
+  do {                                                                         \
+    va_list _args1;                                                            \
+    va_start(_args1, fmt);                                                     \
+    va_list _args2;                                                            \
+    va_copy(_args2, _args1);                                                   \
+    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1;                           \
+    char _buf[_size];                                                          \
+    va_end(_args1);                                                            \
+    vsnprintf(_buf, _size, fmt, _args2);                                       \
+    va_end(_args2);                                                            \
+    fmc_error_init(err, FMC_ERROR_CUSTOM, _buf);                               \
+  } while (0)
 
 #ifdef __cplusplus
 }

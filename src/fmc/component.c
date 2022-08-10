@@ -119,25 +119,41 @@ static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx,
 }
 
 void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
-  va_list _args1;
-  va_start(_args1, fmt);
   if (fmt) {
-    va_list _args2;
-    va_copy(_args2, _args1);
-    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1;
-    char _buf[_size];
-    vsnprintf(_buf, _size, fmt, _args2);
-    va_end(_args2);
-    fmc_error_init(&ctx->err, FMC_ERROR_CUSTOM, _buf);
+    FMC_ERROR_FORMAT(&ctx->err, fmt);
   } else {
+    va_list _args1;
+    va_start(_args1, fmt);
     fmc_error_init(&ctx->err, va_arg(_args1, FMC_ERROR_CODE), NULL);
+    va_end(_args1);
   }
-  va_end(_args1);
+}
+
+bool find_context(void * rhs, void* lhs) {
+  struct fmc_reactor_stop_item *_rhs = rhs;
+  struct fmc_reactor_stop_item *_lhs = lhs;
+  return _rhs->ctx == _lhs->ctx;
 }
 
 void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
                             fmc_reactor_shutdown_clbck cl) {
+
+  if (!ctx->shutdown && cl) {
+    struct fmc_reactor_stop_item *item = calloc(1, sizeof*item);
+    if (!item) goto cleanup;
+    item->ctx = ctx;
+    DL_APPEND(ctx->reactor->stop_list, item);
+  } else if (ctx->shutdown && !cl) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item ctx_item;
+    ctx_item.ctx = ctx;
+    DL_SEARCH(ctx->reactor->stop_list, item, &ctx_item,find_context);
+    DL_DELETE(ctx->reactor->stop_list, item);
+  }
   ctx->shutdown = cl;
+  return;
+cleanup:
+  reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
 void reactor_finished_v1(struct fmc_reactor_ctx *ctx) {
