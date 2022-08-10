@@ -31,6 +31,7 @@
 #include <string.h> // memcpy() strtok()
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
+#include <stdarg.h>
 
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
@@ -117,10 +118,53 @@ static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx,
   ctx->exec = cl;
 }
 
+void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
+  va_list _args1;
+  va_start(_args1, fmt);
+  if (fmt) {
+    va_list _args2;
+    va_copy(_args2, _args1);
+    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1;
+    char _buf[_size];
+    vsnprintf(_buf, _size, fmt, _args2);
+    va_end(_args2);
+    fmc_error_init(&ctx->err, FMC_ERROR_CUSTOM, _buf);
+  } else {
+    fmc_error_init(&ctx->err, va_arg(_args1, FMC_ERROR_CODE), NULL);
+  }
+  va_end(_args1);
+}
+
+void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_shutdown_clbck cl) {
+  ctx->shutdown = cl;
+}
+
+void reactor_finished_v1(struct fmc_reactor_ctx *ctx) {
+  if (!ctx->finishing) return;
+  ctx->finishing = false;
+  --ctx->reactor->finishing;
+}
+
+void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
+  ctx->dep_upd = cl;
+}
+
+void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type, const char *name) {
+}
+
+void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
+}
+
 static struct fmc_reactor_api_v1 reactor_v1 = {
     .queue = reactor_queue_v1,
     .schedule = reactor_schedule_v1,
-    .on_exec = reactor_on_exec_v1 // all input components have been updated
+    .set_error = reactor_set_error_v1,
+    .on_shutdown = reactor_on_shutdown_v1,
+    .finished = reactor_finished_v1,
+    .on_exec = reactor_on_exec_v1,
+    .on_dep = reactor_on_dep_v1,
+    .add_output = reactor_add_output_v1,
+    .notify = reactor_notify_v1
 };
 
 static struct fmc_component_api api = {
