@@ -49,6 +49,12 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->queued);
   utarray_done(&reactor->toqueue);
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
+    if (reactor->ctxs[i]->out_tps) {
+      for (unsigned int j = 0; j < reactor->ctxs[j]->nouts; ++j)
+        free(reactor->ctxs[i]->out_tps[j]);
+      free(reactor->ctxs[i]->out_tps);
+    }
+    // Free dependency related objects
     free(reactor->ctxs[i]);
   }
   free(reactor->ctxs);

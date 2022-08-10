@@ -93,18 +93,16 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
       &mod->error, "component API version is higher than the system version");
 }
 
-static int size_t_less(const void *a, const void *b) {
-  return FMC_SIZE_T_PTR_LESS(a, b);
-}
-
 static int sched_item_less(const void *a, const void *b) {
   struct sched_item *_a = (struct sched_item *)a;
   struct sched_item *_b = (struct sched_item *)b;
-  return (int)fmc_time64_less(_a->t, _b->t);
+  if (fmc_time64_less(_a->t, _b->t))
+    return 1;
+  return (int) _a->idx < _b->idx;
 }
 
 static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
-  utheap_push(&ctx->reactor->toqueue, &ctx->idx, size_t_less);
+  utheap_push(&ctx->reactor->toqueue, &ctx->idx, FMC_SIZE_T_PTR_LESS);
 }
 
 static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx,
@@ -159,7 +157,17 @@ cleanup:
 }
 
 void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
-  //TODO: implement
+  size_t *deps = ctx->deps[idx];
+  if (!deps) return;
+  size_t ndeps = deps[0];
+  for (size_t i = 1; i <= ndeps; ++i) {
+    struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[deps[i]];
+    if (dep_ctx->dep_upd) {
+      // TODO: fix time, fix index of input that corresponds to output
+      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, fmc_time64_from_nanos(0), 0, mem);
+    }
+    utheap_push(&ctx->reactor->toqueue, &deps[i], FMC_SIZE_T_PTR_LESS);
+  }
 }
 
 static struct fmc_reactor_api_v1 reactor_v1 = {
