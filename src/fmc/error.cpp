@@ -131,11 +131,6 @@ void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
   fmc_error_init(err1, err2->code, err2->buf);
 }
 
-void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
-  fmc_error_destroy(err1);
-  fmc_error_init(err1, err2->code, err2->buf);
-}
-
 void fmc_error_init_join(fmc_error_t *res, fmc_error_t *err1, fmc_error_t *err2,
                          const char *sep) {
   fmc_error_init_sprintf(
