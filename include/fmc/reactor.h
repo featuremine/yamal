@@ -83,11 +83,12 @@ struct fmc_reactor_ctx {
   fmc_reactor_shutdown_clbck shutdown;
   fmc_reactor_dep_clbck dep_upd;
   size_t idx;
-  struct fmc_shmem *inp;
   bool finishing;
   size_t nouts;
   char **out_tps;
-  size_t *deps[];
+  size_t **deps; // change to use a structure that holds both dep idx and input idx
+                 // array of array of structures - no lists.
+  struct fmc_shmem inp[]; //allocate context to be big enough to set inputs
 };
 
 struct fmc_reactor_stop_item {

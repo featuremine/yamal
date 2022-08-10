@@ -188,6 +188,7 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem me
       dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, deps[i + 1], mem);
     }
     utheap_push(&ctx->reactor->toqueue, &deps[i], FMC_SIZE_T_PTR_LESS);
+    fmc_shmem_init_share(dep_ctx->inp[deps[i+1]], mem);
   }
 }
 
