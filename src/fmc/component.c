@@ -129,7 +129,7 @@ void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   }
 }
 
-bool find_context(void * rhs, void* lhs) {
+bool find_context(void *rhs, void *lhs) {
   struct fmc_reactor_stop_item *_rhs = rhs;
   struct fmc_reactor_stop_item *_lhs = lhs;
   return _rhs->ctx == _lhs->ctx;
@@ -139,15 +139,16 @@ void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
                             fmc_reactor_shutdown_clbck cl) {
 
   if (!ctx->shutdown && cl) {
-    struct fmc_reactor_stop_item *item = calloc(1, sizeof*item);
-    if (!item) goto cleanup;
+    struct fmc_reactor_stop_item *item = calloc(1, sizeof *item);
+    if (!item)
+      goto cleanup;
     item->ctx = ctx;
     DL_APPEND(ctx->reactor->stop_list, item);
   } else if (ctx->shutdown && !cl) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item ctx_item;
     ctx_item.ctx = ctx;
-    DL_SEARCH(ctx->reactor->stop_list, item, &ctx_item,find_context);
+    DL_SEARCH(ctx->reactor->stop_list, item, &ctx_item, find_context);
     if (item)
       DL_DELETE(ctx->reactor->stop_list, item);
   }
