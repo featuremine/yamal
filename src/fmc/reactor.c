@@ -143,6 +143,7 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
+  // TODO: make increment atomic
   if (!reactor->stop++) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item *tmp = NULL;

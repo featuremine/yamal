@@ -170,7 +170,7 @@ struct fmc_reactor_api_v1 {
          new error or config structure and implement new API version */
 typedef struct fmc_component *(*fmc_newfunc)(struct fmc_cfg_sect_item *,
                                              struct fmc_reactor_ctx *ctx,
-                                             char **inp_tps, fmc_error_t **);
+                                             char **inp_tps);
 typedef void (*fmc_delfunc)(struct fmc_component *);
 
 struct fmc_component_def_v1 {
