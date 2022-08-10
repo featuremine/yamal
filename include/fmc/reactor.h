@@ -82,6 +82,7 @@ struct fmc_reactor_ctx {
   fmc_error_t err;
   fmc_reactor_exec_clbck exec;
   fmc_reactor_shutdown_clbck shutdown;
+  fmc_reactor_dep_clbck dep_upd;
   size_t idx;
   struct fmc_shmem *inp;
   bool finishing;

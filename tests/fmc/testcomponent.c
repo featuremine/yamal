@@ -63,8 +63,12 @@ test_component_new_sched(struct fmc_cfg_sect_item *cfg,
   _reactor->schedule(ctx, c->timesim);
   return c;
 cleanup:
-  if (c)
+  if (c) {
+    if (c->teststr) {
+      free(c->teststr);
+    }
     test_component_del(c);
+  }
   if (!*err)
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   return NULL;
@@ -99,8 +103,12 @@ test_component_new_live(struct fmc_cfg_sect_item *cfg,
   _reactor->queue(ctx);
   return c;
 cleanup:
-  if (c)
+  if (c) {
+    if (c->teststr) {
+      free(c->teststr);
+    }
     test_component_del(c);
+  }
   if (!*err)
     fmc_error_set2(err, FMC_ERROR_MEMORY);
   return NULL;

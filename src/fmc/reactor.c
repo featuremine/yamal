@@ -151,7 +151,9 @@ void fmc_reactor_stop(struct fmc_reactor *reactor) {
       if(!item->ctx->finishing) {
         ++reactor->finishing;
         item->ctx->finishing = true;
-        item->ctx->shutdown(item->ctx->comp, item->ctx);
+        if (item->ctx->shutdown) {
+          item->ctx->shutdown(item->ctx->comp, item->ctx);
+        }
       }
     }
   }
