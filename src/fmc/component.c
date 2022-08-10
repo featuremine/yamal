@@ -467,7 +467,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
 
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
-  item->comp = tp->tp_new(cfg, &ctx, in_names, error);
+  item->comp = tp->tp_new(cfg, &ctx, in_names);
   if (*error)
     goto cleanup;
   ctx.comp = item->comp;
