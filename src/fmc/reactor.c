@@ -117,15 +117,16 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     if (!item)
       break;
     struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
-    if (ctx->exec) {
-      ctx->exec(ctx->comp, ctx, now, 0, NULL); // TODO add argc and schmem
+    // only execute if it does not have an error in the context
+    if (!fmc_error_has(&ctx->err) && ctx->exec) {
+      ctx->exec(ctx->comp, ctx, now); // TODO add argc and schmem
       if (fmc_error_has(&ctx->err)) {
         fmc_error_set(error, "failed to run component %s with error: %s",
                       ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
         return completed;
       }
+      ++completed;
     }
-    ++completed;
     utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
   } while (true);
   return completed;
@@ -145,6 +146,7 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
     }
     // TODO: handle component error
     fmc_reactor_run_once(reactor, now, error);
+    // if error, call stop, dont execute components which have an error
   } while (true);
 }
 

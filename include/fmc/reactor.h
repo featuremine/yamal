@@ -69,8 +69,7 @@ typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
 
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        struct fmc_reactor_ctx *ctx,
-                                       fmc_time64_t now, int argc,
-                                       struct fmc_shmem a[]);
+                                       fmc_time64_t now);
 
 typedef void (*fmc_reactor_shutdown_clbck)(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx);
@@ -84,11 +83,10 @@ struct fmc_reactor_ctx {
   fmc_reactor_dep_clbck dep_upd;
   size_t idx;
   bool finishing;
-  size_t nouts;
-  char **out_tps;
+  char **out_tps; // list of fmc_reactor_component_output {name, type}
+                  // use double linked list, add them with append at the end
   size_t **deps; // change to use a structure that holds both dep idx and input idx
                  // array of array of structures - no lists.
-  struct fmc_shmem inp[]; //allocate context to be big enough to set inputs
 };
 
 struct fmc_reactor_stop_item {
