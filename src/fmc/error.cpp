@@ -61,20 +61,6 @@ void fmc_error_reset_none(fmc_error_t *err) {
   fmc_error_reset(err, FMC_ERROR_NONE, NULL);
 }
 
-#define FMC_ERROR_FORMAT(err, fmt)                                             \
-  do {                                                                         \
-    va_list _args1;                                                            \
-    va_start(_args1, fmt);                                                     \
-    va_list _args2;                                                            \
-    va_copy(_args2, _args1);                                                   \
-    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1;                           \
-    char _buf[_size];                                                          \
-    va_end(_args1);                                                            \
-    vsnprintf(_buf, _size, fmt, _args2);                                       \
-    va_end(_args2);                                                            \
-    fmc_error_init(err, FMC_ERROR_CUSTOM, _buf);                               \
-  } while (0)
-
 void fmc_error_init_sprintf(fmc_error_t *err, const char *fmt, ...) {
   FMC_ERROR_FORMAT(err, fmt);
 }

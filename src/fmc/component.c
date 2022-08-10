@@ -27,11 +27,11 @@
 #include <fmc/platform.h>
 #include <fmc/reactor.h>
 #include <fmc/string.h>
+#include <stdarg.h>
 #include <stdlib.h> // calloc() getenv()
 #include <string.h> // memcpy() strtok()
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
-#include <stdarg.h>
 
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
@@ -117,28 +117,47 @@ static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx,
 }
 
 void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
-  va_list _args1;
-  va_start(_args1, fmt);
   if (fmt) {
-    va_list _args2;
-    va_copy(_args2, _args1);
-    int _size = vsnprintf(NULL, 0, fmt, _args1) + 1;
-    char _buf[_size];
-    vsnprintf(_buf, _size, fmt, _args2);
-    va_end(_args2);
-    fmc_error_init(&ctx->err, FMC_ERROR_CUSTOM, _buf);
+    FMC_ERROR_FORMAT(&ctx->err, fmt);
   } else {
+    va_list _args1;
+    va_start(_args1, fmt);
     fmc_error_init(&ctx->err, va_arg(_args1, FMC_ERROR_CODE), NULL);
+    va_end(_args1);
   }
-  va_end(_args1);
 }
 
-void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_shutdown_clbck cl) {
+bool find_context(void * rhs, void* lhs) {
+  struct fmc_reactor_stop_item *_rhs = rhs;
+  struct fmc_reactor_stop_item *_lhs = lhs;
+  return _rhs->ctx == _lhs->ctx;
+}
+
+void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
+                            fmc_reactor_shutdown_clbck cl) {
+
+  if (!ctx->shutdown && cl) {
+    struct fmc_reactor_stop_item *item = calloc(1, sizeof*item);
+    if (!item) goto cleanup;
+    item->ctx = ctx;
+    DL_APPEND(ctx->reactor->stop_list, item);
+  } else if (ctx->shutdown && !cl) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item ctx_item;
+    ctx_item.ctx = ctx;
+    DL_SEARCH(ctx->reactor->stop_list, item, &ctx_item,find_context);
+    if (item)
+      DL_DELETE(ctx->reactor->stop_list, item);
+  }
   ctx->shutdown = cl;
+  return;
+cleanup:
+  reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
 void reactor_finished_v1(struct fmc_reactor_ctx *ctx) {
-  if (!ctx->finishing) return;
+  if (!ctx->finishing)
+    return;
   ctx->finishing = false;
   --ctx->reactor->finishing;
 }
@@ -147,9 +166,11 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
   ctx->dep_upd = cl;
 }
 
-void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type, const char *name) {
-  char **tmp = (char**)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
-  if (!tmp) goto cleanup;
+void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
+                           const char *name) {
+  char **tmp = (char **)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
+  if (!tmp)
+    goto cleanup;
   tmp[ctx->nouts++] = strdup(type);
   ctx->out_tps = tmp;
 cleanup:
@@ -163,8 +184,8 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem me
   for (size_t i = 1; i <= ndeps; ++i) {
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[deps[i]];
     if (dep_ctx->dep_upd) {
-      // TODO: fix time, fix index of input that corresponds to output
-      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, fmc_time64_from_nanos(0), ctx->idx, mem);
+      // TODO: fix index of input that corresponds to output
+      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, ctx->idx, mem);
     }
     utheap_push(&ctx->reactor->toqueue, &deps[i], FMC_SIZE_T_PTR_LESS);
   }
@@ -179,8 +200,7 @@ static struct fmc_reactor_api_v1 reactor_v1 = {
     .on_exec = reactor_on_exec_v1,
     .on_dep = reactor_on_dep_v1,
     .add_output = reactor_add_output_v1,
-    .notify = reactor_notify_v1
-};
+    .notify = reactor_notify_v1};
 
 static struct fmc_component_api api = {
     .reactor_v1 = &reactor_v1,
