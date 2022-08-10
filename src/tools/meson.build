@@ -38,13 +38,13 @@ yamal_tail = executable('yamal-tail', 'yamal-tail.cpp',
 						install_rpath: '$ORIGIN:$ORIGIN/../../lib',
 						link_args: link_args)
 
-# yamal_run = executable('yamal-run', 'yamal-run.cpp',
-# 						dependencies : [static_fmc_dep, tclap_dep],
-# 						install: true,
-# 						install_dir: 'tools/fmc',
-# 						build_rpath: '$ORIGIN:$ORIGIN/../lib',
-# 						install_rpath: '$ORIGIN:$ORIGIN/../../lib',
-# 						link_args: link_args)
+yamal_run = executable('yamal-run', 'yamal-run.cpp',
+						dependencies : [static_fmc_dep, tclap_dep],
+						install: true,
+						install_dir: 'tools/fmc',
+						build_rpath: '$ORIGIN:$ORIGIN/../lib',
+						install_rpath: '$ORIGIN:$ORIGIN/../../lib',
+						link_args: link_args)
 
 if install_samples
 	install_data('yamal-perf.cpp', install_dir: 'tools/ytp')
