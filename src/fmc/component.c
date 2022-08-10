@@ -164,7 +164,7 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem me
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[deps[i]];
     if (dep_ctx->dep_upd) {
       // TODO: fix time, fix index of input that corresponds to output
-      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, fmc_time64_from_nanos(0), 0, mem);
+      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, fmc_time64_from_nanos(0), ctx->idx, mem);
     }
     utheap_push(&ctx->reactor->toqueue, &deps[i], FMC_SIZE_T_PTR_LESS);
   }
