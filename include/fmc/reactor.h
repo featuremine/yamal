@@ -69,8 +69,7 @@ typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
 
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        struct fmc_reactor_ctx *ctx,
-                                       fmc_time64_t now, int argc,
-                                       struct fmc_shmem a[]);
+                                       fmc_time64_t now);
 
 typedef void (*fmc_reactor_shutdown_clbck)(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx);

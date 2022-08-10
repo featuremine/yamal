@@ -33,8 +33,7 @@ static void producer_component_del(struct producer_component *comp) {
 
 static void producer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time, int argc,
-                                           struct fmc_shmem a[]){};
+                                           fmc_time64_t time){};
 
 static struct producer_component *
 producer_component_new(struct fmc_cfg_sect_item *cfg,
@@ -63,8 +62,7 @@ static void consumer_component_del(struct consumer_component *comp) {
 
 static void consumer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time, int argc,
-                                           struct fmc_shmem a[]){};
+                                           fmc_time64_t time){};
 
 static struct consumer_component *
 consumer_component_new(struct fmc_cfg_sect_item *cfg,
