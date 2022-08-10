@@ -157,10 +157,8 @@ cleanup:
 }
 
 void reactor_finished_v1(struct fmc_reactor_ctx *ctx) {
-  if (!ctx->finishing)
-    return;
+  ctx->reactor->finishing -= ctx->finishing;
   ctx->finishing = false;
-  --ctx->reactor->finishing;
 }
 
 void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
