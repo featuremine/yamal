@@ -60,6 +60,7 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
   ctx->idx = reactor->size;
+  fmc_error_init_none(&ctx->err);
 }
 
 void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
