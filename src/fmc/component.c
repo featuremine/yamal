@@ -482,9 +482,9 @@ cleanup:
   if (!*error)
     fmc_error_set2(error, FMC_ERROR_MEMORY);
   if (item) {
-    free(item);
     if (item->comp)
       item->comp->_vt->tp_del(item->comp);
+    free(item);
   }
   return NULL;
 }
