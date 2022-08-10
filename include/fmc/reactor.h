@@ -86,6 +86,7 @@ struct fmc_reactor_ctx {
   size_t idx;
   struct fmc_shmem *inp;
   bool finishing;
+  size_t nouts;
   char **out_tps;
   size_t *deps[];
 };
