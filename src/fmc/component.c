@@ -148,7 +148,8 @@ void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
     struct fmc_reactor_stop_item ctx_item;
     ctx_item.ctx = ctx;
     DL_SEARCH(ctx->reactor->stop_list, item, &ctx_item,find_context);
-    DL_DELETE(ctx->reactor->stop_list, item);
+    if (item)
+      DL_DELETE(ctx->reactor->stop_list, item);
   }
   ctx->shutdown = cl;
   return;
