@@ -180,12 +180,12 @@ cleanup:
 void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
   size_t *deps = ctx->deps[idx];
   if (!deps) return;
+  // Deps are stored as: [ndeps, dep0compidx, dep0inpidx, ..., depNcompidx, depNinpidx]
   size_t ndeps = deps[0];
-  for (size_t i = 1; i <= ndeps; ++i) {
+  for (size_t i = 1; i <= 2 * ndeps; i+=2) {
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[deps[i]];
     if (dep_ctx->dep_upd) {
-      // TODO: fix index of input that corresponds to output
-      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, ctx->idx, mem);
+      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, deps[i + 1], mem);
     }
     utheap_push(&ctx->reactor->toqueue, &deps[i], FMC_SIZE_T_PTR_LESS);
   }
@@ -200,7 +200,8 @@ static struct fmc_reactor_api_v1 reactor_v1 = {
     .on_exec = reactor_on_exec_v1,
     .on_dep = reactor_on_dep_v1,
     .add_output = reactor_add_output_v1,
-    .notify = reactor_notify_v1};
+    .notify = reactor_notify_v1,
+};
 
 static struct fmc_component_api api = {
     .reactor_v1 = &reactor_v1,
