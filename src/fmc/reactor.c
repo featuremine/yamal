@@ -147,9 +147,11 @@ void fmc_reactor_stop(struct fmc_reactor *reactor) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item *tmp = NULL;
     DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
-      item->ctx->finishing;
-      ++reactor->finishing;
-      item->ctx->shutdown(item->ctx->comp, item->ctx);
+      if(!item->ctx->finishing) {
+        ++reactor->finishing;
+        item->ctx->finishing = true;
+        item->ctx->shutdown(item->ctx->comp, item->ctx);
+      }
     }
   }
 }

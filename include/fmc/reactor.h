@@ -61,6 +61,7 @@ struct sched_item {
 };
 
 struct fmc_reactor_ctx;
+struct fmc_component;
 
 typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
                                       struct fmc_reactor_ctx *ctx,
