@@ -38,17 +38,16 @@ static void producer_component_process_one(struct fmc_component *self,
 
 static struct producer_component *
 producer_component_new(struct fmc_cfg_sect_item *cfg,
-                       struct fmc_reactor_ctx *ctx, char **inp_tps,
-                       fmc_error_t **err) {
+                       struct fmc_reactor_ctx *ctx, char **inp_tps) {
   struct producer_component *c =
       (struct producer_component *)calloc(1, sizeof(*c));
-  if (!c) {
-    fmc_error_set2(err, FMC_ERROR_MEMORY);
-    return NULL;
-  }
+  if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &producer_component_process_one);
   return c;
+cleanup:
+  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+  return NULL;
 };
 
 struct fmc_cfg_node_spec producer_component_cfg_spec[] = {{NULL}};
