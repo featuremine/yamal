@@ -129,10 +129,11 @@ void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   }
 }
 
-#define find_context(lhs, ctx)                                                    \
-  ({                                                                              \
-    struct fmc_reactor_stop_item *_lhs = ((struct fmc_reactor_stop_item *)(lhs)); \
-    _lhs->ctx == (ctx);                                                           \
+#define find_context(lhs, ctx)                                                 \
+  ({                                                                           \
+    struct fmc_reactor_stop_item *_lhs =                                       \
+        ((struct fmc_reactor_stop_item *)(lhs));                               \
+    _lhs->ctx == (ctx);                                                        \
   })
 
 void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
