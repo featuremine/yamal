@@ -52,10 +52,12 @@ test_component_new_sched(struct fmc_cfg_sect_item *cfg,
                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
   fmc_error_t *err = NULL;
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "teststr");
   c->teststr = fmc_cstr_new(item->node.value.str, &err);
-  if (err) goto cleanup;
+  if (err)
+    goto cleanup;
   c->timesim = fmc_time64_start();
   _reactor->on_exec(ctx, &test_component_process_one_sched);
   _reactor->schedule(ctx, c->timesim);
@@ -65,7 +67,7 @@ cleanup:
     test_component_del(c);
   if (!err)
     _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
-  else 
+  else
     _reactor->set_error(ctx, fmc_error_msg(err));
   return NULL;
 };
@@ -88,10 +90,12 @@ test_component_new_live(struct fmc_cfg_sect_item *cfg,
                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
   fmc_error_t *err = NULL;
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "teststr");
   c->teststr = fmc_cstr_new(item->node.value.str, &err);
-  if (err) goto cleanup;
+  if (err)
+    goto cleanup;
   c->timesim = fmc_time64_start();
   _reactor->on_exec(ctx, &test_component_process_one_live);
   _reactor->queue(ctx);
@@ -101,7 +105,7 @@ cleanup:
     test_component_del(c);
   if (!err)
     _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
-  else 
+  else
     _reactor->set_error(ctx, fmc_error_msg(err));
   return NULL;
 };

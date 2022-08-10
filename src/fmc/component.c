@@ -27,11 +27,11 @@
 #include <fmc/platform.h>
 #include <fmc/reactor.h>
 #include <fmc/string.h>
+#include <stdarg.h>
 #include <stdlib.h> // calloc() getenv()
 #include <string.h> // memcpy() strtok()
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
-#include <stdarg.h>
 
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
@@ -135,12 +135,14 @@ void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   va_end(_args1);
 }
 
-void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_shutdown_clbck cl) {
+void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
+                            fmc_reactor_shutdown_clbck cl) {
   ctx->shutdown = cl;
 }
 
 void reactor_finished_v1(struct fmc_reactor_ctx *ctx) {
-  if (!ctx->finishing) return;
+  if (!ctx->finishing)
+    return;
   ctx->finishing = false;
   --ctx->reactor->finishing;
 }
@@ -149,17 +151,20 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
   ctx->dep_upd = cl;
 }
 
-void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type, const char *name) {
-  char **tmp = (char**)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
-  if (!tmp) goto cleanup;
+void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
+                           const char *name) {
+  char **tmp = (char **)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
+  if (!tmp)
+    goto cleanup;
   tmp[ctx->nouts++] = strdup(type);
   ctx->out_tps = tmp;
 cleanup:
   reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
-void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
-  //TODO: implement
+void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx,
+                       struct fmc_shmem mem) {
+  // TODO: implement
 }
 
 static struct fmc_reactor_api_v1 reactor_v1 = {
@@ -171,8 +176,7 @@ static struct fmc_reactor_api_v1 reactor_v1 = {
     .on_exec = reactor_on_exec_v1,
     .on_dep = reactor_on_dep_v1,
     .add_output = reactor_add_output_v1,
-    .notify = reactor_notify_v1
-};
+    .notify = reactor_notify_v1};
 
 static struct fmc_component_api api = {
     .reactor_v1 = &reactor_v1,
