@@ -21,8 +21,8 @@
  */
 
 #include <fmc/error.h>
-#include <fmc/memory.h>
 #include <fmc/math.h>
+#include <fmc/memory.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,7 +60,7 @@ void **fmc_pool_allocate(struct fmc_pool *p, size_t sz, fmc_error_t **e) {
     tmp->scratch = NULL;
   }
 
-  void* temp_mem = realloc(tmp->buf, sz);
+  void *temp_mem = realloc(tmp->buf, sz);
   if (!temp_mem) {
     goto cleanup;
   }
@@ -126,13 +126,13 @@ void fmc_pool_destroy(struct fmc_pool *p) {
 }
 
 void fmc_shmem_init_alloc(struct fmc_shmem *mem, struct fmc_pool *pool,
-                           size_t sz, fmc_error_t **e) {
+                          size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_allocate(pool, sz, e);
 }
 
-void fmc_shmem_init_view(struct fmc_shmem *mem, struct fmc_pool *pool,
-                          void *v, size_t sz, fmc_error_t **e) {
+void fmc_shmem_init_view(struct fmc_shmem *mem, struct fmc_pool *pool, void *v,
+                         size_t sz, fmc_error_t **e) {
   fmc_error_clear(e);
   mem->view = fmc_pool_view(pool, v, sz, e);
   struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
@@ -145,7 +145,8 @@ void fmc_shmem_init_share(struct fmc_shmem *dest, struct fmc_shmem *src) {
   dest->view = src->view;
 }
 
-void fmc_shmem_init_clone(struct fmc_shmem *dest, struct fmc_shmem *src, fmc_error_t **e) {
+void fmc_shmem_init_clone(struct fmc_shmem *dest, struct fmc_shmem *src,
+                          fmc_error_t **e) {
   struct fmc_pool_node *p = (struct fmc_pool_node *)src->view;
   dest->view = fmc_pool_allocate(p->pool, p->sz, e);
   if (e) {
@@ -159,7 +160,7 @@ void fmc_shmem_destroy(struct fmc_shmem *mem, fmc_error_t **e) {
   struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
   if (--p->count) {
     if (p->owner == mem) {
-      void* tmp = realloc(p->scratch, p->sz);
+      void *tmp = realloc(p->scratch, p->sz);
       if (!tmp) {
         ++p->count;
         fmc_error_set2(e, FMC_ERROR_MEMORY);
@@ -180,10 +181,12 @@ void fmc_shmem_destroy(struct fmc_shmem *mem, fmc_error_t **e) {
   }
 }
 
-void fmc_pool_node_realloc(struct fmc_pool_node *p, size_t sz, fmc_error_t **e) {
+void fmc_pool_node_realloc(struct fmc_pool_node *p, size_t sz,
+                           fmc_error_t **e) {
   fmc_error_clear(e);
   void *tmp = realloc(p->owner ? p->scratch : p->buf, sz);
-  if (!tmp) goto cleanup;
+  if (!tmp)
+    goto cleanup;
   if (p->owner)
     memcpy(tmp, p->buf, FMC_MIN(sz, p->sz));
   p->owner = NULL;

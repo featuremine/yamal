@@ -73,8 +73,8 @@ FMMODFUNC void fmc_pool_destroy(struct fmc_pool *p);
  * @param e out-parameter for error handling
  */
 FMMODFUNC void fmc_shmem_init_alloc(struct fmc_shmem *mem,
-                                     struct fmc_pool *pool, size_t sz,
-                                     fmc_error_t **e);
+                                    struct fmc_pool *pool, size_t sz,
+                                    fmc_error_t **e);
 
 /**
  * @brief Initialize memory with memory view
@@ -85,9 +85,8 @@ FMMODFUNC void fmc_shmem_init_alloc(struct fmc_shmem *mem,
  * @param sz size of memory view
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_shmem_init_view(struct fmc_shmem *mem,
-                                    struct fmc_pool *pool, void *v, size_t sz,
-                                    fmc_error_t **e);
+FMMODFUNC void fmc_shmem_init_view(struct fmc_shmem *mem, struct fmc_pool *pool,
+                                   void *v, size_t sz, fmc_error_t **e);
 
 /**
  * @brief Share memory view with destination
@@ -107,7 +106,8 @@ FMMODFUNC void fmc_shmem_init_share(struct fmc_shmem *dest,
  * copy
  * @param src pointer to memory structure used as source
  */
-FMMODFUNC void fmc_shmem_init_clone(struct fmc_shmem *dest, struct fmc_shmem *src, fmc_error_t **e);
+FMMODFUNC void fmc_shmem_init_clone(struct fmc_shmem *dest,
+                                    struct fmc_shmem *src, fmc_error_t **e);
 
 /**
  * @brief Destroy memory
@@ -124,7 +124,8 @@ FMMODFUNC void fmc_shmem_destroy(struct fmc_shmem *mem, fmc_error_t **e);
  * @param sz desired size of buffer
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_shmem_realloc(struct fmc_shmem *mem, size_t sz, fmc_error_t **e);
+FMMODFUNC void fmc_shmem_realloc(struct fmc_shmem *mem, size_t sz,
+                                 fmc_error_t **e);
 
 #ifdef __cplusplus
 }

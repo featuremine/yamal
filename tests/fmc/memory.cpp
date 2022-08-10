@@ -795,7 +795,8 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_one->pool, &p);
   ASSERT_EQ(node_one->scratch, nullptr);
   ASSERT_EQ(node_one->sz, 200);
-  ASSERT_EQ(view.compare(std::string_view((char*)node_one->buf, view.size())), 0);
+  ASSERT_EQ(view.compare(std::string_view((char *)node_one->buf, view.size())),
+            0);
 
   fmc_shmem_destroy(&two, &e);
   ASSERT_EQ(e, nullptr);
@@ -830,7 +831,8 @@ TEST(fmc_memory, resize) {
   ASSERT_EQ(node_two->pool, &p);
   ASSERT_EQ(node_two->scratch, nullptr);
   ASSERT_EQ(node_two->sz, 200);
-  ASSERT_EQ(view.compare(std::string_view((char*)node_two->buf, view.size())), 0);
+  ASSERT_EQ(view.compare(std::string_view((char *)node_two->buf, view.size())),
+            0);
 
   fmc_pool_destroy(&p);
 }

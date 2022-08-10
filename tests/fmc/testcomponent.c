@@ -36,8 +36,8 @@ static void test_component_del(struct test_component *comp) {
 
 static void test_component_process_one_sched(struct fmc_component *self,
                                              struct fmc_reactor_ctx *ctx,
-                                             fmc_time64_t time,
-                                             int argc, struct fmc_shmem a[]) {
+                                             fmc_time64_t time, int argc,
+                                             struct fmc_shmem a[]) {
   struct test_component *comp = (struct test_component *)self;
   if (fmc_time64_less(
           comp->timesim,
@@ -49,28 +49,31 @@ static void test_component_process_one_sched(struct fmc_component *self,
 
 static struct test_component *
 test_component_new_sched(struct fmc_cfg_sect_item *cfg,
-                         struct fmc_reactor_ctx *ctx,
-                         char **inp_tps,
+                         struct fmc_reactor_ctx *ctx, char **inp_tps,
                          fmc_error_t **err) {
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "teststr");
   c->teststr = fmc_cstr_new(item->node.value.str, err);
-  if (*err) goto cleanup;
+  if (*err)
+    goto cleanup;
   c->timesim = fmc_time64_start();
   _reactor->on_exec(ctx, &test_component_process_one_sched);
   _reactor->schedule(ctx, c->timesim);
   return c;
 cleanup:
-  if(c) test_component_del(c);
-  if(!*err) fmc_error_set2(err, FMC_ERROR_MEMORY);
+  if (c)
+    test_component_del(c);
+  if (!*err)
+    fmc_error_set2(err, FMC_ERROR_MEMORY);
   return NULL;
 };
 
 static void test_component_process_one_live(struct fmc_component *self,
                                             struct fmc_reactor_ctx *ctx,
-                                            fmc_time64_t time,
-                                            int argc, struct fmc_shmem a[]) {
+                                            fmc_time64_t time, int argc,
+                                            struct fmc_shmem a[]) {
   struct test_component *comp = (struct test_component *)self;
   if (fmc_time64_less(
           comp->timesim,
@@ -82,21 +85,24 @@ static void test_component_process_one_live(struct fmc_component *self,
 
 static struct test_component *
 test_component_new_live(struct fmc_cfg_sect_item *cfg,
-                        struct fmc_reactor_ctx *ctx,
-                        char **inp_tps,
+                        struct fmc_reactor_ctx *ctx, char **inp_tps,
                         fmc_error_t **err) {
   struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "teststr");
   c->teststr = fmc_cstr_new(item->node.value.str, err);
-  if (*err) goto cleanup;
+  if (*err)
+    goto cleanup;
   c->timesim = fmc_time64_start();
   _reactor->on_exec(ctx, &test_component_process_one_live);
   _reactor->queue(ctx);
   return c;
 cleanup:
-  if(c) test_component_del(c);
-  if(!*err) fmc_error_set2(err, FMC_ERROR_MEMORY);
+  if (c)
+    test_component_del(c);
+  if (!*err)
+    fmc_error_set2(err, FMC_ERROR_MEMORY);
   return NULL;
 };
 

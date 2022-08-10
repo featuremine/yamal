@@ -45,11 +45,11 @@ fmc_component_sys_destroy(&sys);
 
 #include <fmc/component.h>
 #include <fmc/error.h>
+#include <fmc/math.h>
 #include <fmc/memory.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
 #include <uthash/utarray.h>
-#include <fmc/math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,14 +64,13 @@ struct fmc_reactor_ctx;
 
 typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
                                       struct fmc_reactor_ctx *ctx,
-                                      fmc_time64_t now,
-                                      int idx,
+                                      fmc_time64_t now, int idx,
                                       struct fmc_shmem in);
 
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        struct fmc_reactor_ctx *ctx,
-                                       fmc_time64_t now,
-                                       int argc, struct fmc_shmem a[]);
+                                       fmc_time64_t now, int argc,
+                                       struct fmc_shmem a[]);
 
 typedef void (*fmc_reactor_shutdown_clbck)(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx);
@@ -110,7 +109,7 @@ struct fmc_component_input;
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
-FMMODFUNC void fmc_reactor_ctx_init(struct fmc_reactor *reactor, 
+FMMODFUNC void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
                                     struct fmc_reactor_ctx *ctx);
 FMMODFUNC void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
                                     struct fmc_component_input *inps,

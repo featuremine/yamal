@@ -21,24 +21,20 @@
 
 #include <fmc/component.h>
 #include <fmc/error.h>
+#include <fmc/math.h>
 #include <fmc/reactor.h>
 #include <fmc/signals.h>
 #include <fmc/time.h>
-#include <fmc/math.h>
 #include <stdlib.h> // calloc() free()
-#include <uthash/utlist.h>
 #include <uthash/utarray.h>
 #include <uthash/utheap.h>
+#include <uthash/utlist.h>
 
 #define FMC_REACTOR_HARD_STOP 3
 
-UT_icd sched_item_icd = {
-  .sz = sizeof(struct sched_item)
-};
+UT_icd sched_item_icd = {.sz = sizeof(struct sched_item)};
 
-UT_icd size_t_icd = {
-  .sz = sizeof(size_t)
-};
+UT_icd size_t_icd = {.sz = sizeof(size_t)};
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
@@ -59,7 +55,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   memset(reactor, 0, sizeof(*reactor));
 }
 
-void fmc_reactor_ctx_init(struct fmc_reactor *reactor, 
+void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
                           struct fmc_reactor_ctx *ctx) {
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
@@ -73,11 +69,12 @@ void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
   struct fmc_reactor *r = ctx->reactor;
   struct fmc_reactor_ctx *ctxtmp = NULL;
   ctxtmp = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctxtmp));
-  if(!ctxtmp) goto cleanup;
-  struct fmc_reactor_ctx **ctxstmp =
-      (struct fmc_reactor_ctx **)realloc(r->ctxs,
-                                         sizeof(*r->ctxs) * (r->size + 1));
-  if(!ctxstmp) goto cleanup;
+  if (!ctxtmp)
+    goto cleanup;
+  struct fmc_reactor_ctx **ctxstmp = (struct fmc_reactor_ctx **)realloc(
+      r->ctxs, sizeof(*r->ctxs) * (r->size + 1));
+  if (!ctxstmp)
+    goto cleanup;
   r->ctxs = ctxstmp;
   r->ctxs[r->size] = ctxtmp;
   memcpy(r->ctxs[r->size], ctx, sizeof(*ctx));
@@ -85,35 +82,40 @@ void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
   return;
 cleanup:
   fmc_error_set2(error, FMC_ERROR_MEMORY);
-  if(ctxtmp) free(ctxtmp);
+  if (ctxtmp)
+    free(ctxtmp);
 }
 
 fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
-  struct sched_item *item = (struct sched_item *)utarray_front(&(reactor->sched));
+  struct sched_item *item =
+      (struct sched_item *)utarray_front(&(reactor->sched));
   return item ? item->t : fmc_time64_end();
 }
 
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
-                          fmc_error_t **error) {
+                            fmc_error_t **error) {
   fmc_error_clear(error);
   size_t completed = 0;
 
   do {
-    struct sched_item *item = (struct sched_item *)utarray_front(&reactor->sched);
-    if (!item || fmc_time64_greater(item->t, now)) break;
+    struct sched_item *item =
+        (struct sched_item *)utarray_front(&reactor->sched);
+    if (!item || fmc_time64_greater(item->t, now))
+      break;
     utheap_push(&reactor->queued, &item->idx, FMC_SIZE_T_PTR_LESS);
     utheap_pop(&reactor->sched, FMC_SIZE_T_PTR_LESS);
   } while (true);
-  
+
   do {
     size_t *item = (size_t *)utarray_front(&reactor->queued);
-    if (!item) break;
+    if (!item)
+      break;
     struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
-    if(ctx->exec) {
+    if (ctx->exec) {
       ctx->exec(ctx->comp, ctx, now, 0, NULL); // TODO add argc and schmem
       if (fmc_error_has(&ctx->err)) {
-        fmc_error_set(error, "failed to run component %s with error: %s", ctx->comp->_vt->tp_name,
-                      fmc_error_msg(&ctx->err));
+        fmc_error_set(error, "failed to run component %s with error: %s",
+                      ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
         return completed;
       }
     }
@@ -123,7 +125,8 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   return completed;
 }
 
-void fmc_reactor_run(struct fmc_reactor *reactor, bool live, fmc_error_t **error) {
+void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
+                     fmc_error_t **error) {
   fmc_error_clear(error);
   do {
     ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
@@ -131,13 +134,12 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live, fmc_error_t **error
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
     if ((!utarray_len(&reactor->queued) && fmc_time64_is_end(next)) ||
         (reactor->stop && !reactor->finishing) ||
-        reactor->stop >= FMC_REACTOR_HARD_STOP)
-    {
-          break;
+        reactor->stop >= FMC_REACTOR_HARD_STOP) {
+      break;
     }
     // TODO: handle component error
     fmc_reactor_run_once(reactor, now, error);
-  } while(true);
+  } while (true);
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {

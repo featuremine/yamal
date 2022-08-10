@@ -148,10 +148,10 @@ TEST(utheap, heap_random) {
     int inval = rand() % upper;
     utheap_push(&a, (void *)&inval, cmp);
   }
-  
+
   int last = upper;
   for (int i = 0; i < total; i++) {
-    val = *(int*)utarray_front(&a);
+    val = *(int *)utarray_front(&a);
     utheap_pop(&a, cmp);
     ASSERT_TRUE(val <= last);
     last = val;

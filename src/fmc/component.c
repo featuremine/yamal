@@ -20,17 +20,17 @@
  */
 
 #include <fmc/component.h>
-#include <fmc/reactor.h>
 #include <fmc/error.h>
 #include <fmc/extension.h>
 #include <fmc/files.h>
+#include <fmc/math.h>
 #include <fmc/platform.h>
+#include <fmc/reactor.h>
 #include <fmc/string.h>
 #include <stdlib.h> // calloc() getenv()
 #include <string.h> // memcpy() strtok()
-#include <uthash/utlist.h>
 #include <uthash/utheap.h>
-#include <fmc/math.h>
+#include <uthash/utlist.h>
 
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
@@ -97,8 +97,8 @@ static int size_t_less(const void *a, const void *b) {
 }
 
 static int sched_item_less(const void *a, const void *b) {
-  struct sched_item *_a = (struct sched_item*) a;
-  struct sched_item *_b = (struct sched_item*) b;
+  struct sched_item *_a = (struct sched_item *)a;
+  struct sched_item *_b = (struct sched_item *)b;
   return (int)fmc_time64_less(_a->t, _b->t);
 }
 
@@ -106,22 +106,21 @@ static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
   utheap_push(&ctx->reactor->toqueue, &ctx->idx, size_t_less);
 }
 
-static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx, fmc_time64_t time) {
-  struct sched_item item = {
-    .idx = ctx->idx,
-    .t = time
-  };
+static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx,
+                                fmc_time64_t time) {
+  struct sched_item item = {.idx = ctx->idx, .t = time};
   utheap_push(&ctx->reactor->sched, &item, sched_item_less);
 }
 
-static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_exec_clbck cl) {
+static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx,
+                               fmc_reactor_exec_clbck cl) {
   ctx->exec = cl;
 }
 
 static struct fmc_reactor_api_v1 reactor_v1 = {
-  .queue = reactor_queue_v1,
-  .schedule = reactor_schedule_v1,
-  .on_exec = reactor_on_exec_v1 // all input components have been updated
+    .queue = reactor_queue_v1,
+    .schedule = reactor_schedule_v1,
+    .on_exec = reactor_on_exec_v1 // all input components have been updated
 };
 
 static struct fmc_component_api api = {
@@ -376,32 +375,39 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_error_clear(error);
   struct fmc_component_list *item = NULL;
   unsigned int in_sz = 0;
-  for (; inps && inps[in_sz].comp; ++in_sz) {}
+  for (; inps && inps[in_sz].comp; ++in_sz) {
+  }
   char *in_names[in_sz];
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
-  if (*error) goto cleanup;
+  if (*error)
+    goto cleanup;
 
   item = (struct fmc_component_list *)calloc(1, sizeof(*item));
-  if (!item) goto cleanup;
+  if (!item)
+    goto cleanup;
 
   // fmc_component_input to array of component names
   for (unsigned int i = 0; i < in_sz; ++i) {
     if (inps[i].comp->_ctx->reactor != reactor) {
-      fmc_error_set(error, "input component %d of type %s does not have the same reactor",
-                   i,  inps[i].comp->_vt->tp_name);
+      fmc_error_set(
+          error, "input component %d of type %s does not have the same reactor",
+          i, inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     if (!inps[i].comp->_ctx->out_tps) {
-      fmc_error_set(error, "the outputs of the input component %d of type %s are not set",
-                    i, inps[i].comp->_vt->tp_name);
+      fmc_error_set(
+          error, "the outputs of the input component %d of type %s are not set",
+          i, inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     unsigned int out_sz = 0;
-    for (; inps[i].comp->_ctx->out_tps && inps[i].comp->_ctx->out_tps[out_sz]; ++out_sz) {}
+    for (; inps[i].comp->_ctx->out_tps && inps[i].comp->_ctx->out_tps[out_sz];
+         ++out_sz) {
+    }
     if (inps[i].idx < 0 || out_sz <= inps[i].idx) {
-      fmc_error_set(error, "invalid output index %d of type %s",
-                    inps[i].idx, inps[i].comp->_vt->tp_name);
+      fmc_error_set(error, "invalid output index %d of type %s", inps[i].idx,
+                    inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     in_names[i] = inps[i].comp->_ctx->out_tps[inps[i].idx];
@@ -411,19 +417,23 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
   item->comp = tp->tp_new(cfg, &ctx, in_names, error);
-  if (*error) goto cleanup;
+  if (*error)
+    goto cleanup;
   ctx.comp = item->comp;
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
-  if (*error) goto cleanup;
+  if (*error)
+    goto cleanup;
   item->comp->_vt = tp;
-  item->comp->_ctx = reactor->ctxs[reactor->size-1];
+  item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   return item->comp;
 cleanup:
-  if (!*error) fmc_error_set2(error, FMC_ERROR_MEMORY);
-  if(item) {
+  if (!*error)
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+  if (item) {
     free(item);
-    if(item->comp) item->comp->_vt->tp_del(item->comp);
+    if (item->comp)
+      item->comp->_vt->tp_del(item->comp);
   }
   return NULL;
 }

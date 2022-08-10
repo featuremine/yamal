@@ -31,25 +31,33 @@
 extern "C" {
 #endif
 
-#define FMC_MAX(a,b) \
-  ({ __typeof__ (a) _a = (a); \
-     __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
+#define FMC_MAX(a, b)                                                          \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a > _b ? _a : _b;                                                         \
+  })
 
-#define FMC_MIN(a,b) \
-  ({ __typeof__ (a) _a = (a); \
-     __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
+#define FMC_MIN(a, b)                                                          \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a < _b ? _a : _b;                                                         \
+  })
 
-#define FMC_LESS(a,b) \
-  ({ __typeof__ (a) _a = (a); \
-     __typeof__ (b) _b = (b); \
-     _a < _b; })
+#define FMC_LESS(a, b)                                                         \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a < _b;                                                                   \
+  })
 
-#define FMC_TYPED_PTR_LESS(type, a, b) \
-  ({ type _a = *((type*)(a)); \
-     type _b = *((type*)(b)); \
-     _a < _b; })
+#define FMC_TYPED_PTR_LESS(type, a, b)                                         \
+  ({                                                                           \
+    type _a = *((type *)(a));                                                  \
+    type _b = *((type *)(b));                                                  \
+    _a < _b;                                                                   \
+  })
 
 #define FMC_SIZE_T_PTR_LESS(a, b) FMC_TYPED_PTR_LESS(size_t, a, b)
 

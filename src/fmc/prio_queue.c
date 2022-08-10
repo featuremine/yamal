@@ -20,8 +20,8 @@
  */
 
 #include <fmc/error.h>
-#include <stdlib.h>
 #include <fmc/prio_queue.h>
+#include <stdlib.h>
 
 void fmc_prio_queue_init(struct fmc_prio_queue_t *q) {
   q->size = 0;

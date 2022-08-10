@@ -32,15 +32,15 @@ static void producer_component_del(struct producer_component *comp) {
 };
 
 static void producer_component_process_one(struct fmc_component *self,
-                                       fmc_time64_t time,
-                                       struct fmc_reactor_ctx *ctx) {
-};
+                                           fmc_time64_t time,
+                                           struct fmc_reactor_ctx *ctx){};
 
-static struct producer_component *producer_component_new(struct fmc_cfg_sect_item *cfg,
-                                                 struct fmc_reactor_ctx *ctx,
-                                                 char **inp_tps,
-                                                 fmc_error_t **err) {
-  struct producer_component *c = (struct producer_component *)calloc(1, sizeof(*c));
+static struct producer_component *
+producer_component_new(struct fmc_cfg_sect_item *cfg,
+                       struct fmc_reactor_ctx *ctx, char **inp_tps,
+                       fmc_error_t **err) {
+  struct producer_component *c =
+      (struct producer_component *)calloc(1, sizeof(*c));
   if (!c) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
     return NULL;
@@ -61,15 +61,15 @@ static void consumer_component_del(struct consumer_component *comp) {
 };
 
 static void consumer_component_process_one(struct fmc_component *self,
-                                       fmc_time64_t time,
-                                       struct fmc_reactor_ctx *ctx) {
-};
+                                           fmc_time64_t time,
+                                           struct fmc_reactor_ctx *ctx){};
 
-static struct consumer_component *consumer_component_new(struct fmc_cfg_sect_item *cfg,
-                                                 struct fmc_reactor_ctx *ctx,
-                                                 char **inp_tps,
-                                                 fmc_error_t **err) {
-  struct consumer_component *c = (struct consumer_component *)calloc(1, sizeof(*c));
+static struct consumer_component *
+consumer_component_new(struct fmc_cfg_sect_item *cfg,
+                       struct fmc_reactor_ctx *ctx, char **inp_tps,
+                       fmc_error_t **err) {
+  struct consumer_component *c =
+      (struct consumer_component *)calloc(1, sizeof(*c));
   if (!c) {
     fmc_error_set2(err, FMC_ERROR_MEMORY);
     return NULL;

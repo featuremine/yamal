@@ -275,12 +275,12 @@ typedef struct {
 #define utarray_back(a) (((a)->i) ? (_utarray_eltptr(a, (a)->i - 1)) : NULL)
 #define utarray_eltidx(a, e) (((char *)(e) - (a)->d) / (a)->icd.sz)
 
-#define ut_swap(lhs, rhs, sz) \
-  do {                        \
-    char tmp[sz];             \
-    memcpy(&tmp, lhs, sz);    \
-    memcpy(lhs, rhs, sz);     \
-    memcpy(rhs, &tmp, sz);    \
+#define ut_swap(lhs, rhs, sz)                                                  \
+  do {                                                                         \
+    char tmp[sz];                                                              \
+    memcpy(&tmp, lhs, sz);                                                     \
+    memcpy(lhs, rhs, sz);                                                      \
+    memcpy(rhs, &tmp, sz);                                                     \
   } while (0)
 
 /* last we pre-define a few icd for common utarrays of ints and strings */

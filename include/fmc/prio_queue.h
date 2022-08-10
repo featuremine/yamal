@@ -54,7 +54,8 @@ FMMODFUNC void fmc_prio_queue_destroy(struct fmc_prio_queue_t *q);
  * @param val value to be inserted
  * @param e out-parameter for error handling
  */
-FMMODFUNC void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val, fmc_error_t **e);
+FMMODFUNC void fmc_prio_queue_push(struct fmc_prio_queue_t *q, int val,
+                                   fmc_error_t **e);
 
 /**
  * @brief Pop element from queue

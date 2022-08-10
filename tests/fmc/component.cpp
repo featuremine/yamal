@@ -244,7 +244,8 @@ TEST(component, component) {
   struct fmc_cfg_sect_item *cfginvalid =
       fmc_cfg_sect_item_add_str(nullptr, "invalidkey", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *compinvalid = fmc_component_new(&r, tp, cfginvalid, nullptr, &err);
+  struct fmc_component *compinvalid =
+      fmc_component_new(&r, tp, cfginvalid, nullptr, &err);
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(compinvalid, nullptr);
 
