@@ -29,6 +29,8 @@
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 
+#include "iocomponent.h"
+
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
 #define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
@@ -472,6 +474,12 @@ TEST(reactor, io) {
   fmc_reactor_run(&r, false, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+
+  struct producer_component *typedpcomp = (struct producer_component *)pcomp;
+  ASSERT_EQ(typedpcomp->count, 10);
+
+  struct consumer_component *typedccomp = (struct consumer_component *)ccomp;
+  ASSERT_EQ(typedccomp->executed, 10);
 
   fmc_reactor_destroy(&r);
 

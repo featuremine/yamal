@@ -20,14 +20,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <uthash/utlist.h>
+#include "iocomponent.h"
 
 struct fmc_reactor_api_v1 *_reactor;
 int64_t value = 9855;
-
-struct producer_component {
-  fmc_component_HEAD;
-  size_t count;
-};
 
 static void producer_component_del(struct producer_component *comp) {
   free(comp);
@@ -37,10 +33,11 @@ static void producer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
                                            fmc_time64_t time){
   struct producer_component *c = (struct producer_component *)self;
-  if (++c->count == 10) {
+  if (c->count == 10) {
     return;
   }
 
+  ++c->count;
   struct fmc_shmem mem;
   fmc_error_t *err = NULL;
   ++value;
@@ -74,11 +71,6 @@ cleanup:
 };
 
 struct fmc_cfg_node_spec producer_component_cfg_spec[] = {{NULL}};
-
-struct consumer_component {
-  fmc_component_HEAD;
-  size_t executed;
-};
 
 static void consumer_component_del(struct consumer_component *comp) {
   free(comp);
