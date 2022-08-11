@@ -26,17 +26,18 @@ shared_test_component = shared_library('testcomponent', [files('testcomponent.c'
                                         link_language: 'c',
                                         install: false)
 
-test_component = executable(
-    'common_component', 'component.cpp',
-    dependencies : [static_fmc_dep, gtest])
-test('common_component', test_component, args: [shared_test_component.full_path()], is_parallel: false)
-
 shared_io_component = shared_library('iocomponent', [files('iocomponent.c')],
                                      name_prefix : '',
                                      include_directories : [inc],
                                      dependencies : [shared_fmc_dep],
                                      link_language: 'c',
                                      install: false)
+
+test_component = executable(
+    'common_component', 'component.cpp',
+    dependencies : [static_fmc_dep, gtest])
+test('common_component', test_component, args: [shared_test_component.full_path()], is_parallel: false,
+     dependencies: [shared_test_component, shared_io_component])
 
 memory = executable(
     'common_memory', 'memory.cpp',
