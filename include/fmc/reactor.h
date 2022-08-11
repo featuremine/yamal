@@ -74,6 +74,19 @@ typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
 typedef void (*fmc_reactor_shutdown_clbck)(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx);
 
+struct fmc_reactor_ctx_out {
+  struct fmc_reactor_ctx_out *next;
+  struct fmc_reactor_ctx_out *prev;
+  struct fmc_reactor_ctx *ctx;
+  char* name;
+  char* type;
+};
+
+struct fmc_reactor_ctx_dep {
+  size_t idx;
+  size_t inp_idx;
+};
+
 struct fmc_reactor_ctx {
   struct fmc_reactor *reactor;
   struct fmc_component *comp;
@@ -83,10 +96,11 @@ struct fmc_reactor_ctx {
   fmc_reactor_dep_clbck dep_upd;
   size_t idx;
   bool finishing;
-  char **out_tps; // list of fmc_reactor_component_output {name, type}
-                  // use double linked list, add them with append at the end
-  size_t **deps; // change to use a structure that holds both dep idx and input idx
-                 // array of array of structures - no lists.
+  struct fmc_reactor_ctx_out *out_tps; // list of fmc_reactor_component_output {name, type}
+                                       // use double linked list, add them with append at the end
+  UT_array *deps; // change to use a structure that holds both dep idx and input idx
+                  // array of array of structures - no lists.
+                  // fmc_reactor_ctx_dep
 };
 
 struct fmc_reactor_stop_item {

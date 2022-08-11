@@ -38,6 +38,7 @@ UT_icd size_t_icd = {.sz = sizeof(size_t)};
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
+  reactor->stop_list = NULL;
   memset(reactor, 0, sizeof(*reactor));
   utarray_init(&reactor->sched, &sched_item_icd);
   utarray_init(&reactor->queued, &size_t_icd);
@@ -50,9 +51,15 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->toqueue);
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     if (reactor->ctxs[i]->out_tps) {
-      for (unsigned int j = 0; j < reactor->ctxs[j]->nouts; ++j)
-        free(reactor->ctxs[i]->out_tps[j]);
-      free(reactor->ctxs[i]->out_tps);
+      struct fmc_reactor_ctx_out *phead = reactor->ctxs[i]->out_tps;
+      struct fmc_reactor_ctx_out *el = NULL;
+      struct fmc_reactor_ctx_out *ptmp = NULL;
+      DL_FOREACH_SAFE(phead, el, ptmp) {
+        DL_DELETE(phead, el);
+        if (el->name) free(el->name);
+        if (el->type) free(el->type);
+        free(el);
+      }
     }
     // Free dependency related objects
     free(reactor->ctxs[i]);
@@ -117,9 +124,8 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     if (!item)
       break;
     struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
-    // only execute if it does not have an error in the context
     if (!fmc_error_has(&ctx->err) && ctx->exec) {
-      ctx->exec(ctx->comp, ctx, now); // TODO add argc and schmem
+      ctx->exec(ctx->comp, ctx, now);
       if (fmc_error_has(&ctx->err)) {
         fmc_error_set(error, "failed to run component %s with error: %s",
                       ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));

@@ -168,27 +168,35 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
 
 void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
                            const char *name) {
-  char **tmp = (char **)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
-  if (!tmp)
-    goto cleanup;
-  tmp[ctx->nouts++] = strdup(type);
-  ctx->out_tps = tmp;
+  struct fmc_reactor_ctx_out *item = (struct fmc_reactor_ctx_out *)calloc(1, sizeof(*item));
+  if (!item) goto cleanup;
+  item->type = strdup(type);
+  if (!item->type) goto cleanup;
+  if (name) {
+    item->name = strdup(name);
+    if (!item->name) goto cleanup;
+  }
+  DL_APPEND(ctx->out_tps, item);
 cleanup:
+  if (item) {
+    if (item->type) free(item->type);
+    if (item->name) free(item->name);
+    free(item);
+  }
   reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
 void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
-  size_t *deps = ctx->deps[idx];
+  UT_array *deps = &ctx->deps[idx];
   if (!deps) return;
-  // Deps are stored as: [ndeps, dep0compidx, dep0inpidx, ..., depNcompidx, depNinpidx]
-  size_t ndeps = deps[0];
-  for (size_t i = 1; i <= 2 * ndeps; i+=2) {
-    struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[deps[i]];
+  size_t ndeps = utarray_len(deps);
+  for (size_t i = 1; i < ndeps; ++i) {
+    struct fmc_reactor_ctx_dep* dep = utarray_eltptr(deps, i);
+    struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[dep->idx];
     if (dep_ctx->dep_upd) {
-      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, deps[i + 1], mem);
+      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, dep->inp_idx, mem);
     }
-    utheap_push(&ctx->reactor->toqueue, &deps[i], FMC_SIZE_T_PTR_LESS);
-    fmc_shmem_init_share(dep_ctx->inp[deps[i+1]], mem);
+    utheap_push(&ctx->reactor->toqueue, &dep->idx, FMC_SIZE_T_PTR_LESS);
   }
 }
 
@@ -448,6 +456,22 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
   return NULL;
 }
 
+#define DL_GET_ELEM(head, idx)    \
+  ({                              \
+    size_t count;                 \
+    __typeof__(head) _el = NULL;  \
+    DL_COUNT(head, _el, count);   \
+    _el = NULL;                   \
+    if (idx >=0 && count>=idx) {  \
+      count = 0;                  \
+      DL_FOREACH(head, _el) {      \
+        if (count == idx) break;  \
+        ++count;                  \
+      }                           \
+    }                             \
+    _el;                          \
+  })
+
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_type *tp,
                                         struct fmc_cfg_sect_item *cfg,
@@ -482,16 +506,15 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
           i, inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
-    unsigned int out_sz = 0;
-    for (; inps[i].comp->_ctx->out_tps && inps[i].comp->_ctx->out_tps[out_sz];
-         ++out_sz) {
-    }
-    if (inps[i].idx < 0 || out_sz <= inps[i].idx) {
+
+    in_names[i] = DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
+
+    if (inps[i].idx < 0 || !in_names[i]) {
       fmc_error_set(error, "invalid output index %d of type %s", inps[i].idx,
                     inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
-    in_names[i] = inps[i].comp->_ctx->out_tps[inps[i].idx];
+
   }
   in_names[in_sz] = NULL;
 
