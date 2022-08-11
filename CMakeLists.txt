@@ -223,23 +223,23 @@ if(BUILD_TOOLS)
     find_package(PkgConfig)
     pkg_check_modules(TCLAP REQUIRED IMPORTED_TARGET tclap)
 
-    #add_executable(
-    #    yamal-run
-    #    "src/tools/yamal-run.cpp"
-    #)
-    #target_link_libraries(
-    #    yamal-run
-    #    PRIVATE
-    #    ytp
-    #    fmc++
-    #    fmc
-    #    PkgConfig::TCLAP
-    #    pthread
-    #)
-    #install(
-    #    TARGETS
-    #    yamal-run
-    #)
+    add_executable(
+       yamal-run
+       "src/tools/yamal-run.cpp"
+    )
+    target_link_libraries(
+       yamal-run
+       PRIVATE
+       ytp
+       fmc++
+       fmc
+       PkgConfig::TCLAP
+       pthread
+    )
+    install(
+       TARGETS
+       yamal-run
+    )
 
     add_executable(
         yamal-daemon
