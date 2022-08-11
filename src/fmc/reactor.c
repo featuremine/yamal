@@ -62,10 +62,25 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
       }
     }
     // Free dependency related objects
+    utarray_done(&reactor->ctxs[i]->deps);
     free(reactor->ctxs[i]);
   }
   free(reactor->ctxs);
   memset(reactor, 0, sizeof(*reactor));
+}
+
+static void utarr_del(void *elt) {
+  UT_array * _elt = (UT_array *)elt;
+  utarray_done(_elt);
+}
+static void utarr_init(void *elt) {
+  UT_array * _elt = (UT_array *)elt;
+  UT_icd deps;
+  deps.sz = sizeof(struct fmc_reactor_ctx_dep);
+  deps.dtor = NULL;
+  deps.copy = NULL;
+  deps.init = NULL;
+  utarray_init(_elt, &deps);
 }
 
 void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
@@ -73,6 +88,12 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
   ctx->idx = reactor->size;
+  UT_icd deps;
+  deps.sz = sizeof(UT_array);
+  deps.dtor = utarr_del;
+  deps.copy = NULL;
+  deps.init = utarr_init;
+  utarray_init(&ctx->deps, &deps);
 }
 
 void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
