@@ -60,6 +60,7 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
   ctx->idx = reactor->size;
+  fmc_error_init_none(&ctx->err);
 }
 
 void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
@@ -112,7 +113,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
       break;
     struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
     if (ctx->exec) {
-      ctx->exec(ctx->comp, ctx, now, 0, NULL); // TODO add argc and schmem
+      ctx->exec(ctx->comp, ctx, now); // TODO add argc and schmem
       if (fmc_error_has(&ctx->err)) {
         fmc_error_set(error, "failed to run component %s with error: %s",
                       ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
