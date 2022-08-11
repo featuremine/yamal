@@ -99,6 +99,8 @@ static int sched_item_less(const void *a, const void *b) {
   struct sched_item *_b = (struct sched_item *)b;
   if (fmc_time64_less(_a->t, _b->t))
     return 1;
+  else if (fmc_time64_less(_b->t, _a->t))
+    return 0;
   return (int) _a->idx < _b->idx;
 }
 
