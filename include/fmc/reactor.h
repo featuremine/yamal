@@ -22,52 +22,105 @@
 
 /* Usage example:
 fmc_error_t *error;
-fmc_reactor loop;
+struct fmc_component_sys sys;
+struct fmc_reactor loop;
+fmc_component_sys_init(&sys);
 fmc_reactor_init(&loop);
-fmc_reactor_component_add(&loop, gateway, 99, &error);
-if(error) { fmc_reactor_destroy(&loop); return; }
-fmc_reactor_component_add(&loop, manager, 98, &error);
-if(error) { fmc_reactor_destroy(&loop); return; }
-fmc_reactor_run(&loop, &error);
+struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "my_components_module", &error);
+if(error) { ...; }
+struct fmc_component_type *tp =
+    fmc_component_module_type_get(mod, "my_component", &error);
+if(error) { ...; }
+struct fmc_component *comp =
+    fmc_component_new(&loop, tp, cfg, nullptr, &error);
+if(error) { ...; }
+fmc_reactor_run_live(&loop, &error);
+if(error) { ...; }
 fmc_reactor_destroy(&loop);
+fmc_component_sys_destroy(&sys);
 */
 
 #pragma once
 
 #include <fmc/component.h>
 #include <fmc/error.h>
+#include <fmc/math.h>
+#include <fmc/memory.h>
 #include <fmc/platform.h>
 #include <fmc/time.h>
+#include <uthash/utarray.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct fmc_reactor_component_list {
+struct sched_item {
+  fmc_time64_t t;
+  size_t idx;
+};
+
+struct fmc_reactor_ctx;
+struct fmc_component;
+
+typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
+                                      struct fmc_reactor_ctx *ctx, int idx,
+                                      struct fmc_shmem in);
+
+typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
+                                       struct fmc_reactor_ctx *ctx,
+                                       fmc_time64_t now);
+
+typedef void (*fmc_reactor_shutdown_clbck)(struct fmc_component *self,
+                                           struct fmc_reactor_ctx *ctx);
+
+struct fmc_reactor_ctx {
+  struct fmc_reactor *reactor;
   struct fmc_component *comp;
-  fmc_time64_t sched;
-  int priority;
-  struct fmc_reactor_component_list *next, *prev;
+  fmc_error_t err;
+  fmc_reactor_exec_clbck exec;
+  fmc_reactor_shutdown_clbck shutdown;
+  fmc_reactor_dep_clbck dep_upd;
+  size_t idx;
+  struct fmc_shmem *inp;
+  bool finishing;
+  size_t nouts;
+  char **out_tps;
+  size_t *deps[];
+};
+
+struct fmc_reactor_stop_item {
+  struct fmc_reactor_stop_item *next;
+  struct fmc_reactor_stop_item *prev;
+  struct fmc_reactor_ctx *ctx;
 };
 
 struct fmc_reactor {
-  struct fmc_reactor_component_list *comps;
-  volatile bool stop;
-  bool done;
+  struct fmc_reactor_ctx **ctxs;
+  size_t size;
+  UT_array sched;
+  UT_array queued;
+  UT_array toqueue;
+  size_t finishing;
+  volatile int stop;
+  struct fmc_reactor_stop_item *stop_list;
 };
+
+struct fmc_component_input;
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
-FMMODFUNC void fmc_reactor_component_add(struct fmc_reactor *reactor,
-                                         struct fmc_component *comp,
-                                         int priority, fmc_error_t **error);
+FMMODFUNC void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
+                                    struct fmc_reactor_ctx *ctx);
+FMMODFUNC void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
+                                    struct fmc_component_input *inps,
+                                    fmc_error_t **error);
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
-FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
-                                    fmc_time64_t now, fmc_error_t **error);
-FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor,
+FMMODFUNC size_t fmc_reactor_run_once(struct fmc_reactor *reactor,
+                                      fmc_time64_t now, fmc_error_t **error);
+FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                                fmc_error_t **error);
 FMMODFUNC void fmc_reactor_stop(struct fmc_reactor *reactor);
-FMMODFUNC bool fmc_reactor_done(struct fmc_reactor *reactor);
 
 #ifdef __cplusplus
 }

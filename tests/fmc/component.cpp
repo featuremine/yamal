@@ -29,6 +29,15 @@
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 
+#if defined(FMC_SYS_UNIX)
+#define FMC_MOD_SEARCHPATH_CUR ""
+#define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
+#define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
+#else
+#error "Unsupported operating system"
+#endif
+
 struct test_component {
   fmc_component_HEAD;
   char *teststr;
@@ -191,6 +200,9 @@ TEST(component, module) {
 }
 
 TEST(component, component) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
   fmc_error_t *err;
   fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
@@ -225,27 +237,30 @@ TEST(component, component) {
   ASSERT_EQ(tpinvalid, nullptr);
 
   struct fmc_component_type *tp =
-      fmc_component_module_type_get(mod, "testcomponent", &err);
+      fmc_component_module_type_get(mod, "testcomponentsched", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(tp, nullptr);
 
   struct fmc_cfg_sect_item *cfginvalid =
       fmc_cfg_sect_item_add_str(nullptr, "invalidkey", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *compinvalid = fmc_component_new(tp, cfginvalid, &err);
+  struct fmc_component *compinvalid =
+      fmc_component_new(&r, tp, cfginvalid, nullptr, &err);
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(compinvalid, nullptr);
 
   struct fmc_cfg_sect_item *cfg =
       fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
+  struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
-  ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponentsched"));
+  ASSERT_EQ(comp->_ctx->err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
+
+  fmc_reactor_destroy(&r);
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfginvalid);
@@ -259,7 +274,10 @@ TEST(component, component) {
   ASSERT_EQ(sys.modules, nullptr);
 }
 
-TEST(reactor, reactor) {
+TEST(reactor, reactorsched) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
   fmc_error_t *err;
   fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
@@ -288,32 +306,97 @@ TEST(reactor, reactor) {
   ASSERT_EQ(sys.modules->prev, mod);
 
   struct fmc_component_type *tp =
-      fmc_component_module_type_get(mod, "testcomponent", &err);
+      fmc_component_module_type_get(mod, "testcomponentsched", &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(tp, nullptr);
 
   struct fmc_cfg_sect_item *cfg =
       fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
   ASSERT_EQ(err, nullptr);
-  struct fmc_component *comp = fmc_component_new(tp, cfg, &err);
+  struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponent"));
-  ASSERT_EQ(comp->_err.code, FMC_ERROR_NONE);
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponentsched"));
+  ASSERT_EQ(comp->_ctx->err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
 
+  fmc_reactor_run(&r, false, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fmc_time64_equal(
+      testcomp->timesim,
+      fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
+  ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+
+  fmc_reactor_destroy(&r);
+
+  fmc_component_del(comp);
+  fmc_cfg_sect_del(cfg);
+
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
+
+TEST(reactor, reactorlive) {
   struct fmc_reactor r;
   fmc_reactor_init(&r);
-  fmc_reactor_component_add(&r, comp, 99, &err);
-  ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(r.stop, false);
-  ASSERT_EQ(r.done, true);
-  ASSERT_EQ(r.comps->comp, comp);
 
-  fmc_reactor_run(&r, &err);
+  fmc_error_t *err;
+  fmc_error_clear(&err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(r.done, true);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "testcomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_type *tp =
+      fmc_component_module_type_get(mod, "testcomponentlive", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(tp, nullptr);
+
+  struct fmc_cfg_sect_item *cfg =
+      fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
+  ASSERT_EQ(err, nullptr);
+  struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponentlive"));
+  ASSERT_EQ(comp->_ctx->err.code, FMC_ERROR_NONE);
+  struct test_component *testcomp = (struct test_component *)comp;
+  ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
+  ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
+
+  struct fmc_reactor *rptr = &r;
+  std::thread thr([rptr]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    fmc_reactor_stop(rptr);
+  });
+
+  fmc_reactor_run(&r, true, &err);
+  thr.join();
+  ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(
       testcomp->timesim,
       fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));

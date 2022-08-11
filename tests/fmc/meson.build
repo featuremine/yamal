@@ -1,4 +1,4 @@
-tests = ['error', 'files', 'math', 'time', 'config']
+tests = ['error', 'files', 'math', 'time', 'config', 'priority_queue']
 
 foreach test : tests
     name = test
@@ -30,3 +30,15 @@ test_component = executable(
     'common_component', 'component.cpp',
     dependencies : [static_fmc_dep, gtest])
 test('common_component', test_component, args: [shared_test_component.full_path()], is_parallel: false)
+
+shared_io_component = shared_library('iocomponent', [files('iocomponent.c')],
+                                     name_prefix : '',
+                                     include_directories : [inc],
+                                     dependencies : [shared_fmc_dep],
+                                     link_language: 'c',
+                                     install: false)
+
+memory = executable(
+    'common_memory', 'memory.cpp',
+    dependencies : [static_fmc_dep, gtest])
+test('common_memory', memory)
