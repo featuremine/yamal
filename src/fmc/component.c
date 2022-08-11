@@ -501,7 +501,6 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     goto cleanup;
 
   item = (struct fmc_component_list *)calloc(1, sizeof(*item));
-  item->comp = NULL;
   if (!item)
     goto cleanup;
 
