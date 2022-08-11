@@ -94,6 +94,7 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   deps.copy = NULL;
   deps.init = utarr_init;
   utarray_init(&ctx->deps, &deps);
+  fmc_error_init_none(&ctx->err);
 }
 
 void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,

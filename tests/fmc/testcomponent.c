@@ -36,8 +36,7 @@ static void test_component_del(struct test_component *comp) {
 
 static void test_component_process_one_sched(struct fmc_component *self,
                                              struct fmc_reactor_ctx *ctx,
-                                             fmc_time64_t time, int argc,
-                                             struct fmc_shmem a[]) {
+                                             fmc_time64_t time) {
   struct test_component *comp = (struct test_component *)self;
   if (fmc_time64_less(
           comp->timesim,
@@ -74,8 +73,7 @@ cleanup:
 
 static void test_component_process_one_live(struct fmc_component *self,
                                             struct fmc_reactor_ctx *ctx,
-                                            fmc_time64_t time, int argc,
-                                            struct fmc_shmem a[]) {
+                                            fmc_time64_t time) {
   struct test_component *comp = (struct test_component *)self;
   if (fmc_time64_less(
           comp->timesim,
