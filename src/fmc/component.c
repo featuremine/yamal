@@ -487,8 +487,12 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
   item->comp = tp->tp_new(cfg, &ctx, in_names);
-  if (*error)
+  if(fmc_error_has(&ctx.err)) {
+    fmc_error_set(error,
+                  "failed to create new component of type %s with error: %s",
+                  tp->tp_name, fmc_error_msg(&ctx.err));
     goto cleanup;
+  }
   ctx.comp = item->comp;
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
   if (*error)
