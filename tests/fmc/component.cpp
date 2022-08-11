@@ -494,116 +494,116 @@ TEST(reactor, io) {
   ASSERT_EQ(sys.modules, nullptr);
 }
 
-// TEST(reactor, io_multiple_inputs) {
-//   struct fmc_reactor r;
-//   fmc_reactor_init(&r);
+TEST(reactor, io_multiple_inputs) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
 
-//   fmc_error_t *err;
-//   fmc_error_clear(&err);
-//   ASSERT_EQ(err, nullptr);
-//   fmc_component_sys_init(&sys);
-//   ASSERT_EQ(sys.search_paths, nullptr);
-//   ASSERT_EQ(sys.modules, nullptr);
-//   const char *paths[2];
-//   paths[0] = components_path.c_str();
-//   paths[1] = nullptr;
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
 
-//   fmc_component_sys_paths_set(&sys, paths, &err);
-//   ASSERT_EQ(err, nullptr);
-//   fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
-//   ASSERT_EQ(sys.modules, nullptr);
-//   ASSERT_NE(p, nullptr);
-//   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
-//   ASSERT_EQ(p->next, nullptr);
-//   ASSERT_EQ(p, p->prev);
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
 
-//   struct fmc_component_module *mod =
-//       fmc_component_module_get(&sys, "iocomponent", &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_EQ(mod->sys, &sys);
-//   ASSERT_EQ(std::string(mod->name), std::string("iocomponent"));
-//   ASSERT_EQ(sys.modules, mod);
-//   ASSERT_EQ(sys.modules->prev, mod);
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "iocomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("iocomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
 
-//   struct fmc_component_type *p2tp =
-//       fmc_component_module_type_get(mod, "producercomponent2", &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_NE(p2tp, nullptr);
+  struct fmc_component_type *p2tp =
+      fmc_component_module_type_get(mod, "producercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(p2tp, nullptr);
 
-//   struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
+  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
 
-//   struct fmc_component_type *p3tp =
-//       fmc_component_module_type_get(mod, "producercomponent3", &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_NE(p3tp, nullptr);
+  struct fmc_component_type *p3tp =
+      fmc_component_module_type_get(mod, "producercomponent3", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(p3tp, nullptr);
 
-//   struct fmc_component *p3comp = fmc_component_new(&r, p3tp, nullptr, nullptr, &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_EQ(p3comp->_ctx->err.code, FMC_ERROR_NONE);
+  struct fmc_component *p3comp = fmc_component_new(&r, p3tp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(p3comp->_ctx->err.code, FMC_ERROR_NONE);
 
-//   struct fmc_component_type *c2tp =
-//       fmc_component_module_type_get(mod, "consumercomponent2", &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_NE(c2tp, nullptr);
+  struct fmc_component_type *c2tp =
+      fmc_component_module_type_get(mod, "consumercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(c2tp, nullptr);
 
-//   struct fmc_component_input inputs2[] = {
-//     {p3comp, 0},
-//     {p3comp, 1},
-//     {NULL, 0}
-//   };
+  struct fmc_component_input inputs2[] = {
+    {p3comp, 0},
+    {p3comp, 1},
+    {NULL, 0}
+  };
 
-//   struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_EQ(c2comp->_ctx->err.code, FMC_ERROR_NONE);
+  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(c2comp->_ctx->err.code, FMC_ERROR_NONE);
 
-//   struct fmc_component_type *c3tp =
-//       fmc_component_module_type_get(mod, "consumercomponent3", &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_NE(c3tp, nullptr);
+  struct fmc_component_type *c3tp =
+      fmc_component_module_type_get(mod, "consumercomponent3", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(c3tp, nullptr);
 
-//   struct fmc_component_input inputs3[] = {
-//     {p3comp, 2},
-//     {p2comp, 0},
-//     {p2comp, 1},
-//     {NULL, 0}
-//   };
+  struct fmc_component_input inputs3[] = {
+    {p3comp, 2},
+    {p2comp, 0},
+    {p2comp, 1},
+    {NULL, 0}
+  };
 
-//   struct fmc_component *c3comp = fmc_component_new(&r, c3tp, nullptr, inputs3, &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_EQ(c3comp->_ctx->err.code, FMC_ERROR_NONE);
+  struct fmc_component *c3comp = fmc_component_new(&r, c3tp, nullptr, inputs3, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(c3comp->_ctx->err.code, FMC_ERROR_NONE);
 
-//   fmc_reactor_run(&r, false, &err);
-//   ASSERT_EQ(err, nullptr);
-//   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+  fmc_reactor_run(&r, false, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
-//   struct producer_component_2 *typedp2comp = (struct producer_component_2 *)p2comp;
-//   // Validate state
+  struct producer_component_2 *typedp2comp = (struct producer_component_2 *)p2comp;
+  // Validate state
 
-//   struct producer_component_3 *typedp3comp = (struct producer_component_3 *)p2comp;
-//   // Validate state
+  struct producer_component_3 *typedp3comp = (struct producer_component_3 *)p2comp;
+  // Validate state
 
-//   struct consumer_component_2 *typedc2comp = (struct consumer_component_2 *)c2comp;
-//   // Validate state
+  struct consumer_component_2 *typedc2comp = (struct consumer_component_2 *)c2comp;
+  // Validate state
 
-//   struct consumer_component_3 *typedc3comp = (struct consumer_component_3 *)c2comp;
-//   // Validate state
+  struct consumer_component_3 *typedc3comp = (struct consumer_component_3 *)c2comp;
+  // Validate state
 
-//   fmc_reactor_destroy(&r);
+  fmc_reactor_destroy(&r);
 
-//   fmc_component_del(c2comp);
-//   fmc_component_del(c3comp);
-//   fmc_component_del(p2comp);
-//   fmc_component_del(p3comp);
+  fmc_component_del(c2comp);
+  fmc_component_del(c3comp);
+  fmc_component_del(p2comp);
+  fmc_component_del(p3comp);
 
-//   fmc_component_module_del(mod);
-//   ASSERT_EQ(sys.modules, nullptr);
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
 
-//   fmc_component_sys_destroy(&sys);
-//   ASSERT_EQ(sys.search_paths, nullptr);
-//   ASSERT_EQ(sys.modules, nullptr);
-// }
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

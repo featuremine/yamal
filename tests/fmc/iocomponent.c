@@ -70,6 +70,45 @@ cleanup:
   return NULL;
 };
 
+static struct producer_component_2 *
+producer_component_2_new(struct fmc_cfg_sect_item *cfg,
+                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  if (inp_tps && inp_tps[0]) {
+    _reactor->set_error(ctx, "producer component does not expect any inputs");
+    return NULL;
+  }
+  struct producer_component_2 *c =
+      (struct producer_component_2 *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  memset(c, 0, sizeof(*c));
+  _reactor->add_output(ctx, "valid output type", "valid output");
+  _reactor->add_output(ctx, "valid output type", "valid output 2");
+  return c;
+cleanup:
+  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
+static struct producer_component_3 *
+producer_component_3_new(struct fmc_cfg_sect_item *cfg,
+                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  if (inp_tps && inp_tps[0]) {
+    _reactor->set_error(ctx, "producer component does not expect any inputs");
+    return NULL;
+  }
+  struct producer_component_3 *c =
+      (struct producer_component_3 *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  memset(c, 0, sizeof(*c));
+  _reactor->add_output(ctx, "valid output type", "valid output");
+  _reactor->add_output(ctx, "valid output type", "valid output 2");
+  _reactor->add_output(ctx, "valid output type", "valid output 3");
+  return c;
+cleanup:
+  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
 void consumer_component_on_dep(struct fmc_component *self,
                                struct fmc_reactor_ctx *ctx, int idx,
                                struct fmc_shmem in) {
@@ -109,6 +148,40 @@ cleanup:
   return NULL;
 };
 
+static struct consumer_component_2 *
+consumer_component_2_new(struct fmc_cfg_sect_item *cfg,
+                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  if (!inp_tps || !inp_tps[0] || !inp_tps[1] || inp_tps[2]) {
+    _reactor->set_error(ctx, "consumer component expects two inputs");
+    return NULL;
+  }
+  struct consumer_component_2 *c =
+      (struct consumer_component_2 *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  memset(c, 0, sizeof(*c));
+  return c;
+cleanup:
+  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
+static struct consumer_component_3 *
+consumer_component_3_new(struct fmc_cfg_sect_item *cfg,
+                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  if (!inp_tps || !inp_tps[0] || !inp_tps[1] || !inp_tps[2] || inp_tps[3]) {
+    _reactor->set_error(ctx, "consumer component expects three inputs");
+    return NULL;
+  }
+  struct consumer_component_3 *c =
+      (struct consumer_component_3 *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  memset(c, 0, sizeof(*c));
+  return c;
+cleanup:
+  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
 struct fmc_cfg_node_spec empty_cfg_spec[] = {{NULL}};
 
 struct fmc_component_def_v1 components[] = {
@@ -121,11 +194,43 @@ struct fmc_component_def_v1 components[] = {
         .tp_del = &generic_component_del,
     },
     {
+        .tp_name = "producercomponent2",
+        .tp_descr = "Producer component with two outputs",
+        .tp_size = sizeof(struct producer_component_2),
+        .tp_cfgspec = empty_cfg_spec,
+        .tp_new = (fmc_newfunc)&producer_component_2_new,
+        .tp_del = &generic_component_del,
+    },
+    {
+        .tp_name = "producercomponent3",
+        .tp_descr = "Producer component with three outputs",
+        .tp_size = sizeof(struct producer_component_3),
+        .tp_cfgspec = empty_cfg_spec,
+        .tp_new = (fmc_newfunc)&producer_component_3_new,
+        .tp_del = &generic_component_del,
+    },
+    {
         .tp_name = "consumercomponent",
         .tp_descr = "Consumer component",
         .tp_size = sizeof(struct consumer_component),
         .tp_cfgspec = empty_cfg_spec,
         .tp_new = (fmc_newfunc)&consumer_component_new,
+        .tp_del = &generic_component_del,
+    },
+    {
+        .tp_name = "consumercomponent2",
+        .tp_descr = "Consumer component with two inputs",
+        .tp_size = sizeof(struct consumer_component_2),
+        .tp_cfgspec = empty_cfg_spec,
+        .tp_new = (fmc_newfunc)&consumer_component_2_new,
+        .tp_del = &generic_component_del,
+    },
+    {
+        .tp_name = "consumercomponent3",
+        .tp_descr = "Consumer component with three inputs",
+        .tp_size = sizeof(struct consumer_component_3),
+        .tp_cfgspec = empty_cfg_spec,
+        .tp_new = (fmc_newfunc)&consumer_component_3_new,
         .tp_del = &generic_component_del,
     },
     {NULL},
