@@ -163,6 +163,7 @@ struct fmc_reactor_api_v1 {
   void (*notify)(
       struct fmc_reactor_ctx *, int,
       struct fmc_shmem); // notify the system that output have been updated
+  struct fmc_pool *(*get_pool)(struct fmc_reactor_ctx *);
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.

@@ -22,9 +22,11 @@
 #include <uthash/utlist.h>
 
 struct fmc_reactor_api_v1 *_reactor;
+int64_t value = 9855;
 
 struct producer_component {
   fmc_component_HEAD;
+  size_t count;
 };
 
 static void producer_component_del(struct producer_component *comp) {
@@ -33,7 +35,23 @@ static void producer_component_del(struct producer_component *comp) {
 
 static void producer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){};
+                                           fmc_time64_t time){
+  struct producer_component *c = (struct producer_component *)self;
+  if (++c->count == 10) {
+    return;
+  }
+
+  struct fmc_shmem mem;
+  fmc_error_t *err = NULL;
+  ++value;
+  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value), &err);
+  if (err) {
+    _reactor->set_error(ctx, fmc_error_msg(err));
+  } else {
+    _reactor->notify(ctx, 0, mem);
+    _reactor->queue(ctx);
+  }
+};
 
 static struct producer_component *
 producer_component_new(struct fmc_cfg_sect_item *cfg,
@@ -48,6 +66,7 @@ producer_component_new(struct fmc_cfg_sect_item *cfg,
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &producer_component_process_one);
   _reactor->add_output(ctx, "valid output type", "valid output");
+  _reactor->queue(ctx);
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
@@ -58,15 +77,32 @@ struct fmc_cfg_node_spec producer_component_cfg_spec[] = {{NULL}};
 
 struct consumer_component {
   fmc_component_HEAD;
+  size_t executed;
 };
 
 static void consumer_component_del(struct consumer_component *comp) {
   free(comp);
 };
 
+void consumer_component_on_dep(struct fmc_component *self,
+                               struct fmc_reactor_ctx *ctx, int idx,
+                               struct fmc_shmem in) {
+  if (idx != 0) {
+    _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
+    return;
+  }
+  size_t incoming = *(size_t*)*in.view;
+  if (incoming != value) {
+    _reactor->set_error(ctx, "Received invalid value %lu, expected %lu", incoming, value);
+  }
+}
+
 static void consumer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){};
+                                           fmc_time64_t time){
+  struct consumer_component *c = (struct consumer_component *)self;
+  ++c->executed;
+};
 
 static struct consumer_component *
 consumer_component_new(struct fmc_cfg_sect_item *cfg,
@@ -80,6 +116,7 @@ consumer_component_new(struct fmc_cfg_sect_item *cfg,
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_process_one);
+  _reactor->on_dep(ctx, &consumer_component_on_dep);
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);

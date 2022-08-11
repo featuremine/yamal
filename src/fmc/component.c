@@ -191,7 +191,7 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem me
   UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
   if (!deps) goto cleanup;
   size_t ndeps = utarray_len(deps);
-  for (size_t i = 1; i < ndeps; ++i) {
+  for (size_t i = 0; i < ndeps; ++i) {
     struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[dep->idx];
     if (dep_ctx->dep_upd) {
@@ -204,6 +204,10 @@ cleanup:
   reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
+struct fmc_pool *reactor_get_pool_v1(struct fmc_reactor_ctx *ctx) {
+  return &ctx->pool;
+}
+
 static struct fmc_reactor_api_v1 reactor_v1 = {
     .queue = reactor_queue_v1,
     .schedule = reactor_schedule_v1,
@@ -214,6 +218,7 @@ static struct fmc_reactor_api_v1 reactor_v1 = {
     .on_dep = reactor_on_dep_v1,
     .add_output = reactor_add_output_v1,
     .notify = reactor_notify_v1,
+    .get_pool = reactor_get_pool_v1
 };
 
 static struct fmc_component_api api = {

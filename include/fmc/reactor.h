@@ -101,6 +101,7 @@ struct fmc_reactor_ctx {
   UT_array deps; // change to use a structure that holds both dep idx and input idx
                  // array of array of structures - no lists.
                  // fmc_reactor_ctx_dep
+  struct fmc_pool pool;
 };
 
 struct fmc_reactor_stop_item {
