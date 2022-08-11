@@ -39,19 +39,6 @@ struct consumer_component {
 
 /*Components for multiple inputs and outputs test*/
 
-struct producer_component_3 {
-  fmc_component_HEAD;
-  size_t first;
-  size_t second;
-  size_t third;
-};
-
-struct producer_component_2 {
-  fmc_component_HEAD;
-  size_t fourth;
-  size_t fifth;
-};
-
 struct consumer_component_2 {
   fmc_component_HEAD;
   size_t first;

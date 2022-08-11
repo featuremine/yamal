@@ -578,11 +578,11 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
-  struct producer_component_2 *typedp2comp = (struct producer_component_2 *)p2comp;
-  // Validate state
+  struct producer_component *typedp2comp = (struct producer_component *)p2comp;
+  ASSERT_EQ(typedp2comp->count, 10);
 
-  struct producer_component_3 *typedp3comp = (struct producer_component_3 *)p2comp;
-  // Validate state
+  struct producer_component *typedp3comp = (struct producer_component *)p3comp;
+  ASSERT_EQ(typedp3comp->count, 10);
 
   struct consumer_component_2 *typedc2comp = (struct consumer_component_2 *)c2comp;
   // Validate state

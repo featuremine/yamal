@@ -70,39 +70,83 @@ cleanup:
   return NULL;
 };
 
-static struct producer_component_2 *
+static void producer_component_2_process_one(struct fmc_component *self,
+                                           struct fmc_reactor_ctx *ctx,
+                                           fmc_time64_t time){
+  struct producer_component *c = (struct producer_component *)self;
+  if (c->count == 10) {
+    return;
+  }
+  ++c->count;
+  struct fmc_shmem mem;
+  fmc_error_t *err = NULL;
+  ++value;
+  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value), &err);
+  if (err) {
+    _reactor->set_error(ctx, fmc_error_msg(err));
+  } else {
+    _reactor->notify(ctx, c->count % 2, mem);
+    _reactor->queue(ctx);
+  }
+};
+
+static struct producer_component *
 producer_component_2_new(struct fmc_cfg_sect_item *cfg,
                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
   if (inp_tps && inp_tps[0]) {
     _reactor->set_error(ctx, "producer component does not expect any inputs");
     return NULL;
   }
-  struct producer_component_2 *c =
-      (struct producer_component_2 *)calloc(1, sizeof(*c));
+  struct producer_component *c =
+      (struct producer_component *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->add_output(ctx, "valid output type", "valid output");
   _reactor->add_output(ctx, "valid output type", "valid output 2");
+  _reactor->on_exec(ctx, &producer_component_2_process_one);
+  _reactor->queue(ctx);
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
   return NULL;
 };
 
-static struct producer_component_3 *
+static void producer_component_3_process_one(struct fmc_component *self,
+                                           struct fmc_reactor_ctx *ctx,
+                                           fmc_time64_t time){
+  struct producer_component *c = (struct producer_component *)self;
+  if (c->count == 10) {
+    return;
+  }
+  ++c->count;
+  struct fmc_shmem mem;
+  fmc_error_t *err = NULL;
+  ++value;
+  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value), &err);
+  if (err) {
+    _reactor->set_error(ctx, fmc_error_msg(err));
+  } else {
+    _reactor->notify(ctx, c->count % 3, mem);
+    _reactor->queue(ctx);
+  }
+};
+
+static struct producer_component *
 producer_component_3_new(struct fmc_cfg_sect_item *cfg,
                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
   if (inp_tps && inp_tps[0]) {
     _reactor->set_error(ctx, "producer component does not expect any inputs");
     return NULL;
   }
-  struct producer_component_3 *c =
-      (struct producer_component_3 *)calloc(1, sizeof(*c));
+  struct producer_component *c =
+      (struct producer_component *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->add_output(ctx, "valid output type", "valid output");
   _reactor->add_output(ctx, "valid output type", "valid output 2");
   _reactor->add_output(ctx, "valid output type", "valid output 3");
+  _reactor->on_exec(ctx, &producer_component_3_process_one);
+  _reactor->queue(ctx);
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
@@ -148,6 +192,31 @@ cleanup:
   return NULL;
 };
 
+void consumer_component_2_on_dep(struct fmc_component *self,
+                               struct fmc_reactor_ctx *ctx, int idx,
+                               struct fmc_shmem in) {
+  struct consumer_component_2 *c = (struct consumer_component_2 *)self;
+  switch (idx)
+  {
+  case 0:
+    ++c->first;
+    break;
+  case 1:
+    ++c->second;
+    break;
+  default:
+    _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
+    break;
+  }
+}
+
+static void consumer_component_2_process_one(struct fmc_component *self,
+                                           struct fmc_reactor_ctx *ctx,
+                                           fmc_time64_t time){
+  struct consumer_component_2 *c = (struct consumer_component_2 *)self;
+  ++c->executed;
+};
+
 static struct consumer_component_2 *
 consumer_component_2_new(struct fmc_cfg_sect_item *cfg,
                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
@@ -159,10 +228,40 @@ consumer_component_2_new(struct fmc_cfg_sect_item *cfg,
       (struct consumer_component_2 *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
+  _reactor->on_exec(ctx, &consumer_component_2_process_one);
+  _reactor->on_dep(ctx, &consumer_component_2_on_dep);
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
   return NULL;
+};
+
+void consumer_component_3_on_dep(struct fmc_component *self,
+                               struct fmc_reactor_ctx *ctx, int idx,
+                               struct fmc_shmem in) {
+  struct consumer_component_3 *c = (struct consumer_component_3 *)self;
+  switch (idx)
+  {
+  case 0:
+    ++c->third;
+    break;
+  case 1:
+    ++c->fourth;
+    break;
+  case 2:
+    ++c->fifth;
+    break;
+  default:
+    _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
+    break;
+  }
+}
+
+static void consumer_component_3_process_one(struct fmc_component *self,
+                                           struct fmc_reactor_ctx *ctx,
+                                           fmc_time64_t time){
+  struct consumer_component_3 *c = (struct consumer_component_3 *)self;
+  ++c->executed;
 };
 
 static struct consumer_component_3 *
@@ -176,6 +275,8 @@ consumer_component_3_new(struct fmc_cfg_sect_item *cfg,
       (struct consumer_component_3 *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
+  _reactor->on_exec(ctx, &consumer_component_3_process_one);
+  _reactor->on_dep(ctx, &consumer_component_3_on_dep);
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
@@ -196,7 +297,7 @@ struct fmc_component_def_v1 components[] = {
     {
         .tp_name = "producercomponent2",
         .tp_descr = "Producer component with two outputs",
-        .tp_size = sizeof(struct producer_component_2),
+        .tp_size = sizeof(struct producer_component),
         .tp_cfgspec = empty_cfg_spec,
         .tp_new = (fmc_newfunc)&producer_component_2_new,
         .tp_del = &generic_component_del,
@@ -204,7 +305,7 @@ struct fmc_component_def_v1 components[] = {
     {
         .tp_name = "producercomponent3",
         .tp_descr = "Producer component with three outputs",
-        .tp_size = sizeof(struct producer_component_3),
+        .tp_size = sizeof(struct producer_component),
         .tp_cfgspec = empty_cfg_spec,
         .tp_new = (fmc_newfunc)&producer_component_3_new,
         .tp_del = &generic_component_del,
