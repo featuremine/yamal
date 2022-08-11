@@ -585,10 +585,15 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(typedp3comp->count, 10);
 
   struct consumer_component_2 *typedc2comp = (struct consumer_component_2 *)c2comp;
-  // Validate state
+  ASSERT_EQ(typedc2comp->executed, 7);
+  ASSERT_EQ(typedc2comp->first, 3);
+  ASSERT_EQ(typedc2comp->second, 4);
 
-  struct consumer_component_3 *typedc3comp = (struct consumer_component_3 *)c2comp;
-  // Validate state
+  struct consumer_component_3 *typedc3comp = (struct consumer_component_3 *)c3comp;
+  ASSERT_EQ(typedc3comp->executed, 13);
+  ASSERT_EQ(typedc3comp->third, 3);
+  ASSERT_EQ(typedc3comp->fourth, 5);
+  ASSERT_EQ(typedc3comp->fifth, 5);
 
   fmc_reactor_destroy(&r);
 
