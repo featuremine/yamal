@@ -205,7 +205,7 @@ cleanup:
 }
 
 struct fmc_pool *reactor_get_pool_v1(struct fmc_reactor_ctx *ctx) {
-  return &ctx->pool;
+  return &ctx->reactor->pool;
 }
 
 static struct fmc_reactor_api_v1 reactor_v1 = {

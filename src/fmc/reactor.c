@@ -43,6 +43,7 @@ void fmc_reactor_init(struct fmc_reactor *reactor) {
   utarray_init(&reactor->sched, &sched_item_icd);
   utarray_init(&reactor->queued, &size_t_icd);
   utarray_init(&reactor->toqueue, &size_t_icd);
+  fmc_pool_init(&reactor->pool);
 }
 
 void fmc_reactor_destroy(struct fmc_reactor *reactor) {
@@ -66,6 +67,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
     free(reactor->ctxs[i]);
   }
   free(reactor->ctxs);
+  fmc_pool_destroy(&reactor->pool);
   memset(reactor, 0, sizeof(*reactor));
 }
 
@@ -95,7 +97,6 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   deps.init = utarr_init;
   utarray_init(&ctx->deps, &deps);
   fmc_error_init_none(&ctx->err);
-  fmc_pool_init(&ctx->pool);
 }
 
 void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
