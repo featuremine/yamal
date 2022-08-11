@@ -396,6 +396,7 @@ TEST(reactor, reactorlive) {
 
   fmc_reactor_run(&r, true, &err);
   thr.join();
+  std::cout << testcomp->timesim.value << std::endl;
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(
       testcomp->timesim,

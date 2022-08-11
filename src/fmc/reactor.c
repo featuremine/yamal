@@ -96,6 +96,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
   size_t completed = 0;
+  ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
 
   do {
     struct sched_item *item =
@@ -129,10 +130,9 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                      fmc_error_t **error) {
   fmc_error_clear(error);
   do {
-    ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
     fmc_time64_t next = fmc_reactor_sched(reactor);
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
-    if ((!utarray_len(&reactor->queued) && fmc_time64_is_end(next)) ||
+    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) && !utarray_len(&reactor->queued)) ||
         (reactor->stop && !reactor->finishing) ||
         reactor->stop >= FMC_REACTOR_HARD_STOP) {
       break;
