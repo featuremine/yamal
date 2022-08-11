@@ -50,6 +50,16 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->sched);
   utarray_done(&reactor->queued);
   utarray_done(&reactor->toqueue);
+  if (reactor->stop_list) {
+    struct fmc_reactor_stop_item *phead = reactor->stop_list;
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item *tmp = NULL;
+    DL_FOREACH_SAFE(phead, item, tmp) {
+      DL_DELETE(phead, item);
+      free(item);
+    }
+  }
+  fmc_pool_destroy(&reactor->pool);
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     if (reactor->ctxs[i]->out_tps) {
       struct fmc_reactor_ctx_out *phead = reactor->ctxs[i]->out_tps;
@@ -67,7 +77,6 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
     free(reactor->ctxs[i]);
   }
   free(reactor->ctxs);
-  fmc_pool_destroy(&reactor->pool);
   memset(reactor, 0, sizeof(*reactor));
 }
 
