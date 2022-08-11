@@ -460,7 +460,12 @@ TEST(reactor, io) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ctp, nullptr);
 
-  struct fmc_component *ccomp = fmc_component_new(&r, ctp, nullptr, nullptr, &err);
+  struct fmc_component_input inputs[] = {
+    {pcomp, 0},
+    {NULL, 1}
+  };
+
+  struct fmc_component *ccomp = fmc_component_new(&r, ctp, nullptr, inputs, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(ccomp->_ctx->err.code, FMC_ERROR_NONE);
 

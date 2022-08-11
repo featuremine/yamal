@@ -176,9 +176,8 @@ void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
     if (!item->name) goto cleanup;
   }
   DL_APPEND(ctx->out_tps, item);
-  size_t counter = 0;  
-  DL_COUNT(ctx->out_tps, item, counter);
-  utarray_reserve(&ctx->deps, counter * sizeof(UT_array));
+  utarray_extend_back(&ctx->deps);
+  return;
 cleanup:
   if (item) {
     if (item->type) free(item->type);
@@ -200,6 +199,7 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem me
     }
     utheap_push(&ctx->reactor->toqueue, &dep->idx, FMC_SIZE_T_PTR_LESS);
   }
+  return;
 cleanup:
   reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
@@ -316,6 +316,7 @@ void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
   fmc_component_path_list_t *tmpls2 = sys->search_paths;
   sys->search_paths = tmpls;
   tmpls = tmpls2;
+  return;
 cleanup:
   component_path_list_del(&tmpls);
 }
@@ -493,6 +494,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     goto cleanup;
 
   item = (struct fmc_component_list *)calloc(1, sizeof(*item));
+  item->comp = NULL;
   if (!item)
     goto cleanup;
 
@@ -524,13 +526,18 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
   item->comp = tp->tp_new(cfg, &ctx, in_names);
-  if (*error)
+  if (item->comp) {
+    item->comp->_vt = tp;
+  }
+  if (fmc_error_has(&ctx.err)) {
+    *error = fmc_error_inst();
+    fmc_error_cpy(*error, &ctx.err);
     goto cleanup;
+  }
   ctx.comp = item->comp;
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
   if (*error)
     goto cleanup;
-  item->comp->_vt = tp;
   item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {

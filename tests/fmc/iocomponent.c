@@ -47,6 +47,7 @@ producer_component_new(struct fmc_cfg_sect_item *cfg,
   if (!c) goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &producer_component_process_one);
+  _reactor->add_output(ctx, "valid output type", "valid output");
   return c;
 cleanup:
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
@@ -70,7 +71,7 @@ static void consumer_component_process_one(struct fmc_component *self,
 static struct consumer_component *
 consumer_component_new(struct fmc_cfg_sect_item *cfg,
                        struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  if (!inp_tps || !inp_tps[0] || inp_tps[0]) {
+  if (!inp_tps || !inp_tps[0] || inp_tps[1]) {
     _reactor->set_error(ctx, "consumer component expects a single input");
     return NULL;
   }
