@@ -440,21 +440,29 @@ TEST(reactor, io) {
 
   struct fmc_component_module *mod =
       fmc_component_module_get(&sys, "iocomponent", &err);
-  std::cout<<fmc_error_msg(err)<<std::endl;
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(mod->sys, &sys);
   ASSERT_EQ(std::string(mod->name), std::string("iocomponent"));
   ASSERT_EQ(sys.modules, mod);
   ASSERT_EQ(sys.modules->prev, mod);
 
-  struct fmc_component_type *tp =
+  struct fmc_component_type *ptp =
       fmc_component_module_type_get(mod, "producercomponent", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_NE(tp, nullptr);
+  ASSERT_NE(ptp, nullptr);
 
-  struct fmc_component *comp = fmc_component_new(&r, tp, nullptr, nullptr, &err);
+  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(comp->_ctx->err.code, FMC_ERROR_NONE);
+  ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
+
+  struct fmc_component_type *ctp =
+      fmc_component_module_type_get(mod, "consumercomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(ctp, nullptr);
+
+  struct fmc_component *ccomp = fmc_component_new(&r, ctp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(ccomp->_ctx->err.code, FMC_ERROR_NONE);
 
   fmc_reactor_run(&r, false, &err);
   ASSERT_EQ(err, nullptr);
@@ -462,7 +470,8 @@ TEST(reactor, io) {
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(comp);
+  fmc_component_del(ccomp);
+  fmc_component_del(pcomp);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);

@@ -77,6 +77,10 @@ cleanup:
   return NULL;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct fmc_cfg_node_spec consumer_component_cfg_spec[] = {{NULL}};
 
 struct fmc_component_def_v1 components[] = {
@@ -100,11 +104,12 @@ struct fmc_component_def_v1 components[] = {
 };
 
 FMCOMPMODINITFUNC void
-FMCompInit_testcomponent(struct fmc_component_api *api,
-                         struct fmc_component_module *mod) {
+FMCompInit_iocomponent(struct fmc_component_api *api,
+                       struct fmc_component_module *mod) {
   api->components_add_v1(mod, components);
-  if (!api->reactor_v1) {
-    fmc_error_init_sprintf(&mod->error, "Unable to find reactor api v1");
-  }
   _reactor = api->reactor_v1;
 }
+
+#ifdef __cplusplus
+}
+#endif
