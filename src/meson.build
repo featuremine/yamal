@@ -43,6 +43,7 @@ static_fmc = static_library('fmc', [srcs_c],
                             include_directories : [inc],
                             dependencies : [thread_dep, extr_dep_deps],
                             cpp_args : static_cpp_args,
+                            link_language: 'c',
                             install: true,
                             install_dir: 'lib')
 

@@ -50,6 +50,7 @@ fmc_component_sys_destroy(&sys);
 #include <fmc/platform.h>
 #include <fmc/time.h>
 #include <uthash/utarray.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,8 +117,8 @@ struct fmc_reactor {
   UT_array queued;
   UT_array toqueue;
   size_t finishing;
-  volatile int stop;
-  volatile bool stop_cl;
+  _Atomic(int) stop;
+  _Atomic(bool) stop_cl;
   struct fmc_reactor_stop_item *stop_list;
   struct fmc_pool pool;
 };
