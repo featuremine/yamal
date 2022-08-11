@@ -174,6 +174,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
 void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                      fmc_error_t **error) {
   fmc_error_clear(error);
+  static bool stopped = false;
   do {
     ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
     fmc_time64_t next = fmc_reactor_sched(reactor);
@@ -183,9 +184,11 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
         reactor->stop >= FMC_REACTOR_HARD_STOP) {
       break;
     }
-    // TODO: handle component error
     fmc_reactor_run_once(reactor, now, error);
-    // if error, call stop, dont execute components which have an error
+    if (*error && !stopped) {
+      fmc_reactor_stop(reactor);
+      stopped = true;
+    }
   } while (true);
 }
 
