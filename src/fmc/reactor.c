@@ -28,6 +28,7 @@
 #include <uthash/utarray.h>
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
+#include <stdatomic.h>
 
 #define FMC_REACTOR_HARD_STOP 3
 
@@ -95,9 +96,22 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
+  if (atomic_load(&reactor->stop_cl)) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item *tmp = NULL;
+    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
+      struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
+      if (!ctx->finishing && ctx->shutdown) {
+        ++reactor->finishing;
+        ctx->finishing = true;
+        ctx->shutdown(ctx->comp, ctx);
+      }
+    }
+    atomic_store(&reactor->stop_cl, false);
+  }
+
   size_t completed = 0;
   ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
-
   do {
     struct sched_item *item =
         (struct sched_item *)utarray_front(&reactor->sched);
@@ -143,17 +157,7 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  // TODO: make increment atomic
-  if (!reactor->stop++) {
-    struct fmc_reactor_stop_item *item = NULL;
-    struct fmc_reactor_stop_item *tmp = NULL;
-    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
-      struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
-      if (!ctx->finishing && ctx->shutdown) {
-        ++reactor->finishing;
-        ctx->finishing = true;
-        ctx->shutdown(ctx->comp, ctx);
-      }
-    }
+  if (!atomic_fetch_add(&reactor->stop, 1)) {
+    atomic_store(&reactor->stop_cl, true);
   }
 }
