@@ -474,9 +474,9 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
     __typeof__(head) _el = NULL;  \
     DL_COUNT(head, _el, count);   \
     _el = NULL;                   \
-    if (idx >=0 && count>=idx) {  \
+    if (idx >=0 && count>idx) {   \
       count = 0;                  \
-      DL_FOREACH(head, _el) {      \
+      DL_FOREACH(head, _el) {     \
         if (count == idx) break;  \
         ++count;                  \
       }                           \
