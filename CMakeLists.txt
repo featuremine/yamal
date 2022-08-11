@@ -59,6 +59,8 @@ add_library(
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/memory.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
@@ -221,23 +223,23 @@ if(BUILD_TOOLS)
     find_package(PkgConfig)
     pkg_check_modules(TCLAP REQUIRED IMPORTED_TARGET tclap)
 
-    add_executable(
-        yamal-run
-        "src/tools/yamal-run.cpp"
-    )
-    target_link_libraries(
-        yamal-run
-        PRIVATE
-        ytp
-        fmc++
-        fmc
-        PkgConfig::TCLAP
-        pthread
-    )
-    install(
-        TARGETS
-        yamal-run
-    )
+    #add_executable(
+    #    yamal-run
+    #    "src/tools/yamal-run.cpp"
+    #)
+    #target_link_libraries(
+    #    yamal-run
+    #    PRIVATE
+    #    ytp
+    #    fmc++
+    #    fmc
+    #    PkgConfig::TCLAP
+    #    pthread
+    #)
+    #install(
+    #    TARGETS
+    #    yamal-run
+    #)
 
     add_executable(
         yamal-daemon
