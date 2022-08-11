@@ -25,7 +25,7 @@
 struct fmc_reactor_api_v1 *_reactor;
 int64_t value = 9855;
 
-static void producer_component_del(struct producer_component *comp) {
+static void generic_component_del(struct fmc_component *comp) {
   free(comp);
 };
 
@@ -70,12 +70,6 @@ cleanup:
   return NULL;
 };
 
-struct fmc_cfg_node_spec producer_component_cfg_spec[] = {{NULL}};
-
-static void consumer_component_del(struct consumer_component *comp) {
-  free(comp);
-};
-
 void consumer_component_on_dep(struct fmc_component *self,
                                struct fmc_reactor_ctx *ctx, int idx,
                                struct fmc_shmem in) {
@@ -115,31 +109,31 @@ cleanup:
   return NULL;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct fmc_cfg_node_spec consumer_component_cfg_spec[] = {{NULL}};
+struct fmc_cfg_node_spec empty_cfg_spec[] = {{NULL}};
 
 struct fmc_component_def_v1 components[] = {
     {
         .tp_name = "producercomponent",
         .tp_descr = "Producer component",
         .tp_size = sizeof(struct producer_component),
-        .tp_cfgspec = producer_component_cfg_spec,
-        .tp_new = (fmc_newfunc)producer_component_new,
-        .tp_del = (fmc_delfunc)producer_component_del,
+        .tp_cfgspec = empty_cfg_spec,
+        .tp_new = (fmc_newfunc)&producer_component_new,
+        .tp_del = &generic_component_del,
     },
     {
         .tp_name = "consumercomponent",
         .tp_descr = "Consumer component",
         .tp_size = sizeof(struct consumer_component),
-        .tp_cfgspec = consumer_component_cfg_spec,
-        .tp_new = (fmc_newfunc)consumer_component_new,
-        .tp_del = (fmc_delfunc)consumer_component_del,
+        .tp_cfgspec = empty_cfg_spec,
+        .tp_new = (fmc_newfunc)&consumer_component_new,
+        .tp_del = &generic_component_del,
     },
     {NULL},
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 FMCOMPMODINITFUNC void
 FMCompInit_iocomponent(struct fmc_component_api *api,
