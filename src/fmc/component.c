@@ -532,9 +532,6 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
   item->comp = tp->tp_new(cfg, &ctx, in_names);
-  if (item->comp) {
-    item->comp->_vt = tp;
-  }
   if (fmc_error_has(&ctx.err)) {
     *error = fmc_error_inst();
     fmc_error_cpy(*error, &ctx.err);
@@ -544,6 +541,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
   if (*error)
     goto cleanup;
+  item->comp->_vt = tp;
   item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {
@@ -561,7 +559,7 @@ cleanup:
     fmc_error_set2(error, FMC_ERROR_MEMORY);
   if (item) {
     if (item->comp)
-      item->comp->_vt->tp_del(item->comp);
+      tp->tp_del(item->comp);
     free(item);
   }
   return NULL;
