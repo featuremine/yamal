@@ -23,7 +23,6 @@
 #include <fmc/error.h>
 #include <fmc/math.h>
 #include <fmc/reactor.h>
-#include <fmc/signals.h>
 #include <fmc/time.h>
 #include <stdlib.h> // calloc() free()
 #include <uthash/utarray.h>

@@ -168,7 +168,7 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
 
 void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
                            const char *name) {
-  char **tmp = (char **)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
+  char **tmp = (char **)realloc(ctx->out_tps, (ctx->nouts + 1) * sizeof(*tmp));
   if (!tmp)
     goto cleanup;
   tmp[ctx->nouts++] = strdup(type);
