@@ -180,7 +180,7 @@ void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
   DL_APPEND(ctx->out_tps, item);
   size_t counter = 0;  
   DL_COUNT(ctx->out_tps, item, counter);
-  utarray_reserve(&ctx->deps, counter * sizeof(struct fmc_reactor_ctx_dep));
+  utarray_reserve(&ctx->deps, counter * sizeof(UT_array));
 cleanup:
   if (item) {
     if (item->type) free(item->type);
@@ -535,6 +535,15 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   item->comp->_vt = tp;
   item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
+  for (unsigned int i = 0; i < in_sz; ++i) {
+    struct fmc_reactor_ctx * inp_ctx = inps[i].comp->_ctx;
+    UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
+    if (!deps) goto cleanup;
+    struct fmc_reactor_ctx_dep new_dep;
+    new_dep.idx = item->comp->_ctx->idx;
+    new_dep.inp_idx = i;
+    utarray_push_back(deps, &new_dep);
+  }
   return item->comp;
 cleanup:
   if (!*error)
