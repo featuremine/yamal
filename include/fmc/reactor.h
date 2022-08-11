@@ -98,7 +98,7 @@ struct fmc_reactor_ctx {
   bool finishing;
   struct fmc_reactor_ctx_out *out_tps; // list of fmc_reactor_component_output {name, type}
                                        // use double linked list, add them with append at the end
-  UT_array *deps; // change to use a structure that holds both dep idx and input idx
+  UT_array deps; // change to use a structure that holds both dep idx and input idx
                   // array of array of structures - no lists.
                   // fmc_reactor_ctx_dep
 };

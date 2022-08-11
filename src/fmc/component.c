@@ -32,6 +32,7 @@
 #include <string.h> // memcpy() strtok()
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
+#include <uthash/utarray.h>
 
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
@@ -177,6 +178,9 @@ void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
     if (!item->name) goto cleanup;
   }
   DL_APPEND(ctx->out_tps, item);
+  size_t counter = 0;  
+  DL_COUNT(ctx->out_tps, item, counter);
+  utarray_reserve(&ctx->deps, counter * sizeof(struct fmc_reactor_ctx_dep));
 cleanup:
   if (item) {
     if (item->type) free(item->type);
@@ -187,17 +191,19 @@ cleanup:
 }
 
 void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
-  UT_array *deps = &ctx->deps[idx];
-  if (!deps) return;
+  UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
+  if (!deps) goto cleanup;
   size_t ndeps = utarray_len(deps);
   for (size_t i = 1; i < ndeps; ++i) {
-    struct fmc_reactor_ctx_dep* dep = utarray_eltptr(deps, i);
+    struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[dep->idx];
     if (dep_ctx->dep_upd) {
       dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, dep->inp_idx, mem);
     }
     utheap_push(&ctx->reactor->toqueue, &dep->idx, FMC_SIZE_T_PTR_LESS);
   }
+cleanup:
+  reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
 static struct fmc_reactor_api_v1 reactor_v1 = {
@@ -507,14 +513,13 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
       goto cleanup;
     }
 
-    in_names[i] = DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
-
-    if (inps[i].idx < 0 || !in_names[i]) {
+    struct fmc_reactor_ctx_out *elem = DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
+    if (!elem) {
       fmc_error_set(error, "invalid output index %d of type %s", inps[i].idx,
                     inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
-
+    in_names[i] = elem->name;
   }
   in_names[in_sz] = NULL;
 
