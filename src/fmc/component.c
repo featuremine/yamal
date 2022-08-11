@@ -133,7 +133,7 @@ void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   ({                                                                           \
     struct fmc_reactor_stop_item *_lhs =                                       \
         ((struct fmc_reactor_stop_item *)(lhs));                               \
-    _lhs->ctx == (ctx);                                                        \
+    _lhs->idx == (ctx)->idx;                                                        \
   })
 
 void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
@@ -143,7 +143,7 @@ void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
     struct fmc_reactor_stop_item *item = calloc(1, sizeof(*item));
     if (!item)
       goto cleanup;
-    item->ctx = ctx;
+    item->idx = ctx->idx;
     DL_APPEND(ctx->reactor->stop_list, item);
   } else if (ctx->shutdown && !cl) {
     struct fmc_reactor_stop_item *item = NULL;
