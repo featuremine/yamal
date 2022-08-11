@@ -38,6 +38,10 @@ static void producer_component_process_one(struct fmc_component *self,
 static struct producer_component *
 producer_component_new(struct fmc_cfg_sect_item *cfg,
                        struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  if (inp_tps && inp_tps[0]) {
+    _reactor->set_error(ctx, "producer component does not expect any inputs");
+    return NULL;
+  }
   struct producer_component *c =
       (struct producer_component *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
@@ -66,6 +70,10 @@ static void consumer_component_process_one(struct fmc_component *self,
 static struct consumer_component *
 consumer_component_new(struct fmc_cfg_sect_item *cfg,
                        struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  if (!inp_tps || !inp_tps[0] || inp_tps[0]) {
+    _reactor->set_error(ctx, "consumer component expects a single input");
+    return NULL;
+  }
   struct consumer_component *c =
       (struct consumer_component *)calloc(1, sizeof(*c));
   if (!c) goto cleanup;
