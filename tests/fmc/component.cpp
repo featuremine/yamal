@@ -252,6 +252,8 @@ TEST(component, component) {
       fmc_component_new(&r, tp, cfginvalid, nullptr, &err);
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(compinvalid, nullptr);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   struct fmc_cfg_sect_item *cfg =
       fmc_cfg_sect_item_add_str(nullptr, "teststr", "message", &err);
@@ -263,6 +265,8 @@ TEST(component, component) {
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
+  ASSERT_EQ(r.size, 1);
+  ASSERT_NE(r.ctxs, nullptr);
 
   fmc_reactor_destroy(&r);
   ASSERT_EQ(err, nullptr);
@@ -333,6 +337,8 @@ TEST(reactor, reactorsched) {
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
+  ASSERT_EQ(r.size, 1);
+  ASSERT_NE(r.ctxs, nullptr);
 
   fmc_reactor_run(&r, false, &err);
   ASSERT_EQ(err, nullptr);
@@ -414,7 +420,9 @@ TEST(reactor, reactorlive) {
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
-
+  ASSERT_EQ(r.size, 1);
+  ASSERT_NE(r.ctxs, nullptr);
+  
   struct fmc_reactor *rptr = &r;
   std::thread thr([rptr]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
