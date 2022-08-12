@@ -102,8 +102,8 @@ struct fmc_reactor {
   UT_array queued;
   UT_array toqueue;
   size_t finishing;
-  volatile int stop;
-  volatile bool stop_cl;
+  int stop;
+  volatile int stop_cl;
   struct fmc_reactor_stop_item *stop_list;
 };
 
