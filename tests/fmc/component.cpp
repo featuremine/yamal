@@ -205,6 +205,10 @@ TEST(component, module) {
 TEST(component, component) {
   struct fmc_reactor r;
   fmc_reactor_init(&r);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   fmc_error_t *err;
   fmc_error_clear(&err);
@@ -264,6 +268,11 @@ TEST(component, component) {
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
 
   fmc_reactor_destroy(&r);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfginvalid);
@@ -280,6 +289,10 @@ TEST(component, component) {
 TEST(reactor, reactorsched) {
   struct fmc_reactor r;
   fmc_reactor_init(&r);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   fmc_error_t *err;
   fmc_error_clear(&err);
@@ -330,8 +343,18 @@ TEST(reactor, reactorsched) {
       testcomp->timesim,
       fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 1);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_NE(r.ctxs, nullptr);
 
   fmc_reactor_destroy(&r);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfg);
@@ -347,6 +370,10 @@ TEST(reactor, reactorsched) {
 TEST(reactor, reactorlive) {
   struct fmc_reactor r;
   fmc_reactor_init(&r);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   fmc_error_t *err;
   fmc_error_clear(&err);
@@ -398,14 +425,24 @@ TEST(reactor, reactorlive) {
   });
 
   fmc_reactor_run(&r, true, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.stop, 1);
+  ASSERT_EQ(r.size, 1);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_NE(r.ctxs, nullptr);
   thr.join();
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fmc_time64_equal(
+  ASSERT_TRUE(fmc_time64_greater_or_equal(
       testcomp->timesim,
       fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100))));
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
   fmc_reactor_destroy(&r);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(r.stop, 0);
+  ASSERT_EQ(r.size, 0);
+  ASSERT_EQ(r.finishing, 0);
+  ASSERT_EQ(r.ctxs, nullptr);
 
   fmc_component_del(comp);
   fmc_cfg_sect_del(cfg);

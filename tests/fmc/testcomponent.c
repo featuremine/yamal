@@ -27,11 +27,18 @@ struct test_component {
   fmc_component_HEAD;
   char *teststr;
   fmc_time64_t timesim;
+  bool stop;
 };
 
 static void test_component_del(struct test_component *comp) {
   free(comp->teststr);
   free(comp);
+};
+
+static void test_component_shutdown(struct fmc_component *self,
+                                      struct fmc_reactor_ctx *ctx) {
+  struct test_component *comp = (struct test_component *)self;
+  comp->stop = true;
 };
 
 static void test_component_process_one_sched(struct fmc_component *self,
@@ -58,7 +65,8 @@ test_component_new_sched(struct fmc_cfg_sect_item *cfg,
   if (err)
     goto cleanup;
   c->timesim = fmc_time64_start();
-  _reactor->on_exec(ctx, &test_component_process_one_sched);
+  c->stop = false;
+  _reactor->on_exec(ctx, test_component_process_one_sched);
   _reactor->schedule(ctx, c->timesim);
   return c;
 cleanup:
@@ -75,11 +83,11 @@ static void test_component_process_one_live(struct fmc_component *self,
                                             struct fmc_reactor_ctx *ctx,
                                             fmc_time64_t time) {
   struct test_component *comp = (struct test_component *)self;
-  if (fmc_time64_less(
-          comp->timesim,
-          fmc_time64_add(fmc_time64_start(), fmc_time64_from_nanos(100)))) {
-    fmc_time64_inc(&comp->timesim, fmc_time64_from_nanos(10));
+  fmc_time64_inc(&comp->timesim, fmc_time64_from_nanos(10));
+  if (!comp->stop) {
     _reactor->queue(ctx);
+  } else {
+    _reactor->finished(ctx);
   }
 };
 
@@ -95,8 +103,10 @@ test_component_new_live(struct fmc_cfg_sect_item *cfg,
   if (err)
     goto cleanup;
   c->timesim = fmc_time64_start();
-  _reactor->on_exec(ctx, &test_component_process_one_live);
+  c->stop = false;
+  _reactor->on_exec(ctx, test_component_process_one_live);
   _reactor->queue(ctx);
+  _reactor->on_shutdown(ctx, test_component_shutdown);
   return c;
 cleanup:
   if (c)
