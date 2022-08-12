@@ -65,10 +65,10 @@ static void shutdown_component_process_one(struct fmc_component *self,
                                         struct fmc_reactor_ctx *ctx,
                                         fmc_time64_t time) {
   struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
-  if (typed->shutdown_count && ++typed->post_shutdown_count == 10) {
+  if (typed->shutdown_count && ++typed->post_shutdown_count == typed->limit) {
     _reactor->finished(ctx);
   }
-  _reactor->queue(ctx);
+  _reactor->schedule(ctx, fmc_time64_add(time, fmc_time64_from_nanos(1000)));
 };
 
 static struct shutdown_component_enabled_cb *
@@ -80,6 +80,8 @@ shutdown_component_new(struct fmc_cfg_sect_item *cfg,
   _reactor->on_exec(ctx, &shutdown_component_process_one);
   _reactor->on_shutdown(ctx, &shutdown_component_shutdown_cb);
   _reactor->queue(ctx);
+  struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "limit");
+  c->limit = item->node.value.int64;
   return c;
 cleanup:
   if (c)
@@ -152,6 +154,16 @@ cleanup:
 
 struct fmc_cfg_node_spec empty_component_cfg_spec[] = {{NULL}};
 
+struct fmc_cfg_node_spec limit_component_cfg_spec[] = {
+  {
+      "limit",
+      "int64 descr",
+      true,
+      {FMC_CFG_INT64},
+  },
+  {NULL}
+};
+
 struct fmc_component_def_v1 components[] = {
     {
         .tp_name = "noshutdowncomponent",
@@ -165,7 +177,7 @@ struct fmc_component_def_v1 components[] = {
         .tp_name = "shutdowncomponent",
         .tp_descr = "Component that queues itself allways, has shutdown",
         .tp_size = sizeof(struct shutdown_component),
-        .tp_cfgspec = empty_component_cfg_spec,
+        .tp_cfgspec = limit_component_cfg_spec,
         .tp_new = (fmc_newfunc)shutdown_component_new,
         .tp_del = (fmc_delfunc)generic_component_del,
     },

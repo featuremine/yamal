@@ -22,6 +22,7 @@ struct shutdown_component_enabled_cb {
   fmc_component_HEAD;
   size_t shutdown_count;
   size_t post_shutdown_count;
+  size_t limit;
 };
 
 #ifdef __cplusplus
