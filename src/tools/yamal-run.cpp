@@ -140,6 +140,7 @@ int main(int argc, char **argv) {
 
   fmc_reactor_init(&r);
   fmc_component *component = fmc_component_new(&r, type, cfg.get(), nullptr, &err);
+  (void) component;
   fmc_runtime_error_unless(!err)
       << "Unable to load component " << componentArg.getValue() << ": "
       << fmc_error_msg(err);
