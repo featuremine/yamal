@@ -1004,6 +1004,9 @@ TEST(reactor, multi_shutdown_cb) {
   fmc_reactor_destroy(&r);
 
   fmc_component_del(pcomp);
+  fmc_component_del(pcomp2);
+  fmc_component_del(pcomp3);
+  fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
