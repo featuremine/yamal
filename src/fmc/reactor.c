@@ -140,7 +140,7 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
-  bool stop_prev = reactor->stop;
+  int stop_prev = reactor->stop;
   reactor->stop = __atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST);
   if (!stop_prev && reactor->stop) {
     struct fmc_reactor_stop_item *item = NULL;
