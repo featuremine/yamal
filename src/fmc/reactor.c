@@ -28,7 +28,6 @@
 #include <uthash/utarray.h>
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
-#include <stdatomic.h>
 
 #define FMC_REACTOR_HARD_STOP 3
 
@@ -141,7 +140,7 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
-  if (atomic_load(&reactor->stop_cl)) {
+  if (__atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST)) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item *tmp = NULL;
     DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
@@ -152,7 +151,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
         ctx->shutdown(ctx->comp, ctx);
       }
     }
-    atomic_store(&reactor->stop_cl, false);
+    __atomic_store_n(&reactor->stop_cl, false, __ATOMIC_SEQ_CST);
   }
 
   size_t completed = 0;
@@ -206,7 +205,7 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  if (!atomic_fetch_add(&reactor->stop, 1)) {
-    atomic_store(&reactor->stop_cl, true);
+  if (!__atomic_fetch_add(&reactor->stop, 1, __ATOMIC_SEQ_CST)) {
+    __atomic_store_n(&reactor->stop_cl, true, __ATOMIC_SEQ_CST);
   }
 }
