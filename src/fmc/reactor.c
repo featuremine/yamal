@@ -55,7 +55,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
     DL_DELETE(head, item);
     free(item);
   }
-  
+
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     free(reactor->ctxs[i]);
   }
