@@ -260,8 +260,7 @@ TEST(component, component) {
   ASSERT_EQ(err, nullptr);
   struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_EQ(std::string(comp->_vt->tp_name),
-            std::string("testcomponentsched"));
+  ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponentsched"));
   ASSERT_EQ(comp->_ctx->err.code, FMC_ERROR_NONE);
   struct test_component *testcomp = (struct test_component *)comp;
   ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
