@@ -140,21 +140,19 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
-  int stop_cl = __atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST);
-  if (stop_cl) {
-    if (!reactor->stop) {
-      struct fmc_reactor_stop_item *item = NULL;
-      struct fmc_reactor_stop_item *tmp = NULL;
-      DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
-        struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
-        if (!ctx->finishing && ctx->shutdown) {
-          ++reactor->finishing;
-          ctx->finishing = true;
-          ctx->shutdown(ctx->comp, ctx);
-        }
+  bool stop_prev = reactor->stop;
+  reactor->stop = __atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST);
+  if (!stop_prev && reactor->stop) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item *tmp = NULL;
+    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
+      struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
+      if (!ctx->finishing && ctx->shutdown) {
+        ++reactor->finishing;
+        ctx->finishing = true;
+        ctx->shutdown(ctx->comp, ctx);
       }
     }
-    reactor->stop = stop_cl;
   }
   size_t completed = 0;
   ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));

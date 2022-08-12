@@ -29,7 +29,7 @@ struct shutdown_component {
   fmc_component_HEAD;
 };
 
-static void shutdown_component_del(struct shutdown_component *comp) {
+static void generic_component_del(struct fmc_component *comp) {
   free(comp);
 };
 
@@ -89,16 +89,23 @@ cleanup:
 static void no_queue_component_process_one(struct fmc_component *self,
                                             struct fmc_reactor_ctx *ctx,
                                             fmc_time64_t time) {
+  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+  if (typed->shutdown_count) {
+    ++typed->post_shutdown_count;
+  } else {
+    _reactor->queue(ctx);
+  }
 };
 
-static struct shutdown_component *
+static struct shutdown_component_enabled_cb *
 no_queue_shutdown_component_new(struct fmc_cfg_sect_item *cfg,
                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component *c = (struct shutdown_component *)calloc(1, sizeof(*c));
+  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
   _reactor->on_exec(ctx, &no_queue_component_process_one);
   _reactor->on_shutdown(ctx, &shutdown_component_shutdown_cb);
+  _reactor->queue(ctx);
   return c;
 cleanup:
   if (c)
@@ -116,7 +123,7 @@ struct fmc_component_def_v1 components[] = {
         .tp_size = sizeof(struct shutdown_component),
         .tp_cfgspec = empty_component_cfg_spec,
         .tp_new = (fmc_newfunc)no_shutdown_component_new,
-        .tp_del = (fmc_delfunc)shutdown_component_del,
+        .tp_del = (fmc_delfunc)generic_component_del,
     },
     {
         .tp_name = "shutdowncomponent",
@@ -124,7 +131,7 @@ struct fmc_component_def_v1 components[] = {
         .tp_size = sizeof(struct shutdown_component),
         .tp_cfgspec = empty_component_cfg_spec,
         .tp_new = (fmc_newfunc)shutdown_component_new,
-        .tp_del = (fmc_delfunc)shutdown_component_del,
+        .tp_del = (fmc_delfunc)generic_component_del,
     },
     {
         .tp_name = "noqueueshutdowncomponent",
@@ -132,7 +139,7 @@ struct fmc_component_def_v1 components[] = {
         .tp_size = sizeof(struct shutdown_component),
         .tp_cfgspec = empty_component_cfg_spec,
         .tp_new = (fmc_newfunc)no_queue_shutdown_component_new,
-        .tp_del = (fmc_delfunc)shutdown_component_del,
+        .tp_del = (fmc_delfunc)generic_component_del,
     },
 };
 

@@ -779,6 +779,75 @@ TEST(reactor, shutdown_cb) {
   ASSERT_EQ(sys.modules, nullptr);
 }
 
+TEST(reactor, shutdown_cb_no_queue) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "shutdowncomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("shutdowncomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_type *ptp =
+      fmc_component_module_type_get(mod, "noqueueshutdowncomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(ptp, nullptr);
+
+  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
+
+  struct fmc_reactor *rptr = &r;
+  std::thread thr([rptr]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    fmc_reactor_stop(rptr);
+  });
+
+  fmc_reactor_run(&r, true, &err);
+  thr.join();
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+
+  struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+
+  ASSERT_EQ(typed->shutdown_count, 1);
+  // Corresponds to queued call before stop
+  ASSERT_EQ(typed->post_shutdown_count, 1);
+
+  fmc_reactor_destroy(&r);
+
+  fmc_component_del(pcomp);
+
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   components_path = fs::path(argv[1]).parent_path();
