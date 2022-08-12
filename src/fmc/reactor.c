@@ -96,7 +96,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
   int stop_prev = reactor->stop;
-  reactor->stop = __atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST);
+  reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
   if (!stop_prev && reactor->stop) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item *tmp = NULL;
@@ -157,5 +157,5 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  __atomic_fetch_add(&reactor->stop_cl, 1, __ATOMIC_SEQ_CST);
+  __atomic_fetch_add(&reactor->stop_signal, 1, __ATOMIC_SEQ_CST);
 }
