@@ -24,7 +24,6 @@
 
 #include <ytp/version.h>
 
-
 struct fmc_reactor r;
 static void sig_handler(int s) { fmc_reactor_stop(&r); }
 
@@ -97,8 +96,8 @@ int main(int argc, char **argv) {
       "component", "Component name", true, "component", "component");
   cmd.add(componentArg);
 
-  TCLAP::SwitchArg liveArg(
-      "l", "live", "Run component live (scheduled otherwise)");
+  TCLAP::SwitchArg liveArg("l", "live",
+                           "Run component live (scheduled otherwise)");
   cmd.add(liveArg);
 
   TCLAP::ValueArg<int> affinityArg("a", "affinity",
@@ -139,8 +138,9 @@ int main(int argc, char **argv) {
   }
 
   fmc_reactor_init(&r);
-  fmc_component *component = fmc_component_new(&r, type, cfg.get(), nullptr, &err);
-  (void) component;
+  fmc_component *component =
+      fmc_component_new(&r, type, cfg.get(), nullptr, &err);
+  (void)component;
   fmc_runtime_error_unless(!err)
       << "Unable to load component " << componentArg.getValue() << ": "
       << fmc_error_msg(err);

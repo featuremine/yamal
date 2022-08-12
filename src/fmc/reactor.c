@@ -146,7 +146,8 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
   do {
     fmc_time64_t next = fmc_reactor_sched(reactor);
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
-    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) && !utarray_len(&reactor->queued)) ||
+    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) &&
+         !utarray_len(&reactor->queued)) ||
         (reactor->stop && !reactor->finishing) ||
         reactor->stop >= FMC_REACTOR_HARD_STOP) {
       break;

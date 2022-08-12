@@ -422,7 +422,7 @@ TEST(reactor, reactorlive) {
   ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
   ASSERT_EQ(r.size, 1);
   ASSERT_NE(r.ctxs, nullptr);
-  
+
   struct fmc_reactor *rptr = &r;
   std::thread thr([rptr]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));

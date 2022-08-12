@@ -36,7 +36,7 @@ static void test_component_del(struct test_component *comp) {
 };
 
 static void test_component_shutdown(struct fmc_component *self,
-                                      struct fmc_reactor_ctx *ctx) {
+                                    struct fmc_reactor_ctx *ctx) {
   struct test_component *comp = (struct test_component *)self;
   comp->stop = true;
 };
