@@ -33,6 +33,13 @@ shared_io_component = shared_library('iocomponent', [files('iocomponent.c')],
                                      link_language: 'c',
                                      install: false)
 
+shared_shutdown_component = shared_library('shutdowncomponent', [files('shutdowncomponent.c')],
+                                     name_prefix : '',
+                                     include_directories : [inc],
+                                     dependencies : [shared_fmc_dep],
+                                     link_language: 'c',
+                                     install: false)
+
 test_component = executable(
     'common_component', 'component.cpp',
     dependencies : [static_fmc_dep, gtest])
