@@ -260,10 +260,10 @@ TEST(component, component) {
   ASSERT_EQ(err, nullptr);
   struct fmc_component *comp = fmc_component_new(&r, tp, cfg, nullptr, &err);
   // ASSERT_EQ(err, nullptr);
-  // ASSERT_EQ(std::string(comp->_vt->tp_name), std::string("testcomponentsched"));
-  // ASSERT_EQ(comp->_ctx->err.code, FMC_ERROR_NONE);
-  // struct test_component *testcomp = (struct test_component *)comp;
-  // ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
+  // ASSERT_EQ(std::string(comp->_vt->tp_name),
+  // std::string("testcomponentsched")); ASSERT_EQ(comp->_ctx->err.code,
+  // FMC_ERROR_NONE); struct test_component *testcomp = (struct test_component
+  // *)comp; ASSERT_EQ(std::string(testcomp->teststr), std::string("message"));
   // ASSERT_TRUE(fmc_time64_equal(testcomp->timesim, fmc_time64_start()));
   // ASSERT_EQ(r.size, 1);
   // ASSERT_NE(r.ctxs, nullptr);
