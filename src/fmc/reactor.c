@@ -47,6 +47,15 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->sched);
   utarray_done(&reactor->queued);
   utarray_done(&reactor->toqueue);
+
+  struct fmc_reactor_stop_item *head = reactor->stop_list;
+  struct fmc_reactor_stop_item *item;
+  struct fmc_reactor_stop_item *tmp;
+  DL_FOREACH_SAFE(head, item, tmp) {
+    DL_DELETE(head, item);
+    free(item);
+  }
+  
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     free(reactor->ctxs[i]);
   }
