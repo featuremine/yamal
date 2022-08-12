@@ -765,6 +765,7 @@ TEST(reactor, shutdown_cb) {
   struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
 
   ASSERT_EQ(typed->shutdown_count, 1);
+  ASSERT_EQ(typed->post_shutdown_count, 10);
 
   fmc_reactor_destroy(&r);
 

@@ -140,20 +140,22 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
-  if (__atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST)) {
-    struct fmc_reactor_stop_item *item = NULL;
-    struct fmc_reactor_stop_item *tmp = NULL;
-    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
-      struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
-      if (!ctx->finishing && ctx->shutdown) {
-        ++reactor->finishing;
-        ctx->finishing = true;
-        ctx->shutdown(ctx->comp, ctx);
+  int stop_cl = __atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST);
+  if (stop_cl) {
+    if (!reactor->stop) {
+      struct fmc_reactor_stop_item *item = NULL;
+      struct fmc_reactor_stop_item *tmp = NULL;
+      DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
+        struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
+        if (!ctx->finishing && ctx->shutdown) {
+          ++reactor->finishing;
+          ctx->finishing = true;
+          ctx->shutdown(ctx->comp, ctx);
+        }
       }
     }
-    __atomic_store_n(&reactor->stop_cl, false, __ATOMIC_SEQ_CST);
+    reactor->stop = stop_cl;
   }
-
   size_t completed = 0;
   ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
   do {
@@ -191,10 +193,9 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
   do {
     fmc_time64_t next = fmc_reactor_sched(reactor);
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
-    int reactor_stop = __atomic_load_n(&reactor->stop, __ATOMIC_SEQ_CST);
     if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) && !utarray_len(&reactor->queued)) ||
-        (reactor_stop && !reactor->finishing) ||
-        reactor_stop >= FMC_REACTOR_HARD_STOP) {
+        (reactor->stop && !reactor->finishing) ||
+        reactor->stop >= FMC_REACTOR_HARD_STOP) {
       break;
     }
     fmc_reactor_run_once(reactor, now, error);
@@ -206,7 +207,5 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  if (!__atomic_fetch_add(&reactor->stop, 1, __ATOMIC_SEQ_CST)) {
-    __atomic_store_n(&reactor->stop_cl, true, __ATOMIC_SEQ_CST);
-  }
+  __atomic_fetch_add(&reactor->stop_cl, 1, __ATOMIC_SEQ_CST);
 }
