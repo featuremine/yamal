@@ -65,7 +65,9 @@ static void shutdown_component_process_one(struct fmc_component *self,
                                         struct fmc_reactor_ctx *ctx,
                                         fmc_time64_t time) {
   struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
-  if (typed->shutdown_count && ++typed->post_shutdown_count == 10) return;
+  if (typed->shutdown_count && ++typed->post_shutdown_count == 10) {
+    _reactor->finished(ctx);
+  }
   _reactor->queue(ctx);
 };
 
@@ -92,9 +94,9 @@ static void no_queue_component_process_one(struct fmc_component *self,
   struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
   if (typed->shutdown_count) {
     ++typed->post_shutdown_count;
-  } else {
-    _reactor->queue(ctx);
+    _reactor->finished(ctx);
   }
+  _reactor->queue(ctx);
 };
 
 static struct shutdown_component_enabled_cb *
