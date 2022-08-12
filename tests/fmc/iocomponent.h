@@ -13,13 +13,6 @@
 *****************************************************************************/
 
 #include <fmc/component.h>
-#include <fmc/config.h>
-#include <fmc/error.h>
-#include <fmc/string.h>
-#include <fmc/time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <uthash/utlist.h>
 
 #ifdef __cplusplus
 extern "C" {

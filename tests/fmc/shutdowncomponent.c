@@ -21,6 +21,8 @@
 #include <string.h>
 #include <uthash/utlist.h>
 
+#include "shutdowncomponent.h"
+
 struct fmc_reactor_api_v1 *_reactor;
 
 struct shutdown_component {
@@ -32,8 +34,8 @@ static void shutdown_component_del(struct shutdown_component *comp) {
 };
 
 static void queue_component_process_one(struct fmc_component *self,
-                                            struct fmc_reactor_ctx *ctx,
-                                            fmc_time64_t time) {
+                                        struct fmc_reactor_ctx *ctx,
+                                        fmc_time64_t time) {
   _reactor->queue(ctx);
 };
 
@@ -55,18 +57,30 @@ cleanup:
 
 void shutdown_component_shutdown_cb(struct fmc_component *self,
                                     struct fmc_reactor_ctx *ctx) {
-
+  printf("shutdown callback\n");
+  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+  ++typed->shutdown_count;
 }
 
-static struct shutdown_component *
+static void shutdown_component_process_one(struct fmc_component *self,
+                                        struct fmc_reactor_ctx *ctx,
+                                        fmc_time64_t time) {
+  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+  if (typed->shutdown_count && ++typed->post_shutdown_count == 10) return;
+  _reactor->queue(ctx);
+};
+
+static struct shutdown_component_enabled_cb *
 shutdown_component_new(struct fmc_cfg_sect_item *cfg,
                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component *c = (struct shutdown_component *)calloc(1, sizeof(*c));
+  printf("new\n");
+  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
-  _reactor->on_exec(ctx, &queue_component_process_one);
+  _reactor->on_exec(ctx, &shutdown_component_process_one);
   _reactor->on_shutdown(ctx, &shutdown_component_shutdown_cb);
   _reactor->queue(ctx);
+  printf("all good, returning\n");
   return c;
 cleanup:
   if (c)
