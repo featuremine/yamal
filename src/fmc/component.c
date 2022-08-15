@@ -133,7 +133,7 @@ void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   ({                                                                           \
     struct fmc_reactor_stop_item *_lhs =                                       \
         ((struct fmc_reactor_stop_item *)(lhs));                               \
-    _lhs->ctx == (ctx);                                                        \
+    _lhs->idx == (ctx)->idx;                                                   \
   })
 
 void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
@@ -143,7 +143,7 @@ void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
     struct fmc_reactor_stop_item *item = calloc(1, sizeof(*item));
     if (!item)
       goto cleanup;
-    item->ctx = ctx;
+    item->idx = ctx->idx;
     DL_APPEND(ctx->reactor->stop_list, item);
   } else if (ctx->shutdown && !cl) {
     struct fmc_reactor_stop_item *item = NULL;
@@ -168,7 +168,7 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
 
 void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
                            const char *name) {
-  char **tmp = (char **)realloc(ctx->out_tps, ctx->nouts + 1 * sizeof(*tmp));
+  char **tmp = (char **)realloc(ctx->out_tps, (ctx->nouts + 1) * sizeof(*tmp));
   if (!tmp)
     goto cleanup;
   tmp[ctx->nouts++] = strdup(type);
@@ -447,7 +447,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   unsigned int in_sz = 0;
   for (; inps && inps[in_sz].comp; ++in_sz) {
   }
-  char *in_names[in_sz];
+  char *in_names[in_sz + 1];
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
   if (*error)
@@ -487,8 +487,12 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
   item->comp = tp->tp_new(cfg, &ctx, in_names);
-  if (*error)
+  if (fmc_error_has(&ctx.err)) {
+    fmc_error_set(error,
+                  "failed to create new component of type %s with error: %s",
+                  tp->tp_name, fmc_error_msg(&ctx.err));
     goto cleanup;
+  }
   ctx.comp = item->comp;
   fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
   if (*error)

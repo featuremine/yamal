@@ -18,10 +18,14 @@
 #include <fmc/config.h>
 #include <fmc/process.h>
 #include <fmc/reactor.h>
+#include <fmc/signals.h>
 
 #include <fmc++/mpl.hpp>
 
 #include <ytp/version.h>
+
+struct fmc_reactor r;
+static void sig_handler(int s) { fmc_reactor_stop(&r); }
 
 struct deleter_t {
   void operator()(struct fmc_component_module *ptr) {
@@ -92,6 +96,10 @@ int main(int argc, char **argv) {
       "component", "Component name", true, "component", "component");
   cmd.add(componentArg);
 
+  TCLAP::SwitchArg liveArg("l", "live",
+                           "Run component live (scheduled otherwise)");
+  cmd.add(liveArg);
+
   TCLAP::ValueArg<int> affinityArg("a", "affinity",
                                    "set the CPU affinity of the main process",
                                    false, 0, "cpuid");
@@ -129,7 +137,10 @@ int main(int argc, char **argv) {
         << "Unable to load configuration file: " << fmc_error_msg(err);
   }
 
-  fmc_component *component = fmc_component_new(type, cfg.get(), &err);
+  fmc_reactor_init(&r);
+  fmc_component *component =
+      fmc_component_new(&r, type, cfg.get(), nullptr, &err);
+  (void)component;
   fmc_runtime_error_unless(!err)
       << "Unable to load component " << componentArg.getValue() << ": "
       << fmc_error_msg(err);
@@ -152,14 +163,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  struct fmc_reactor r;
-  fmc_reactor_init(&r);
-  fmc_reactor_component_add(&r, component, 99, &err);
-  fmc_runtime_error_unless(!err)
-      << "Unable to add component " << componentArg.getValue()
-      << " to reactor : " << fmc_error_msg(err);
-
-  fmc_reactor_run(&r, &err);
+  fmc_set_signal_handler(sig_handler);
+  fmc_reactor_run(&r, liveArg.getValue(), &err);
   fmc_runtime_error_unless(!err)
       << "Unable to run reactor : " << fmc_error_msg(err);
 

@@ -92,7 +92,7 @@ struct fmc_reactor_ctx {
 struct fmc_reactor_stop_item {
   struct fmc_reactor_stop_item *next;
   struct fmc_reactor_stop_item *prev;
-  struct fmc_reactor_ctx *ctx;
+  size_t idx;
 };
 
 struct fmc_reactor {
@@ -102,7 +102,8 @@ struct fmc_reactor {
   UT_array queued;
   UT_array toqueue;
   size_t finishing;
-  volatile int stop;
+  int stop;
+  volatile int stop_signal;
   struct fmc_reactor_stop_item *stop_list;
 };
 

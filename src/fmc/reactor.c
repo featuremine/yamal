@@ -23,7 +23,6 @@
 #include <fmc/error.h>
 #include <fmc/math.h>
 #include <fmc/reactor.h>
-#include <fmc/signals.h>
 #include <fmc/time.h>
 #include <stdlib.h> // calloc() free()
 #include <uthash/utarray.h>
@@ -48,6 +47,15 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->sched);
   utarray_done(&reactor->queued);
   utarray_done(&reactor->toqueue);
+
+  struct fmc_reactor_stop_item *head = reactor->stop_list;
+  struct fmc_reactor_stop_item *item;
+  struct fmc_reactor_stop_item *tmp;
+  DL_FOREACH_SAFE(head, item, tmp) {
+    DL_DELETE(head, item);
+    free(item);
+  }
+
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     free(reactor->ctxs[i]);
   }
@@ -96,8 +104,23 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
-  size_t completed = 0;
+  int stop_prev = reactor->stop;
+  reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
+  if (reactor->stop && !stop_prev) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item *tmp = NULL;
+    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
+      struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
+      if (!ctx->finishing && ctx->shutdown) {
+        ++reactor->finishing;
+        ctx->finishing = true;
+        ctx->shutdown(ctx->comp, ctx);
+      }
+    }
+  }
 
+  size_t completed = 0;
+  ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
   do {
     struct sched_item *item =
         (struct sched_item *)utarray_front(&reactor->sched);
@@ -130,10 +153,10 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                      fmc_error_t **error) {
   fmc_error_clear(error);
   do {
-    ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
     fmc_time64_t next = fmc_reactor_sched(reactor);
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
-    if ((!utarray_len(&reactor->queued) && fmc_time64_is_end(next)) ||
+    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) &&
+         !utarray_len(&reactor->queued)) ||
         (reactor->stop && !reactor->finishing) ||
         reactor->stop >= FMC_REACTOR_HARD_STOP) {
       break;
@@ -144,16 +167,5 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  // TODO: make increment atomic
-  if (!reactor->stop++) {
-    struct fmc_reactor_stop_item *item = NULL;
-    struct fmc_reactor_stop_item *tmp = NULL;
-    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
-      if (!item->ctx->finishing && item->ctx->shutdown) {
-        ++reactor->finishing;
-        item->ctx->finishing = true;
-        item->ctx->shutdown(item->ctx->comp, item->ctx);
-      }
-    }
-  }
+  __atomic_fetch_add(&reactor->stop_signal, 1, __ATOMIC_SEQ_CST);
 }
