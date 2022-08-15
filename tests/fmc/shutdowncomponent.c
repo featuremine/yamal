@@ -162,7 +162,9 @@ static void nostop_shutdown_component_process_one(struct fmc_component *self,
   if (++typed->shutdown_count) {
     _reactor->finished(ctx);
   }
-  _reactor->queue(ctx);
+  if (typed->shutdown_count < 5) {
+    _reactor->queue(ctx);
+  }
 };
 
 static struct shutdown_component_enabled_cb *
