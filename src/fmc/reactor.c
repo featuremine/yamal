@@ -106,7 +106,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   fmc_error_clear(error);
   int stop_prev = reactor->stop;
   reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
-  if (!stop_prev && reactor->stop) {
+  if (reactor->stop && !stop_prev) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item *tmp = NULL;
     DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
