@@ -134,7 +134,7 @@ void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   ({                                                                           \
     struct fmc_reactor_stop_item *_lhs =                                       \
         ((struct fmc_reactor_stop_item *)(lhs));                               \
-    _lhs->idx == (ctx)->idx;                                                        \
+    _lhs->idx == (ctx)->idx;                                                   \
   })
 
 void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
@@ -494,7 +494,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   unsigned int in_sz = 0;
   for (; inps && inps[in_sz].comp; ++in_sz) {
   }
-  char *in_names[in_sz];
+  char *in_names[in_sz + 1];
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
   if (*error)

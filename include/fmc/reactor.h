@@ -118,7 +118,7 @@ struct fmc_reactor {
   UT_array toqueue;
   size_t finishing;
   int stop;
-  volatile int stop_cl;
+  volatile int stop_signal;
   struct fmc_reactor_stop_item *stop_list;
   struct fmc_pool pool;
 };

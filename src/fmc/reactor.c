@@ -49,16 +49,16 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   utarray_done(&reactor->sched);
   utarray_done(&reactor->queued);
   utarray_done(&reactor->toqueue);
-  if (reactor->stop_list) {
-    struct fmc_reactor_stop_item *phead = reactor->stop_list;
-    struct fmc_reactor_stop_item *item = NULL;
-    struct fmc_reactor_stop_item *tmp = NULL;
-    DL_FOREACH_SAFE(phead, item, tmp) {
-      DL_DELETE(phead, item);
-      free(item);
-    }
+
+  struct fmc_reactor_stop_item *head = reactor->stop_list;
+  struct fmc_reactor_stop_item *item;
+  struct fmc_reactor_stop_item *tmp;
+  DL_FOREACH_SAFE(head, item, tmp) {
+    DL_DELETE(head, item);
+    free(item);
   }
   fmc_pool_destroy(&reactor->pool);
+
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     if (reactor->ctxs[i]->out_tps) {
       struct fmc_reactor_ctx_out *phead = reactor->ctxs[i]->out_tps;
@@ -141,7 +141,7 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **error) {
   fmc_error_clear(error);
   int stop_prev = reactor->stop;
-  reactor->stop = __atomic_load_n(&reactor->stop_cl, __ATOMIC_SEQ_CST);
+  reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
   if (!stop_prev && reactor->stop) {
     struct fmc_reactor_stop_item *item = NULL;
     struct fmc_reactor_stop_item *tmp = NULL;
@@ -191,7 +191,8 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
   do {
     fmc_time64_t next = fmc_reactor_sched(reactor);
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
-    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) && !utarray_len(&reactor->queued)) ||
+    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) &&
+         !utarray_len(&reactor->queued)) ||
         (reactor->stop && !reactor->finishing) ||
         reactor->stop >= FMC_REACTOR_HARD_STOP) {
       break;
@@ -205,5 +206,5 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
-  __atomic_fetch_add(&reactor->stop_cl, 1, __ATOMIC_SEQ_CST);
+  __atomic_fetch_add(&reactor->stop_signal, 1, __ATOMIC_SEQ_CST);
 }
