@@ -122,6 +122,7 @@ struct fmc_reactor {
   volatile int stop_signal;
   struct fmc_reactor_stop_item *stop_list;
   struct fmc_pool pool;
+  fmc_error_t err;
 };
 
 struct fmc_component_input;

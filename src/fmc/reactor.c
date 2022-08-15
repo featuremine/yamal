@@ -19,6 +19,12 @@
  * @see http://www.featuremine.com
  */
 
+#define utarray_oom()                      \
+ do { \
+  fmc_error_reset(error, FMC_ERROR_MEMORY, NULL); \
+  goto cleanup; \
+ } while (0)
+
 #include <fmc/component.h>
 #include <fmc/error.h>
 #include <fmc/math.h>
@@ -43,6 +49,7 @@ void fmc_reactor_init(struct fmc_reactor *reactor) {
   utarray_init(&reactor->queued, &size_t_icd);
   utarray_init(&reactor->toqueue, &size_t_icd);
   fmc_pool_init(&reactor->pool);
+  fmc_error_init_none(&reactor->err);
 }
 
 void fmc_reactor_destroy(struct fmc_reactor *reactor) {
@@ -77,6 +84,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
     utarray_done(&reactor->ctxs[i]->deps);
     free(reactor->ctxs[i]);
   }
+  fmc_error_destroy(&reactor->err);
   free(reactor->ctxs);
   memset(reactor, 0, sizeof(*reactor));
 }
@@ -116,19 +124,22 @@ void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
   struct fmc_reactor *r = ctx->reactor;
   struct fmc_reactor_ctx *ctxtmp = NULL;
   ctxtmp = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctxtmp));
-  if (!ctxtmp)
+  if (!ctxtmp) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     goto cleanup;
+  }
   struct fmc_reactor_ctx **ctxstmp = (struct fmc_reactor_ctx **)realloc(
       r->ctxs, sizeof(*r->ctxs) * (r->size + 1));
-  if (!ctxstmp)
+  if (!ctxstmp) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
     goto cleanup;
+  }
   r->ctxs = ctxstmp;
   r->ctxs[r->size] = ctxtmp;
   memcpy(r->ctxs[r->size], ctx, sizeof(*ctx));
   ++r->size;
   return;
 cleanup:
-  fmc_error_set2(error, FMC_ERROR_MEMORY);
   if (ctxtmp)
     free(ctxtmp);
 }
@@ -140,8 +151,9 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 }
 
 size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
-                            fmc_error_t **error) {
-  fmc_error_clear(error);
+                            fmc_error_t **usr_error) {
+  fmc_error_clear(usr_error);
+  fmc_error_t *error = &reactor->err;
   int stop_prev = reactor->stop;
   reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
   if (reactor->stop && !stop_prev) {
@@ -167,30 +179,36 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     utheap_pop(&reactor->sched, FMC_SIZE_T_PTR_LESS);
   } while (true);
 
-  do {
+  size_t last = SIZE_MAX;
+  while (!fmc_error_has(&reactor->err)) {
     size_t *item = (size_t *)utarray_front(&reactor->queued);
     if (!item)
       break;
     struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
-    if (!fmc_error_has(&ctx->err) && ctx->exec) {
+    if (*item != last && !fmc_error_has(&ctx->err) && ctx->exec) {
       ctx->exec(ctx->comp, ctx, now);
       if (fmc_error_has(&ctx->err)) {
-        fmc_error_set(error, "failed to run component %s with error: %s",
+        fmc_error_set(usr_error, "failed to run component %s with error: %s",
                       ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
         return completed;
       }
       ++completed;
     }
+    last = *item;
     utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
-  } while (true);
+  };
+cleanup:
+  if (fmc_error_has(&reactor->err)) {
+    fmc_error_set(usr_error, "failed to run reactor once with error: %s",
+                  fmc_error_msg(&reactor->err));
+  }
   return completed;
 }
 
 void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                      fmc_error_t **error) {
   fmc_error_clear(error);
-  static bool stopped = false;
-  do {
+  while (!fmc_error_has(&reactor->err)) {
     fmc_time64_t next = fmc_reactor_sched(reactor);
     fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
     if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) &&
@@ -200,11 +218,10 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
       break;
     }
     fmc_reactor_run_once(reactor, now, error);
-    if (*error && !stopped) {
+    if (*error && !reactor->stop) {
       fmc_reactor_stop(reactor);
-      stopped = true;
     }
-  } while (true);
+  };
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {

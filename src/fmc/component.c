@@ -19,6 +19,12 @@
  * @see http://www.featuremine.com
  */
 
+#define utarray_oom()                      \
+ do { \
+  fmc_error_reset(error, FMC_ERROR_MEMORY, NULL); \
+  goto cleanup; \
+ } while (0)
+
 #include <fmc/component.h>
 #include <fmc/error.h>
 #include <fmc/extension.h>
@@ -105,13 +111,19 @@ static int sched_item_less(const void *a, const void *b) {
 }
 
 static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
+  fmc_error_t *error = &ctx->reactor->err;
   utheap_push(&ctx->reactor->toqueue, &ctx->idx, FMC_SIZE_T_PTR_LESS);
+cleanup:
+  return;
 }
 
 static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx,
                                 fmc_time64_t time) {
+  fmc_error_t *error = &ctx->reactor->err;
   struct sched_item item = {.idx = ctx->idx, .t = time};
   utheap_push(&ctx->reactor->sched, &item, sched_item_less);
+cleanup:
+  return;
 }
 
 static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx,
@@ -142,8 +154,10 @@ void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
 
   if (!ctx->shutdown && cl) {
     struct fmc_reactor_stop_item *item = calloc(1, sizeof(*item));
-    if (!item)
+    if (!item) {
+      reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
       goto cleanup;
+    }
     item->idx = ctx->idx;
     DL_APPEND(ctx->reactor->stop_list, item);
   } else if (ctx->shutdown && !cl) {
@@ -153,9 +167,8 @@ void reactor_on_shutdown_v1(struct fmc_reactor_ctx *ctx,
       DL_DELETE(ctx->reactor->stop_list, item);
   }
   ctx->shutdown = cl;
-  return;
 cleanup:
-  reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
+  return;
 }
 
 void reactor_finished_v1(struct fmc_reactor_ctx *ctx) {
@@ -169,6 +182,7 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
 
 void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
                            const char *name) {
+  fmc_error_t *error = &ctx->reactor->err;
   struct fmc_reactor_ctx_out *item =
       (struct fmc_reactor_ctx_out *)calloc(1, sizeof(*item));
   if (!item)
@@ -185,6 +199,7 @@ void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
   utarray_extend_back(&ctx->deps);
   return;
 cleanup:
+  /*Move this code to a function to avoid repeated code, used also in reactor del*/
   if (item) {
     if (item->type)
       free(item->type);
@@ -195,11 +210,11 @@ cleanup:
   reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
-void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx,
+void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
                        struct fmc_shmem mem) {
+  fmc_error_t *error = &ctx->reactor->err;
   UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
-  if (!deps)
-    goto cleanup;
+  if (!deps) return;
   size_t ndeps = utarray_len(deps);
   for (size_t i = 0; i < ndeps; ++i) {
     struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
@@ -207,11 +222,10 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx,
     if (dep_ctx->dep_upd) {
       dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, dep->inp_idx, mem);
     }
-    utheap_push(&ctx->reactor->toqueue, &dep->idx, FMC_SIZE_T_PTR_LESS);
+    utheap_push(&ctx->reactor->queued, &dep->idx, FMC_SIZE_T_PTR_LESS);
   }
-  return;
 cleanup:
-  reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
+  return;
 }
 
 struct fmc_pool *reactor_get_pool_v1(struct fmc_reactor_ctx *ctx) {
@@ -475,54 +489,50 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
   return NULL;
 }
 
-#define DL_GET_ELEM(head, idx)                                                 \
-  ({                                                                           \
-    size_t count;                                                              \
-    __typeof__(head) _el = NULL;                                               \
-    DL_COUNT(head, _el, count);                                                \
-    _el = NULL;                                                                \
-    if (idx >= 0 && count > idx) {                                             \
-      count = 0;                                                               \
-      DL_FOREACH(head, _el) {                                                  \
-        if (count == idx)                                                      \
-          break;                                                               \
-        ++count;                                                               \
-      }                                                                        \
-    }                                                                          \
-    _el;                                                                       \
+#define DL_GET_ELEM(head, idx)   \
+  ({                             \
+    size_t count = (idx);        \
+    __typeof__(head) _el = NULL; \
+    DL_FOREACH(head, _el) {      \
+      if (!--count) break;       \
+    }                            \
+    _el;                         \
   })
 
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_type *tp,
                                         struct fmc_cfg_sect_item *cfg,
                                         struct fmc_component_input *inps,
-                                        fmc_error_t **error) {
-  fmc_error_clear(error);
+                                        fmc_error_t **usr_error) {
+  fmc_error_clear(usr_error);
+  fmc_error_t *error = &reactor->err;
   struct fmc_component_list *item = NULL;
   unsigned int in_sz = 0;
   for (; inps && inps[in_sz].comp; ++in_sz) {
   }
-  char *in_names[in_sz + 1];
+  char *in_types[in_sz + 1];
 
-  fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, error);
-  if (*error)
+  fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
+  if (*usr_error)
     goto cleanup;
 
   item = (struct fmc_component_list *)calloc(1, sizeof(*item));
-  if (!item)
+  if (!item) {
+    fmc_error_set2(usr_error, FMC_ERROR_MEMORY);
     goto cleanup;
+  }
 
   // fmc_component_input to array of component names
   for (unsigned int i = 0; i < in_sz; ++i) {
     if (inps[i].comp->_ctx->reactor != reactor) {
       fmc_error_set(
-          error, "input component %d of type %s does not have the same reactor",
+          usr_error, "input component %d of type %s does not have the same reactor",
           i, inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     if (!inps[i].comp->_ctx->out_tps) {
       fmc_error_set(
-          error, "the outputs of the input component %d of type %s are not set",
+          usr_error, "the outputs of the input component %d of type %s are not set",
           i, inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
@@ -530,35 +540,34 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     struct fmc_reactor_ctx_out *elem =
         DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
     if (!elem) {
-      fmc_error_set(error, "invalid output index %d of type %s", inps[i].idx,
+      fmc_error_set(usr_error, "invalid output index %d of type %s", inps[i].idx,
                     inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
-    in_names[i] = elem->name;
+    in_types[i] = elem->type;
   }
-  in_names[in_sz] = NULL;
+  in_types[in_sz] = NULL;
 
   struct fmc_reactor_ctx ctx;
   fmc_reactor_ctx_init(reactor, &ctx);
-  item->comp = tp->tp_new(cfg, &ctx, in_names);
+  item->comp = tp->tp_new(cfg, &ctx, in_types);
   if (fmc_error_has(&ctx.err)) {
-    fmc_error_set(error,
+    fmc_error_set(usr_error,
                   "failed to create new component of type %s with error: %s",
                   tp->tp_name, fmc_error_msg(&ctx.err));
     goto cleanup;
   }
   item->comp->_vt = tp;
   ctx.comp = item->comp;
-  fmc_reactor_ctx_push(&ctx, inps, error); // copy the context
-  if (*error)
+  fmc_reactor_ctx_push(&ctx, inps, usr_error); // copy the context
+  if (*usr_error)
     goto cleanup;
   item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {
     struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
     UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
-    if (!deps)
-      goto cleanup;
+    assert(deps);
     struct fmc_reactor_ctx_dep new_dep;
     new_dep.idx = item->comp->_ctx->idx;
     new_dep.inp_idx = i;
@@ -566,9 +575,17 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
-  if (!*error)
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
+  if (fmc_error_has(error))
+    fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
+    for (unsigned int i = 0; i < in_sz; ++i) {
+      struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
+      UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
+      assert(deps);
+      struct fmc_reactor_ctx_dep *back = utarray_back(&inp_ctx->deps);
+      if (!back) continue;
+      if (back->idx == ctx.idx) utarray_pop_back(&inp_ctx->deps);
+    }
     if (item->comp)
       tp->tp_del(item->comp);
     free(item);
