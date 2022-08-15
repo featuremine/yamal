@@ -648,6 +648,209 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(sys.modules, nullptr);
 }
 
+TEST(reactor, io_incorrect_number_of_inputs) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "iocomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("iocomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_type *p2tp =
+      fmc_component_module_type_get(mod, "producercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(p2tp, nullptr);
+
+  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
+
+  struct fmc_component_type *c2tp =
+      fmc_component_module_type_get(mod, "consumercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(c2tp, nullptr);
+
+  struct fmc_component_input inputs2[] = {
+    {p2comp, 0},
+    {NULL, 0}
+  };
+
+  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_NE(err, nullptr);
+  ASSERT_NE(c2comp->_ctx->err.code, FMC_ERROR_NONE);
+
+  fmc_reactor_destroy(&r);
+
+  fmc_component_del(c2comp);
+  fmc_component_del(p2comp);
+
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
+
+TEST(reactor, io_incorrect_output_index) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "iocomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("iocomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_type *p2tp =
+      fmc_component_module_type_get(mod, "producercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(p2tp, nullptr);
+
+  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
+
+  struct fmc_component_type *c2tp =
+      fmc_component_module_type_get(mod, "consumercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(c2tp, nullptr);
+
+  struct fmc_component_input inputs2[] = {
+    {p2comp, 0},
+    {p2comp, 2},
+    {NULL, 0}
+  };
+
+  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_NE(err, nullptr);
+  ASSERT_NE(c2comp->_ctx->err.code, FMC_ERROR_NONE);
+
+  fmc_reactor_destroy(&r);
+
+  fmc_component_del(c2comp);
+  fmc_component_del(p2comp);
+
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
+
+TEST(reactor, io_invalid_output_index) {
+  struct fmc_reactor r;
+  fmc_reactor_init(&r);
+
+  fmc_error_t *err;
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+  const char *paths[2];
+  paths[0] = components_path.c_str();
+  paths[1] = nullptr;
+
+  fmc_component_sys_paths_set(&sys, paths, &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  ASSERT_EQ(sys.modules, nullptr);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+  ASSERT_EQ(p->next, nullptr);
+  ASSERT_EQ(p, p->prev);
+
+  struct fmc_component_module *mod =
+      fmc_component_module_get(&sys, "iocomponent", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(mod->sys, &sys);
+  ASSERT_EQ(std::string(mod->name), std::string("iocomponent"));
+  ASSERT_EQ(sys.modules, mod);
+  ASSERT_EQ(sys.modules->prev, mod);
+
+  struct fmc_component_type *p2tp =
+      fmc_component_module_type_get(mod, "producercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(p2tp, nullptr);
+
+  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
+
+  struct fmc_component_type *c2tp =
+      fmc_component_module_type_get(mod, "consumercomponent2", &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_NE(c2tp, nullptr);
+
+  struct fmc_component_input inputs2[] = {
+    {p2comp, 0},
+    {p2comp, -3},
+    {NULL, 0}
+  };
+
+  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_NE(err, nullptr);
+  ASSERT_NE(c2comp->_ctx->err.code, FMC_ERROR_NONE);
+
+  fmc_reactor_destroy(&r);
+
+  fmc_component_del(c2comp);
+  fmc_component_del(p2comp);
+
+  fmc_component_module_del(mod);
+  ASSERT_EQ(sys.modules, nullptr);
+
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
+}
+
 TEST(reactor, shutdown_no_cb) {
   struct fmc_reactor r;
   fmc_reactor_init(&r);
@@ -990,16 +1193,19 @@ TEST(reactor, multi_shutdown_cb) {
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
+  ASSERT_EQ(typed->post_finish_count, 91);
 
   typed = (struct shutdown_component_enabled_cb*)pcomp2;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
+  ASSERT_EQ(typed->post_finish_count, 1);
 
   typed = (struct shutdown_component_enabled_cb*)pcomp3;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
+  ASSERT_EQ(typed->post_finish_count, 51);
 
   fmc_reactor_destroy(&r);
 
@@ -1015,6 +1221,66 @@ TEST(reactor, multi_shutdown_cb) {
   ASSERT_EQ(sys.search_paths, nullptr);
   ASSERT_EQ(sys.modules, nullptr);
 }
+
+// TEST(reactor, nostop_shutdown) {
+//   struct fmc_reactor r;
+//   fmc_reactor_init(&r);
+
+//   fmc_error_t *err;
+//   fmc_error_clear(&err);
+//   ASSERT_EQ(err, nullptr);
+//   fmc_component_sys_init(&sys);
+//   ASSERT_EQ(sys.search_paths, nullptr);
+//   ASSERT_EQ(sys.modules, nullptr);
+//   const char *paths[2];
+//   paths[0] = components_path.c_str();
+//   paths[1] = nullptr;
+
+//   fmc_component_sys_paths_set(&sys, paths, &err);
+//   ASSERT_EQ(err, nullptr);
+//   fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+//   ASSERT_EQ(sys.modules, nullptr);
+//   ASSERT_NE(p, nullptr);
+//   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
+//   ASSERT_EQ(p->next, nullptr);
+//   ASSERT_EQ(p, p->prev);
+
+//   struct fmc_component_module *mod =
+//       fmc_component_module_get(&sys, "shutdowncomponent", &err);
+//   ASSERT_EQ(err, nullptr);
+//   ASSERT_EQ(mod->sys, &sys);
+//   ASSERT_EQ(std::string(mod->name), std::string("shutdowncomponent"));
+//   ASSERT_EQ(sys.modules, mod);
+//   ASSERT_EQ(sys.modules->prev, mod);
+
+//   struct fmc_component_type *ptp =
+//       fmc_component_module_type_get(mod, "nostopshutdowncomponent", &err);
+//   ASSERT_EQ(err, nullptr);
+//   ASSERT_NE(ptp, nullptr);
+
+//   struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+//   ASSERT_EQ(err, nullptr);
+//   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
+
+//   fmc_reactor_run(&r, true, &err);
+//   ASSERT_EQ(err, nullptr);
+//   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
+
+//   struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+
+//   ASSERT_EQ(typed->shutdown_count, 1);
+
+//   fmc_reactor_destroy(&r);
+
+//   fmc_component_del(pcomp);
+
+//   fmc_component_module_del(mod);
+//   ASSERT_EQ(sys.modules, nullptr);
+
+//   fmc_component_sys_destroy(&sys);
+//   ASSERT_EQ(sys.search_paths, nullptr);
+//   ASSERT_EQ(sys.modules, nullptr);
+// }
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -23,6 +23,7 @@ struct shutdown_component_enabled_cb {
   size_t shutdown_count;
   size_t post_shutdown_count;
   size_t limit;
+  size_t post_finish_count;
 };
 
 #ifdef __cplusplus

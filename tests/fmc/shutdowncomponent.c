@@ -68,6 +68,9 @@ static void shutdown_component_process_one(struct fmc_component *self,
   if (typed->shutdown_count && ++typed->post_shutdown_count == typed->limit) {
     _reactor->finished(ctx);
   }
+  if (typed->post_shutdown_count >= typed->limit) {
+    ++typed->post_finish_count;
+  }
   _reactor->schedule(ctx, fmc_time64_add(time, fmc_time64_from_nanos(1000)));
 };
 
@@ -152,6 +155,32 @@ cleanup:
   return NULL;
 };
 
+static void nostop_shutdown_component_process_one(struct fmc_component *self,
+                                            struct fmc_reactor_ctx *ctx,
+                                            fmc_time64_t time) {
+  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+  if (++typed->shutdown_count) {
+    _reactor->finished(ctx);
+  }
+  _reactor->queue(ctx);
+};
+
+static struct shutdown_component_enabled_cb *
+nostop_shutdown_component_new(struct fmc_cfg_sect_item *cfg,
+                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
+  if (!c)
+    goto cleanup;
+  _reactor->on_exec(ctx, &nostop_shutdown_component_process_one);
+  _reactor->queue(ctx);
+  return c;
+cleanup:
+  if (c)
+    free(c);
+  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
 struct fmc_cfg_node_spec empty_component_cfg_spec[] = {{NULL}};
 
 struct fmc_cfg_node_spec limit_component_cfg_spec[] = {
@@ -195,6 +224,14 @@ struct fmc_component_def_v1 components[] = {
         .tp_size = sizeof(struct shutdown_component),
         .tp_cfgspec = empty_component_cfg_spec,
         .tp_new = (fmc_newfunc)immediate_shutdown_component_new,
+        .tp_del = (fmc_delfunc)generic_component_del,
+    },
+    {
+        .tp_name = "nostopshutdowncomponent",
+        .tp_descr = "Component that shuts without receiving stop signal",
+        .tp_size = sizeof(struct shutdown_component),
+        .tp_cfgspec = empty_component_cfg_spec,
+        .tp_new = (fmc_newfunc)nostop_shutdown_component_new,
         .tp_del = (fmc_delfunc)generic_component_del,
     },
 };
