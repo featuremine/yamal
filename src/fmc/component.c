@@ -489,14 +489,14 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
   return NULL;
 }
 
-#define DL_GET_ELEM(head, idx)   \
-  ({                             \
-    size_t count = (idx);        \
-    __typeof__(head) _el = NULL; \
-    DL_FOREACH(head, _el) {      \
-      if (!--count) break;       \
-    }                            \
-    _el;                         \
+#define DL_GET_ELEM(head, idx)     \
+  ({                               \
+    __typeof__(idx) count = (idx); \
+    __typeof__(head) _el = NULL;   \
+    DL_FOREACH(head, _el) {        \
+      if (!count--) break;         \
+    }                              \
+    _el;                           \
   })
 
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
