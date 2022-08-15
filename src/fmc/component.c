@@ -586,7 +586,7 @@ cleanup:
     for (unsigned int i = 0; i < in_sz; ++i) {
       struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
       UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
-      assert(deps);
+      if (!deps) continue;
       struct fmc_reactor_ctx_dep *back = utarray_back(&inp_ctx->deps);
       if (!back)
         continue;

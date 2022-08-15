@@ -637,7 +637,7 @@ TEST(reactor, io_multiple_inputs) {
 
   struct consumer_component_3 *typedc3comp =
       (struct consumer_component_3 *)c3comp;
-  ASSERT_EQ(typedc3comp->executed, 13);
+  ASSERT_EQ(typedc3comp->executed, 10);
   ASSERT_EQ(typedc3comp->third, 3);
   ASSERT_EQ(typedc3comp->fourth, 5);
   ASSERT_EQ(typedc3comp->fifth, 5);
@@ -1051,7 +1051,7 @@ TEST(reactor, immediate_shutdown) {
 
   ASSERT_EQ(typed->shutdown_count, 1);
   // Corresponds to queued call before stop
-  ASSERT_EQ(typed->post_shutdown_count, 1);
+  ASSERT_EQ(typed->post_shutdown_count, 0);
 
   fmc_reactor_destroy(&r);
 
