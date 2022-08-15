@@ -29,9 +29,7 @@ struct shutdown_component {
   fmc_component_HEAD;
 };
 
-static void generic_component_del(struct fmc_component *comp) {
-  free(comp);
-};
+static void generic_component_del(struct fmc_component *comp) { free(comp); };
 
 static void queue_component_process_one(struct fmc_component *self,
                                         struct fmc_reactor_ctx *ctx,
@@ -41,8 +39,9 @@ static void queue_component_process_one(struct fmc_component *self,
 
 static struct shutdown_component *
 no_shutdown_component_new(struct fmc_cfg_sect_item *cfg,
-                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component *c = (struct shutdown_component *)calloc(1, sizeof(*c));
+                          struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  struct shutdown_component *c =
+      (struct shutdown_component *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
   _reactor->on_exec(ctx, &queue_component_process_one);
@@ -57,14 +56,16 @@ cleanup:
 
 void shutdown_component_shutdown_cb(struct fmc_component *self,
                                     struct fmc_reactor_ctx *ctx) {
-  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)self;
   ++typed->shutdown_count;
 }
 
 static void shutdown_component_process_one(struct fmc_component *self,
-                                        struct fmc_reactor_ctx *ctx,
-                                        fmc_time64_t time) {
-  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+                                           struct fmc_reactor_ctx *ctx,
+                                           fmc_time64_t time) {
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)self;
   if (typed->post_shutdown_count >= typed->limit) {
     ++typed->post_finish_count;
   }
@@ -76,8 +77,9 @@ static void shutdown_component_process_one(struct fmc_component *self,
 
 static struct shutdown_component_enabled_cb *
 shutdown_component_new(struct fmc_cfg_sect_item *cfg,
-                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
+                       struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  struct shutdown_component_enabled_cb *c =
+      (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
   _reactor->on_exec(ctx, &shutdown_component_process_one);
@@ -94,9 +96,10 @@ cleanup:
 };
 
 static void no_queue_component_process_one(struct fmc_component *self,
-                                            struct fmc_reactor_ctx *ctx,
-                                            fmc_time64_t time) {
-  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+                                           struct fmc_reactor_ctx *ctx,
+                                           fmc_time64_t time) {
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)self;
   if (typed->shutdown_count) {
     ++typed->post_shutdown_count;
     _reactor->finished(ctx);
@@ -106,8 +109,9 @@ static void no_queue_component_process_one(struct fmc_component *self,
 
 static struct shutdown_component_enabled_cb *
 no_queue_shutdown_component_new(struct fmc_cfg_sect_item *cfg,
-                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
+                                struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  struct shutdown_component_enabled_cb *c =
+      (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
   _reactor->on_exec(ctx, &no_queue_component_process_one);
@@ -121,10 +125,12 @@ cleanup:
   return NULL;
 };
 
-static void immediate_shutdown_component_process_one(struct fmc_component *self,
-                                            struct fmc_reactor_ctx *ctx,
-                                            fmc_time64_t time) {
-  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+static void
+immediate_shutdown_component_process_one(struct fmc_component *self,
+                                         struct fmc_reactor_ctx *ctx,
+                                         fmc_time64_t time) {
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)self;
   if (typed->shutdown_count) {
     ++typed->post_shutdown_count;
   }
@@ -132,16 +138,18 @@ static void immediate_shutdown_component_process_one(struct fmc_component *self,
 };
 
 void immediate_shutdown_component_shutdown_cb(struct fmc_component *self,
-                                    struct fmc_reactor_ctx *ctx) {
-  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+                                              struct fmc_reactor_ctx *ctx) {
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)self;
   ++typed->shutdown_count;
   _reactor->finished(ctx);
 }
 
 static struct shutdown_component_enabled_cb *
 immediate_shutdown_component_new(struct fmc_cfg_sect_item *cfg,
-                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
+                                 struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  struct shutdown_component_enabled_cb *c =
+      (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
   _reactor->on_exec(ctx, &immediate_shutdown_component_process_one);
@@ -156,9 +164,10 @@ cleanup:
 };
 
 static void nostop_shutdown_component_process_one(struct fmc_component *self,
-                                            struct fmc_reactor_ctx *ctx,
-                                            fmc_time64_t time) {
-  struct shutdown_component_enabled_cb * typed = (struct shutdown_component_enabled_cb *)self;
+                                                  struct fmc_reactor_ctx *ctx,
+                                                  fmc_time64_t time) {
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)self;
   if (++typed->shutdown_count) {
     _reactor->finished(ctx);
   }
@@ -169,8 +178,9 @@ static void nostop_shutdown_component_process_one(struct fmc_component *self,
 
 static struct shutdown_component_enabled_cb *
 nostop_shutdown_component_new(struct fmc_cfg_sect_item *cfg,
-                         struct fmc_reactor_ctx *ctx, char **inp_tps) {
-  struct shutdown_component_enabled_cb *c = (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
+                              struct fmc_reactor_ctx *ctx, char **inp_tps) {
+  struct shutdown_component_enabled_cb *c =
+      (struct shutdown_component_enabled_cb *)calloc(1, sizeof(*c));
   if (!c)
     goto cleanup;
   _reactor->on_exec(ctx, &nostop_shutdown_component_process_one);
@@ -185,15 +195,13 @@ cleanup:
 
 struct fmc_cfg_node_spec empty_component_cfg_spec[] = {{NULL}};
 
-struct fmc_cfg_node_spec limit_component_cfg_spec[] = {
-  {
-      "limit",
-      "int64 descr",
-      true,
-      {FMC_CFG_INT64},
-  },
-  {NULL}
-};
+struct fmc_cfg_node_spec limit_component_cfg_spec[] = {{
+                                                           "limit",
+                                                           "int64 descr",
+                                                           true,
+                                                           {FMC_CFG_INT64},
+                                                       },
+                                                       {NULL}};
 
 struct fmc_component_def_v1 components[] = {
     {
@@ -244,7 +252,7 @@ extern "C" {
 
 FMCOMPMODINITFUNC void
 FMCompInit_shutdowncomponent(struct fmc_component_api *api,
-                         struct fmc_component_module *mod) {
+                             struct fmc_component_module *mod) {
   api->components_add_v1(mod, components);
   _reactor = api->reactor_v1;
 }

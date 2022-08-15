@@ -12,6 +12,7 @@
 
 *****************************************************************************/
 
+#include "iocomponent.h"
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/error.h>
@@ -20,18 +21,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <uthash/utlist.h>
-#include "iocomponent.h"
 
 struct fmc_reactor_api_v1 *_reactor;
 int64_t value = 9855;
 
-static void generic_component_del(struct fmc_component *comp) {
-  free(comp);
-};
+static void generic_component_del(struct fmc_component *comp) { free(comp); };
 
 static void producer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){
+                                           fmc_time64_t time) {
   struct producer_component *c = (struct producer_component *)self;
   if (c->count == 10) {
     return;
@@ -41,7 +39,8 @@ static void producer_component_process_one(struct fmc_component *self,
   struct fmc_shmem mem;
   fmc_error_t *err = NULL;
   ++value;
-  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value), &err);
+  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value),
+                      &err);
   if (err) {
     _reactor->set_error(ctx, fmc_error_msg(err));
   } else {
@@ -59,7 +58,8 @@ producer_component_new(struct fmc_cfg_sect_item *cfg,
   }
   struct producer_component *c =
       (struct producer_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &producer_component_process_one);
   _reactor->add_output(ctx, "valid output type", "valid output");
@@ -71,8 +71,8 @@ cleanup:
 };
 
 static void producer_component_2_process_one(struct fmc_component *self,
-                                           struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){
+                                             struct fmc_reactor_ctx *ctx,
+                                             fmc_time64_t time) {
   struct producer_component *c = (struct producer_component *)self;
   if (c->count == 10) {
     return;
@@ -81,7 +81,8 @@ static void producer_component_2_process_one(struct fmc_component *self,
   struct fmc_shmem mem;
   fmc_error_t *err = NULL;
   ++value;
-  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value), &err);
+  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value),
+                      &err);
   if (err) {
     _reactor->set_error(ctx, fmc_error_msg(err));
   } else {
@@ -99,7 +100,8 @@ producer_component_2_new(struct fmc_cfg_sect_item *cfg,
   }
   struct producer_component *c =
       (struct producer_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->add_output(ctx, "valid output type", "valid output");
   _reactor->add_output(ctx, "valid output type", "valid output 2");
@@ -112,8 +114,8 @@ cleanup:
 };
 
 static void producer_component_3_process_one(struct fmc_component *self,
-                                           struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){
+                                             struct fmc_reactor_ctx *ctx,
+                                             fmc_time64_t time) {
   struct producer_component *c = (struct producer_component *)self;
   if (c->count == 10) {
     return;
@@ -122,7 +124,8 @@ static void producer_component_3_process_one(struct fmc_component *self,
   struct fmc_shmem mem;
   fmc_error_t *err = NULL;
   ++value;
-  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value), &err);
+  fmc_shmem_init_view(&mem, _reactor->get_pool(ctx), &value, sizeof(value),
+                      &err);
   if (err) {
     _reactor->set_error(ctx, fmc_error_msg(err));
   } else {
@@ -140,7 +143,8 @@ producer_component_3_new(struct fmc_cfg_sect_item *cfg,
   }
   struct producer_component *c =
       (struct producer_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->add_output(ctx, "valid output type", "valid output");
   _reactor->add_output(ctx, "valid output type", "valid output 2");
@@ -160,15 +164,16 @@ void consumer_component_on_dep(struct fmc_component *self,
     _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
     return;
   }
-  size_t incoming = *(size_t*)*in.view;
+  size_t incoming = *(size_t *)*in.view;
   if (incoming != value) {
-    _reactor->set_error(ctx, "Received invalid value %lu, expected %lu", incoming, value);
+    _reactor->set_error(ctx, "Received invalid value %lu, expected %lu",
+                        incoming, value);
   }
 }
 
 static void consumer_component_process_one(struct fmc_component *self,
                                            struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){
+                                           fmc_time64_t time) {
   struct consumer_component *c = (struct consumer_component *)self;
   ++c->executed;
 };
@@ -182,7 +187,8 @@ consumer_component_new(struct fmc_cfg_sect_item *cfg,
   }
   struct consumer_component *c =
       (struct consumer_component *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_process_one);
   _reactor->on_dep(ctx, &consumer_component_on_dep);
@@ -193,11 +199,10 @@ cleanup:
 };
 
 void consumer_component_2_on_dep(struct fmc_component *self,
-                               struct fmc_reactor_ctx *ctx, int idx,
-                               struct fmc_shmem in) {
+                                 struct fmc_reactor_ctx *ctx, int idx,
+                                 struct fmc_shmem in) {
   struct consumer_component_2 *c = (struct consumer_component_2 *)self;
-  switch (idx)
-  {
+  switch (idx) {
   case 0:
     ++c->first;
     break;
@@ -211,8 +216,8 @@ void consumer_component_2_on_dep(struct fmc_component *self,
 }
 
 static void consumer_component_2_process_one(struct fmc_component *self,
-                                           struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){
+                                             struct fmc_reactor_ctx *ctx,
+                                             fmc_time64_t time) {
   struct consumer_component_2 *c = (struct consumer_component_2 *)self;
   ++c->executed;
 };
@@ -226,7 +231,8 @@ consumer_component_2_new(struct fmc_cfg_sect_item *cfg,
   }
   struct consumer_component_2 *c =
       (struct consumer_component_2 *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_2_process_one);
   _reactor->on_dep(ctx, &consumer_component_2_on_dep);
@@ -237,11 +243,10 @@ cleanup:
 };
 
 void consumer_component_3_on_dep(struct fmc_component *self,
-                               struct fmc_reactor_ctx *ctx, int idx,
-                               struct fmc_shmem in) {
+                                 struct fmc_reactor_ctx *ctx, int idx,
+                                 struct fmc_shmem in) {
   struct consumer_component_3 *c = (struct consumer_component_3 *)self;
-  switch (idx)
-  {
+  switch (idx) {
   case 0:
     ++c->third;
     break;
@@ -258,8 +263,8 @@ void consumer_component_3_on_dep(struct fmc_component *self,
 }
 
 static void consumer_component_3_process_one(struct fmc_component *self,
-                                           struct fmc_reactor_ctx *ctx,
-                                           fmc_time64_t time){
+                                             struct fmc_reactor_ctx *ctx,
+                                             fmc_time64_t time) {
   struct consumer_component_3 *c = (struct consumer_component_3 *)self;
   ++c->executed;
 };
@@ -273,7 +278,8 @@ consumer_component_3_new(struct fmc_cfg_sect_item *cfg,
   }
   struct consumer_component_3 *c =
       (struct consumer_component_3 *)calloc(1, sizeof(*c));
-  if (!c) goto cleanup;
+  if (!c)
+    goto cleanup;
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_3_process_one);
   _reactor->on_dep(ctx, &consumer_component_3_on_dep);

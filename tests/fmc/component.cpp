@@ -503,7 +503,8 @@ TEST(reactor, io) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ptp, nullptr);
 
-  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+  struct fmc_component *pcomp =
+      fmc_component_new(&r, ptp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -512,12 +513,10 @@ TEST(reactor, io) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ctp, nullptr);
 
-  struct fmc_component_input inputs[] = {
-    {pcomp, 0},
-    {NULL, 0}
-  };
+  struct fmc_component_input inputs[] = {{pcomp, 0}, {NULL, 0}};
 
-  struct fmc_component *ccomp = fmc_component_new(&r, ctp, nullptr, inputs, &err);
+  struct fmc_component *ccomp =
+      fmc_component_new(&r, ctp, nullptr, inputs, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(ccomp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -580,7 +579,8 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(p2tp, nullptr);
 
-  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  struct fmc_component *p2comp =
+      fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -589,7 +589,8 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(p3tp, nullptr);
 
-  struct fmc_component *p3comp = fmc_component_new(&r, p3tp, nullptr, nullptr, &err);
+  struct fmc_component *p3comp =
+      fmc_component_new(&r, p3tp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(p3comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -598,13 +599,10 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(c2tp, nullptr);
 
-  struct fmc_component_input inputs2[] = {
-    {p3comp, 0},
-    {p3comp, 1},
-    {NULL, 0}
-  };
+  struct fmc_component_input inputs2[] = {{p3comp, 0}, {p3comp, 1}, {NULL, 0}};
 
-  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  struct fmc_component *c2comp =
+      fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(c2comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -614,13 +612,10 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_NE(c3tp, nullptr);
 
   struct fmc_component_input inputs3[] = {
-    {p3comp, 2},
-    {p2comp, 0},
-    {p2comp, 1},
-    {NULL, 0}
-  };
+      {p3comp, 2}, {p2comp, 0}, {p2comp, 1}, {NULL, 0}};
 
-  struct fmc_component *c3comp = fmc_component_new(&r, c3tp, nullptr, inputs3, &err);
+  struct fmc_component *c3comp =
+      fmc_component_new(&r, c3tp, nullptr, inputs3, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(c3comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -634,12 +629,14 @@ TEST(reactor, io_multiple_inputs) {
   struct producer_component *typedp3comp = (struct producer_component *)p3comp;
   ASSERT_EQ(typedp3comp->count, 10);
 
-  struct consumer_component_2 *typedc2comp = (struct consumer_component_2 *)c2comp;
+  struct consumer_component_2 *typedc2comp =
+      (struct consumer_component_2 *)c2comp;
   ASSERT_EQ(typedc2comp->executed, 7);
   ASSERT_EQ(typedc2comp->first, 3);
   ASSERT_EQ(typedc2comp->second, 4);
 
-  struct consumer_component_3 *typedc3comp = (struct consumer_component_3 *)c3comp;
+  struct consumer_component_3 *typedc3comp =
+      (struct consumer_component_3 *)c3comp;
   ASSERT_EQ(typedc3comp->executed, 13);
   ASSERT_EQ(typedc3comp->third, 3);
   ASSERT_EQ(typedc3comp->fourth, 5);
@@ -696,7 +693,8 @@ TEST(reactor, io_incorrect_number_of_inputs) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(p2tp, nullptr);
 
-  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  struct fmc_component *p2comp =
+      fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -705,12 +703,10 @@ TEST(reactor, io_incorrect_number_of_inputs) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(c2tp, nullptr);
 
-  struct fmc_component_input inputs2[] = {
-    {p2comp, 0},
-    {NULL, 0}
-  };
+  struct fmc_component_input inputs2[] = {{p2comp, 0}, {NULL, 0}};
 
-  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  struct fmc_component *c2comp =
+      fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
   ASSERT_EQ(c2comp, nullptr);
   ASSERT_NE(err, nullptr);
 
@@ -762,7 +758,8 @@ TEST(reactor, io_incorrect_output_index) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(p2tp, nullptr);
 
-  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  struct fmc_component *p2comp =
+      fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -771,13 +768,10 @@ TEST(reactor, io_incorrect_output_index) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(c2tp, nullptr);
 
-  struct fmc_component_input inputs2[] = {
-    {p2comp, 0},
-    {p2comp, 2},
-    {NULL, 0}
-  };
+  struct fmc_component_input inputs2[] = {{p2comp, 0}, {p2comp, 2}, {NULL, 0}};
 
-  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  struct fmc_component *c2comp =
+      fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
   ASSERT_EQ(c2comp, nullptr);
   ASSERT_NE(err, nullptr);
 
@@ -829,7 +823,8 @@ TEST(reactor, io_invalid_output_index) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(p2tp, nullptr);
 
-  struct fmc_component *p2comp = fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
+  struct fmc_component *p2comp =
+      fmc_component_new(&r, p2tp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(p2comp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -838,13 +833,10 @@ TEST(reactor, io_invalid_output_index) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(c2tp, nullptr);
 
-  struct fmc_component_input inputs2[] = {
-    {p2comp, 0},
-    {p2comp, -3},
-    {NULL, 0}
-  };
+  struct fmc_component_input inputs2[] = {{p2comp, 0}, {p2comp, -3}, {NULL, 0}};
 
-  struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  struct fmc_component *c2comp =
+      fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
   ASSERT_EQ(c2comp, nullptr);
   ASSERT_NE(err, nullptr);
 
@@ -896,7 +888,8 @@ TEST(reactor, shutdown_no_cb) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ptp, nullptr);
 
-  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+  struct fmc_component *pcomp =
+      fmc_component_new(&r, ptp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -977,7 +970,8 @@ TEST(reactor, shutdown_cb) {
   thr.join();
   ASSERT_EQ(err, nullptr);
 
-  struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)pcomp;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 10);
@@ -1030,7 +1024,8 @@ TEST(reactor, shutdown_cb_no_queue) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ptp, nullptr);
 
-  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+  struct fmc_component *pcomp =
+      fmc_component_new(&r, ptp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -1045,7 +1040,8 @@ TEST(reactor, shutdown_cb_no_queue) {
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
-  struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)pcomp;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   // Corresponds to queued call before stop
@@ -1099,7 +1095,8 @@ TEST(reactor, immediate_shutdown) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ptp, nullptr);
 
-  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+  struct fmc_component *pcomp =
+      fmc_component_new(&r, ptp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -1114,7 +1111,8 @@ TEST(reactor, immediate_shutdown) {
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
-  struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)pcomp;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   // Corresponds to queued call before stop
@@ -1198,19 +1196,20 @@ TEST(reactor, multi_shutdown_cb) {
   thr.join();
   ASSERT_EQ(err, nullptr);
 
-  struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)pcomp;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
   ASSERT_EQ(typed->post_finish_count, 90);
 
-  typed = (struct shutdown_component_enabled_cb*)pcomp2;
+  typed = (struct shutdown_component_enabled_cb *)pcomp2;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
   ASSERT_EQ(typed->post_finish_count, 0);
 
-  typed = (struct shutdown_component_enabled_cb*)pcomp3;
+  typed = (struct shutdown_component_enabled_cb *)pcomp3;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
@@ -1267,7 +1266,8 @@ TEST(reactor, nostop_shutdown) {
   ASSERT_EQ(err, nullptr);
   ASSERT_NE(ptp, nullptr);
 
-  struct fmc_component *pcomp = fmc_component_new(&r, ptp, nullptr, nullptr, &err);
+  struct fmc_component *pcomp =
+      fmc_component_new(&r, ptp, nullptr, nullptr, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
 
@@ -1275,7 +1275,8 @@ TEST(reactor, nostop_shutdown) {
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
-  struct shutdown_component_enabled_cb *typed = (struct shutdown_component_enabled_cb*)pcomp;
+  struct shutdown_component_enabled_cb *typed =
+      (struct shutdown_component_enabled_cb *)pcomp;
 
   ASSERT_EQ(typed->shutdown_count, 5);
 

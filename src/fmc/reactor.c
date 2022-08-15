@@ -66,8 +66,10 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
       struct fmc_reactor_ctx_out *ptmp = NULL;
       DL_FOREACH_SAFE(phead, el, ptmp) {
         DL_DELETE(phead, el);
-        if (el->name) free(el->name);
-        if (el->type) free(el->type);
+        if (el->name)
+          free(el->name);
+        if (el->type)
+          free(el->type);
         free(el);
       }
     }
@@ -80,11 +82,11 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
 }
 
 static void utarr_del(void *elt) {
-  UT_array * _elt = (UT_array *)elt;
+  UT_array *_elt = (UT_array *)elt;
   utarray_done(_elt);
 }
 static void utarr_init(void *elt) {
-  UT_array * _elt = (UT_array *)elt;
+  UT_array *_elt = (UT_array *)elt;
   UT_icd deps;
   deps.sz = sizeof(struct fmc_reactor_ctx_dep);
   deps.dtor = NULL;

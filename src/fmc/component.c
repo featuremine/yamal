@@ -30,9 +30,9 @@
 #include <stdarg.h>
 #include <stdlib.h> // calloc() getenv()
 #include <string.h> // memcpy() strtok()
+#include <uthash/utarray.h>
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
-#include <uthash/utarray.h>
 
 #if defined(FMC_SYS_UNIX)
 #define FMC_MOD_SEARCHPATH_CUR ""
@@ -101,7 +101,7 @@ static int sched_item_less(const void *a, const void *b) {
     return 1;
   else if (fmc_time64_less(_b->t, _a->t))
     return 0;
-  return (int) _a->idx < _b->idx;
+  return (int)_a->idx < _b->idx;
 }
 
 static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
@@ -169,29 +169,37 @@ void reactor_on_dep_v1(struct fmc_reactor_ctx *ctx, fmc_reactor_dep_clbck cl) {
 
 void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
                            const char *name) {
-  struct fmc_reactor_ctx_out *item = (struct fmc_reactor_ctx_out *)calloc(1, sizeof(*item));
-  if (!item) goto cleanup;
+  struct fmc_reactor_ctx_out *item =
+      (struct fmc_reactor_ctx_out *)calloc(1, sizeof(*item));
+  if (!item)
+    goto cleanup;
   item->type = strdup(type);
-  if (!item->type) goto cleanup;
+  if (!item->type)
+    goto cleanup;
   if (name) {
     item->name = strdup(name);
-    if (!item->name) goto cleanup;
+    if (!item->name)
+      goto cleanup;
   }
   DL_APPEND(ctx->out_tps, item);
   utarray_extend_back(&ctx->deps);
   return;
 cleanup:
   if (item) {
-    if (item->type) free(item->type);
-    if (item->name) free(item->name);
+    if (item->type)
+      free(item->type);
+    if (item->name)
+      free(item->name);
     free(item);
   }
   reactor_set_error_v1(ctx, NULL, FMC_ERROR_MEMORY);
 }
 
-void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx, struct fmc_shmem mem) {
+void reactor_notify_v1(struct fmc_reactor_ctx *ctx, int idx,
+                       struct fmc_shmem mem) {
   UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
-  if (!deps) goto cleanup;
+  if (!deps)
+    goto cleanup;
   size_t ndeps = utarray_len(deps);
   for (size_t i = 0; i < ndeps; ++i) {
     struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
@@ -220,8 +228,7 @@ static struct fmc_reactor_api_v1 reactor_v1 = {
     .on_dep = reactor_on_dep_v1,
     .add_output = reactor_add_output_v1,
     .notify = reactor_notify_v1,
-    .get_pool = reactor_get_pool_v1
-};
+    .get_pool = reactor_get_pool_v1};
 
 static struct fmc_component_api api = {
     .reactor_v1 = &reactor_v1,
@@ -468,20 +475,21 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
   return NULL;
 }
 
-#define DL_GET_ELEM(head, idx)    \
-  ({                              \
-    size_t count;                 \
-    __typeof__(head) _el = NULL;  \
-    DL_COUNT(head, _el, count);   \
-    _el = NULL;                   \
-    if (idx >=0 && count>idx) {   \
-      count = 0;                  \
-      DL_FOREACH(head, _el) {     \
-        if (count == idx) break;  \
-        ++count;                  \
-      }                           \
-    }                             \
-    _el;                          \
+#define DL_GET_ELEM(head, idx)                                                 \
+  ({                                                                           \
+    size_t count;                                                              \
+    __typeof__(head) _el = NULL;                                               \
+    DL_COUNT(head, _el, count);                                                \
+    _el = NULL;                                                                \
+    if (idx >= 0 && count > idx) {                                             \
+      count = 0;                                                               \
+      DL_FOREACH(head, _el) {                                                  \
+        if (count == idx)                                                      \
+          break;                                                               \
+        ++count;                                                               \
+      }                                                                        \
+    }                                                                          \
+    _el;                                                                       \
   })
 
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
@@ -519,7 +527,8 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
       goto cleanup;
     }
 
-    struct fmc_reactor_ctx_out *elem = DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
+    struct fmc_reactor_ctx_out *elem =
+        DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
     if (!elem) {
       fmc_error_set(error, "invalid output index %d of type %s", inps[i].idx,
                     inps[i].comp->_vt->tp_name);
@@ -546,9 +555,10 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {
-    struct fmc_reactor_ctx * inp_ctx = inps[i].comp->_ctx;
+    struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
     UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
-    if (!deps) goto cleanup;
+    if (!deps)
+      goto cleanup;
     struct fmc_reactor_ctx_dep new_dep;
     new_dep.idx = item->comp->_ctx->idx;
     new_dep.inp_idx = i;
