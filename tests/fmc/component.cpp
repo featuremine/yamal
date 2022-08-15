@@ -699,12 +699,11 @@ TEST(reactor, io_incorrect_number_of_inputs) {
   };
 
   struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_EQ(c2comp, nullptr);
   ASSERT_NE(err, nullptr);
-  ASSERT_NE(c2comp->_ctx->err.code, FMC_ERROR_NONE);
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(c2comp);
   fmc_component_del(p2comp);
 
   fmc_component_module_del(mod);
@@ -767,12 +766,11 @@ TEST(reactor, io_incorrect_output_index) {
   };
 
   struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_EQ(c2comp, nullptr);
   ASSERT_NE(err, nullptr);
-  ASSERT_NE(c2comp->_ctx->err.code, FMC_ERROR_NONE);
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(c2comp);
   fmc_component_del(p2comp);
 
   fmc_component_module_del(mod);
@@ -835,12 +833,11 @@ TEST(reactor, io_invalid_output_index) {
   };
 
   struct fmc_component *c2comp = fmc_component_new(&r, c2tp, nullptr, inputs2, &err);
+  ASSERT_EQ(c2comp, nullptr);
   ASSERT_NE(err, nullptr);
-  ASSERT_NE(c2comp->_ctx->err.code, FMC_ERROR_NONE);
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(c2comp);
   fmc_component_del(p2comp);
 
   fmc_component_module_del(mod);
