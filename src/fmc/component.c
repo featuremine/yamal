@@ -19,11 +19,11 @@
  * @see http://www.featuremine.com
  */
 
-#define utarray_oom()                      \
- do { \
-  fmc_error_reset(error, FMC_ERROR_MEMORY, NULL); \
-  goto cleanup; \
- } while (0)
+#define utarray_oom()                                                          \
+  do {                                                                         \
+    fmc_error_reset(error, FMC_ERROR_MEMORY, NULL);                            \
+    goto cleanup;                                                              \
+  } while (0)
 
 #include <fmc/component.h>
 #include <fmc/error.h>
@@ -199,7 +199,8 @@ void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
   utarray_extend_back(&ctx->deps);
   return;
 cleanup:
-  /*Move this code to a function to avoid repeated code, used also in reactor del*/
+  /*Move this code to a function to avoid repeated code, used also in reactor
+   * del*/
   if (item) {
     if (item->type)
       free(item->type);
@@ -214,7 +215,8 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
                        struct fmc_shmem mem) {
   fmc_error_t *error = &ctx->reactor->err;
   UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
-  if (!deps) return;
+  if (!deps)
+    return;
   size_t ndeps = utarray_len(deps);
   for (size_t i = 0; i < ndeps; ++i) {
     struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
@@ -489,14 +491,15 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
   return NULL;
 }
 
-#define DL_GET_ELEM(head, idx)     \
-  ({                               \
-    __typeof__(idx) count = (idx); \
-    __typeof__(head) _el = NULL;   \
-    DL_FOREACH(head, _el) {        \
-      if (!count--) break;         \
-    }                              \
-    _el;                           \
+#define DL_GET_ELEM(head, idx)                                                 \
+  ({                                                                           \
+    __typeof__(idx) _count = (idx);                                            \
+    __typeof__(head) _el = NULL;                                               \
+    DL_FOREACH(head, _el) {                                                    \
+      if (!_count--)                                                           \
+        break;                                                                 \
+    }                                                                          \
+    _el;                                                                       \
   })
 
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
@@ -526,22 +529,24 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   for (unsigned int i = 0; i < in_sz; ++i) {
     if (inps[i].comp->_ctx->reactor != reactor) {
       fmc_error_set(
-          usr_error, "input component %d of type %s does not have the same reactor",
-          i, inps[i].comp->_vt->tp_name);
+          usr_error,
+          "input component %d of type %s does not have the same reactor", i,
+          inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     if (!inps[i].comp->_ctx->out_tps) {
       fmc_error_set(
-          usr_error, "the outputs of the input component %d of type %s are not set",
-          i, inps[i].comp->_vt->tp_name);
+          usr_error,
+          "the outputs of the input component %d of type %s are not set", i,
+          inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
 
     struct fmc_reactor_ctx_out *elem =
         DL_GET_ELEM(inps[i].comp->_ctx->out_tps, inps[i].idx);
     if (!elem) {
-      fmc_error_set(usr_error, "invalid output index %d of type %s", inps[i].idx,
-                    inps[i].comp->_vt->tp_name);
+      fmc_error_set(usr_error, "invalid output index %d of type %s",
+                    inps[i].idx, inps[i].comp->_vt->tp_name);
       goto cleanup;
     }
     in_types[i] = elem->type;
@@ -583,8 +588,10 @@ cleanup:
       UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
       assert(deps);
       struct fmc_reactor_ctx_dep *back = utarray_back(&inp_ctx->deps);
-      if (!back) continue;
-      if (back->idx == ctx.idx) utarray_pop_back(&inp_ctx->deps);
+      if (!back)
+        continue;
+      if (back->idx == ctx.idx)
+        utarray_pop_back(&inp_ctx->deps);
     }
     if (item->comp)
       tp->tp_del(item->comp);

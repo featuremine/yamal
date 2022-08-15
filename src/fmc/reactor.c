@@ -19,11 +19,11 @@
  * @see http://www.featuremine.com
  */
 
-#define utarray_oom()                      \
- do { \
-  fmc_error_reset(error, FMC_ERROR_MEMORY, NULL); \
-  goto cleanup; \
- } while (0)
+#define utarray_oom()                                                          \
+  do {                                                                         \
+    fmc_error_reset(error, FMC_ERROR_MEMORY, NULL);                            \
+    goto cleanup;                                                              \
+  } while (0)
 
 #include <fmc/component.h>
 #include <fmc/error.h>
