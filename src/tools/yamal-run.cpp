@@ -25,9 +25,7 @@
 #include <ytp/version.h>
 
 struct fmc_reactor r;
-static void sig_handler(int s) {
-  fmc_reactor_stop(&r);
-}
+static void sig_handler(int s) { fmc_reactor_stop(&r); }
 
 struct deleter_t {
   void operator()(struct fmc_component_module *ptr) {
