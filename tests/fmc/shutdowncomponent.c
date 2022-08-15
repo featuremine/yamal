@@ -68,6 +68,9 @@ static void shutdown_component_process_one(struct fmc_component *self,
   if (typed->shutdown_count && ++typed->post_shutdown_count == typed->limit) {
     _reactor->finished(ctx);
   }
+  if (typed->post_shutdown_count >= typed->limit) {
+    ++typed->post_finish_count;
+  }
   _reactor->schedule(ctx, fmc_time64_add(time, fmc_time64_from_nanos(1000)));
 };
 

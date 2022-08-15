@@ -990,16 +990,19 @@ TEST(reactor, multi_shutdown_cb) {
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
+  ASSERT_EQ(typed->post_finish_count, 91);
 
   typed = (struct shutdown_component_enabled_cb*)pcomp2;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
+  ASSERT_EQ(typed->post_finish_count, 1);
 
   typed = (struct shutdown_component_enabled_cb*)pcomp3;
 
   ASSERT_EQ(typed->shutdown_count, 1);
   ASSERT_EQ(typed->post_shutdown_count, 100);
+  ASSERT_EQ(typed->post_finish_count, 51);
 
   fmc_reactor_destroy(&r);
 
