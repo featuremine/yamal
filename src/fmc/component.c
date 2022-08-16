@@ -219,7 +219,7 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
   if (!deps) {
     fmc_error_reset_sprintf(
         error,
-        "failed to notify the component %s: invalid dependency index %lu",
+        "component type %s updating output using incorrect output index %lu",
         ctx->comp->_vt->tp_name, idx);
     goto cleanup;
   }
@@ -522,6 +522,8 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   char *in_types[in_sz + 1];
   UT_array *updated_deps[in_sz + 1];
   memset(updated_deps, 0, sizeof(updated_deps));
+  struct fmc_reactor_ctx ctx;
+  fmc_reactor_ctx_init(reactor, &ctx);
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
@@ -561,19 +563,16 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   in_types[in_sz] = NULL;
 
-  struct fmc_reactor_ctx ctx;
-  fmc_reactor_ctx_init(reactor, &ctx);
   item->comp = tp->tp_new(cfg, &ctx, in_types);
   if (fmc_error_has(&ctx.err)) {
     fmc_error_set(usr_error,
                   "failed to create new component of type %s with error: %s",
                   tp->tp_name, fmc_error_msg(&ctx.err));
-    fmc_error_destroy(&ctx.err);
     goto cleanup;
   }
   item->comp->_vt = tp;
   ctx.comp = item->comp;
-  fmc_reactor_ctx_push(&ctx, inps, usr_error); // copy the context
+  fmc_reactor_ctx_emplace(&ctx, inps, usr_error); // copy the context
   if (*usr_error)
     goto cleanup;
   item->comp->_ctx = reactor->ctxs[reactor->size - 1];
@@ -590,6 +589,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
+  fmc_reactor_ctx_destroy(&ctx);
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {

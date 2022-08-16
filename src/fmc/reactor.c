@@ -67,22 +67,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   fmc_pool_destroy(&reactor->pool);
 
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
-    if (reactor->ctxs[i]->out_tps) {
-      struct fmc_reactor_ctx_out *phead = reactor->ctxs[i]->out_tps;
-      struct fmc_reactor_ctx_out *el = NULL;
-      struct fmc_reactor_ctx_out *ptmp = NULL;
-      DL_FOREACH_SAFE(phead, el, ptmp) {
-        DL_DELETE(phead, el);
-        if (el->name)
-          free(el->name);
-        if (el->type)
-          free(el->type);
-        free(el);
-      }
-    }
-    // Free dependency related objects
-    utarray_done(&reactor->ctxs[i]->deps);
-    fmc_error_destroy(&reactor->ctxs[i]->err);
+    fmc_reactor_ctx_destroy(reactor->ctxs[i]);
     free(reactor->ctxs[i]);
   }
   fmc_error_destroy(&reactor->err);
@@ -118,9 +103,9 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   fmc_error_init_none(&ctx->err);
 }
 
-void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
-                          struct fmc_component_input *inps,
-                          fmc_error_t **error) {
+void fmc_reactor_ctx_emplace(struct fmc_reactor_ctx *ctx,
+                             struct fmc_component_input *inps,
+                             fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_reactor *r = ctx->reactor;
   struct fmc_reactor_ctx *ctxtmp = NULL;
@@ -139,10 +124,28 @@ void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
   r->ctxs[r->size] = ctxtmp;
   memcpy(r->ctxs[r->size], ctx, sizeof(*ctx));
   ++r->size;
+  memset(ctx, 0, sizeof(*ctx));
   return;
 cleanup:
   if (ctxtmp)
     free(ctxtmp);
+}
+
+void fmc_reactor_ctx_destroy(struct fmc_reactor_ctx *ctx) {
+  struct fmc_reactor_ctx_out *phead = ctx->out_tps;
+  struct fmc_reactor_ctx_out *el = NULL;
+  struct fmc_reactor_ctx_out *ptmp = NULL;
+  DL_FOREACH_SAFE(phead, el, ptmp) {
+    DL_DELETE(phead, el);
+    if (el->name)
+      free(el->name);
+    if (el->type)
+      free(el->type);
+    free(el);
+  }
+  ctx->out_tps = NULL;
+  utarray_done(&ctx->deps);
+  fmc_error_destroy(&ctx->err);
 }
 
 fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {

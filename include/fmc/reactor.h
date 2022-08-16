@@ -131,9 +131,10 @@ FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
                                     struct fmc_reactor_ctx *ctx);
-FMMODFUNC void fmc_reactor_ctx_push(struct fmc_reactor_ctx *ctx,
-                                    struct fmc_component_input *inps,
-                                    fmc_error_t **error);
+FMMODFUNC void fmc_reactor_ctx_emplace(struct fmc_reactor_ctx *ctx,
+                                       struct fmc_component_input *inps,
+                                       fmc_error_t **error);
+FMMODFUNC void fmc_reactor_ctx_destroy(struct fmc_reactor_ctx *ctx);
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
 FMMODFUNC size_t fmc_reactor_run_once(struct fmc_reactor *reactor,
                                       fmc_time64_t now, fmc_error_t **error);
