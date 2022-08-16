@@ -82,6 +82,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
     }
     // Free dependency related objects
     utarray_done(&reactor->ctxs[i]->deps);
+    fmc_error_destroy(&reactor->ctxs[i]->err);
     free(reactor->ctxs[i]);
   }
   fmc_error_destroy(&reactor->err);

@@ -133,11 +133,12 @@ static void reactor_on_exec_v1(struct fmc_reactor_ctx *ctx,
 
 void reactor_set_error_v1(struct fmc_reactor_ctx *ctx, const char *fmt, ...) {
   if (fmt) {
+    fmc_error_destroy(&ctx->err);
     FMC_ERROR_FORMAT(&ctx->err, fmt);
   } else {
     va_list _args1;
     va_start(_args1, fmt);
-    fmc_error_init(&ctx->err, va_arg(_args1, FMC_ERROR_CODE), NULL);
+    fmc_error_reset(&ctx->err, va_arg(_args1, FMC_ERROR_CODE), NULL);
     va_end(_args1);
   }
 }
@@ -519,7 +520,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   char *in_types[in_sz + 1];
   UT_array *updated_deps[in_sz+1];
-  memset(updated_deps, 0, sizeof(*updated_deps)*(in_sz+1));
+  memset(updated_deps, 0, sizeof(updated_deps));
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
@@ -566,6 +567,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     fmc_error_set(usr_error,
                   "failed to create new component of type %s with error: %s",
                   tp->tp_name, fmc_error_msg(&ctx.err));
+    fmc_error_destroy(&ctx.err);
     goto cleanup;
   }
   item->comp->_vt = tp;

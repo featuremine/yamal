@@ -71,7 +71,13 @@ TEST(component, sys_paths) {
   EXPECT_EQ(std::string(pdef->next->next->path),
             std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
   ASSERT_EQ(pdef->next->next->next, nullptr);
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
 
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
   setenv(FMC_MOD_SEARCHPATH_ENV, "/first/path:/second/path", 1);
   fmc_component_sys_paths_set_default(&sys, &err);
   ASSERT_EQ(err, nullptr);
@@ -89,7 +95,13 @@ TEST(component, sys_paths) {
   EXPECT_EQ(std::string(pdef->next->next->next->next->path),
             std::string("/second/path"));
   ASSERT_EQ(pdef->next->next->next->next->next, nullptr);
+  fmc_component_sys_destroy(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
 
+  fmc_component_sys_init(&sys);
+  ASSERT_EQ(sys.search_paths, nullptr);
+  ASSERT_EQ(sys.modules, nullptr);
   const char *paths[2];
   paths[0] = components_path.c_str();
   paths[1] = nullptr;
@@ -914,6 +926,7 @@ TEST(reactor, shutdown_cb) {
   fmc_reactor_destroy(&r);
 
   fmc_component_del(pcomp);
+  fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
