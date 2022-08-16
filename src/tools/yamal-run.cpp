@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
       "component", "Component name", true, "component", "component");
   cmd.add(componentArg);
 
-  TCLAP::SwitchArg schedArg("sched", "sched",
+  TCLAP::SwitchArg schedArg("k", "sched",
                             "Run component scheduled (live by default)");
   cmd.add(schedArg);
 
