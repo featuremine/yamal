@@ -161,8 +161,9 @@ struct fmc_reactor_api_v1 {
   void (*add_output)(struct fmc_reactor_ctx *, const char *type,
                      const char *name);
   void (*notify)(
-      struct fmc_reactor_ctx *, int,
+      struct fmc_reactor_ctx *, size_t,
       struct fmc_shmem); // notify the system that output have been updated
+  struct fmc_pool *(*get_pool)(struct fmc_reactor_ctx *);
 };
 
 /* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
@@ -242,7 +243,7 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
 
 struct fmc_component_input {
   struct fmc_component *comp;
-  int idx;
+  size_t idx;
 };
 
 FMMODFUNC struct fmc_component *
