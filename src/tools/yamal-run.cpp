@@ -96,9 +96,9 @@ int main(int argc, char **argv) {
       "component", "Component name", true, "component", "component");
   cmd.add(componentArg);
 
-  TCLAP::SwitchArg liveArg("l", "live",
-                           "Run component live (scheduled otherwise)");
-  cmd.add(liveArg);
+  TCLAP::SwitchArg schedArg("k", "sched",
+                            "Run component scheduled (live by default)");
+  cmd.add(schedArg);
 
   TCLAP::ValueArg<int> affinityArg("a", "affinity",
                                    "set the CPU affinity of the main process",
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
   }
 
   fmc_set_signal_handler(sig_handler);
-  fmc_reactor_run(&r, liveArg.getValue(), &err);
+  fmc_reactor_run(&r, !schedArg.getValue(), &err);
   fmc_runtime_error_unless(!err)
       << "Unable to run reactor : " << fmc_error_msg(err);
 
