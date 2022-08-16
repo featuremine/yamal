@@ -217,9 +217,10 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
   fmc_error_t *error = &ctx->reactor->err;
   UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
   if (!deps) {
-    fmc_error_reset_sprintf(error,
-                            "failed to notify the component %s: invalid dependency index %lu",
-                            ctx->comp->_vt->tp_name, idx);
+    fmc_error_reset_sprintf(
+        error,
+        "failed to notify the component %s: invalid dependency index %lu",
+        ctx->comp->_vt->tp_name, idx);
     goto cleanup;
   }
   size_t ndeps = utarray_len(deps);
