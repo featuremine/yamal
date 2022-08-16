@@ -520,7 +520,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   for (; inps && inps[in_sz].comp; ++in_sz) {
   }
   char *in_types[in_sz + 1];
-  UT_array *updated_deps[in_sz+1];
+  UT_array *updated_deps[in_sz + 1];
   memset(updated_deps, 0, sizeof(updated_deps));
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
