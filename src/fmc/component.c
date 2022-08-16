@@ -199,8 +199,8 @@ void reactor_add_output_v1(struct fmc_reactor_ctx *ctx, const char *type,
   utarray_extend_back(&ctx->deps);
   return;
 cleanup:
-  /*Move this code to a function to avoid repeated code, used also in reactor
-   * del*/
+  // TODO: Move this code to a function to avoid repeated code,
+  // used also in reactor
   if (item) {
     if (item->type)
       free(item->type);
@@ -215,8 +215,12 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
                        struct fmc_shmem mem) {
   fmc_error_t *error = &ctx->reactor->err;
   UT_array *deps = (UT_array *)utarray_eltptr(&ctx->deps, idx);
-  if (!deps)
-    return;
+  if (!deps) {
+    fmc_error_reset_sprintf(error,
+                            "failed to notify the component %s: invalid dependency index %lu",
+                            ctx->comp->_vt->tp_name, idx);
+    goto cleanup;
+  }
   size_t ndeps = utarray_len(deps);
   for (size_t i = 0; i < ndeps; ++i) {
     struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
@@ -514,6 +518,8 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   for (; inps && inps[in_sz].comp; ++in_sz) {
   }
   char *in_types[in_sz + 1];
+  UT_array *updated_deps[in_sz+1];
+  memset(updated_deps, 0, sizeof(*updated_deps)*(in_sz+1));
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
@@ -577,22 +583,15 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     new_dep.idx = item->comp->_ctx->idx;
     new_dep.inp_idx = i;
     utarray_push_back(deps, &new_dep);
+    updated_deps[i] = deps;
   }
   return item->comp;
 cleanup:
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
-    for (unsigned int i = 0; i < in_sz; ++i) {
-      struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
-      UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
-      if (!deps)
-        continue;
-      struct fmc_reactor_ctx_dep *back = utarray_back(&inp_ctx->deps);
-      if (!back)
-        continue;
-      if (back->idx == ctx.idx)
-        utarray_pop_back(&inp_ctx->deps);
+    for (unsigned int i = 0; updated_deps[i]; ++i) {
+      utarray_pop_back(updated_deps[i]);
     }
     if (item->comp)
       tp->tp_del(item->comp);
