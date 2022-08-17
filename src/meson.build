@@ -12,7 +12,10 @@ srcs_c = files(
     'fmc/extension.c',
     'fmc/config.c',
     'fmc/component.c',
-    'fmc/string.c'
+    'fmc/reactor.c',
+    'fmc/string.c',
+    'fmc/prio_queue.c',
+    'fmc/memory.c'
 )
 
 srcs_cpp = files(

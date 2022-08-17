@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -29,8 +29,40 @@ struct manager_comp {
    fmc_component_HEAD;
 };
 
-gateway_comp_process_one(gateway_comp *comp) {
-   gateway_comp *c = (gateway_comp *)comp;
+struct fmc_reactor_api_v1 *_reactor;
+
+static void gateway_comp_del(struct gateway_comp *comp) {
+  free(comp);
+};
+
+static struct gateway_comp *
+gateway_comp_new_live(struct fmc_cfg_sect_item *cfg,
+                       struct fmc_reactor_ctx *ctx,
+                       char **inp_tps,
+                       fmc_error_t **err) {
+  struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  _reactor->on_exec(ctx, &gateway_comp_process_one_live);
+  _reactor->queue(ctx);
+  return c;
+cleanup:
+  fmc_error_set2(err, FMC_ERROR_MEMORY);
+  return NULL;
+};
+
+static struct gateway_comp *
+gateway_comp_new_sched(struct fmc_cfg_sect_item *cfg,
+                       struct fmc_reactor_ctx *ctx,
+                       char **inp_tps,
+                       fmc_error_t **err) {
+  struct test_component *c = (struct test_component *)calloc(1, sizeof(*c));
+  if (!c) goto cleanup;
+  _reactor->on_exec(ctx, &gateway_comp_process_one_sched);
+  _reactor->schedule(ctx, start_time);
+  return c;
+cleanup:
+  fmc_error_set2(err, FMC_ERROR_MEMORY);
+  return NULL;
 };
 
 fmc_cfg_node_spec session_cfg_spec[] = {
@@ -48,37 +80,33 @@ fmc_cfg_node_spec gateway_cfg_spec[] = {
 struct fmc_component_def_v1 components[] = {
    {
       .tp_name = "live-gateway",
+      .tp_descr = "Gateway live component",
       .tp_size = sizeof(gateway_comp),
       .tp_cfgspec = gateway_cfg_spec;
-      .tp_new = (newfunc)gateway_comp_new,
-      .tp_del = (delfunc)gateway_comp_del,
-      .tp_sched = (schedfunc)NULL,
-      .tp_proc = (procfunc)gateway_comp_process_one,
+      .tp_new = (fmc_newfunc)gateway_comp_new_live,
+      .tp_del = (fmc_delfunc)gateway_comp_del,
    },
    {
       .tp_name = "sched-gateway",
+      .tp_descr = "Gateway scheduled component",
       .tp_size = sizeof(gateway_comp),
       .tp_cfgspec = gateway_cfg_spec;
-      .tp_new = (newfunc)gateway_comp_new,
-      .tp_del = (delfunc)gateway_comp_del,
-      .tp_sched = (schedfunc)gateway_comp_sched,
-      .tp_proc = (procfunc)gateway_comp_process_one,
+      .tp_new = (fmc_newfunc)gateway_comp_new_sched,
+      .tp_del = (fmc_delfunc)gateway_comp_del,
    },
    {
       .tp_name = "live-oms",
+      .tp_descr = "OMS live component",
       .tp_size = sizeof(manager_comp),
-      .tp_new = (newfunc)oms_comp_new,
-      .tp_del = (delfunc)oms_comp_del,
-      .tp_sched = (schedfunc)NULL,
-      .tp_proc = (procfunc)oms_comp_process_one,
+      .tp_new = (fmc_newfunc)oms_comp_new,
+      .tp_del = (fmc_delfunc)oms_comp_del,
    },
    {
       .tp_name = "sched-oms",
+      .tp_descr = "OMS scheduled component",
       .tp_size = sizeof(manager_comp),
-      .tp_new = (newfunc)oms_comp_new,
-      .tp_del = (delfunc)oms_comp_del,
-      .tp_sched = (schedfunc)oms_comp_sched,
-      .tp_proc = (procfunc)oms_comp_process_one,
+      .tp_new = (fmc_newfunc)oms_comp_new,
+      .tp_del = (fmc_delfunc)oms_comp_del,
    },
    { NULL },
 };
@@ -87,6 +115,7 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
                                       struct fmc_component_module *mod) {
    // The number at the end of the functions signifies the API version.
    api->components_add_v1(mod, components);
+   _reactor = api->reactor_v1;
 }
 */
 
@@ -94,7 +123,9 @@ FMCOMPMODINITFUNC void FMCompInit_oms(struct fmc_component_api *api,
 
 #include <fmc/config.h>
 #include <fmc/extension.h>
+#include <fmc/memory.h>
 #include <fmc/platform.h>
+#include <fmc/reactor.h>
 #include <fmc/time.h>
 
 #ifdef __cplusplus
@@ -106,30 +137,50 @@ extern "C" {
 
 #define fmc_component_HEAD                                                     \
   struct fmc_component_type *_vt;                                              \
-  struct fmc_error _err
+  struct fmc_reactor_ctx *_ctx;
 
 struct fmc_component {
   fmc_component_HEAD;
 };
 
-/* NOTE: fmc_error_t, fm_time64_t and fmc_cfg_sect_item cannot change.
+// TODO: Complete
+struct fmc_reactor_api_v1 {
+  void (*queue)(struct fmc_reactor_ctx *);
+  void (*schedule)(struct fmc_reactor_ctx *, fmc_time64_t);
+  void (*set_error)(struct fmc_reactor_ctx *, const char *fmt,
+                    ...); // set the component error
+  void (*on_shutdown)(struct fmc_reactor_ctx *,
+                      fmc_reactor_shutdown_clbck); // system shutting down
+  void (*finished)(
+      struct fmc_reactor_ctx *); // notify the system that component is finished
+  void (*on_exec)(
+      struct fmc_reactor_ctx *,
+      fmc_reactor_exec_clbck); // all input components have been updated
+  void (*on_dep)(struct fmc_reactor_ctx *,
+                 fmc_reactor_dep_clbck); // a dependency has been updated
+  void (*add_output)(struct fmc_reactor_ctx *, const char *type,
+                     const char *name);
+  void (*notify)(
+      struct fmc_reactor_ctx *, size_t,
+      struct fmc_shmem); // notify the system that output have been updated
+  struct fmc_pool *(*get_pool)(struct fmc_reactor_ctx *);
+};
+
+/* NOTE: fmc_error_t, fmc_time64_t and fmc_cfg_sect_item cannot change.
          If changes to config or error object are required, must add
          new error or config structure and implement new API version */
-typedef struct fmc_component *(*newfunc)(struct fmc_cfg_sect_item *,
-                                         fmc_error_t **);
-typedef void (*delfunc)(struct fmc_component *);
-typedef fm_time64_t (*schedfunc)(struct fmc_component *);
-typedef bool (*procfunc)(struct fmc_component *, fm_time64_t);
+typedef struct fmc_component *(*fmc_newfunc)(struct fmc_cfg_sect_item *,
+                                             struct fmc_reactor_ctx *ctx,
+                                             char **inp_tps);
+typedef void (*fmc_delfunc)(struct fmc_component *);
 
 struct fmc_component_def_v1 {
-  const char *tp_name;
+  const char *tp_name; // prohibited characters: '-'
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  newfunc tp_new;                       // allocate and initialize the component
-  delfunc tp_del;                       // destroy the component
-  schedfunc tp_sched;                   // returns the next schedule time
-  procfunc tp_proc;                     // run the component once
+  fmc_newfunc tp_new;                   // alloc and initialize the component
+  fmc_delfunc tp_del;                   // destroy the component
 };
 
 struct fmc_component_list {
@@ -138,15 +189,13 @@ struct fmc_component_list {
 };
 
 struct fmc_component_type {
-  const char *tp_name;
+  const char *tp_name; // prohibited characters: '-'
   const char *tp_descr;
   size_t tp_size;                       // size of the component struct
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
-  newfunc tp_new;                       // allocate and initialize the component
-  delfunc tp_del;                       // destroy the component
-  schedfunc tp_sched;                   // returns the next schedule time
-  procfunc tp_proc;                     // run the component once
-  struct fmc_component_list *comps;     // pointer to the containing component
+  fmc_newfunc tp_new;                   // alloc and initialize the component
+  fmc_delfunc tp_del;                   // destroy the component
+  struct fmc_component_list *comps;     // ptr to the containing component
   struct fmc_component_type *next, *prev;
 };
 
@@ -179,6 +228,9 @@ FMMODFUNC void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
                                            fmc_error_t **error);
 FMMODFUNC fmc_component_path_list_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys);
+FMMODFUNC void
+fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
+                                    fmc_error_t **error);
 FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 
 FMMODFUNC struct fmc_component_module *
@@ -189,18 +241,31 @@ FMMODFUNC struct fmc_component_type *
 fmc_component_module_type_get(struct fmc_component_module *mod,
                               const char *comp, fmc_error_t **error);
 
-FMMODFUNC struct fmc_component *fmc_component_new(struct fmc_component_type *tp,
-                                                  struct fmc_cfg_sect_item *cfg,
-                                                  fmc_error_t **error);
+struct fmc_component_input {
+  struct fmc_component *comp;
+  size_t idx;
+};
+
+FMMODFUNC struct fmc_component *
+fmc_component_new(struct fmc_reactor *reactor, struct fmc_component_type *tp,
+                  struct fmc_cfg_sect_item *cfg,
+                  struct fmc_component_input *inps, fmc_error_t **error);
+FMMODFUNC size_t fmc_component_out_idx(struct fmc_component *, const char *name,
+                                       fmc_error_t **error);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 /* Current API version: 1 (components_add_v1) */
 struct fmc_component_api {
+  struct fmc_reactor_api_v1 *reactor_v1;
   void (*components_add_v1)(struct fmc_component_module *mod,
                             struct fmc_component_def_v1 *tps);
+  void *reactor_v2;
   void (*components_add_v2)(struct fmc_component_module *mod, void *);
+  void *reactor_v3;
   void (*components_add_v3)(struct fmc_component_module *mod, void *);
+  void *reactor_v4;
   void (*components_add_v4)(struct fmc_component_module *mod, void *);
+  void *reactor_v5;
   void (*components_add_v5)(struct fmc_component_module *mod, void *);
   void *_zeros[128];
 };

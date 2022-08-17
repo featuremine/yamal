@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -891,7 +891,7 @@ do_cleanup:
   return ret;
 }
 
-static const char *type_name(FMC_CFG_TYPE type) {
+const char *fmc_cfg_type_name(FMC_CFG_TYPE type) {
   switch (type) {
   case FMC_CFG_NONE:
     return "none";
@@ -947,7 +947,8 @@ static void fmc_cfg_arr_spec_check(struct fmc_cfg_type *spec,
   for (; cfg; cfg = cfg->next) {
     if (cfg->item.type != spec->type) {
       fmc_error_set(err, "config error: item in array %s must be %s",
-                    type_name(cfg->item.type), type_name(spec->type));
+                    fmc_cfg_type_name(cfg->item.type),
+                    fmc_cfg_type_name(spec->type));
       return;
     }
 
@@ -990,8 +991,8 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
 
     if (item->node.type != spec_item->type.type) {
       fmc_error_set(err, "config error: field %s (%s) must be %s",
-                    spec_item->key, type_name(item->node.type),
-                    type_name(spec_item->type.type));
+                    spec_item->key, fmc_cfg_type_name(item->node.type),
+                    fmc_cfg_type_name(spec_item->type.type));
       return;
     }
     check_value(&spec_item->type, &item->node, err);
@@ -1022,4 +1023,15 @@ void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
     fmc_error_set(err, "config error: unknown field");
     return;
   }
+}
+
+static int cmp_key(struct fmc_cfg_sect_item *item, const char *key) {
+  return strcmp(item->key, key);
+}
+
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg,
+                                                const char *key) {
+  struct fmc_cfg_sect_item *item = NULL;
+  LL_SEARCH(cfg, item, key, cmp_key);
+  return item;
 }

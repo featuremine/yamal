@@ -1,29 +1,31 @@
 /******************************************************************************
-    COPYRIGHT (c) 2020 by Featuremine Corporation.
-    This software has been provided pursuant to a License Agreement
-    containing restrictions on its use.  This software contains
-    valuable trade secrets and proprietary information of
-    FeatureMine Corporation and is protected by law.  It may not be
-    copied or distributed in any form or medium, disclosed to third
-    parties, reverse engineered or used in any manner not provided
-    for in said License Agreement except with the prior written
-    authorization Featuremine Corporation.
+
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
 *****************************************************************************/
 
 #include <tclap/CmdLine.h>
 
 #include <fmc/component.h>
 #include <fmc/config.h>
+#include <fmc/process.h>
+#include <fmc/reactor.h>
 #include <fmc/signals.h>
 
 #include <fmc++/mpl.hpp>
 
 #include <ytp/version.h>
 
-#include <atomic>
-
-static std::atomic<bool> run = true;
-static void sig_handler(int s) { run = false; }
+struct fmc_reactor r;
+static void sig_handler(int s) { fmc_reactor_stop(&r); }
 
 struct deleter_t {
   void operator()(struct fmc_component_module *ptr) {
@@ -47,7 +49,14 @@ struct initdestroy_t {
     }
   }
 
-  void init(struct fmc_component_sys &sys) { fmc_component_sys_init(&sys); }
+  void init(struct fmc_component_sys &sys) {
+    fmc_component_sys_init(&sys);
+    fmc_error_t *err;
+    fmc_component_sys_paths_set_default(&sys, &err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to set default search paths for component modules: "
+        << fmc_error_msg(err);
+  }
   void destroy(struct fmc_component_sys &sys) {
     fmc_component_sys_destroy(&sys);
   }
@@ -68,8 +77,6 @@ using sys_ptr = scopevar_t<fmc_component_sys, initdestroy_t>;
 using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
 
 int main(int argc, char **argv) {
-  fmc_set_signal_handler(sig_handler);
-
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
@@ -88,6 +95,20 @@ int main(int argc, char **argv) {
   TCLAP::UnlabeledValueArg<std::string> componentArg(
       "component", "Component name", true, "component", "component");
   cmd.add(componentArg);
+
+  TCLAP::SwitchArg schedArg("k", "sched",
+                            "Run component scheduled (live by default)");
+  cmd.add(schedArg);
+
+  TCLAP::ValueArg<int> affinityArg("a", "affinity",
+                                   "set the CPU affinity of the main process",
+                                   false, 0, "cpuid");
+  cmd.add(affinityArg);
+
+  TCLAP::ValueArg<int> priorityArg(
+      "x", "priority", "set the priority of the main process (1-99)", false, 1,
+      "priority");
+  cmd.add(priorityArg);
 
   cmd.parse(argc, argv);
 
@@ -116,26 +137,37 @@ int main(int argc, char **argv) {
         << "Unable to load configuration file: " << fmc_error_msg(err);
   }
 
-  auto component = fmc_component_new(type, cfg.get(), &err);
+  fmc_reactor_init(&r);
+  fmc_component *component =
+      fmc_component_new(&r, type, cfg.get(), nullptr, &err);
+  (void)component;
   fmc_runtime_error_unless(!err)
       << "Unable to load component " << componentArg.getValue() << ": "
       << fmc_error_msg(err);
 
-  if (component->_vt->tp_sched) {
-    while (run) {
-      fm_time64_t now = component->_vt->tp_sched(component);
-      if (fm_time64_is_end(now)) {
-        break;
-      }
-      component->_vt->tp_proc(component, now);
-      fmc_runtime_error_unless(!fmc_error_has(&component->_err))
-          << "Component proc failed: " << fmc_error_msg(&component->_err);
+  if (affinityArg.isSet()) {
+    fmc_tid threadid = fmc_tid_cur(&err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to get current thread id: " << fmc_error_msg(err);
+
+    int cpuid = affinityArg.getValue();
+    fmc_set_affinity(threadid, cpuid, &err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to set current thread cpu affinity: " << fmc_error_msg(err);
+
+    if (priorityArg.isSet()) {
+      int priority = priorityArg.getValue();
+      fmc_set_sched_fifo(threadid, priority, &err);
+      fmc_runtime_error_unless(!err)
+          << "Unable to set current thread priority: " << fmc_error_msg(err);
     }
-  } else {
-    while (run && component->_vt->tp_proc(
-                      component, fm_time64_from_nanos(fmc_cur_time_ns())))
-      ;
   }
 
+  fmc_set_signal_handler(sig_handler);
+  fmc_reactor_run(&r, !schedArg.getValue(), &err);
+  fmc_runtime_error_unless(!err)
+      << "Unable to run reactor : " << fmc_error_msg(err);
+
+  fmc_reactor_destroy(&r);
   return 0;
 }

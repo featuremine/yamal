@@ -16,11 +16,14 @@ option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
+option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
 
 # Add the cmake folder so the FindSphinx module is found
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-if (BUILD_API_DOCS)
+find_package(Doxygen)
+if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
+    find_package(Doxygen)
     # Add subdir "docs" for Doxygen + Sphinx to use.
     add_subdirectory ("docs")
 endif ()
@@ -56,7 +59,10 @@ add_library(
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/memory.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
@@ -87,6 +93,10 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         stdc++fs
     )
 endif()
+install(
+    TARGETS
+    fmc
+)
 configure_file(
     "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc.pc.in"
     "${PROJECT_BINARY_DIR}/fmc.pc"
@@ -95,6 +105,12 @@ configure_file(
 install(
     FILES "${PROJECT_BINARY_DIR}/fmc.pc"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+)
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
 )
 
 add_library(
@@ -163,14 +179,26 @@ target_link_libraries(
     PUBLIC
     fmc
 )
-install(
-    TARGETS
-    ytp
-)
 set_target_properties(
     ytp
     PROPERTIES
     LINKER_LANGUAGE "C"
+)
+install(
+    TARGETS
+    ytp
+)
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/ytp"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+install(
+    DIRECTORY "${PROJECT_BINARY_DIR}/include/ytp"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
 )
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -196,29 +224,29 @@ if(BUILD_TOOLS)
     pkg_check_modules(TCLAP REQUIRED IMPORTED_TARGET tclap)
 
     add_executable(
-        fmc-component
-        "src/tools/fmc-component.cpp"
+       yamal-run
+       "src/tools/yamal-run.cpp"
     )
     target_link_libraries(
-        fmc-component
-        PRIVATE
-        ytp
-        fmc++
-        fmc
-        PkgConfig::TCLAP
-        pthread
+       yamal-run
+       PRIVATE
+       ytp
+       fmc++
+       fmc
+       PkgConfig::TCLAP
+       pthread
     )
     install(
-        TARGETS
-        fmc-component
+       TARGETS
+       yamal-run
     )
 
     add_executable(
-        ytp-daemon
-        "src/tools/ytp-daemon.cpp"
+        yamal-daemon
+        "src/tools/yamal-daemon.cpp"
     )
     target_link_libraries(
-        ytp-daemon
+        yamal-daemon
         PRIVATE
         ytp
         fmc++
@@ -227,15 +255,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-daemon
+        yamal-daemon
     )
 
     add_executable(
-        ytp-tail
-        "src/tools/ytp-tail.cpp"
+        yamal-tail
+        "src/tools/yamal-tail.cpp"
     )
     target_link_libraries(
-        ytp-tail
+        yamal-tail
         PRIVATE
         ytp
         fmc++
@@ -244,15 +272,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-tail
+        yamal-tail
     )
 
     add_executable(
-        ytp-perf
-        "src/tools/ytp-perf.cpp"
+        yamal-perf
+        "src/tools/yamal-perf.cpp"
     )
     target_link_libraries(
-        ytp-perf
+        yamal-perf
         PRIVATE
         ytp
         fmc++
@@ -261,15 +289,15 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-perf
+        yamal-perf
     )
 
     add_executable(
-        ytp-stats
-        "src/tools/ytp-stats.cpp"
+        yamal-stats
+        "src/tools/yamal-stats.cpp"
     )
     target_link_libraries(
-        ytp-stats
+        yamal-stats
         PRIVATE
         ytp
         fmc++
@@ -278,26 +306,13 @@ if(BUILD_TOOLS)
     )
     install(
         TARGETS
-        ytp-stats
+        yamal-stats
     )
 endif()
 if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif()
-
-install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
-    DESTINATION "./fmc"
-    FILES_MATCHING
-    PATTERN "*.h"
-)
-install(
-    DIRECTORY "${PROJECT_BINARY_DIR}/include/ytp"
-    DESTINATION "."
-    FILES_MATCHING
-    PATTERN "*.h"
-)
 
 set(CPACK_PACKAGE_VENDOR "Featuremine")
 set(CPACK_PACKAGE_CONTACT "support@featuremine.com")
