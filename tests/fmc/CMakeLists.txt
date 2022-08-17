@@ -23,6 +23,34 @@ set_target_properties(
     testcomponent
     PROPERTIES PREFIX ""
 )
+add_library(
+    iocomponent
+    SHARED
+    "iocomponent.c"
+)
+target_link_libraries(
+    iocomponent
+    PRIVATE
+    fmc
+)
+set_target_properties(
+    iocomponent
+    PROPERTIES PREFIX ""
+)
+add_library(
+    shutdowncomponent
+    SHARED
+    "shutdowncomponent.c"
+)
+target_link_libraries(
+    shutdowncomponent
+    PRIVATE
+    fmc
+)
+set_target_properties(
+    shutdowncomponent
+    PROPERTIES PREFIX ""
+)
 add_executable(
     tests_fmc_component
     "component.cpp"
