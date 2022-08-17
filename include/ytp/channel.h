@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -14,12 +14,12 @@
 
 /**
  * @file channel.h
- * @author Federico Ravchina
  * @date 23 Apr 2021
- * @brief File contains C declaration of channel layer of YTP
- *
+ * @brief File contains C declaration of channel layer of YTP.\n
  * A channel uniquely identifies a logical partition of a set of messages.
  *
+ * @par Description
+ * - Channel data message\n
  * <table>
  * <caption id="multi_row">Channel message</caption>
  * <tr><th colspan="3">peer/channel
@@ -48,24 +48,26 @@ typedef uint64_t ytp_channel_t;
 
 /**
  * @brief Reserves memory for data in the memory mapped list
+ * to be used to write to the file, on the channel level.
  *
- * @param[in] yamal
- * @param[in] sz the size of the data payload
- * @param[out] error
- * @return a writable pointer for data
+ * @param[out] yamal ytp_yamal_t object
+ * @param[in] sz size of the buffer to hold the memory
+ * @param[out] error out-parameter for error handling
+ * @return a buffer to hold the reserved memory
  */
 FMMODFUNC char *ytp_channel_reserve(ytp_yamal_t *yamal, size_t sz,
                                     fmc_error_t **error);
 
 /**
- * @brief Commits the data to the memory mapped list
+ * @brief Commits the data to the memory mapped node to write
+ * it to the file, on the channel level.
  *
- * @param[in] yamal
+ * @param[out] yamal ytp_yamal_t object
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
  * @param[in] data the value returned by ytp_channel_reserve
- * @param[out] error
- * @return ytp_iterator_t for the message
+ * @param[out] error out-parameter for error handling
+ * @return iterator to the next memory mapped node
  */
 FMMODFUNC ytp_iterator_t ytp_channel_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
                                             ytp_channel_t channel, void *data,
@@ -74,13 +76,14 @@ FMMODFUNC ytp_iterator_t ytp_channel_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
 /**
  * @brief Reads a message on channel level
  *
- * @param[in] yamal
- * @param[in] iterator
- * @param[out] peer
- * @param[out] channel
- * @param[out] sz
- * @param[out] data
- * @param[out] error
+ * @param[in] yamal ytp_yamal_t object
+ * @param[in] iterator iterator that points to the memory mapped node to read
+ * from
+ * @param[out] peer the peer that wrote the data
+ * @param[out] channel the channel that wrote the data
+ * @param[out] sz size of the read data
+ * @param[out] data pointer to the read data
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_channel_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                                 ytp_peer_t *peer, ytp_channel_t *channel,

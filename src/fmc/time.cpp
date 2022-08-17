@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -29,6 +29,98 @@
 #endif
 
 #include <chrono>
+
+fmc_time64_t fmc_time64_from_raw(int64_t value) {
+  fmc_time64_t res = {value};
+  return res;
+}
+
+fmc_time64_t fmc_time64_from_nanos(int64_t value) {
+  return fmc_time64_from_raw(value);
+}
+
+fmc_time64_t fmc_time64_from_seconds(int32_t value) {
+  return fmc_time64_from_nanos(value * 1000000000ULL);
+}
+
+int64_t fmc_time64_to_nanos(fmc_time64_t t) { return t.value; }
+
+double fmc_time64_to_fseconds(fmc_time64_t t) {
+  return (double)t.value / 1000000000.0;
+}
+
+int64_t fmc_time64_raw(fmc_time64_t time) { return time.value; }
+
+bool fmc_time64_less(fmc_time64_t a, fmc_time64_t b) {
+  return a.value < b.value;
+}
+
+bool fmc_time64_less_or_equal(fmc_time64_t a, fmc_time64_t b) {
+  return a.value <= b.value;
+}
+
+bool fmc_time64_greater(fmc_time64_t a, fmc_time64_t b) {
+  return a.value > b.value;
+}
+
+bool fmc_time64_greater_or_equal(fmc_time64_t a, fmc_time64_t b) {
+  return a.value >= b.value;
+}
+
+bool fmc_time64_equal(fmc_time64_t a, fmc_time64_t b) {
+  return a.value == b.value;
+}
+
+fmc_time64_t fmc_time64_min(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_less(a, b) ? a : b;
+}
+
+fmc_time64_t fmc_time64_max(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_greater(a, b) ? a : b;
+}
+
+int64_t fmc_time64_div(fmc_time64_t a, fmc_time64_t b) {
+  return a.value / b.value;
+}
+
+fmc_time64_t fmc_time64_add(fmc_time64_t a, fmc_time64_t b) {
+  fmc_time64_t res = {a.value + b.value};
+  return res;
+}
+
+void fmc_time64_inc(fmc_time64_t *a, fmc_time64_t b) { a->value += b.value; }
+
+fmc_time64_t fmc_time64_sub(fmc_time64_t a, fmc_time64_t b) {
+  fmc_time64_t res = {a.value - b.value};
+  return res;
+}
+
+fmc_time64_t fmc_time64_mul(fmc_time64_t a, int64_t b) {
+  fmc_time64_t res = {a.value * b};
+  return res;
+}
+
+fmc_time64_t fmc_time64_int_div(fmc_time64_t a, int64_t b) {
+  fmc_time64_t res = {a.value / b};
+  return res;
+}
+
+fmc_time64_t fmc_time64_start() {
+  fmc_time64_t res = {INT64_MIN};
+  return res;
+}
+
+fmc_time64_t fmc_time64_end() {
+  fmc_time64_t res = {INT64_MAX};
+  return res;
+}
+
+bool fmc_time64_is_end(fmc_time64_t time) { return time.value == INT64_MAX; }
+
+typedef struct {
+  fmc_time64_t start;
+  fmc_time64_t end;
+} fmc_time64_range_t;
 
 using namespace std;
 using namespace chrono;

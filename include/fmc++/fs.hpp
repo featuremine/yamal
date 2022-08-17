@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -26,7 +26,7 @@
 
 #include <fmc/platform.h>
 
-#if !defined(FMC_SYS_WIN) || (defined(__GNUC__) && __GNUC__ < 8)
+#if defined(FMC_SYS_LINUX) && defined(__GNUC__) && __GNUC__ < 8
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #else

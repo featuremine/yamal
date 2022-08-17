@@ -1,14 +1,14 @@
 /******************************************************************************
 
-       COPYRIGHT (c) 2020 by Featuremine Corporation.
-       This software has been provided pursuant to a License Agreement
-       containing restrictions on its use.  This software contains
-       valuable trade secrets and proprietary information of
-       FeatureMine Corporation and is protected by law.  It may not be
-       copied or distributed in any form or medium, disclosed to third
-       parties, reverse engineered or used in any manner not provided
-       for in said License Agreement except with the prior written
-       authorization from Featuremine Corporation
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
 
 *****************************************************************************/
 
@@ -25,11 +25,40 @@
 #pragma once
 
 #include <fmc/platform.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct fmc_time64 {
+  int64_t value;
+} fmc_time64_t;
+
+FMMODFUNC fmc_time64_t fmc_time64_from_raw(int64_t value);
+FMMODFUNC fmc_time64_t fmc_time64_from_nanos(int64_t value);
+FMMODFUNC fmc_time64_t fmc_time64_from_seconds(int32_t value);
+FMMODFUNC int64_t fmc_time64_to_nanos(fmc_time64_t t);
+FMMODFUNC double fmc_time64_to_fseconds(fmc_time64_t t);
+FMMODFUNC int64_t fmc_time64_raw(fmc_time64_t time);
+FMMODFUNC bool fmc_time64_less(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC bool fmc_time64_greater(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC bool fmc_time64_equal(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC bool fmc_time64_less_or_equal(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC bool fmc_time64_greater_or_equal(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_min(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_max(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC int64_t fmc_time64_div(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_add(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC void fmc_time64_inc(fmc_time64_t *a, fmc_time64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_sub(fmc_time64_t a, fmc_time64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_mul(fmc_time64_t a, int64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_int_div(fmc_time64_t a, int64_t b);
+FMMODFUNC fmc_time64_t fmc_time64_start();
+FMMODFUNC fmc_time64_t fmc_time64_end();
+FMMODFUNC bool fmc_time64_is_end(fmc_time64_t time);
 
 /**
  * @brief Converts given time since epoch into calendar time, expressed in UTC.

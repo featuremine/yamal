@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -34,8 +34,8 @@
 
 using namespace std;
 
-static bool fmc_exec(const char *cmd, const char **result) {
 #if defined(FMC_SYS_WIN)
+static bool fmc_exec(const char *cmd, const char **result) {
   static thread_local std::string result_buffer;
   char buffer[128];
   result_buffer = "";
@@ -54,10 +54,8 @@ static bool fmc_exec(const char *cmd, const char **result) {
   *result = result_buffer.c_str();
 
   return _pclose(pipe) == 0;
-#else
-  return false;
-#endif
 }
+#endif
 
 bool fmc_run_base_vs_test_diff(const char *base, const char *test) {
 #if defined(FMC_SYS_UNIX)

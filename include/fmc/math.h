@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -30,6 +30,36 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define FMC_MAX(a, b)                                                          \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a > _b ? _a : _b;                                                         \
+  })
+
+#define FMC_MIN(a, b)                                                          \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a < _b ? _a : _b;                                                         \
+  })
+
+#define FMC_LESS(a, b)                                                         \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a < _b;                                                                   \
+  })
+
+#define FMC_TYPED_PTR_LESS(type, a, b)                                         \
+  ({                                                                           \
+    type _a = *((type *)(a));                                                  \
+    type _b = *((type *)(b));                                                  \
+    _a < _b;                                                                   \
+  })
+
+#define FMC_SIZE_T_PTR_LESS(a, b) FMC_TYPED_PTR_LESS(size_t, a, b)
 
 #define fmc_sign(x) (((x) > 0) - ((x) < 0))
 

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -85,6 +85,17 @@ bool fmc_basedir_exists(const char *file_path, fmc_error_t **error) {
   auto msg = ec.message();
   FMC_ERROR_REPORT(error, msg.c_str());
   return false;
+}
+
+int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
+#ifdef FMC_SYS_UNIX
+  char sep = '/';
+#elif defined(FMC_SYS_WIN)
+  char sep = '\\';
+#else
+#error "Not supported"
+#endif
+  return snprintf(dest, sz, "%s%c%s", p1, sep, p2);
 }
 
 FILE *fmc_popen(const char *command, const char *read_mode,

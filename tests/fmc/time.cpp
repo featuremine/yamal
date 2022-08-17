@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2018 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -25,9 +25,42 @@
 #include <fmc/platform.h>
 #include <fmc/time.h>
 
-using namespace std;
+TEST(fmc, conversions) {
+  fmc_time64_t time = fmc_time64_from_nanos(10);
+  fmc_time64_t time_expected = fmc_time64_from_nanos(10);
+  int64_t timeraw = fmc_time64_raw(time);
+  int64_t timeraw_expected = fmc_time64_raw(time_expected);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_from_raw(timeraw)), timeraw_expected);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_from_nanos(timeraw)), timeraw_expected);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_from_seconds(timeraw)),
+            fmc_time64_raw(fmc_time64_from_nanos(timeraw * 1000000000ULL)));
+  ASSERT_EQ(fmc_time64_to_nanos(time), timeraw_expected);
+  ASSERT_EQ(fmc_time64_to_fseconds(fmc_time64_from_nanos(1000000000ULL)),
+            (double)1.0);
+  ASSERT_EQ(fmc_time64_raw(time), timeraw_expected);
+}
 
-#define ERROR_UNINITIALIZED_VALUE ((fmc_error_t *)1)
+TEST(fmc, comparisons) {
+  fmc_time64_t time1 = fmc_time64_from_raw(1);
+  fmc_time64_t time2 = fmc_time64_from_raw(2);
+  ASSERT_TRUE(fmc_time64_less(time1, time2));
+  ASSERT_FALSE(fmc_time64_greater(time1, time2));
+  ASSERT_FALSE(fmc_time64_equal(time1, time2));
+  ASSERT_FALSE(fmc_time64_is_end(time1));
+  ASSERT_TRUE(fmc_time64_is_end(fmc_time64_end()));
+}
+
+TEST(fmc, operators) {
+  fmc_time64_t time1 = fmc_time64_from_raw(10);
+  fmc_time64_t time2 = fmc_time64_from_raw(20);
+  ASSERT_EQ(fmc_time64_div(time2, time1), 2);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_add(time2, time1)), 30);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_sub(time2, time1)), 10);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_mul(time2, 10)), 200);
+  ASSERT_EQ(fmc_time64_raw(fmc_time64_int_div(time2, 10)), 2);
+  fmc_time64_inc(&time1, time2);
+  ASSERT_EQ(fmc_time64_raw(time1), 30);
+}
 
 TEST(fmc, strptime) {
   struct tm t {};

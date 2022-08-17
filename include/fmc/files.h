@@ -1,6 +1,6 @@
 /******************************************************************************
 
-        COPYRIGHT (c) 2017 by Featuremine Corporation.
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
         This software has been provided pursuant to a License Agreement
         containing restrictions on its use.  This software contains
         valuable trade secrets and proprietary information of
@@ -79,6 +79,20 @@ FMMODFUNC void fmc_basedir_mk(const char *file_path, fmc_error_t **error);
  * @return true if base directory of file_path exists, false otherwise
  */
 FMMODFUNC bool fmc_basedir_exists(const char *file_path, fmc_error_t **error);
+
+/**
+ * @brief Join two paths.
+ * If sz if 0, it resturns the size of the result string.
+ *
+ * @param dest buffer to store the string with the final path.
+ * @param sz size of dest buffer.
+ * @param p1 base path to join
+ * @param p2 last part of the path to join
+ * @return the number of characters that would have been written on the
+ * buffer, if ‘sz’ had been sufficiently large
+ */
+FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1,
+                            const char *p2);
 
 /**
  * @brief Opens a process by creating a pipe, forking, and invoking the shell

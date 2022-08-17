@@ -6,7 +6,7 @@
 *.test.log-info
 debug
 release
-subprojects/*
+subprojects/*/
 .format/*
 *.pyc
 doc

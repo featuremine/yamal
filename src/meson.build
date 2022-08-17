@@ -1,7 +1,7 @@
 srcs_c = files(
-    'fmc/cmp.c',
+    'cmp/cmp.c',
+    'murmur3/murmur3.c',
     'fmc/math.c',
-    'fmc/murmur3.c',
     'fmc/signals.c',
     'fmc/error.cpp',
     'fmc/files.cpp',
@@ -9,7 +9,13 @@ srcs_c = files(
     'fmc/time.cpp',
     'fmc/sockets.cpp',
     'fmc/process.cpp',
-    'fmc/extension.cpp'
+    'fmc/extension.c',
+    'fmc/config.c',
+    'fmc/component.c',
+    'fmc/reactor.c',
+    'fmc/string.c',
+    'fmc/prio_queue.c',
+    'fmc/memory.c'
 )
 
 srcs_cpp = files(

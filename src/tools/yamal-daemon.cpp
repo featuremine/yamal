@@ -1,13 +1,15 @@
 /******************************************************************************
-    COPYRIGHT (c) 2020 by Featuremine Corporation.
-    This software has been provided pursuant to a License Agreement
-    containing restrictions on its use.  This software contains
-    valuable trade secrets and proprietary information of
-    FeatureMine Corporation and is protected by law.  It may not be
-    copied or distributed in any form or medium, disclosed to third
-    parties, reverse engineered or used in any manner not provided
-    for in said License Agreement except with the prior written
-    authorization Featuremine Corporation.
+
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
 *****************************************************************************/
 
 #include <tclap/CmdLine.h>
@@ -29,7 +31,7 @@
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(std::string name, double rate, size_t initial_sz)
-      : name_(std::move(name)), rate_(rate), initial_sz_(initial_sz) {
+      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
     fmc_runtime_error_unless(!error_)
         << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
