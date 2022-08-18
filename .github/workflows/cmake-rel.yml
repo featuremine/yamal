@@ -49,6 +49,7 @@ jobs:
       run: cpack -G DEB
         
     - name: Upload package
+      working-directory: ${{github.workspace}}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload ${{github.ref_name}} ${{github.workspace}}/build/yamal-${{github.ref_name}}-Linux.deb
+      run: gh release upload ${{github.ref_name}} ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.deb
