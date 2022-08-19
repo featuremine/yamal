@@ -50,11 +50,32 @@ fmc_component_sys_destroy(&sys);
 #include <fmc/platform.h>
 #include <fmc/time.h>
 #include <stddef.h>
-#include <uthash/utarray.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef void(fmc_ctor_f)(void *dst, const void *src);
+typedef void(fmc_dtor_f)(void *elt);
+typedef void(fmc_init_f)(void *elt);
+typedef struct {
+  size_t sz;
+  fmc_init_f *init;
+  fmc_ctor_f *copy;
+  fmc_dtor_f *dtor;
+} fmc_icd;
+
+typedef struct {
+  unsigned i, n; /* i: index of next available slot, n: num slots */
+  fmc_icd icd;    /* initializer, copy and destructor functions */
+  char *d;       /* n slots of size icd->sz*/
+} fmc_array;
+
+#define fmc_array_init(a, _icd)                                                  \
+  do {                                                                         \
+    memset(a, 0, sizeof(fmc_array));                                            \
+    (a)->icd = *(_icd);                                                        \
+  } while (0)
 
 struct sched_item {
   fmc_time64_t t;
@@ -100,7 +121,7 @@ struct fmc_reactor_ctx {
   struct fmc_reactor_ctx_out
       *out_tps;  // list of fmc_reactor_component_output {name, type}
                  // use double linked list, add them with append at the end
-  UT_array deps; // change to use a structure that holds both dep idx and input
+  fmc_array deps; // change to use a structure that holds both dep idx and input
                  // idx array of array of structures - no lists.
                  // fmc_reactor_ctx_dep
 };
@@ -114,9 +135,9 @@ struct fmc_reactor_stop_item {
 struct fmc_reactor {
   struct fmc_reactor_ctx **ctxs;
   size_t size;
-  UT_array sched;
-  UT_array queued;
-  UT_array toqueue;
+  fmc_array sched;
+  fmc_array queued;
+  fmc_array toqueue;
   size_t finishing;
   int stop;
   volatile int stop_signal;
