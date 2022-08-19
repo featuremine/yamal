@@ -37,17 +37,17 @@
 
 #define FMC_REACTOR_HARD_STOP 3
 
-UT_icd sched_item_icd = {.sz = sizeof(struct sched_item)};
+fmc_icd sched_item_icd = {.sz = sizeof(struct sched_item)};
 
-UT_icd size_t_icd = {.sz = sizeof(size_t)};
+fmc_icd size_t_icd = {.sz = sizeof(size_t)};
 
 void fmc_reactor_init(struct fmc_reactor *reactor) {
   // important: initialize lists to NULL
   reactor->stop_list = NULL;
   memset(reactor, 0, sizeof(*reactor));
-  utarray_init(&reactor->sched, &sched_item_icd);
-  utarray_init(&reactor->queued, &size_t_icd);
-  utarray_init(&reactor->toqueue, &size_t_icd);
+  fmc_array_init(&reactor->sched, &sched_item_icd);
+  fmc_array_init(&reactor->queued, &size_t_icd);
+  fmc_array_init(&reactor->toqueue, &size_t_icd);
   fmc_pool_init(&reactor->pool);
   fmc_error_init_none(&reactor->err);
 }
@@ -86,7 +86,7 @@ static void utarr_init(void *elt) {
   deps.dtor = NULL;
   deps.copy = NULL;
   deps.init = NULL;
-  utarray_init(_elt, &deps);
+  fmc_array_init(_elt, &deps);
 }
 
 void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
@@ -94,12 +94,12 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
   ctx->idx = reactor->size;
-  UT_icd deps;
+  fmc_icd deps;
   deps.sz = sizeof(UT_array);
   deps.dtor = utarr_del;
   deps.copy = NULL;
   deps.init = utarr_init;
-  utarray_init(&ctx->deps, &deps);
+  fmc_array_init(&ctx->deps, &deps);
   fmc_error_init_none(&ctx->err);
 }
 
