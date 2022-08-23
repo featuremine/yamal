@@ -46,7 +46,7 @@ jobs:
       
     - name: Package
       working-directory: ${{github.workspace}}/build
-      run: cpack -G DEB
+      run: cpack -G "DEB;RPM"
         
     - name: Upload package
       working-directory: ${{github.workspace}}
