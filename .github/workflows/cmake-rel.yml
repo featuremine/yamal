@@ -48,7 +48,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: tar -czvf sphinxdocs-$(cat ../VERSION).tar.gz docs/sphinx && gh release upload ${{github.ref_name}} sphinxdocs-$(cat ../VERSION).tar.gz
+      run: tar -czvf sphinxdocs-v$(cat ../VERSION).tar.gz docs/sphinx && gh release upload ${{github.ref_name}} sphinxdocs-v$(cat ../VERSION).tar.gz
       
     - name: Package
       working-directory: ${{github.workspace}}/build
