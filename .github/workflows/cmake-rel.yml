@@ -44,6 +44,12 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
       
+    - name: Compress and upload documentation
+      working-directory: ${{github.workspace}}/build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: tar -czvf sphinxdocs-$(cat ../VERSION).tar.gz docs/sphinx && gh release upload ${{github.ref_name}} sphinxdocs-$(cat ../VERSION).tar.gz
+      
     - name: Package
       working-directory: ${{github.workspace}}/build
       run: cpack -G DEB
