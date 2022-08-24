@@ -1,4 +1,4 @@
-name: CMake
+name: CMake Ubuntu PR
 
 on:
   pull_request:
