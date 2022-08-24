@@ -317,7 +317,7 @@ _from_string_view_double(const std::string_view &s) noexcept {
   bool negative = s[0] == '-';
   const auto se = negative ? std::string_view(s.data() + 1, s.size() - 1) : s;
   unsigned long long sum = 0;
-  unsigned point_pos = 1; // > 1 indicates that point has been seen
+  unsigned long long point_pos = 1; // > 1 indicates that point has been seen
   unsigned i = 0;         // num of characters (including period)
   unsigned long long digit_count = 1;
   for (auto it = se.rbegin(), e = se.rend(); it != e; ++it, ++i) {
