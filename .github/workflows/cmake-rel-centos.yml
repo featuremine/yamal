@@ -22,8 +22,12 @@ jobs:
     steps:
     - uses: actions/checkout@main
 
+    - name: Check version number matches reference name
+      working-directory: ${{github.workspace}}
+      run:  echo v$(cat VERSION) && [[ v$(cat VERSION) == ${{github.ref_name}} ]]
+
     - name: Install dependencies
-      run: yum -y install clang cmake autoconf automake pkgconfig gcc gcc-c++ doxygen libstdc++-static wget
+      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget
     - name: Install tclap
       run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure --prefix=/usr && make && make install && popd && rm -rf tclap-code
     - name: Install gtest
