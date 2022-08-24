@@ -23,10 +23,8 @@ jobs:
 
     - name: Install dependencies
       run: yum -y install clang cmake autoconf automake pkgconfig gcc gcc-c++
-#    - name: check directories
-#      run: ls / && ls /__w/ && ls /__w/usr
-#    - name: Install tclap
-#      run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure && make && make install && popd && rm -rf tclap-code
+    - name: Install tclap
+      run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure && make && make install && popd && rm -rf tclap-code
     - name: Install gtest
       run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && make install && cd ../../ && rm -rf googletest
     - name: Install Doxygen
