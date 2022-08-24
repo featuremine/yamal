@@ -34,3 +34,16 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME fmc_variant_map COMMAND tests_fmc_variant_map)
+
+add_executable(
+    tests_fmc_strings
+    "strings.cpp"
+)
+target_link_libraries(
+    tests_fmc_strings
+    PRIVATE
+    fmc
+    fmc++
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_strings COMMAND tests_fmc_strings)
