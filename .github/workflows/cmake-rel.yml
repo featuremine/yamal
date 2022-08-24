@@ -44,11 +44,15 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
       
-    - name: Compress and upload documentation
+    - name: Compress documentation
+      working-directory: ${{github.workspace}}/build
+      run: tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
+      
+    - name: Upload documentation
       working-directory: ${{github.workspace}}/build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . && gh release upload ${{github.ref_name}} docs-v$(cat ../VERSION).tar.gz
+      run: gh release upload ${{github.ref_name}} docs-v$(cat ../VERSION).tar.gz
       
     - name: Package
       working-directory: ${{github.workspace}}/build
