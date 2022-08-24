@@ -1,4 +1,4 @@
-name: CMake Ubuntu Release
+name: CMake Release Ubuntu
 
 on:
   release:

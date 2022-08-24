@@ -1,4 +1,4 @@
-name: CMake CentOS PR
+name: CMake PR CentOS
 
 on:
   pull_request:

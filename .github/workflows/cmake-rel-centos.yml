@@ -1,4 +1,4 @@
-name: CMake CentOS Release
+name: CMake Release CentOS
 
 on:
   release:
