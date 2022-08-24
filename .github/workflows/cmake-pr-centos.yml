@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@main
 
     - name: Install dependencies
-      run: yum -y install clang cmake autoconf automake pkgconfig gcc gcc-c++ doxygen
+      run: yum -y install clang cmake autoconf automake pkgconfig gcc gcc-c++ doxygen libstdc++-static
     - name: Install tclap
       run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure --prefix=/usr && make && make install && popd && rm -rf tclap-code
     - name: Install gtest
