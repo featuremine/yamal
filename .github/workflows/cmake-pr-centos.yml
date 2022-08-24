@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: yum -y install cmake pkgconfig doxygen libstdc++-static wget
     - name: Install tclap
-      run: yum install -y libtclap-devel
+      run: yum install -y tclap-devel
     - name: Install gtest
       run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && make install && cd ../../ && rm -rf googletest
     - name: Upgrade packaging
