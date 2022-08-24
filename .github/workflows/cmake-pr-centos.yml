@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@main
 
     - name: Install dependencies
-      run: yum -y install clang cmake autoconf automake pkgconfig
+      run: yum -y install clang cmake autoconf automake pkgconfig gcc gcc-c++
 #    - name: check directories
 #      run: ls / && ls /__w/ && ls /__w/usr
 #    - name: Install tclap
