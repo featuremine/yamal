@@ -1,6 +1,7 @@
 project('yamal', 'cpp', 'c', version:'7.2.11')
 
 version = meson.project_version()
+is_subproject = meson.is_subproject()
 
 is_windows = build_machine.system() == 'windows'
 is_macos = build_machine.system() == 'darwin'
@@ -76,8 +77,6 @@ dl = []
 if is_linux
   dl = cpp_compiler.find_library('dl', required : true)
 endif
-
-is_subproject = meson.is_subproject()
 
 if is_windows
 base = 'C:/vcpkg/installed/x64-windows'
