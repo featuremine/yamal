@@ -28,7 +28,7 @@ jobs:
     - name: Install gtest
       run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && make install && cd ../../ && rm -rf googletest
     - name: Upgrade packaging
-      run: pip3 install -U packaging
+      run: pip3 install packaging==21.3
     - name: Install sphinx
       run: yum -y install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install mistune==0.8.4 && pip3 install m2r && pip3 install sphinx-autodoc-typehints
       
@@ -38,7 +38,6 @@ jobs:
       run: cmake -DBUILD_TOOLS=OFF -B $PWD/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       #run: cmake -DBUILD_TOOLS=OFF -DBUILD_API_DOCS=OFF -B $PWD/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       # TODO: To build the tools, use newer cmake
-      # TODO: Build the docs. Fix the error: AttributeError: 'Version' object has no attribute 'release'
       
     - name: Build
       # Build your program with the given configuration
