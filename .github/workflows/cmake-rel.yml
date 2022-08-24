@@ -22,7 +22,7 @@ jobs:
 
     - name: Check version number matches reference name
       working-directory: ${{github.workspace}}
-      run:  echo && [[ yamal/$(cat VERSION) == ${{github.ref_name}} ]]
+      run:  echo yamal/v$(cat VERSION) && [[ yamal/$(cat VERSION) == ${{github.ref_name}} ]]
 
     - name: Install tclap
       run: sudo apt-get install libtclap-dev
