@@ -154,12 +154,38 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   return item ? item->t : fmc_time64_end();
 }
 
-size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
+bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **usr_error) {
-  fmc_error_clear(usr_error);
   fmc_error_t *error = &reactor->err;
   size_t completed = 0;
+
+  if (fmc_error_has(&reactor->err)) goto cleanup;
+
+  // NOTE: code handling stop in a thread safe way
+  int stop_prev = reactor->stop;
+  reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
+  if (reactor->stop && !stop_prev) {
+    struct fmc_reactor_stop_item *item = NULL;
+    struct fmc_reactor_stop_item *tmp = NULL;
+    DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
+      struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
+      if (!ctx->finishing && ctx->shutdown) {
+        ++reactor->finishing;
+        ctx->finishing = true;
+        ctx->shutdown(ctx->comp, ctx);
+      }
+    }
+  }
+
+  bool busy = utarray_len(&reactor->toqueue) ||
+              utarray_len(&(reactor->sched)) ||
+              utarray_len(&reactor->queued);
+  bool stopped = reactor->stop && !reactor->finishing;
+  bool hardstop = reactor->stop >= FMC_REACTOR_HARD_STOP;
+  if (!busy || stopped || hardstop) return false;
+
   ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
+  // NOTE: queue expried componenents
   do {
     struct sched_item *item =
         (struct sched_item *)utarray_front(&reactor->sched);
@@ -174,59 +200,46 @@ size_t fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     size_t *item = (size_t *)utarray_front(&reactor->queued);
     if (!item)
       break;
-    struct fmc_reactor_ctx *ctx = reactor->ctxs[*item];
-    if (*item != last && !fmc_error_has(&ctx->err) && ctx->exec) {
+    size_t ctxidx = *item;
+    utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
+    struct fmc_reactor_ctx *ctx = reactor->ctxs[ctxidx];
+    if (item != last && !fmc_error_has(&ctx->err) && ctx->exec) {
       ctx->exec(ctx->comp, ctx, now);
       if (fmc_error_has(&ctx->err)) {
-        fmc_error_set(usr_error, "failed to run component %s with error: %s",
-                      ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
-        return completed;
+        if (fmc_error_has(usr_error)) {
+          fmc_error_set(usr_error, "%s\nalso, failed to run component %s with error: %s",
+                        fmc_error_msg(usr_error),
+                        ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
+        } else {
+          fmc_error_set(usr_error, "failed to run component %s with error: %s",
+                        ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
+        }
       }
-      ++completed;
     }
-    last = *item;
-    utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
+    last = ctxidx;
   };
 cleanup:
   if (fmc_error_has(&reactor->err)) {
     fmc_error_set(usr_error, "failed to run reactor once with error: %s",
                   fmc_error_msg(&reactor->err));
+    return false;
   }
-  return completed;
+  if (*usr_error && !reactor->stop) {
+    fmc_reactor_stop(reactor);
+  }
+  return true;
 }
 
 void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                      fmc_error_t **error) {
   fmc_error_clear(error);
-  while (!fmc_error_has(&reactor->err)) {
-    int stop_prev = reactor->stop;
-    reactor->stop = __atomic_load_n(&reactor->stop_signal, __ATOMIC_SEQ_CST);
-    if (reactor->stop && !stop_prev) {
-      struct fmc_reactor_stop_item *item = NULL;
-      struct fmc_reactor_stop_item *tmp = NULL;
-      DL_FOREACH_SAFE(reactor->stop_list, item, tmp) {
-        struct fmc_reactor_ctx *ctx = reactor->ctxs[item->idx];
-        if (!ctx->finishing && ctx->shutdown) {
-          ++reactor->finishing;
-          ctx->finishing = true;
-          ctx->shutdown(ctx->comp, ctx);
-        }
-      }
-    }
-
-    fmc_time64_t next = fmc_reactor_sched(reactor);
-    fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns()) : next;
-    if ((!utarray_len(&reactor->toqueue) && fmc_time64_is_end(next) &&
-         !utarray_len(&reactor->queued)) ||
-        (reactor->stop && !reactor->finishing) ||
-        reactor->stop >= FMC_REACTOR_HARD_STOP) {
+  do {
+    fmc_time64_t now = live
+                       ? fmc_time64_from_nanos(fmc_cur_time_ns())
+                       : fmc_reactor_sched(reactor);
+    if(!fmc_reactor_run_once(reactor, now, error))
       break;
-    }
-    fmc_reactor_run_once(reactor, now, error);
-    if (*error && !reactor->stop) {
-      fmc_reactor_stop(reactor);
-    }
-  };
+  } while(true);
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
