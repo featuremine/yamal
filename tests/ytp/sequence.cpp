@@ -835,7 +835,7 @@ TEST(sequence, peer_simple) {
 
   ytp_sequence_peer_cb_rm(seq, peer_cb, &output, &error);
 
-  auto producer3 = ytp_sequence_peer_decl(seq, 9, "producer3", &error);
+  (void)ytp_sequence_peer_decl(seq, 9, "producer3", &error);
 
   while (ytp_sequence_poll(seq, &error))
     ;
@@ -908,10 +908,13 @@ TEST(sequence, idempotence_simple_1) {
   while (ytp_sequence_poll(seq, &error))
     ;
 
-  auto consumer2 = ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
-  auto consumer2_2 = ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
+  // consumer_2
+  (void)ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
+  // consumer2_2
+  (void)ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
   auto producer2 = ytp_sequence_peer_decl(seq, 9, "producer2", &error);
-  auto producer2_2 = ytp_sequence_peer_decl(seq, 9, "producer2", &error);
+  // producer2_2
+  (void)ytp_sequence_peer_decl(seq, 9, "producer2", &error);
   auto channel2 =
       ytp_sequence_ch_decl(seq, consumer1, 1000, 13, "main/channel2", &error);
   auto channel2_2 =
@@ -956,7 +959,6 @@ TEST(sequence, idempotence_simple_1) {
   ytp_peer_t peer;
   ytp_channel_t channel;
   uint64_t time;
-  char control;
   size_t sz;
   const char *data;
   auto *yamal = ytp_yamal_new(fd, &error);
@@ -1210,8 +1212,7 @@ TEST(sequence, leading_slash_test) {
     ;
   ASSERT_EQ(error, nullptr);
 
-  auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 9, "/channel2", &error);
+  (void)ytp_sequence_ch_decl(seq, consumer1, 0, 9, "/channel2", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(channel1, 0);
@@ -1277,14 +1278,13 @@ TEST(sequence, read_only_1) {
   ASSERT_EQ(string_view(fmc_error_msg(error)).substr(0, 52),
             "unable to reserve using a readonly file descriptor (");
 
-  auto consumer2 = ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
+  (void)ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
   ASSERT_NE(error, nullptr);
 
   ASSERT_EQ(string_view(fmc_error_msg(error)).substr(0, 52),
             "unable to reserve using a readonly file descriptor (");
 
-  auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel2", &error);
+  (void)ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel2", &error);
   ASSERT_NE(error, nullptr);
 
   ASSERT_EQ(string_view(fmc_error_msg(error)).substr(0, 52),

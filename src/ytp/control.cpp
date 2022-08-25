@@ -74,15 +74,14 @@ static void read_msg(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
   ytp_time_read(&ctrl->yamal, it, peer, channel, time, sz, data, error);
   if (!*error) {
     if (ytp_peer_ann(*peer)) {
-      auto &peer_d = process_peer(ctrl, std::string_view(*data, *sz));
+      (void)process_peer(ctrl, std::string_view(*data, *sz));
     } else {
       switch (*channel) {
       case YTP_CHANNEL_ANN: {
-        auto &channel_d =
-            process_channel(ctrl, *peer, std::string_view(*data, *sz));
+        (void)process_channel(ctrl, *peer, std::string_view(*data, *sz));
       } break;
       case YTP_CHANNEL_SUB: {
-        auto &sub_d = process_sub(ctrl, *peer, std::string_view(*data, *sz));
+        (void)process_sub(ctrl, *peer, std::string_view(*data, *sz));
       } break;
       case YTP_CHANNEL_DIR: {
         process_dir(ctrl, *peer, std::string_view(*data, *sz));

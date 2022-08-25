@@ -262,12 +262,11 @@ struct node : fmc::configs::interface::node {
       return std::to_string(*pval);
     } else if (auto pval = std::get_if<fmc::time>(&val_)) {
       return std::to_string(*pval);
-    } else if (auto pval = std::get_if<section>(&val_)) {
+    } else if (std::get_if<section>(&val_)) {
       // TODO: Implement
       return std::string();
     }
-
-    auto pval = std::get_if<array>(&val_);
+    // std::get_if<array>(&val_)
 
     fmc_runtime_error_unless(false)
         << "Unable to generate string representation of object";
@@ -279,23 +278,23 @@ struct node : fmc::configs::interface::node {
 
   fmc::configs::interface::node::_type type() override {
     // TODO: Migrate to visitor pattern
-    if (auto pval = std::get_if<std::string>(&val_)) {
+    if (std::get_if<std::string>(&val_)) {
       return fmc::configs::interface::node::STRING;
-    } else if (auto pval = std::get_if<int>(&val_)) {
+    } else if (std::get_if<int>(&val_)) {
       return fmc::configs::interface::node::INTEGER;
-    } else if (auto pval = std::get_if<long>(&val_)) {
+    } else if (std::get_if<long>(&val_)) {
       return fmc::configs::interface::node::LONG;
-    } else if (auto pval = std::get_if<unsigned>(&val_)) {
+    } else if (std::get_if<unsigned>(&val_)) {
       return fmc::configs::interface::node::UNSIGNED;
-    } else if (auto pval = std::get_if<bool>(&val_)) {
+    } else if (std::get_if<bool>(&val_)) {
       return fmc::configs::interface::node::BOOL;
-    } else if (auto pval = std::get_if<double>(&val_)) {
+    } else if (std::get_if<double>(&val_)) {
       return fmc::configs::interface::node::FLOATING_POINT;
-    } else if (auto pval = std::get_if<fmc::time>(&val_)) {
+    } else if (std::get_if<fmc::time>(&val_)) {
       return fmc::configs::interface::node::TIME;
-    } else if (auto pval = std::get_if<section>(&val_)) {
+    } else if (std::get_if<section>(&val_)) {
       return fmc::configs::interface::node::SECTION;
-    } else if (auto pval = std::get_if<array>(&val_)) {
+    } else if (std::get_if<array>(&val_)) {
       return fmc::configs::interface::node::ARRAY;
     }
     return fmc::configs::interface::node::INVALID;

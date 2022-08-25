@@ -138,7 +138,6 @@ static void threaded(bool enable_thread) {
     auto *yamal = ytp_yamal_new_2(fd, enable_thread, &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(yamal, nullptr);
-    ytp_iterator_t iter;
     unsigned count = 0;
     unsigned misses = 0;
     unsigned last_idx = 0;
@@ -275,7 +274,6 @@ static void seektell(bool enable_thread) {
   auto *yamal = ytp_yamal_new_2(fd, enable_thread, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
-  ytp_iterator_t iter;
   auto it = ytp_yamal_begin(yamal, &error);
   ASSERT_EQ(error, nullptr);
   auto end = ytp_yamal_end(yamal, &error);
