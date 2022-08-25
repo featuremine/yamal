@@ -407,6 +407,7 @@ static void allocate_out_of_range_page(bool enable_thread) {
   error = (fmc_error_t *)1;
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
+  fclose(fp);
 }
 
 TEST(yamal, allocate_out_of_range_page) {
