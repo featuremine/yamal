@@ -1068,6 +1068,8 @@ TEST(sequence, idempotence_simple_2) {
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "peer1");
 
+  ytp_sequence_del(seq, &error);
+  ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
@@ -1118,6 +1120,8 @@ TEST(sequence, idempotence_simple_3) {
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(output[0], "channel1");
 
+  ytp_sequence_del(seq, &error);
+  ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
@@ -1168,6 +1172,8 @@ TEST(sequence, idempotence_simple_4) {
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(output[0], "channel1");
 
+  ytp_sequence_del(seq, &error);
+  ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
