@@ -1,4 +1,17 @@
 add_executable(
+    tests_fmc_config
+    "config.cpp"
+)
+target_link_libraries(
+    tests_fmc_config
+    PRIVATE
+    fmc
+    fmc++
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_config COMMAND tests_fmc_config)
+
+add_executable(
     tests_fmc_shared_map
     "shared_map.cpp"
 )

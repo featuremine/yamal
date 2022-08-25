@@ -100,7 +100,10 @@ target_link_libraries(
     fmc
     PkgConfig::GTEST
 )
-add_test(NAME fmc_extension COMMAND tests_fmc_extension)
+add_test(
+    NAME fmc_extension
+    COMMAND tests_fmc_extension "$<TARGET_FILE:testcomponent>"
+)
 
 add_executable(
     tests_fmc_files
