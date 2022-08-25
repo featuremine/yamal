@@ -1141,6 +1141,10 @@ TEST(timeline, idempotence_simple_2) {
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "peer1");
 
+  ytp_timeline_del(timeline, &error);
+  ASSERT_EQ(error, nullptr);
+  ytp_control_del(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
@@ -1194,6 +1198,10 @@ TEST(timeline, idempotence_simple_3) {
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(output[0], "channel1");
 
+  ytp_timeline_del(timeline, &error);
+  ASSERT_EQ(error, nullptr);
+  ytp_control_del(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
@@ -1247,6 +1255,10 @@ TEST(timeline, idempotence_simple_4) {
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(output[0], "channel1");
 
+  ytp_timeline_del(timeline, &error);
+  ASSERT_EQ(error, nullptr);
+  ytp_control_del(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
@@ -1626,6 +1638,13 @@ TEST(timeline, data_callback_removal_1) {
   expected = {3};
   EXPECT_EQ(execution, expected);
   execution.clear();
+
+  ytp_timeline_del(timeline, &error);
+  ASSERT_EQ(error, nullptr);
+  ytp_control_del(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
 }
 
 TEST(timeline, data_callback_removal_2) {
@@ -1696,6 +1715,13 @@ TEST(timeline, data_callback_removal_2) {
   expected = {1, 2};
   EXPECT_EQ(execution, expected);
   execution.clear();
+
+  ytp_timeline_del(timeline, &error);
+  ASSERT_EQ(error, nullptr);
+  ytp_control_del(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
