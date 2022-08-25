@@ -266,7 +266,6 @@ struct node : fmc::configs::interface::node {
       // TODO: Implement
       return std::string();
     }
-    // std::get_if<array>(&val_)
 
     fmc_runtime_error_unless(false)
         << "Unable to generate string representation of object";

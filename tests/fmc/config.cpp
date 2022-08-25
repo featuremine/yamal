@@ -148,7 +148,9 @@ sect_ptr parse_cfg(const std::vector<std::string_view> &config_parts,
       if (i > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
       }
-      write(fd, config_parts[i].data(), config_parts[i].size());
+      if(write(fd, config_parts[i].data(), config_parts[i].size()) != (ssize_t)config_parts[i].size()) {
+        return;
+      }
     }
     fmc_error_t *err;
     fmc_fclose(fd, &err);
