@@ -592,28 +592,31 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
 cleanup : {
   void *val = NULL;
   do {
-    val =
-      utarray_find(&ctx->reactor->queued, (const void *)&curridx, inequal_cmp);
-    if (!val) break;
+    val = utarray_find(&ctx->reactor->queued, (const void *)&curridx,
+                       inequal_cmp);
+    if (!val)
+      break;
     utheap_erase(&ctx->reactor->queued,
-                utarray_eltidx(&ctx->reactor->queued, val),
-                FMC_SIZE_T_PTR_LESS);
+                 utarray_eltidx(&ctx->reactor->queued, val),
+                 FMC_SIZE_T_PTR_LESS);
   } while (true);
   do {
-    val =
-      utarray_find(&ctx->reactor->toqueue, (const void *)&curridx, inequal_cmp);
-    if (!val) break;
+    val = utarray_find(&ctx->reactor->toqueue, (const void *)&curridx,
+                       inequal_cmp);
+    if (!val)
+      break;
     utheap_erase(&ctx->reactor->toqueue,
-                utarray_eltidx(&ctx->reactor->toqueue, val),
-                FMC_SIZE_T_PTR_LESS);
+                 utarray_eltidx(&ctx->reactor->toqueue, val),
+                 FMC_SIZE_T_PTR_LESS);
   } while (true);
   do {
     val = utarray_find(&ctx->reactor->sched, (const void *)&curridx,
                        inequal_idx_cmp);
     if (!val)
       break;
-    utheap_erase(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val),
-                FMC_INT64_T_PTR_LESS);
+    utheap_erase(&ctx->reactor->sched,
+                 utarray_eltidx(&ctx->reactor->sched, val),
+                 FMC_INT64_T_PTR_LESS);
   } while (true);
 }
   fmc_reactor_ctx_del(ctx);
