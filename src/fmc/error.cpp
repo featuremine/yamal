@@ -129,6 +129,7 @@ void fmc_error_cat(fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
   fmc_error_t res;
   fmc_error_init_join(&res, err1, err2, sep);
   fmc_error_cpy(err1, &res);
+  fmc_error_destroy(&res);
 }
 
 bool fmc_error_has(fmc_error_t *err) { return err->code != FMC_ERROR_NONE; }

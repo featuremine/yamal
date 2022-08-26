@@ -91,6 +91,21 @@ target_link_libraries(
 add_test(NAME fmc_error COMMAND tests_fmc_error)
 
 add_executable(
+    tests_fmc_extension
+    "extension.cpp"
+)
+target_link_libraries(
+    tests_fmc_extension
+    PRIVATE
+    fmc
+    PkgConfig::GTEST
+)
+add_test(
+    NAME fmc_extension
+    COMMAND tests_fmc_extension "$<TARGET_FILE:testcomponent>"
+)
+
+add_executable(
     tests_fmc_files
     "files.cpp"
 )
@@ -137,3 +152,15 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME fmc_memory COMMAND tests_fmc_memory)
+
+add_executable(
+    tests_fmc_priority_queue
+    "priority_queue.cpp"
+)
+target_link_libraries(
+    tests_fmc_priority_queue
+    PRIVATE
+    fmc
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_priority_queue COMMAND tests_fmc_priority_queue)
