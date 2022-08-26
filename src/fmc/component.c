@@ -508,6 +508,10 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
     _el;                                                                       \
   })
 
+int inequal_cmp(const void *a, const void *b) {
+  return *(const size_t *)a - *(const size_t *)b;
+}
+
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_type *tp,
                                         struct fmc_cfg_sect_item *cfg,
@@ -522,8 +526,9 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   char *in_types[in_sz + 1];
   UT_array *updated_deps[in_sz + 1];
   memset(updated_deps, 0, sizeof(updated_deps));
-  struct fmc_reactor_ctx ctx;
-  fmc_reactor_ctx_init(reactor, &ctx);
+  struct fmc_reactor_ctx *ctx = fmc_reactor_ctx_new(reactor, usr_error);
+  if (!ctx)
+    goto cleanup;
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
@@ -563,19 +568,19 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   in_types[in_sz] = NULL;
 
-  item->comp = tp->tp_new(cfg, &ctx, in_types);
-  if (fmc_error_has(&ctx.err)) {
+  item->comp = tp->tp_new(cfg, ctx, in_types);
+  if (fmc_error_has(&ctx->err)) {
     fmc_error_set(usr_error,
                   "failed to create new component of type %s with error: %s",
-                  tp->tp_name, fmc_error_msg(&ctx.err));
+                  tp->tp_name, fmc_error_msg(&ctx->err));
     goto cleanup;
   }
   item->comp->_vt = tp;
-  ctx.comp = item->comp;
-  fmc_reactor_ctx_emplace(&ctx, inps, usr_error); // copy the context
+  item->comp->_ctx = ctx;
+  ctx->comp = item->comp;
+  fmc_reactor_ctx_take(ctx, inps, usr_error); // copy the context
   if (*usr_error)
     goto cleanup;
-  item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {
     struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
@@ -589,7 +594,23 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
-  fmc_reactor_ctx_destroy(&ctx);
+  if (utarray_find(&ctx->reactor->queued, (const void *)&reactor->size,
+                   inequal_cmp)) {
+    utarray_resize(&ctx->reactor->queued,
+                   utarray_len(&ctx->reactor->queued) - 1);
+  }
+  if (utarray_find(&ctx->reactor->toqueue, (const void *)&reactor->size,
+                   inequal_cmp)) {
+    utarray_resize(&ctx->reactor->toqueue,
+                   utarray_len(&ctx->reactor->toqueue) - 1);
+  }
+  if (utarray_find(&ctx->reactor->sched, (const void *)&reactor->size,
+                   inequal_cmp)) {
+    utarray_resize(&ctx->reactor->sched, utarray_len(&ctx->reactor->sched) - 1);
+  }
+  if (ctx) {
+    fmc_reactor_ctx_del(ctx);
+  }
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
