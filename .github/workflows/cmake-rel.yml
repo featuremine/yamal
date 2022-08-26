@@ -12,35 +12,10 @@ env:
 
 jobs:
 
-  utility:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@main
-
-    # Code formatting with Clang linter
-    - uses: DoozyX/clang-format-lint-action@v0.14
-      with:
-        source: '.'
-        exclude: './lib'
-        extensions: 'h,cpp,c'
-        clangFormatVersion: 14
-        inplace: True
-
-    # Commit clang-format changes
-    - uses: EndBug/add-and-commit@v4
-      with:
-        author_name: Clang Robot
-        author_email: robot@example.com
-        message: 'Committing clang-format changes'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-ubuntu:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    needs: utility
     runs-on: ubuntu-latest
     
     steps:
@@ -98,7 +73,6 @@ jobs:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    needs: utility
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/easybuilders/centos-8.5

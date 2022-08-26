@@ -21,16 +21,15 @@ jobs:
     - uses: DoozyX/clang-format-lint-action@v0.14
       with:
         source: '.'
-        exclude: './lib'
-        extensions: 'h,cpp,c'
+        extensions: 'h,c,hpp,cpp'
         clangFormatVersion: 14
         inplace: True
 
     # Commit clang-format changes
     - uses: EndBug/add-and-commit@v4
       with:
-        author_name: Clang Robot
-        author_email: robot@example.com
+        author_name: CI bot
+        author_email: dev@featuremine.com
         message: 'Committing clang-format changes'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
