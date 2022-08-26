@@ -89,8 +89,7 @@ static void utarr_init(void *elt) {
 }
 
 struct fmc_reactor_ctx *fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error) {
-  struct fmc_reactor_ctx *ctx = NULL;
-  ctx = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctx));
+  struct fmc_reactor_ctx *ctx = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctx));
   if (!ctx) goto cleanup;
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
