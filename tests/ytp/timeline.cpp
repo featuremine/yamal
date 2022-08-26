@@ -1284,16 +1284,18 @@ TEST(timeline, leading_slash_test) {
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(channel1, 0);
 
-  ytp_timeline_indx_cb(timeline, channel1,
-                       [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                          uint64_t time, size_t sz, const char *data) {},
-                       nullptr, &error);
+  ytp_timeline_indx_cb(
+      timeline, channel1,
+      [](void *closure, ytp_peer_t peer, ytp_channel_t channel, uint64_t time,
+         size_t sz, const char *data) {},
+      nullptr, &error);
   ASSERT_EQ(error, nullptr);
 
-  ytp_timeline_prfx_cb(timeline, 1, "a/",
-                       [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                          uint64_t time, size_t sz, const char *data) {},
-                       nullptr, &error);
+  ytp_timeline_prfx_cb(
+      timeline, 1, "a/",
+      [](void *closure, ytp_peer_t peer, ytp_channel_t channel, uint64_t time,
+         size_t sz, const char *data) {},
+      nullptr, &error);
   ASSERT_EQ(error, nullptr);
 
   while (ytp_timeline_poll(timeline, &error))
