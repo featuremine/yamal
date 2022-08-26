@@ -157,7 +157,7 @@ FMMODFUNC void fmc_reactor_ctx_emplace(struct fmc_reactor_ctx *ctx,
                                        fmc_error_t **error);
 FMMODFUNC void fmc_reactor_ctx_destroy(struct fmc_reactor_ctx *ctx);
 FMMODFUNC fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor);
-FMMODFUNC size_t fmc_reactor_run_once(struct fmc_reactor *reactor,
+FMMODFUNC bool fmc_reactor_run_once(struct fmc_reactor *reactor,
                                       fmc_time64_t now, fmc_error_t **error);
 FMMODFUNC void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                                fmc_error_t **error);
