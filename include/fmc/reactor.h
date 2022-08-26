@@ -150,7 +150,8 @@ struct fmc_component_input;
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
-FMMODFUNC struct fmc_reactor_ctx *fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error);
+FMMODFUNC struct fmc_reactor_ctx *
+fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error);
 FMMODFUNC void fmc_reactor_ctx_take(struct fmc_reactor_ctx *ctx,
                                     struct fmc_component_input *inps,
                                     fmc_error_t **error);

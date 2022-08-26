@@ -208,4 +208,3 @@ size_t fmc_shmem_sz(struct fmc_shmem *mem) {
   struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
   return p->sz;
 }
-

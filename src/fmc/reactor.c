@@ -88,9 +88,12 @@ static void utarr_init(void *elt) {
   fmc_array_init(_elt, &deps);
 }
 
-struct fmc_reactor_ctx *fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error) {
-  struct fmc_reactor_ctx *ctx = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctx));
-  if (!ctx) goto cleanup;
+struct fmc_reactor_ctx *fmc_reactor_ctx_new(struct fmc_reactor *reactor,
+                                            fmc_error_t **error) {
+  struct fmc_reactor_ctx *ctx =
+      (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctx));
+  if (!ctx)
+    goto cleanup;
   ctx->reactor = reactor;
   ctx->idx = reactor->size;
   fmc_icd deps;
@@ -113,7 +116,8 @@ void fmc_reactor_ctx_take(struct fmc_reactor_ctx *ctx,
   struct fmc_reactor *r = ctx->reactor;
   struct fmc_reactor_ctx **ctxstmp = (struct fmc_reactor_ctx **)realloc(
       r->ctxs, sizeof(*r->ctxs) * (r->size + 1));
-  if (!ctxstmp) goto cleanup;
+  if (!ctxstmp)
+    goto cleanup;
   r->ctxs = ctxstmp;
   r->ctxs[r->size] = ctx;
   ++r->size;
