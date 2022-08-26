@@ -594,7 +594,6 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
-  // Since insertion would be done in proper order, the element will always be at the end
   if (utarray_find(&ctx->reactor->queued, (const void*) &reactor->size, inequal_cmp)) {
     utarray_resize(&ctx->reactor->queued, utarray_len(&ctx->reactor->queued) - 1);
   }
@@ -604,7 +603,6 @@ cleanup:
   if (utarray_find(&ctx->reactor->sched, (const void*) &reactor->size, inequal_cmp)) {
     utarray_resize(&ctx->reactor->sched, utarray_len(&ctx->reactor->sched) - 1);
   }
-
   if (ctx) {
     fmc_reactor_ctx_del(ctx);
   }
