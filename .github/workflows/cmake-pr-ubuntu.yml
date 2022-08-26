@@ -1,4 +1,4 @@
-name: CMake PR Ubuntu
+name: CMake CI
 
 on:
   pull_request:
@@ -10,10 +10,8 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+
+  utility:
     runs-on: ubuntu-latest
     
     steps:
@@ -36,6 +34,16 @@ jobs:
         message: 'Committing clang-format changes'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ubuntu:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    needs: utility
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@main
 
     - name: Install tclap
       run: sudo apt-get install libtclap-dev
@@ -60,3 +68,40 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
+
+  build-centos:
+    needs: utility    
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/easybuilders/centos-8.5
+    
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Install dependencies
+      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget
+    - name: Install tclap
+      run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure --prefix=/usr && make && make install && popd && rm -rf tclap-code
+    - name: Install gtest
+      run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && make install && cd ../../ && rm -rf googletest
+    - name: Upgrade packaging
+      run: pip3 install packaging==21.3
+    - name: Install sphinx
+      run: yum -y install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install mistune==0.8.4 && pip3 install m2r && pip3 install sphinx-autodoc-typehints
+    - name: Install cmake 3.21.0 from binary
+      run: wget https://github.com/Kitware/CMake/releases/download/v3.21.0/cmake-3.21.0-linux-x86_64.tar.gz && tar xvzf cmake-3.21.0-linux-x86_64.tar.gz 
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake-3.21.0-linux-x86_64/bin/cmake -B $PWD/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake-3.21.0-linux-x86_64/bin/cmake --build $PWD/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ../cmake-3.21.0-linux-x86_64/bin/ctest -C ${{env.BUILD_TYPE}}
