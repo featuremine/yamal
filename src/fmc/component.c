@@ -513,7 +513,8 @@ int inequal_cmp(const void *a, const void *b) {
 }
 
 int inequal_idx_cmp(const void *a, const void *b) {
-  return ((const struct sched_item *)a)->idx - ((const struct sched_item *)b)->idx;
+  return ((const struct sched_item *)a)->idx -
+         ((const struct sched_item *)b)->idx;
 }
 
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
@@ -598,22 +599,30 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     updated_deps[i] = deps;
   }
   return item->comp;
-cleanup:
-  {
-    void* val = utarray_find(&ctx->reactor->queued, (const void *)&curridx, inequal_cmp);
-    if (val) {
-      _utheap_pop(&ctx->reactor->queued, utarray_eltidx(&ctx->reactor->queued, val), FMC_SIZE_T_PTR_LESS);
-    }
-    val = utarray_find(&ctx->reactor->toqueue, (const void *)&curridx, inequal_cmp);
-    if (val) {
-      _utheap_pop(&ctx->reactor->toqueue, utarray_eltidx(&ctx->reactor->toqueue, val), FMC_SIZE_T_PTR_LESS);
-    }
-    do {
-      val = utarray_find(&ctx->reactor->sched, (const void *)&curridx, inequal_idx_cmp);
-      if (!val) break;
-      _utheap_pop(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val), sched_item_less);
-    } while (true);
+cleanup : {
+  void *val =
+      utarray_find(&ctx->reactor->queued, (const void *)&curridx, inequal_cmp);
+  if (val) {
+    _utheap_pop(&ctx->reactor->queued,
+                utarray_eltidx(&ctx->reactor->queued, val),
+                FMC_SIZE_T_PTR_LESS);
   }
+  val =
+      utarray_find(&ctx->reactor->toqueue, (const void *)&curridx, inequal_cmp);
+  if (val) {
+    _utheap_pop(&ctx->reactor->toqueue,
+                utarray_eltidx(&ctx->reactor->toqueue, val),
+                FMC_SIZE_T_PTR_LESS);
+  }
+  do {
+    val = utarray_find(&ctx->reactor->sched, (const void *)&curridx,
+                       inequal_idx_cmp);
+    if (!val)
+      break;
+    _utheap_pop(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val),
+                sched_item_less);
+  } while (true);
+}
   fmc_reactor_ctx_del(ctx);
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));

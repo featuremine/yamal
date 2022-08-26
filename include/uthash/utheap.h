@@ -78,5 +78,4 @@
     }                                                                          \
   } while (0)
 
-#define utheap_pop(a, cmp)                                                     \
-  _utheap_pop(a, 0, cmp)
+#define utheap_pop(a, cmp) _utheap_pop(a, 0, cmp)
