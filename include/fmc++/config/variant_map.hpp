@@ -262,9 +262,6 @@ struct node : fmc::configs::interface::node {
       return std::to_string(*pval);
     } else if (auto pval = std::get_if<fmc::time>(&val_)) {
       return std::to_string(*pval);
-    } else if (std::get_if<section>(&val_)) {
-      // TODO: Implement
-      return std::string();
     }
 
     fmc_runtime_error_unless(false)
