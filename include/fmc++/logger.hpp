@@ -24,7 +24,7 @@
 namespace fmc {
 
 struct logger_t {
-  template <typename... Args> void info(Args &&... args) {
+  template <typename... Args> void info(Args &&...args) {
     out << std::chrono::system_clock::now().time_since_epoch();
 
     for_each(

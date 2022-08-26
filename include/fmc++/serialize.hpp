@@ -43,7 +43,7 @@ inline ostream &operator<<(ostream &s, const pair<A, B> &t) {
 template <typename... Ts>
 ostream &operator<<(ostream &os, tuple<Ts...> const &theTuple) {
   apply(
-      [&os](Ts const &... tupleArgs) {
+      [&os](Ts const &...tupleArgs) {
         os << '(';
         size_t n{0};
         ((os << tupleArgs << (++n != sizeof...(Ts) ? ", " : "")), ...);

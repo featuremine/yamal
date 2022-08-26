@@ -98,7 +98,7 @@ public:
       return where;
     return end();
   }
-  template <class A, class... Args> iterator emplace(A &&a, Args &&... args) {
+  template <class A, class... Args> iterator emplace(A &&a, Args &&...args) {
     auto where = lower_bound(a);
     return items_.emplace(where, std::forward<A>(a),
                           std::forward<Args>(args)...);
