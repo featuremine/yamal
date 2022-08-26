@@ -590,7 +590,9 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
-  fmc_reactor_ctx_del(ctx);
+  if (ctx) {
+    fmc_reactor_ctx_del(ctx);
+  }
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
