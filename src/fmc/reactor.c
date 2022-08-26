@@ -127,7 +127,8 @@ cleanup:
 }
 
 void fmc_reactor_ctx_del(struct fmc_reactor_ctx *ctx) {
-  if (!ctx) return;
+  if (!ctx)
+    return;
   struct fmc_reactor_ctx_out *phead = ctx->out_tps;
   struct fmc_reactor_ctx_out *el = NULL;
   struct fmc_reactor_ctx_out *ptmp = NULL;
