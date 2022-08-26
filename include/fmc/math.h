@@ -61,6 +61,8 @@ extern "C" {
 
 #define FMC_SIZE_T_PTR_LESS(a, b) FMC_TYPED_PTR_LESS(size_t, a, b)
 
+#define FMC_INT64_T_PTR_LESS(a, b) FMC_TYPED_PTR_LESS(int64_t, a, b)
+
 #define fmc_sign(x) (((x) > 0) - ((x) < 0))
 
 /**

@@ -100,16 +100,6 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
       &mod->error, "component API version is higher than the system version");
 }
 
-static int sched_item_less(const void *a, const void *b) {
-  struct sched_item *_a = (struct sched_item *)a;
-  struct sched_item *_b = (struct sched_item *)b;
-  if (fmc_time64_less(_a->t, _b->t))
-    return 1;
-  else if (fmc_time64_less(_b->t, _a->t))
-    return 0;
-  return (int)_a->idx < _b->idx;
-}
-
 static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
   fmc_error_t *error = &ctx->reactor->err;
   utheap_push(&ctx->reactor->toqueue, &ctx->idx, FMC_SIZE_T_PTR_LESS);
@@ -121,7 +111,7 @@ static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx,
                                 fmc_time64_t time) {
   fmc_error_t *error = &ctx->reactor->err;
   struct sched_item item = {.idx = ctx->idx, .t = time};
-  utheap_push(&ctx->reactor->sched, &item, sched_item_less);
+  utheap_push(&ctx->reactor->sched, &item, FMC_INT64_T_PTR_LESS);
 cleanup:
   return;
 }
@@ -600,27 +590,30 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup : {
-  void *val =
+  void *val = NULL;
+  do {
+    val =
       utarray_find(&ctx->reactor->queued, (const void *)&curridx, inequal_cmp);
-  if (val) {
-    _utheap_pop(&ctx->reactor->queued,
+    if (!val) break;
+    utheap_erase(&ctx->reactor->queued,
                 utarray_eltidx(&ctx->reactor->queued, val),
                 FMC_SIZE_T_PTR_LESS);
-  }
-  val =
+  } while (true);
+  do {
+    val =
       utarray_find(&ctx->reactor->toqueue, (const void *)&curridx, inequal_cmp);
-  if (val) {
-    _utheap_pop(&ctx->reactor->toqueue,
+    if (!val) break;
+    utheap_erase(&ctx->reactor->toqueue,
                 utarray_eltidx(&ctx->reactor->toqueue, val),
                 FMC_SIZE_T_PTR_LESS);
-  }
+  } while (true);
   do {
     val = utarray_find(&ctx->reactor->sched, (const void *)&curridx,
                        inequal_idx_cmp);
     if (!val)
       break;
-    _utheap_pop(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val),
-                sched_item_less);
+    utheap_erase(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val),
+                FMC_INT64_T_PTR_LESS);
   } while (true);
 }
   fmc_reactor_ctx_del(ctx);

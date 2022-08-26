@@ -66,7 +66,7 @@
     }                                                                          \
   } while (0)
 
-#define _utheap_pop(a, idx, cmp)                                               \
+#define utheap_erase(a, idx, cmp)                                              \
   do {                                                                         \
     if ((a)->i) {                                                              \
       ut_swap(_utarray_eltptr(a, idx), _utarray_eltptr(a, (a)->i - 1),         \
@@ -78,4 +78,4 @@
     }                                                                          \
   } while (0)
 
-#define utheap_pop(a, cmp) _utheap_pop(a, 0, cmp)
+#define utheap_pop(a, cmp) utheap_erase(a, 0, cmp)
