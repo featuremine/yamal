@@ -56,7 +56,7 @@ public:
     for (auto &item : table_)
       delete item.second;
   }
-  template <class Key> Obj &operator()(Key key, Args &&... args) {
+  template <class Key> Obj &operator()(Key key, Args &&...args) {
     auto where = table_.find(std::forward<Key>(key));
     if (where == table_.end()) {
       auto *obj = creator_(std::forward<Key>(key), std::forward<Args>(args)...);

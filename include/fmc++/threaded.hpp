@@ -31,7 +31,7 @@ namespace fmc {
 template <typename T> class threaded {
 public:
   template <typename... Args>
-  threaded(Args &&... args) noexcept
+  threaded(Args &&...args) noexcept
       : slot_(nullptr), consumed_(new T(std::forward<Args>(args)...)),
         cleanup_(nullptr), cache_(*consumed_) {}
 

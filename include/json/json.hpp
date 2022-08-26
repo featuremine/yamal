@@ -1646,7 +1646,7 @@ JSON_HEDLEY_DIAGNOSTIC_POP
   JSON_HEDLEY_DIAGNOSTIC_PUSH                                                  \
   _Pragma("clang diagnostic ignored \"-Wgcc-compat\"")                         \
       __attribute__((__diagnose_if__(!(expr), msg, "error")))                  \
-          JSON_HEDLEY_DIAGNOSTIC_POP
+      JSON_HEDLEY_DIAGNOSTIC_POP
 #else
 #define JSON_HEDLEY_REQUIRE_MSG(expr, msg)                                     \
   __attribute__((__diagnose_if__(!(expr), msg, "error")))
@@ -3080,9 +3080,10 @@ auto from_json_array_impl(const BasicJsonType &j, std::array<T, N> &arr,
 template <typename BasicJsonType, typename ConstructibleArrayType>
 auto from_json_array_impl(const BasicJsonType &j, ConstructibleArrayType &arr,
                           priority_tag<1> /*unused*/)
-    -> decltype(
-        arr.reserve(std::declval<typename ConstructibleArrayType::size_type>()),
-        j.template get<typename ConstructibleArrayType::value_type>(), void()) {
+    -> decltype(arr.reserve(
+                    std::declval<typename ConstructibleArrayType::size_type>()),
+                j.template get<typename ConstructibleArrayType::value_type>(),
+                void()) {
   using std::end;
 
   ConstructibleArrayType ret;
@@ -10612,7 +10613,7 @@ public:
   template <
       class... Args,
       enable_if_t<std::is_constructible<value_type, Args...>::value, int> = 0>
-  json_ref(Args &&... args)
+  json_ref(Args &&...args)
       : owned_value(std::forward<Args>(args)...), value_ref(&owned_value),
         is_rvalue(true) {}
 
@@ -14546,7 +14547,7 @@ public:
 private:
   /// helper for exception-safe object creation
   template <typename T, typename... Args>
-  JSON_HEDLEY_RETURNS_NON_NULL static T *create(Args &&... args) {
+  JSON_HEDLEY_RETURNS_NON_NULL static T *create(Args &&...args) {
     AllocatorType<T> alloc;
     using AllocatorTraits = std::allocator_traits<AllocatorType<T>>;
 
@@ -14715,7 +14716,9 @@ private:
         break;
       }
 
-      default: { break; }
+      default: {
+        break;
+      }
       }
     }
   };
@@ -16022,8 +16025,8 @@ private:
   }
 
   /// get a pointer to the value (object)
-  constexpr const object_t *get_impl_ptr(const object_t * /*unused*/) const
-      noexcept {
+  constexpr const object_t *
+  get_impl_ptr(const object_t * /*unused*/) const noexcept {
     return is_object() ? m_value.object : nullptr;
   }
 
@@ -16033,8 +16036,8 @@ private:
   }
 
   /// get a pointer to the value (array)
-  constexpr const array_t *get_impl_ptr(const array_t * /*unused*/) const
-      noexcept {
+  constexpr const array_t *
+  get_impl_ptr(const array_t * /*unused*/) const noexcept {
     return is_array() ? m_value.array : nullptr;
   }
 
@@ -16044,8 +16047,8 @@ private:
   }
 
   /// get a pointer to the value (string)
-  constexpr const string_t *get_impl_ptr(const string_t * /*unused*/) const
-      noexcept {
+  constexpr const string_t *
+  get_impl_ptr(const string_t * /*unused*/) const noexcept {
     return is_string() ? m_value.string : nullptr;
   }
 
@@ -16055,8 +16058,8 @@ private:
   }
 
   /// get a pointer to the value (boolean)
-  constexpr const boolean_t *get_impl_ptr(const boolean_t * /*unused*/) const
-      noexcept {
+  constexpr const boolean_t *
+  get_impl_ptr(const boolean_t * /*unused*/) const noexcept {
     return is_boolean() ? &m_value.boolean : nullptr;
   }
 
@@ -16422,8 +16425,8 @@ public:
   template <typename PointerType,
             typename std::enable_if<std::is_pointer<PointerType>::value,
                                     int>::type = 0>
-  auto get() noexcept -> decltype(
-      std::declval<basic_json_t &>().template get_ptr<PointerType>()) {
+  auto get() noexcept -> decltype(std::declval<basic_json_t &>()
+                                      .template get_ptr<PointerType>()) {
     // delegate the call to get_ptr
     return get_ptr<PointerType>();
   }
@@ -16435,8 +16438,9 @@ public:
   template <typename PointerType,
             typename std::enable_if<std::is_pointer<PointerType>::value,
                                     int>::type = 0>
-  constexpr auto get() const noexcept -> decltype(
-      std::declval<const basic_json_t &>().template get_ptr<PointerType>()) {
+  constexpr auto get() const noexcept
+      -> decltype(std::declval<const basic_json_t &>()
+                      .template get_ptr<PointerType>()) {
     // delegate the call to get_ptr
     return get_ptr<PointerType>();
   }
@@ -18536,7 +18540,7 @@ public:
 
   @since version 2.0.8, returns reference since 3.7.0
   */
-  template <class... Args> reference emplace_back(Args &&... args) {
+  template <class... Args> reference emplace_back(Args &&...args) {
     // emplace_back only works for null objects or arrays
     if (JSON_HEDLEY_UNLIKELY(not(is_null() or is_array()))) {
       JSON_THROW(type_error::create(311, "cannot use emplace_back() with " +
@@ -18586,7 +18590,7 @@ public:
 
   @since version 2.0.8
   */
-  template <class... Args> std::pair<iterator, bool> emplace(Args &&... args) {
+  template <class... Args> std::pair<iterator, bool> emplace(Args &&...args) {
     // emplace only works for null objects or arrays
     if (JSON_HEDLEY_UNLIKELY(not(is_null() or is_object()))) {
       JSON_THROW(type_error::create(311, "cannot use emplace() with " +
@@ -18614,7 +18618,7 @@ public:
   /// @note: This uses std::distance to support GCC 4.8,
   ///        see https://github.com/nlohmann/json/pull/1257
   template <typename... Args>
-  iterator insert_iterator(const_iterator pos, Args &&... args) {
+  iterator insert_iterator(const_iterator pos, Args &&...args) {
     iterator result(this);
     assert(m_value.array != nullptr);
 
