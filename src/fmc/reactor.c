@@ -89,8 +89,10 @@ static void utarr_init(void *elt) {
   fmc_array_init(_elt, &deps);
 }
 
-void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
-                          struct fmc_reactor_ctx *ctx) {
+struct fmc_reactor_ctx *fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error) {
+  struct fmc_reactor_ctx *ctx = NULL;
+  ctx = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctx));
+  if (!ctx) goto cleanup;
   memset(ctx, 0, sizeof(*ctx));
   ctx->reactor = reactor;
   ctx->idx = reactor->size;
@@ -101,34 +103,28 @@ void fmc_reactor_ctx_init(struct fmc_reactor *reactor,
   deps.init = utarr_init;
   fmc_array_init(&ctx->deps, &deps);
   fmc_error_init_none(&ctx->err);
+  return ctx;
+cleanup:
+  fmc_error_set2(error, FMC_ERROR_MEMORY);
+  return NULL;
 }
 
-void fmc_reactor_ctx_emplace(struct fmc_reactor_ctx *ctx,
-                             struct fmc_component_input *inps,
-                             fmc_error_t **error) {
+void fmc_reactor_ctx_take(struct fmc_reactor_ctx *ctx,
+                          struct fmc_component_input *inps,
+                          fmc_error_t **error) {
   fmc_error_clear(error);
   struct fmc_reactor *r = ctx->reactor;
-  struct fmc_reactor_ctx *ctxtmp = NULL;
-  ctxtmp = (struct fmc_reactor_ctx *)calloc(1, sizeof(*ctxtmp));
-  if (!ctxtmp) {
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
-    goto cleanup;
-  }
   struct fmc_reactor_ctx **ctxstmp = (struct fmc_reactor_ctx **)realloc(
       r->ctxs, sizeof(*r->ctxs) * (r->size + 1));
-  if (!ctxstmp) {
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
-    goto cleanup;
-  }
+  if (!ctxstmp) goto cleanup;
   r->ctxs = ctxstmp;
-  r->ctxs[r->size] = ctxtmp;
+  r->ctxs[r->size] = ctx;
   memcpy(r->ctxs[r->size], ctx, sizeof(*ctx));
   ++r->size;
   memset(ctx, 0, sizeof(*ctx));
   return;
 cleanup:
-  if (ctxtmp)
-    free(ctxtmp);
+  fmc_error_set2(error, FMC_ERROR_MEMORY);
 }
 
 void fmc_reactor_ctx_destroy(struct fmc_reactor_ctx *ctx) {
