@@ -155,10 +155,11 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 }
 
 bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
-                            fmc_error_t **usr_error) {
+                          fmc_error_t **usr_error) {
   fmc_error_t *error = &reactor->err;
 
-  if (fmc_error_has(&reactor->err)) goto cleanup;
+  if (fmc_error_has(&reactor->err))
+    goto cleanup;
 
   // NOTE: code handling stop in a thread safe way
   int stop_prev = reactor->stop;
@@ -177,11 +178,11 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
   }
 
   bool busy = utarray_len(&reactor->toqueue) ||
-              utarray_len(&(reactor->sched)) ||
-              utarray_len(&reactor->queued);
+              utarray_len(&(reactor->sched)) || utarray_len(&reactor->queued);
   bool stopped = reactor->stop && !reactor->finishing;
   bool hardstop = reactor->stop >= FMC_REACTOR_HARD_STOP;
-  if (!busy || stopped || hardstop) return false;
+  if (!busy || stopped || hardstop)
+    return false;
 
   ut_swap(&reactor->queued, &reactor->toqueue, sizeof(reactor->queued));
   // NOTE: queue expried componenents
@@ -206,9 +207,10 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
       ctx->exec(ctx->comp, ctx, now);
       if (fmc_error_has(&ctx->err)) {
         if (*usr_error) {
-          fmc_error_set(usr_error, "%s\nalso, failed to run component %s with error: %s",
-                        fmc_error_msg(*usr_error),
-                        ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
+          fmc_error_set(usr_error,
+                        "%s\nalso, failed to run component %s with error: %s",
+                        fmc_error_msg(*usr_error), ctx->comp->_vt->tp_name,
+                        fmc_error_msg(&ctx->err));
         } else {
           fmc_error_set(usr_error, "failed to run component %s with error: %s",
                         ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
@@ -233,12 +235,11 @@ void fmc_reactor_run(struct fmc_reactor *reactor, bool live,
                      fmc_error_t **error) {
   fmc_error_clear(error);
   do {
-    fmc_time64_t now = live
-                       ? fmc_time64_from_nanos(fmc_cur_time_ns())
-                       : fmc_reactor_sched(reactor);
-    if(!fmc_reactor_run_once(reactor, now, error))
+    fmc_time64_t now = live ? fmc_time64_from_nanos(fmc_cur_time_ns())
+                            : fmc_reactor_sched(reactor);
+    if (!fmc_reactor_run_once(reactor, now, error))
       break;
-  } while(true);
+  } while (true);
 }
 
 void fmc_reactor_stop(struct fmc_reactor *reactor) {
