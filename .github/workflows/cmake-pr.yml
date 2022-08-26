@@ -1,8 +1,7 @@
-name: CMake Release CentOS
+name: CMake PR
 
 on:
-  release:
-    types: [prereleased]
+  pull_request:
 
 permissions: write-all
 
@@ -11,19 +10,73 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+
+  utility:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@main
+
+    # Code formatting with Clang linter
+    - uses: DoozyX/clang-format-lint-action@v0.14
+      with:
+        source: '.'
+        exclude: './lib'
+        extensions: 'h,cpp,c'
+        clangFormatVersion: 14
+        inplace: True
+
+    # Commit clang-format changes
+    - uses: EndBug/add-and-commit@v4
+      with:
+        author_name: Clang Robot
+        author_email: robot@example.com
+        message: 'Committing clang-format changes'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ubuntu:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    needs: utility
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Install tclap
+      run: sudo apt-get install libtclap-dev
+    - name: Install gtest
+      run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && sudo make install && cd ../../ && rm -rf googletest
+    - name: Install Doxygen
+      run: sudo apt-get install doxygen
+    - name: Install sphinx
+      run: sudo apt-get install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install m2r && pip3 install mistune==0.8.4 && pip3 install sphinx-autodoc-typehints
+    
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ctest -C ${{env.BUILD_TYPE}}
+
+  build-centos:
+    needs: utility    
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/easybuilders/centos-8.5
     
     steps:
     - uses: actions/checkout@main
-
-    - name: Check version number matches reference name
-      run:  echo v$(cat VERSION) && [[ v$(cat VERSION) == ${{github.ref_name}} ]]
 
     - name: Install dependencies
       run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget
@@ -52,12 +105,3 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ../cmake-3.21.0-linux-x86_64/bin/ctest -C ${{env.BUILD_TYPE}}
-      
-    - name: Package
-      working-directory: build
-      run: ../cmake-3.21.0-linux-x86_64/bin/cpack -G RPM
-        
-    - name: Upload package
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload ${{github.ref_name}} build/yamal-$(cat VERSION)-Linux.rpm
