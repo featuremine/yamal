@@ -9,11 +9,6 @@ foreach test : tests
     test('common_' + name, exe, is_parallel: false)
 endforeach
 
-extension = executable(
-    'common_extension', 'extension.cpp',
-    dependencies : [static_fmc_dep, gtest])
-test('common_extension', extension, args: [shared_fmc.full_path()], is_parallel: false)
-
 compiles_c = executable(
     'common_compiles_c', 'compiles.c',
     dependencies : [static_fmc_dep])
@@ -39,6 +34,11 @@ shared_shutdown_component = shared_library('shutdowncomponent', [files('shutdown
                                      dependencies : [shared_fmc_dep],
                                      link_language: 'c',
                                      install: false)
+
+extension = executable(
+    'common_extension', 'extension.cpp',
+    dependencies : [static_fmc_dep, gtest])
+test('common_extension', extension, args: [shared_test_component.full_path()], is_parallel: false)
 
 test_component = executable(
     'common_component', 'component.cpp',

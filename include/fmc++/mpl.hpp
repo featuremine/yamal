@@ -75,7 +75,7 @@ template <class T> std::string type_name() {
 
 using namespace std;
 
-template <class Func, class... Args> void for_each(Func &&f, Args &&... args) {
+template <class Func, class... Args> void for_each(Func &&f, Args &&...args) {
   (f(std::forward<Args>(args)), ...);
 }
 
@@ -115,8 +115,8 @@ template <class R, class... Args> struct _uniquely_callable<R(Args...)> {
 };
 
 template <class F>
-struct _uniquely_callable<F, typename enable_if<_member_function_type<decltype(
-                                 &F::operator())>::value>::type> {
+struct _uniquely_callable<F, typename enable_if<_member_function_type<
+                                 decltype(&F::operator())>::value>::type> {
   using details = _member_function_type<decltype(&F::operator())>;
   enum { value = true };
   using result = typename details::result;
@@ -140,7 +140,7 @@ template <class E> struct exception_builder {
 };
 
 template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template <class... Ts> overloaded(Ts...)->overloaded<Ts...>;
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 template <class... Args> struct type_list {};
 
@@ -221,7 +221,7 @@ almost_equal(const T x, const T y) {
 }
 
 template <class T, class... Ts, class... Args>
-T *derived_by_name(string_view name, type_list<Ts...>, Args &&... args) {
+T *derived_by_name(string_view name, type_list<Ts...>, Args &&...args) {
   T *result = nullptr;
   for_each(
       [&](auto t) {
@@ -237,7 +237,7 @@ T *derived_by_name(string_view name, type_list<Ts...>, Args &&... args) {
 
 template <class T, class... Ts, class... Args>
 std::unique_ptr<T> make_unique_by_name(string_view name, type_list<Ts...>,
-                                       Args &&... args) {
+                                       Args &&...args) {
   T *result = nullptr;
   for_each(
       [&](auto t) {

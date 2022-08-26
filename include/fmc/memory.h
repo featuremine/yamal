@@ -127,6 +127,14 @@ FMMODFUNC void fmc_shmem_destroy(struct fmc_shmem *mem, fmc_error_t **e);
 FMMODFUNC void fmc_shmem_realloc(struct fmc_shmem *mem, size_t sz,
                                  fmc_error_t **e);
 
+/**
+ * @brief Memory size
+ *
+ * @param mem pointer to memory to be destroyed
+ * @return desired size of buffer
+ */
+FMMODFUNC size_t fmc_shmem_sz(struct fmc_shmem *mem);
+
 #ifdef __cplusplus
 }
 #endif

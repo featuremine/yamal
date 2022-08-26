@@ -223,7 +223,7 @@ struct nanoseconds {
 template <class Counter, class Sample> struct record : Sample {
   using type = invoke_result_t<Counter>;
   template <typename... Args>
-  record(Args &&... args) : Sample(std::forward<Args>(args)...) {}
+  record(Args &&...args) : Sample(std::forward<Args>(args)...) {}
   void start() { val_ = Counter()(); }
   void stop() { Sample::sample(Counter()() - val_); }
   type val_;
@@ -237,7 +237,7 @@ template <class Record> struct scoped_sampler {
 
 template <template <class> class Record> struct single_scope_sampler {
   template <class... Args>
-  single_scope_sampler(Args &&... args) : inst_(args...) {
+  single_scope_sampler(Args &&...args) : inst_(args...) {
     inst_.start();
   }
   ~single_scope_sampler() { inst_.stop(); }

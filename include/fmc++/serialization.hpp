@@ -205,7 +205,7 @@ inline bool cmp_read_item(cmp_ctx_t *ctx, std::string *arg) {
 }
 
 template <class... Args>
-bool cmp_read_many(cmp_ctx_t *ctx, uint32_t *left, Args *... args) {
+bool cmp_read_many(cmp_ctx_t *ctx, uint32_t *left, Args *...args) {
   auto read_one = [ctx, left](auto *arg) {
     bool ret = *left > 0 && cmp_read_item(ctx, arg);
     *left -= ret == true;
@@ -272,7 +272,7 @@ inline bool cmp_write_item(cmp_ctx_t *ctx, std::string &arg) {
 }
 
 template <class... Args>
-bool cmp_write_many(cmp_ctx_t *ctx, uint32_t *left, Args &&... args) {
+bool cmp_write_many(cmp_ctx_t *ctx, uint32_t *left, Args &&...args) {
   auto write_one = [ctx, left](auto &&arg) {
     bool ret = *left > 0 && cmp_write_item(ctx, arg);
     *left -= ret == true;

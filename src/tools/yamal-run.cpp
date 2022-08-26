@@ -62,7 +62,7 @@ struct initdestroy_t {
   }
 };
 template <typename T, typename InitDestroy> struct scopevar_t {
-  template <typename... Args> scopevar_t(Args &&... args) {
+  template <typename... Args> scopevar_t(Args &&...args) {
     InitDestroy().init(value, std::forward<Args>(args)...);
   }
   ~scopevar_t() { InitDestroy().destroy(value); }

@@ -110,7 +110,7 @@ struct lazy_rem_vector : private std::vector<std::pair<T, bool>> {
 
   iterator end() noexcept { return V::end(); }
 
-  template <typename... Args> void emplace_back(Args &&... args) {
+  template <typename... Args> void emplace_back(Args &&...args) {
     V::emplace_back(T{std::forward<Args>(args)...}, false);
   }
 

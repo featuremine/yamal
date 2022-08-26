@@ -67,13 +67,13 @@ typedef struct {
 
 typedef struct {
   unsigned i, n; /* i: index of next available slot, n: num slots */
-  fmc_icd icd;    /* initializer, copy and destructor functions */
+  fmc_icd icd;   /* initializer, copy and destructor functions */
   char *d;       /* n slots of size icd->sz*/
 } fmc_array;
 
-#define fmc_array_init(a, _icd)                                                  \
+#define fmc_array_init(a, _icd)                                                \
   do {                                                                         \
-    memset(a, 0, sizeof(fmc_array));                                            \
+    memset(a, 0, sizeof(fmc_array));                                           \
     (a)->icd = *(_icd);                                                        \
   } while (0)
 
@@ -119,11 +119,11 @@ struct fmc_reactor_ctx {
   size_t idx;
   bool finishing;
   struct fmc_reactor_ctx_out
-      *out_tps;  // list of fmc_reactor_component_output {name, type}
-                 // use double linked list, add them with append at the end
+      *out_tps;   // list of fmc_reactor_component_output {name, type}
+                  // use double linked list, add them with append at the end
   fmc_array deps; // change to use a structure that holds both dep idx and input
-                 // idx array of array of structures - no lists.
-                 // fmc_reactor_ctx_dep
+                  // idx array of array of structures - no lists.
+                  // fmc_reactor_ctx_dep
 };
 
 struct fmc_reactor_stop_item {
@@ -150,7 +150,8 @@ struct fmc_component_input;
 
 FMMODFUNC void fmc_reactor_init(struct fmc_reactor *reactor);
 FMMODFUNC void fmc_reactor_destroy(struct fmc_reactor *reactor);
-FMMODFUNC struct fmc_reactor_ctx *fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error);
+FMMODFUNC struct fmc_reactor_ctx *
+fmc_reactor_ctx_new(struct fmc_reactor *reactor, fmc_error_t **error);
 FMMODFUNC void fmc_reactor_ctx_take(struct fmc_reactor_ctx *ctx,
                                     struct fmc_component_input *inps,
                                     fmc_error_t **error);

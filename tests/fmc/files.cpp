@@ -119,7 +119,7 @@ TEST(fmc, popen_success) {
   ASSERT_EQ(error, nullptr);
 
   char data[128];
-  fscanf(cmd, "%s", data);
+  ASSERT_EQ(fscanf(cmd, "%s", data), 1);
 
   ASSERT_EQ(std::string_view(data), "hello");
 
@@ -136,7 +136,7 @@ TEST(fmc, popen_fail) {
   ASSERT_EQ(error, nullptr);
 
   char data[128];
-  fscanf(cmd, "%s", data);
+  ASSERT_EQ(fscanf(cmd, "%s", data), 1);
 
   ASSERT_EQ(std::string_view(data), "failure");
 
