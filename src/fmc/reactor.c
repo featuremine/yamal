@@ -117,9 +117,7 @@ void fmc_reactor_ctx_take(struct fmc_reactor_ctx *ctx,
   if (!ctxstmp) goto cleanup;
   r->ctxs = ctxstmp;
   r->ctxs[r->size] = ctx;
-  memcpy(r->ctxs[r->size], ctx, sizeof(*ctx));
   ++r->size;
-  memset(ctx, 0, sizeof(*ctx));
   return;
 cleanup:
   fmc_error_set2(error, FMC_ERROR_MEMORY);
