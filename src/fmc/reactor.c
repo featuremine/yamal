@@ -150,6 +150,15 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
   return item ? item->t : fmc_time64_end();
 }
 
+static int sched_item_less(const void *a, const void *b) {
+  struct sched_item *_a = (struct sched_item *)a;
+  struct sched_item *_b = (struct sched_item *)b;
+  if (fmc_time64_less(_a->t, _b->t))
+    return 1;
+  else if (fmc_time64_less(_b->t, _a->t))
+    return 0;
+  return (int)_a->idx < _b->idx;
+}
 bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                           fmc_error_t **usr_error) {
   fmc_error_t *error = &reactor->err;
@@ -188,7 +197,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     if (!item || fmc_time64_greater(item->t, now))
       break;
     utheap_push(&reactor->queued, &item->idx, FMC_SIZE_T_PTR_LESS);
-    utheap_pop(&reactor->sched, FMC_SIZE_T_PTR_LESS);
+    utheap_pop(&reactor->sched, sched_item_less);
   } while (true);
 
   size_t last = SIZE_MAX;

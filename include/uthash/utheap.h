@@ -66,14 +66,17 @@
     }                                                                          \
   } while (0)
 
-#define utheap_pop(a, cmp)                                                     \
+#define _utheap_pop(a, idx, cmp)                                               \
   do {                                                                         \
     if ((a)->i) {                                                              \
-      ut_swap(_utarray_eltptr(a, 0), _utarray_eltptr(a, (a)->i - 1),           \
+      ut_swap(_utarray_eltptr(a, idx), _utarray_eltptr(a, (a)->i - 1),         \
               (a)->icd.sz);                                                    \
       utarray_resize(a, (a)->i - 1);                                           \
       if (utarray_len(a)) {                                                    \
-        _utheap_heapify_down(a, 0, cmp);                                       \
+        _utheap_heapify_down(a, idx, cmp);                                     \
       }                                                                        \
     }                                                                          \
   } while (0)
+
+#define utheap_pop(a, cmp)                                                     \
+  _utheap_pop(a, 0, cmp)

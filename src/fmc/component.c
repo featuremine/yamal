@@ -512,12 +512,17 @@ int inequal_cmp(const void *a, const void *b) {
   return *(const size_t *)a - *(const size_t *)b;
 }
 
+int inequal_idx_cmp(const void *a, const void *b) {
+  return ((const struct sched_item *)a)->idx - ((const struct sched_item *)b)->idx;
+}
+
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_type *tp,
                                         struct fmc_cfg_sect_item *cfg,
                                         struct fmc_component_input *inps,
                                         fmc_error_t **usr_error) {
   fmc_error_clear(usr_error);
+  size_t curridx = reactor->size;
   fmc_error_t *error = &reactor->err;
   struct fmc_component_list *item = NULL;
   unsigned int in_sz = 0;
@@ -594,19 +599,20 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
-  if (utarray_find(&ctx->reactor->queued, (const void *)&reactor->size,
-                   inequal_cmp)) {
-    utarray_resize(&ctx->reactor->queued,
-                   utarray_len(&ctx->reactor->queued) - 1);
-  }
-  if (utarray_find(&ctx->reactor->toqueue, (const void *)&reactor->size,
-                   inequal_cmp)) {
-    utarray_resize(&ctx->reactor->toqueue,
-                   utarray_len(&ctx->reactor->toqueue) - 1);
-  }
-  if (utarray_find(&ctx->reactor->sched, (const void *)&reactor->size,
-                   inequal_cmp)) {
-    utarray_resize(&ctx->reactor->sched, utarray_len(&ctx->reactor->sched) - 1);
+  {
+    void* val = utarray_find(&ctx->reactor->queued, (const void *)&curridx, inequal_cmp);
+    if (val) {
+      _utheap_pop(&ctx->reactor->queued, utarray_eltidx(&ctx->reactor->queued, val), FMC_SIZE_T_PTR_LESS);
+    }
+    val = utarray_find(&ctx->reactor->toqueue, (const void *)&curridx, inequal_cmp);
+    if (val) {
+      _utheap_pop(&ctx->reactor->toqueue, utarray_eltidx(&ctx->reactor->toqueue, val), FMC_SIZE_T_PTR_LESS);
+    }
+    do {
+      val = utarray_find(&ctx->reactor->sched, (const void *)&curridx, inequal_idx_cmp);
+      if (!val) break;
+      _utheap_pop(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val), sched_item_less);
+    } while (true);
   }
   if (ctx) {
     fmc_reactor_ctx_del(ctx);
