@@ -308,7 +308,6 @@ int main(int argc, char **argv) {
         // now - time = how long it took from writing to receiving the message
         uint64_t time_write_read = now - msg_time;
 
-        auto msg_sz = *reinterpret_cast<const size_t *>(data_ptr);
         if (first_message_ == 0) {
           first_message_ = now;
         }

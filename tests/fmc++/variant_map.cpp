@@ -155,7 +155,7 @@ TEST(var_config, populate_from_ini) {
                                "test=third"
                                "\n"
                                "num=-9";
-  write(fd, test_data.data(), test_data.size());
+  ASSERT_EQ(write(fd, test_data.data(), test_data.size()), test_data.size());
   lseek(fd, 0, SEEK_SET);
 
   fmc::configs::variant_map::node data =
@@ -255,7 +255,7 @@ TEST(var_config, bad_ini) {
                                "num=1"
                                "\n"
                                "num=-9";
-  write(fd, test_data.data(), test_data.size());
+  ASSERT_EQ(write(fd, test_data.data(), test_data.size()), test_data.size());
   lseek(fd, 0, SEEK_SET);
 
   fmc::configs::variant_map::node data =

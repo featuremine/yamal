@@ -138,7 +138,6 @@ static void threaded(bool enable_thread) {
     auto *yamal = ytp_yamal_new_2(fd, enable_thread, &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(yamal, nullptr);
-    ytp_iterator_t iter;
     unsigned count = 0;
     unsigned misses = 0;
     unsigned last_idx = 0;
@@ -275,7 +274,6 @@ static void seektell(bool enable_thread) {
   auto *yamal = ytp_yamal_new_2(fd, enable_thread, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
-  ytp_iterator_t iter;
   auto it = ytp_yamal_begin(yamal, &error);
   ASSERT_EQ(error, nullptr);
   auto end = ytp_yamal_end(yamal, &error);
@@ -381,7 +379,7 @@ static void magic_number(bool enable_thread) {
 
   char magic_number[8];
   fseek(fp, 24, SEEK_SET);
-  fread(magic_number, sizeof(magic_number), 1, fp);
+  ASSERT_EQ(fread(magic_number, sizeof(magic_number), 1, fp), 1);
   ASSERT_EQ(string_view(magic_number, 8), "YAMAL000");
   fclose(fp);
 }
@@ -407,6 +405,7 @@ static void allocate_out_of_range_page(bool enable_thread) {
   error = (fmc_error_t *)1;
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
+  fclose(fp);
 }
 
 TEST(yamal, allocate_out_of_range_page) {
