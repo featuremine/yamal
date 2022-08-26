@@ -157,7 +157,6 @@ fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {
 bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
                             fmc_error_t **usr_error) {
   fmc_error_t *error = &reactor->err;
-  size_t completed = 0;
 
   if (fmc_error_has(&reactor->err)) goto cleanup;
 
@@ -203,10 +202,10 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     size_t ctxidx = *item;
     utheap_pop(&reactor->queued, FMC_SIZE_T_PTR_LESS);
     struct fmc_reactor_ctx *ctx = reactor->ctxs[ctxidx];
-    if (item != last && !fmc_error_has(&ctx->err) && ctx->exec) {
+    if (*item != last && !fmc_error_has(&ctx->err) && ctx->exec) {
       ctx->exec(ctx->comp, ctx, now);
       if (fmc_error_has(&ctx->err)) {
-        if (fmc_error_has(usr_error)) {
+        if (fmc_error_has(*usr_error)) {
           fmc_error_set(usr_error, "%s\nalso, failed to run component %s with error: %s",
                         fmc_error_msg(usr_error),
                         ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
