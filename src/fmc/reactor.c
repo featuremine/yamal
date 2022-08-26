@@ -67,8 +67,7 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   fmc_pool_destroy(&reactor->pool);
 
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
-    fmc_reactor_ctx_destroy(reactor->ctxs[i]);
-    free(reactor->ctxs[i]);
+    fmc_reactor_ctx_del(reactor->ctxs[i]);
   }
   fmc_error_destroy(&reactor->err);
   free(reactor->ctxs);
@@ -127,7 +126,7 @@ cleanup:
   fmc_error_set2(error, FMC_ERROR_MEMORY);
 }
 
-void fmc_reactor_ctx_destroy(struct fmc_reactor_ctx *ctx) {
+void fmc_reactor_ctx_del(struct fmc_reactor_ctx *ctx) {
   struct fmc_reactor_ctx_out *phead = ctx->out_tps;
   struct fmc_reactor_ctx_out *el = NULL;
   struct fmc_reactor_ctx_out *ptmp = NULL;
@@ -142,6 +141,7 @@ void fmc_reactor_ctx_destroy(struct fmc_reactor_ctx *ctx) {
   ctx->out_tps = NULL;
   utarray_done(&ctx->deps);
   fmc_error_destroy(&ctx->err);
+  free(ctx);
 }
 
 fmc_time64_t fmc_reactor_sched(struct fmc_reactor *reactor) {

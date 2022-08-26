@@ -522,7 +522,9 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   char *in_types[in_sz + 1];
   UT_array *updated_deps[in_sz + 1];
   memset(updated_deps, 0, sizeof(updated_deps));
-  struct fmc_reactor_ctx *ctx = fmc_reactor_ctx_new(reactor, error);
+  struct fmc_reactor_ctx *ctx = fmc_reactor_ctx_new(reactor, usr_error);
+  if (!ctx)
+    goto cleanup;
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
@@ -588,7 +590,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   return item->comp;
 cleanup:
-  fmc_reactor_ctx_destroy(&ctx);
+  fmc_reactor_ctx_del(ctx);
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
