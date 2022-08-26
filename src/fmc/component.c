@@ -614,9 +614,7 @@ cleanup:
       _utheap_pop(&ctx->reactor->sched, utarray_eltidx(&ctx->reactor->sched, val), sched_item_less);
     } while (true);
   }
-  if (ctx) {
-    fmc_reactor_ctx_del(ctx);
-  }
+  fmc_reactor_ctx_del(ctx);
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
