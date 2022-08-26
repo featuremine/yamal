@@ -205,6 +205,5 @@ void fmc_shmem_realloc(struct fmc_shmem *mem, size_t sz, fmc_error_t **e) {
 }
 
 size_t fmc_shmem_sz(struct fmc_shmem *mem) {
-  struct fmc_pool_node *p = (struct fmc_pool_node *)mem->view;
-  return p->sz;
+  return ((struct fmc_pool_node *)mem->view)->sz;
 }
