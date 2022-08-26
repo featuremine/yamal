@@ -205,7 +205,7 @@ bool fmc_reactor_run_once(struct fmc_reactor *reactor, fmc_time64_t now,
     if (*item != last && !fmc_error_has(&ctx->err) && ctx->exec) {
       ctx->exec(ctx->comp, ctx, now);
       if (fmc_error_has(&ctx->err)) {
-        if (fmc_error_has(*usr_error)) {
+        if (*usr_error) {
           fmc_error_set(usr_error, "%s\nalso, failed to run component %s with error: %s",
                         fmc_error_msg(usr_error),
                         ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
