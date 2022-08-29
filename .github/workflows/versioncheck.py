@@ -5,7 +5,7 @@ isnewversion = False
 isbugfix = False
 isversbump = False
 
-ghclient = Github("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")
+ghclient = Github(os.getenv('TOKEN'))
 
 # Get list of already existing tags, minus the leading 'v'
 releases = []
@@ -84,8 +84,7 @@ if isnewversion:
                 print("Patch version change")
 
 
-#base = os.getenv('github.base_ref')
-#if isnewversion and isversbump and base == 'main':
-if isnewversion and isversbump:
+base = os.getenv('github.base_ref')
+if isnewversion and isversbump and base == 'main':
     print("New version")
     os.environ['RELEASE'] = 'TRUE'
