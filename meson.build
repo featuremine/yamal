@@ -110,9 +110,9 @@ install_samples = get_option('install_samples')
 
 subdir('include')
 subdir('src')
-subdir('tests')
 
 if not is_subproject
+  subdir('tests')
   install_subdir('doc', install_dir : '.')
   install_data('README.md', install_dir : '.')
   install_data('LICENSE', install_dir : '.')
