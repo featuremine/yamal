@@ -87,6 +87,7 @@ if isnewversion:
 
 
 base = os.getenv('github.base_ref')
+print(f'Destination branch is {base}')
 if isnewversion and isversbump and base == 'main':
     print("New version")
     os.environ['RELEASE'] = 'TRUE'
