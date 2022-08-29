@@ -513,7 +513,8 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_input *inps,
                                         fmc_error_t **usr_error) {
   fmc_error_clear(usr_error);
-  size_t curridx = reactor->size;
+  size_t size_t_curridx = reactor->size;
+  int64_t int64_t_curridx = reactor->size;
   fmc_error_t *error = &reactor->err;
   struct fmc_component_list *item = NULL;
   unsigned int in_sz = 0;
@@ -592,7 +593,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
 cleanup : {
   void *val = NULL;
   do {
-    val = utarray_find(&ctx->reactor->queued, (const void *)&curridx,
+    val = utarray_find(&ctx->reactor->queued, (const void *)&size_t_curridx,
                        inequal_cmp);
     if (!val)
       break;
@@ -601,7 +602,7 @@ cleanup : {
                  FMC_SIZE_T_PTR_LESS);
   } while (true);
   do {
-    val = utarray_find(&ctx->reactor->toqueue, (const void *)&curridx,
+    val = utarray_find(&ctx->reactor->toqueue, (const void *)&size_t_curridx,
                        inequal_cmp);
     if (!val)
       break;
@@ -610,7 +611,7 @@ cleanup : {
                  FMC_SIZE_T_PTR_LESS);
   } while (true);
   do {
-    val = utarray_find(&ctx->reactor->sched, (const void *)&curridx,
+    val = utarray_find(&ctx->reactor->sched, (const void *)&int64_t_curridx,
                        inequal_idx_cmp);
     if (!val)
       break;
