@@ -86,7 +86,7 @@ if isnewversion:
                 print("Patch version change")
 
 
-base = os.getenv('github.base_ref')
+base = os.getenv('BASE')
 print(f'Destination branch is {base}')
 if isnewversion and isversbump and base == 'main':
     print("New version")
