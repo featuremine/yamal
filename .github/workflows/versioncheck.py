@@ -1,4 +1,5 @@
 import os
+import sys
 from github import Github
 
 isnewversion = False
@@ -67,6 +68,7 @@ for release in releases:
 if isbugfix and isversbump:
     print("Bug fix")
     os.environ['RELEASE'] = 'TRUE'
+    sys.exit(0)
 
 # Is cur in releases?
 if isnewversion:
@@ -88,3 +90,7 @@ base = os.getenv('github.base_ref')
 if isnewversion and isversbump and base == 'main':
     print("New version")
     os.environ['RELEASE'] = 'TRUE'
+    sys.exit(0)
+    
+if not (isnewversion and isversbump and base == 'main') or not (isbugfix and isversbump):
+    sys.exit(1)
