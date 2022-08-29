@@ -2,32 +2,44 @@ name: CMake Release
 
 on:
   pull_request:
-    # only runs when PR targets branch main
-    branches:
-      - 'main'
-    # only runs when PR involves a change in the file named "VERSION"
-    paths:
-      - 'VERSION'
 
 permissions: write-all
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
 
-  # runs for every event in the "release candidate" PR
-  build_pre_rel_ubuntu:
+  rel_prep:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@main  
+    
+    - name: Install PyGitHub
+      run: pip3 install PyGithub
+      
+    - name: Check the PRs version 
+      working-directory: ${{github.workspace}}/.github/workflows
+      run: python3 versioncheck.py
 
     - name: Check version number matches reference name
       working-directory: ${{github.workspace}}
       run:  echo v$(cat VERSION) && [[ v$(cat VERSION) == ${{github.ref_name}} ]]
+      
+    - name: Create Release
+      run: gh release create v$(cat ../VERSION) --prerelease
 
+  # runs for every event in the "release candidate" PR
+  build_pre_rel_ubuntu:
+    needs: 'rel_prep'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@main
+    
     - name: Install tclap
       run: sudo apt-get install libtclap-dev
     - name: Install gtest
@@ -60,9 +72,6 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: cpack -G DEB
 
-    - name: Create Release
-      run: gh release create v$(cat ../VERSION) --prerelease
-
     - name: Upload documentation
       working-directory: ${{github.workspace}}/build
       env:
@@ -77,6 +86,7 @@ jobs:
 
   # runs for every event in the "release candidate" PR
   build_pre_rel_centos:
+    needs: 'rel_prep'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/easybuilders/centos-8.5
@@ -126,7 +136,7 @@ jobs:
 
   # runs only when the "release candidate" PR has been merged
   if_relPR_merged:
-    needs: 'build_pre_rel_ubuntu, build_pre_rel_centos'
+    needs: ['build_pre_rel_ubuntu', 'build_pre_rel_centos']
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
