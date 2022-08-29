@@ -2,6 +2,8 @@ name: CMake Release
 
 on:
   pull_request:
+    paths:
+    - 'VERSION'
 
 permissions: write-all
 
