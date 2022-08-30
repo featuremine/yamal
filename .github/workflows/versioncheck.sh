@@ -10,4 +10,6 @@ elif [ $? -eq 2 ]; then
 elif [ $? -eq 3 ]; then 
     echo "Releasing bug fix v$(cat ../../VERSION)"
     gh release create v$(cat ../../VERSION) --prerelease
+elif [ $? -eq 4 ]; then 
+    echo "Error, cannot merge bugfix v$(cat ../../VERSION) into main."
 fi 

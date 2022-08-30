@@ -20,7 +20,7 @@ for release in ghclient.get_repo("featuremine/yamal").get_releases():
     rel['string'] = f'{rel["major"]}.{rel["minor"]}.{rel["patch"]}'
     if len(tag) == 4:
         rel['bugfix'] = tag[3]
-        rel['string'] = rel["string"] + f'.{rel["bugfix"]}'
+        rel['string'] = f'{rel["string"]}.{rel["bugfix"]}'
     releases.append(rel)
 
 # Iterate through list for latest (highest) tag
@@ -29,31 +29,31 @@ for release in releases:
     if int(release['major']) > int(latest['major']):
         latest = release
         continue
-    else:
+    elif int(release['major']) == int(latest['major']):
         if int(release['minor']) > int(latest['minor']):
             latest = release
             continue
-        else:
+        elif int(release['minor']) == int(latest['minor']):
             if int(release['patch']) > int(latest['patch']):
                 latest = release
                 continue
 print(f'Latest release is {latest["string"]}.')
 
-versionFile = open('../../VERSION')
-current = str(versionFile.read()).splitlines()[0].split('.')
-cur = {}
-cur['major'] = current[0]
-cur['minor'] = current[1]
-cur['patch'] = current[2]
-cur['string'] = f'{cur["major"]}.{cur["minor"]}.{cur["patch"]}'
-if len(current) == 4:
-    cur['bugfix'] = current[3]
-    cur['string'] = cur["string"] + f'.{cur["bugfix"]}'
-print(f'Version in file is {cur["string"]}.')
+with open('../../VERSION', encoding = 'utf-8') as versionFile:
+    current = str(versionFile.read()).splitlines()[0].split('.')
+    cur = {}
+    cur['major'] = current[0]
+    cur['minor'] = current[1]
+    cur['patch'] = current[2]
+    cur['string'] = f'{cur["major"]}.{cur["minor"]}.{cur["patch"]}'
+    if len(current) == 4:
+        cur['bugfix'] = current[3]
+        cur['string'] = cur["string"] + f'.{cur["bugfix"]}'
+    print(f'Version in file is {cur["string"]}.')
 
 # Is cur in releases?
 for release in releases:
-    if release['string'] in cur['string']:
+    if release['major'] == cur['major'] and release['minor'] == cur['minor'] and release['patch'] == cur['patch'] :
         isnewversion = False
         if len(release) == 4 and len(cur) == 5:
             isbugfix = True
@@ -66,17 +66,17 @@ for release in releases:
     else:
         isnewversion = True
 
-# Is cur in releases?
+# Was the version bumped?
 if isnewversion:
     # Compare current vs latest
     if int(cur['major']) > int(latest['major']):
         isversbump = True
         print("Major version change")
-    else:
+    elif int(cur['major']) == int(latest['major']):
         if int(cur['minor']) > int(latest['minor']):
             isversbump = True
             print("Minor version change")
-        else:
+        elif int(cur['minor']) == int(latest['minor']):
             if int(cur['patch']) > int(latest['patch']):
                 isversbump = True
                 print("Patch version change")
@@ -88,6 +88,9 @@ if base == 'main':
     if isnewversion and isversbump:
         print(f'Releasing new version {cur["string"]}.')
         sys.exit(0)
+    elif isbugfix:
+        print(f'Error, cannot merge bugfix {cur["string"]} into main.')
+        sys.exit(4)
     else:
         print(f'Correct version in version file before merging to main.')
         sys.exit(1)
@@ -96,7 +99,6 @@ else:
     if isbugfix and isversbump:
         print(f'Releasing bug fix {cur["string"]}.')
         sys.exit(3)
-        
     else:
         print(f'Non-release event is not processed by this workflow.')
         sys.exit(2)

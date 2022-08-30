@@ -1,4 +1,4 @@
-name: CMake Release
+name: CMake Pre-Release
 
 on:
   pull_request:
