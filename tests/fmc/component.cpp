@@ -522,6 +522,12 @@ TEST(reactor, io) {
 
   ASSERT_EQ(fmc_component_out_idx(pcomp, "valid output", &err), 0);
 
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(fmc_component_out_idx(pcomp, "non existent output", &err), 0);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  ASSERT_EQ(err, nullptr);
+
   struct fmc_component_type *ctp =
       fmc_component_module_type_get(mod, "consumercomponent", &err);
   ASSERT_EQ(err, nullptr);
