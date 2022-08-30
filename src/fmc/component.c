@@ -635,16 +635,17 @@ cleanup : {
 size_t fmc_component_out_idx(struct fmc_component *comp, const char *name,
                              fmc_error_t **error) {
   fmc_error_clear(error);
-  struct fmc_reactor_ctx_out *item = comp->_ctx->out_tps;
+  struct fmc_reactor_ctx_out *head = comp->_ctx->out_tps;
+  struct fmc_reactor_ctx_out *item;
   size_t idx = 0;
-  while (item) {
+  DL_FOREACH(head, item) {
     if (strcmp(name, item->name) == 0) {
       return idx;
     }
-    item = item->next;
+    ++idx;
   }
   fmc_error_set(error, "unable to find output with name %s in component", name);
-  return (size_t)-1;
+  return 0;
 }
 
 void fmc_component_del(struct fmc_component *comp) {
