@@ -7,7 +7,7 @@ isnewversion = False
 isbugfix = False
 isversbump = False
 
-ghclient = Github(os.getenv('TOKEN'))
+ghclient = Github(os.getenv('GH_TOKEN'))
 
 # Get list of already existing tags, minus the leading 'v'
 releases = []
