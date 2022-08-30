@@ -2,7 +2,8 @@ name: CMake Release
 
 on:
   pull_request:
-
+    #paths:
+    #  - 'VERSION'
 permissions: write-all
 
 env:
@@ -21,24 +22,11 @@ jobs:
     
     - name: Install PyGitHub
       run: pip3 install PyGithub
-      
-    - name: Echo 'RELEASE'
-      run: echo $RELEASE
-    
-    - name: Check the PRs version 
+          
+    - name: Check if PR is release
       working-directory: ${{github.workspace}}/.github/workflows
-      run: python3 versioncheck.py
-
-    - name: Echo 'RELEASE' after script
-      run: echo $RELEASE
-
-    - name: Check version number matches reference name
-      working-directory: ${{github.workspace}}
-      run:  echo v$(cat VERSION) && [[ v$(cat VERSION) == ${{github.ref_name}} ]]
+      run: bash versioncheck.sh
       
-    - name: Create Release
-      run: gh release create v$(cat ../VERSION) --prerelease
-
   # runs for every event in the "release candidate" PR
   build_pre_rel_ubuntu:
     needs: 'rel_prep'

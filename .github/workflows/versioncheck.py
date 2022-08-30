@@ -66,11 +66,6 @@ for release in releases:
     else:
         isnewversion = True
 
-if isbugfix and isversbump:
-    print(f'Releasing bug fix {cur["string"]}.')
-    command = subprocess.run(["echo" , "'{'RELEASE'}'='{'TRUE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
-    sys.exit(0)
-
 # Is cur in releases?
 if isnewversion:
     # Compare current vs latest
@@ -92,14 +87,16 @@ print(f'Destination branch is {base}')
 if base == 'main':
     if isnewversion and isversbump:
         print(f'Releasing new version {cur["string"]}.')
-        command = subprocess.run(["echo" , "'{'RELEASE'}'='{'TRUE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
         sys.exit(0)
     else:
-        print(f'Cannot merge non-release to main.')
-        command = subprocess.run(["echo" , "'{'RELEASE'}'='{'FALSE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
-        sys.exit(0)
+        print(f'Correct version in version file before merging to main.')
+        sys.exit(1)
     
 else:
-    if not (isbugfix and isversbump):
-        command = subprocess.run(["echo" , "'{'RELEASE'}'='{'FALSE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
-        sys.exit(0)
+    if isbugfix and isversbump:
+        print(f'Releasing bug fix {cur["string"]}.')
+        sys.exit(3)
+        
+    else:
+        print(f'Non-release event is not processed by this workflow.')
+        sys.exit(2)
