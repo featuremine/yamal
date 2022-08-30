@@ -638,7 +638,7 @@ size_t fmc_component_out_idx(struct fmc_component *comp, const char *name,
   struct fmc_reactor_ctx_out *item = comp->_ctx->out_tps;
   size_t idx = 0;
   while (item) {
-    if (strcmp(name, item->type) == 0) {
+    if (strcmp(name, item->name) == 0) {
       return idx;
     }
     item = item->next;
