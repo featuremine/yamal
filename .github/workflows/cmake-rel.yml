@@ -2,8 +2,6 @@ name: CMake Release
 
 on:
   pull_request:
-   # paths:
-   # - 'VERSION'
 
 permissions: write-all
 
@@ -24,9 +22,15 @@ jobs:
     - name: Install PyGitHub
       run: pip3 install PyGithub
       
+    - name: Echo 'RELEASE'
+      run: echo $RELEASE
+    
     - name: Check the PRs version 
       working-directory: ${{github.workspace}}/.github/workflows
       run: python3 versioncheck.py
+
+    - name: Echo 'RELEASE' after script
+      run: echo $RELEASE
 
     - name: Check version number matches reference name
       working-directory: ${{github.workspace}}

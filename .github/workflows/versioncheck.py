@@ -66,8 +66,8 @@ for release in releases:
         isnewversion = True
 
 if isbugfix and isversbump:
-    print("Bug fix")
-    os.environ['RELEASE'] = 'TRUE'
+    print(f'Releasing bug fix {cur["string"]}.')
+    os.environ["RELEASE"] = "true"
     sys.exit(0)
 
 # Is cur in releases?
@@ -88,10 +88,17 @@ if isnewversion:
 
 base = os.getenv('BASE')
 print(f'Destination branch is {base}')
-if isnewversion and isversbump and base == 'main':
-    print("New version")
-    os.environ['RELEASE'] = 'TRUE'
-    sys.exit(0)
+if base == 'main':
+    if isnewversion and isversbump:
+        print(f'Releasing new version {cur["string"]}.')
+        os.environ["RELEASE"] = "true"
+        sys.exit(0)
+    else:
+        print(f'Cannot merge non-release to main.')
+        os.environ["RELEASE"] = "false"
+        sys.exit(0)
     
-if not (isnewversion and isversbump and base == 'main') or not (isbugfix and isversbump):
-    sys.exit(1)
+else:
+    if not (isbugfix and isversbump):
+        os.environ["RELEASE"] = "false"
+        sys.exit(0)
