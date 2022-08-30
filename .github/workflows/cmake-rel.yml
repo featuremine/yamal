@@ -24,6 +24,8 @@ jobs:
       run: pip3 install PyGithub
           
     - name: Check if PR is release
+      env: 
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
       working-directory: ${{github.workspace}}/.github/workflows
       run: bash versioncheck.sh
       
