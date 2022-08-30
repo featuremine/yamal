@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 from github import Github
 
 isnewversion = False
@@ -67,7 +68,7 @@ for release in releases:
 
 if isbugfix and isversbump:
     print(f'Releasing bug fix {cur["string"]}.')
-    os.environ["RELEASE"] = "true"
+    command = subprocess.run(["echo" , "'{'RELEASE'}'='{'TRUE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
     sys.exit(0)
 
 # Is cur in releases?
@@ -91,14 +92,14 @@ print(f'Destination branch is {base}')
 if base == 'main':
     if isnewversion and isversbump:
         print(f'Releasing new version {cur["string"]}.')
-        os.environ["RELEASE"] = "true"
+        command = subprocess.run(["echo" , "'{'RELEASE'}'='{'TRUE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
         sys.exit(0)
     else:
         print(f'Cannot merge non-release to main.')
-        os.environ["RELEASE"] = "false"
+        command = subprocess.run(["echo" , "'{'RELEASE'}'='{'FALSE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
         sys.exit(0)
     
 else:
     if not (isbugfix and isversbump):
-        os.environ["RELEASE"] = "false"
+        command = subprocess.run(["echo" , "'{'RELEASE'}'='{'FALSE'}'", " >> $GITHUB_ENV"], stdout=subprocess.PIPE)
         sys.exit(0)
