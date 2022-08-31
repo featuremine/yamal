@@ -83,19 +83,19 @@ jobs:
       run: ctest -C ${{env.BUILD_TYPE}}
 
     - name: Package
-      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      if: needs.utility.outputs.isRelease == '0' || needs.utility.outputs.isRelease == '3'
       working-directory: ${{github.workspace}}/build
       run: cpack -G DEB
     
     - name: Upload documentation
-      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      if: needs.utility.outputs.isRelease == '0' || needs.utility.outputs.isRelease == '3'
       working-directory: ${{github.workspace}}/build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat ../VERSION) ${{github.repository}}-docs-v$(cat ../VERSION).tar.gz --clobber
 
     - name: Upload package
-      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      if: needs.utility.outputs.isRelease == '0' || needs.utility.outputs.isRelease == '3'
       working-directory: ${{github.workspace}}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -140,12 +140,12 @@ jobs:
       run: ../cmake-3.21.0-linux-x86_64/bin/ctest -C ${{env.BUILD_TYPE}}
 
     - name: Package
-      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      if: needs.utility.outputs.isRelease == '0' || needs.utility.outputs.isRelease == '3'
       working-directory: build
       run: ../cmake-3.21.0-linux-x86_64/bin/cpack -G RPM
         
     - name: Upload package
-      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      if: needs.utility.outputs.isRelease == '0' || needs.utility.outputs.isRelease == '3'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat ../VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
