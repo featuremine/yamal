@@ -1,107 +1,82 @@
+#!/usr/bin/env python3
 import os
 import sys
 import subprocess
+from os import path
 from github import Github
 
-# todo: ADD create pre-rel
-# todo: ADD PRE-REL check
+def version_file():
+    where = path.dirname(path.dirname(path.dirname(__file__)))
+    return path.join(where, 'VERSION')
 
-isnewversion = False
-isbugfix = False
-isversbump = False
+class Version(object):
+    def __init__(self, version_str):
+        self._numbers = [int(x) for x in str(version_str).split('.')]
 
-ghclient = Github(os.getenv('GH_TOKEN'))
+    def regular(self):
+        return len(self._numbers) == 3
 
-# Get list of already existing tags, minus the leading 'v'
-releases = []
-for release in ghclient.get_repo("featuremine/yamal").get_releases():
-    rel = {}
-    tag = str(release.tag_name[1:]).split('.')
-    rel['major'] = tag[0]
-    rel['minor'] = tag[1]
-    rel['patch'] = tag[2]
-    rel['string'] = f'{rel["major"]}.{rel["minor"]}.{rel["patch"]}'
-    if len(tag) == 4:
-        rel['bugfix'] = tag[3]
-        rel['string'] = f'{rel["string"]}.{rel["bugfix"]}'
-    releases.append(rel)
+    def bugfix(self):
+        return len(self._numbers) == 4
 
-# Iterate through list for latest (highest) tag
-latest = releases[0]
-for release in releases:
-    if int(release['major']) > int(latest['major']):
-        latest = release
-        continue
-    elif int(release['major']) == int(latest['major']):
-        if int(release['minor']) > int(latest['minor']):
-            latest = release
-            continue
-        elif int(release['minor']) == int(latest['minor']):
-            if int(release['patch']) > int(latest['patch']):
-                latest = release
-                continue
-print(f'Latest release is {latest["string"]}.')
+    def __lt__(self, other):
+        for x, y in zip(self._numbers, other._numbers):
+            if x < y:
+                return True
+        
+        return len(self._numbers) < len(other._numbers)
+    def __str__(self):
+        return '.'.join([str(x) for x in self._numbers])
 
-with open('../../VERSION', encoding = 'utf-8') as versionFile:
-    current = str(versionFile.read()).splitlines()[0].split('.')
-    cur = {}
-    cur['major'] = current[0]
-    cur['minor'] = current[1]
-    cur['patch'] = current[2]
-    cur['string'] = f'{cur["major"]}.{cur["minor"]}.{cur["patch"]}'
-    if len(current) == 4:
-        cur['bugfix'] = current[3]
-        cur['string'] = cur["string"] + f'.{cur["bugfix"]}'
-    print(f'Version in file is {cur["string"]}.')
+def version():
+    return Version(list(open(version_file()))[0].strip())
 
-# Is cur in releases?
-for release in releases:
-    if release['major'] == cur['major'] and release['minor'] == cur['minor'] and release['patch'] == cur['patch'] :
-        isnewversion = False
-        if len(release) == 4 and len(cur) == 5:
-            isbugfix = True
-            isversbump = True
-        elif len(release) == 5 and len(cur) == 5:
-            if int(cur["bugfix"]) > int(release["bugfix"]):
-                isbugfix = True
-                isversbump = True
-        break
+def version_check():
+    res = subprocess.run(['git', 'diff', os.getenv('GIT_MERGE_BASE'), '--', version_file()], capture_output=True)
+    assert not res.returncode, f'git diff failed to execute with output\n{res.stderr}'
+    if not res.stdout:
+        return None
+    return version()
+
+ghrepo = Github(os.getenv('GH_TOKEN')).get_repo("featuremine/yamal")
+
+def releases():
+    rels = []
+    for release in ghrepo.get_releases():
+        if not release.draft:
+            rels.append(Version(release.tag_name[1:]))
+
+    return sorted(rels, reverse=True)        
+
+def main_merge():
+    return os.getenv('GIT_MERGE_BASE') == 'main'
+
+
+if __name__ == '__main__':
+    ver = version_check()
+    rels = releases()
+    version_bump = ver and ver.regular() and (not rels or rels[0] < ver)
+    regular_pr = not ver and not main_merge()
+    proper_release = main_merge() and version_bump
+    # TODO need to check that bug fix is proper
+    # derived from existing release and large than existing bug fixes
+    bug_fix_release = ver and ver.bugfix() and not main_merge()
+    good_to_go = regular_pr or proper_release or bug_fix_release
+    if not good_to_go:
+        if main_merge():
+            raise "Merging to main allowed with a proper version bump only"
+        elif ver and not ver.bug_fix():
+            raise "Version changes other than bug fixes need to increase the version and merge into main"
+        else:
+            raise "Bug fix needs to extend an existing release and must increase bug fix version"
+
+    if proper_release or bug_fix_release:
+        #create draft
+        # check if draft release exists
+        #if it does, amment it by changing target_commitish
+        #else create new
+        ghrepo.create_git_release(f'v{ver}', f'v{ver}', f'draft release for version v{ver}',
+            draft=True, prerelease=False, target_commitish=os.getenv('GIT_MERGE_COMMIT'))
+        print("::set-output name=release::release")
     else:
-        isnewversion = True
-
-# Was the version bumped?
-if isnewversion:
-    # Compare current vs latest
-    if int(cur['major']) > int(latest['major']):
-        isversbump = True
-        print("Major version change")
-    elif int(cur['major']) == int(latest['major']):
-        if int(cur['minor']) > int(latest['minor']):
-            isversbump = True
-            print("Minor version change")
-        elif int(cur['minor']) == int(latest['minor']):
-            if int(cur['patch']) > int(latest['patch']):
-                isversbump = True
-                print("Patch version change")
-
-
-base = os.getenv('BASE')
-print(f'Destination branch is {base}')
-if base == 'main':
-    if isnewversion and isversbump:
-        print(f'Releasing new version {cur["string"]}.')
-        sys.exit(0)
-    elif isbugfix:
-        print(f'Error, cannot merge bugfix {cur["string"]} into main.')
-        sys.exit(4)
-    else:
-        print(f'Fix version in version file before merging to main.')
-        sys.exit(1)
-    
-else:
-    if isbugfix and isversbump:
-        print(f'Releasing bug fix {cur["string"]}.')
-        sys.exit(3)
-    else:
-        print(f'Non-release event is not processed by this workflow.')
-        sys.exit(2)
+        print("::set-output name=release::regular")
