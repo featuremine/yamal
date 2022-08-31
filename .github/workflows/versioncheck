@@ -51,7 +51,6 @@ def releases():
 def main_merge():
     return os.getenv('GIT_MERGE_BASE') == 'main'
 
-
 if __name__ == '__main__':
     ver = version_check()
     rels = releases()
