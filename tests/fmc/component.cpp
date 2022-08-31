@@ -521,6 +521,7 @@ TEST(reactor, io) {
   ASSERT_EQ(pcomp->_ctx->err.code, FMC_ERROR_NONE);
 
   ASSERT_EQ(fmc_component_out_idx(pcomp, "valid output", &err), 0);
+  ASSERT_EQ(fmc_component_out_sz(pcomp), 1);
 
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(fmc_component_out_idx(pcomp, "non existent output", &err), 0);
@@ -539,6 +540,7 @@ TEST(reactor, io) {
       fmc_component_new(&r, ctp, nullptr, inputs, &err);
   ASSERT_EQ(err, nullptr);
   ASSERT_EQ(ccomp->_ctx->err.code, FMC_ERROR_NONE);
+  ASSERT_EQ(fmc_component_out_sz(ccomp), 0);
 
   fmc_reactor_run(&r, false, &err);
   ASSERT_EQ(err, nullptr);
@@ -606,6 +608,7 @@ TEST(reactor, io_multiple_inputs) {
 
   ASSERT_EQ(fmc_component_out_idx(p2comp, "valid output", &err), 0);
   ASSERT_EQ(fmc_component_out_idx(p2comp, "valid output 2", &err), 1);
+  ASSERT_EQ(fmc_component_out_sz(p2comp), 2);
 
   struct fmc_component_type *p3tp =
       fmc_component_module_type_get(mod, "producercomponent3", &err);
@@ -620,6 +623,7 @@ TEST(reactor, io_multiple_inputs) {
   ASSERT_EQ(fmc_component_out_idx(p3comp, "valid output", &err), 0);
   ASSERT_EQ(fmc_component_out_idx(p3comp, "valid output 2", &err), 1);
   ASSERT_EQ(fmc_component_out_idx(p3comp, "valid output 3", &err), 2);
+  ASSERT_EQ(fmc_component_out_sz(p3comp), 3);
 
   struct fmc_component_type *c2tp =
       fmc_component_module_type_get(mod, "consumercomponent2", &err);

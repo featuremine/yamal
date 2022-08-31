@@ -648,6 +648,13 @@ size_t fmc_component_out_idx(struct fmc_component *comp, const char *name,
   return 0;
 }
 
+size_t fmc_component_out_sz(struct fmc_component *comp) {
+  struct fmc_reactor_ctx_out *item;
+  size_t counter = 0;
+  DL_COUNT(comp->_ctx->out_tps, item, counter);
+  return counter;
+}
+
 void fmc_component_del(struct fmc_component *comp) {
   struct fmc_component_list *head = comp->_vt->comps;
   struct fmc_component_list *item;
