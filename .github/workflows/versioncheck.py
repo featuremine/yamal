@@ -3,6 +3,9 @@ import sys
 import subprocess
 from github import Github
 
+# todo: ADD create pre-rel
+# todo: ADD PRE-REL check
+
 isnewversion = False
 isbugfix = False
 isversbump = False
@@ -92,7 +95,7 @@ if base == 'main':
         print(f'Error, cannot merge bugfix {cur["string"]} into main.')
         sys.exit(4)
     else:
-        print(f'Correct version in version file before merging to main.')
+        print(f'Fix version in version file before merging to main.')
         sys.exit(1)
     
 else:

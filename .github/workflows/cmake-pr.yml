@@ -13,6 +13,8 @@ jobs:
 
   utility:
     runs-on: ubuntu-latest
+    outputs:
+      isRelease: ${{ steps.isRelease.outputs.release }}
     
     steps:
     - uses: actions/checkout@main
@@ -33,6 +35,18 @@ jobs:
         message: 'Committing clang-format changes'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # Install python wrappers for gh
+    - name: Install PyGitHub
+      run: pip3 install PyGithub
+
+    # Detect release and cache
+    - name: Check if PR is release
+      id: isRelease
+      env: 
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: ${{github.workspace}}/.github/workflows
+      run: echo "::set-output name=release::bash versioncheck.sh"
 
   build-ubuntu:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
@@ -68,6 +82,26 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
 
+    - name: Package
+      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      working-directory: ${{github.workspace}}/build
+      run: cpack -G DEB
+    
+    - name: Upload documentation
+      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      working-directory: ${{github.workspace}}/build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload v$(cat ../VERSION) ${{github.repository}}-docs-v$(cat ../VERSION).tar.gz --clobber
+
+    - name: Upload package
+      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      working-directory: ${{github.workspace}}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload v$(cat ../VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.deb --clobber
+
+  
   build-centos:
     needs: utility    
     runs-on: ubuntu-latest
@@ -104,3 +138,15 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ../cmake-3.21.0-linux-x86_64/bin/ctest -C ${{env.BUILD_TYPE}}
+
+    - name: Package
+      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      working-directory: build
+      run: ../cmake-3.21.0-linux-x86_64/bin/cpack -G RPM
+        
+    - name: Upload package
+      if: needs.utility.outputs.isRelease == 0 or needs.utility.outputs.isRelease == 3
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload v$(cat ../VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
+
