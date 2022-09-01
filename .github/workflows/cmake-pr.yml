@@ -27,7 +27,7 @@ jobs:
         working-directory: ${{github.workspace}}/.github/workflows
         GIT_MERGE_BASE: ${{ github.base_ref }}
         GIT_MERGE_COMMIT: ${{ github.sha }}
-      run: versioncheck
+      run: python3 versioncheck
 
     # Code formatting with Clang linter
     - uses: DoozyX/clang-format-lint-action@v0.14
