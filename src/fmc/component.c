@@ -219,6 +219,13 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[dep->idx];
     if (dep_ctx->dep_upd) {
       dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, dep->inp_idx, mem);
+      if (fmc_error_has(&dep_ctx->err)) {
+        fmc_error_reset_sprintf(
+            error,
+            "component type %s failed to process update with error %s",
+            ctx->comp->_vt->tp_name, fmc_error_msg(&dep_ctx->err));
+        goto cleanup;
+      }
     }
     utheap_push(&ctx->reactor->queued, &dep->idx, FMC_SIZE_T_PTR_LESS);
   }
