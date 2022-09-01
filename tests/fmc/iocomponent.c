@@ -166,8 +166,8 @@ void consumer_component_on_dep(struct fmc_component *self, int idx,
   }
   size_t incoming = *(size_t *)*in.view;
   if (incoming != value) {
-    fmc_error_set(&c->e, "Received invalid value %lu, expected %lu",
-                  incoming, value);
+    fmc_error_set(&c->e, "Received invalid value %lu, expected %lu", incoming,
+                  value);
   }
 }
 
