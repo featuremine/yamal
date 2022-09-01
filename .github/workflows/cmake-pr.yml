@@ -22,9 +22,9 @@ jobs:
     # Detect release and cache
     - name: Check if PR is release
       id: isRelease
+      working-directory: ${{github.workspace}}/.github/workflows
       env: 
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: ${{github.workspace}}/.github/workflows
         GIT_MERGE_BASE: ${{ github.base_ref }}
         GIT_MERGE_COMMIT: ${{ github.sha }}
       run: python3 versioncheck
