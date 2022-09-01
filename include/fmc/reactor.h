@@ -85,9 +85,11 @@ struct sched_item {
 struct fmc_reactor_ctx;
 struct fmc_component;
 
+/*
+The reactor should not be used directly in fmc_reactor_dep_clbck that have been registered
+*/
 typedef void (*fmc_reactor_dep_clbck)(struct fmc_component *self,
-                                      struct fmc_reactor_ctx *ctx, int idx,
-                                      struct fmc_shmem in);
+                                      int idx, struct fmc_shmem in);
 
 typedef void (*fmc_reactor_exec_clbck)(struct fmc_component *self,
                                        struct fmc_reactor_ctx *ctx,
