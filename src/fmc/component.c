@@ -222,12 +222,15 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
       if (fmc_error_has(&dep_ctx->err)) {
         if (fmc_error_has(error)) {
           fmc_error_reset_sprintf(error,
-                        "%s\nalso, failed to process input %lu for component %s with error: %s",
-                        fmc_error_msg(error), dep->inp_idx, ctx->comp->_vt->tp_name,
-                        fmc_error_msg(&ctx->err));
+                                  "%s\nalso, failed to process input %lu for "
+                                  "component %s with error: %s",
+                                  fmc_error_msg(error), dep->inp_idx,
+                                  ctx->comp->_vt->tp_name,
+                                  fmc_error_msg(&ctx->err));
         } else {
-          fmc_error_reset_sprintf(error, "failed to process input %lu component %s with error: %s",
-                        dep->inp_idx, ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
+          fmc_error_reset_sprintf(
+              error, "failed to process input %lu component %s with error: %s",
+              dep->inp_idx, ctx->comp->_vt->tp_name, fmc_error_msg(&ctx->err));
         }
       }
     }
