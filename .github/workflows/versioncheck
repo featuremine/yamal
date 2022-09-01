@@ -7,6 +7,8 @@ from github import Github
 
 def version_file():
     where = path.dirname(path.dirname(path.dirname(__file__)))
+    print(where)
+    print(path.join(where, 'VERSION'))
     return path.join(where, 'VERSION')
 
 class Version(object):
