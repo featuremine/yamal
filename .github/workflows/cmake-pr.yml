@@ -18,8 +18,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@main
+    
+    # Install python wrappers for gh
+    - name: Install PyGitHub
+      run: pip3 install PyGithub
 
-    # Detect release and cache
+    # Detect release
     - name: Check if PR is release
       id: isRelease
       working-directory: ${{github.workspace}}/.github/workflows
@@ -45,10 +49,6 @@ jobs:
         message: 'Committing clang-format changes'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    # Install python wrappers for gh
-    - name: Install PyGitHub
-      run: pip3 install PyGithub
 
   build-ubuntu:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
