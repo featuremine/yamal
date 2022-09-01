@@ -33,6 +33,8 @@ def version():
 
 def version_check():
     res = subprocess.run(['git', 'diff', os.getenv('GIT_MERGE_BASE'), '--', version_file()], capture_output=True)
+    print(res.returncode)
+    print(res.stdout)
     assert not res.returncode, f'git diff failed to execute with output\n{res.stderr}'
     if not res.stdout:
         return None
