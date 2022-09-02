@@ -156,5 +156,5 @@ jobs:
       if: needs.utility.outputs.isRelease == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat ../VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
+      run: gh release upload v$(cat VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
 
