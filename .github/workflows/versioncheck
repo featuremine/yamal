@@ -6,10 +6,7 @@ from os import path
 from github import Github
 
 def version_file():
-    print(__file__)
-    print((path.dirname(__file__)))
-    print((path.dirname(path.dirname(__file__))))
-    where = path.dirname(path.dirname(path.dirname(__file__)))
+    where = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
     return path.join(where, 'VERSION')
 
 class Version(object):
