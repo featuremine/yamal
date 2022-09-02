@@ -106,7 +106,7 @@ jobs:
       working-directory: ${{github.workspace}}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat ../VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.deb --clobber
+      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.deb --clobber
 
   
   build-centos:
@@ -119,7 +119,7 @@ jobs:
     - uses: actions/checkout@main
 
     - name: Install dependencies
-      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget
+      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget rpm-build
     - name: Install tclap
       run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure --prefix=/usr && make && make install && popd && rm -rf tclap-code
     - name: Install gtest
