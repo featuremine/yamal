@@ -2,6 +2,7 @@ name: CMake PR
 
 on:
   pull_request:
+    types: [opened, synchronize, closed]
 
 permissions: write-all
 
