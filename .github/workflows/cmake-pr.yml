@@ -2,7 +2,6 @@ name: CMake PR
 
 on:
   pull_request:
-    types: [opened, synchronize, closed]
 
 permissions: write-all
 
@@ -161,13 +160,3 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
-
-  publish-release:
-    needs: [build-ubuntu, build-centos]
-    runs-on: ubuntu-latest
-    if: needs.utility.outputs.isRelease == 'release' && github.event.pull_request.merged == true
-    steps:
-    - uses: actions/checkout@main
-    
-    - name: Publish
-      run: gh release edit v$(cat VERSION) --draft=false
