@@ -65,7 +65,7 @@ if __name__ == '__main__':
     if not good_to_go:
         if main_merge():
             raise "Merging to main allowed with a proper version bump only"
-        elif ver and not ver.bug_fix():
+        elif ver and not ver.bugfix():
             raise "Version changes other than bug fixes need to increase the version and merge into main"
         else:
             raise "Bug fix needs to extend an existing release and must increase bug fix version"
