@@ -252,6 +252,7 @@ fmc_component_new(struct fmc_reactor *reactor, struct fmc_component_type *tp,
                   struct fmc_component_input *inps, fmc_error_t **error);
 FMMODFUNC size_t fmc_component_out_idx(struct fmc_component *, const char *name,
                                        fmc_error_t **error);
+FMMODFUNC size_t fmc_component_out_sz(struct fmc_component *);
 FMMODFUNC void fmc_component_del(struct fmc_component *comp);
 
 /* Current API version: 1 (components_add_v1) */

@@ -100,16 +100,6 @@ static void incompatible(struct fmc_component_module *mod, void *unused) {
       &mod->error, "component API version is higher than the system version");
 }
 
-static int sched_item_less(const void *a, const void *b) {
-  struct sched_item *_a = (struct sched_item *)a;
-  struct sched_item *_b = (struct sched_item *)b;
-  if (fmc_time64_less(_a->t, _b->t))
-    return 1;
-  else if (fmc_time64_less(_b->t, _a->t))
-    return 0;
-  return (int)_a->idx < _b->idx;
-}
-
 static void reactor_queue_v1(struct fmc_reactor_ctx *ctx) {
   fmc_error_t *error = &ctx->reactor->err;
   utheap_push(&ctx->reactor->toqueue, &ctx->idx, FMC_SIZE_T_PTR_LESS);
@@ -121,7 +111,7 @@ static void reactor_schedule_v1(struct fmc_reactor_ctx *ctx,
                                 fmc_time64_t time) {
   fmc_error_t *error = &ctx->reactor->err;
   struct sched_item item = {.idx = ctx->idx, .t = time};
-  utheap_push(&ctx->reactor->sched, &item, sched_item_less);
+  utheap_push(&ctx->reactor->sched, &item, FMC_INT64_T_PTR_LESS);
 cleanup:
   return;
 }
@@ -508,12 +498,21 @@ fmc_component_module_type_get(struct fmc_component_module *mod,
     _el;                                                                       \
   })
 
+int inequal_cmp(const void *a, const void *b) {
+  return *(const size_t *)a - *(const size_t *)b;
+}
+
+int inequal_idx_cmp(const void *a, const void *b) {
+  return *(const size_t *)a - ((const struct sched_item *)b)->idx;
+}
+
 struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
                                         struct fmc_component_type *tp,
                                         struct fmc_cfg_sect_item *cfg,
                                         struct fmc_component_input *inps,
                                         fmc_error_t **usr_error) {
   fmc_error_clear(usr_error);
+  size_t size_t_curridx = reactor->size;
   fmc_error_t *error = &reactor->err;
   struct fmc_component_list *item = NULL;
   unsigned int in_sz = 0;
@@ -522,8 +521,9 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   char *in_types[in_sz + 1];
   UT_array *updated_deps[in_sz + 1];
   memset(updated_deps, 0, sizeof(updated_deps));
-  struct fmc_reactor_ctx ctx;
-  fmc_reactor_ctx_init(reactor, &ctx);
+  struct fmc_reactor_ctx *ctx = fmc_reactor_ctx_new(reactor, usr_error);
+  if (!ctx)
+    goto cleanup;
 
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
@@ -563,19 +563,19 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   in_types[in_sz] = NULL;
 
-  item->comp = tp->tp_new(cfg, &ctx, in_types);
-  if (fmc_error_has(&ctx.err)) {
+  item->comp = tp->tp_new(cfg, ctx, in_types);
+  if (fmc_error_has(&ctx->err)) {
     fmc_error_set(usr_error,
                   "failed to create new component of type %s with error: %s",
-                  tp->tp_name, fmc_error_msg(&ctx.err));
+                  tp->tp_name, fmc_error_msg(&ctx->err));
     goto cleanup;
   }
   item->comp->_vt = tp;
-  ctx.comp = item->comp;
-  fmc_reactor_ctx_emplace(&ctx, inps, usr_error); // copy the context
+  item->comp->_ctx = ctx;
+  ctx->comp = item->comp;
+  fmc_reactor_ctx_take(ctx, inps, usr_error); // copy the context
   if (*usr_error)
     goto cleanup;
-  item->comp->_ctx = reactor->ctxs[reactor->size - 1];
   DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {
     struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
@@ -588,8 +588,37 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     updated_deps[i] = deps;
   }
   return item->comp;
-cleanup:
-  fmc_reactor_ctx_destroy(&ctx);
+cleanup : {
+  void *val = NULL;
+  do {
+    val = utarray_find(&ctx->reactor->queued, (const void *)&size_t_curridx,
+                       inequal_cmp);
+    if (!val)
+      break;
+    utheap_erase(&ctx->reactor->queued,
+                 utarray_eltidx(&ctx->reactor->queued, val),
+                 FMC_SIZE_T_PTR_LESS);
+  } while (true);
+  do {
+    val = utarray_find(&ctx->reactor->toqueue, (const void *)&size_t_curridx,
+                       inequal_cmp);
+    if (!val)
+      break;
+    utheap_erase(&ctx->reactor->toqueue,
+                 utarray_eltidx(&ctx->reactor->toqueue, val),
+                 FMC_SIZE_T_PTR_LESS);
+  } while (true);
+  do {
+    val = utarray_find(&ctx->reactor->sched, (const void *)&size_t_curridx,
+                       inequal_idx_cmp);
+    if (!val)
+      break;
+    utheap_erase(&ctx->reactor->sched,
+                 utarray_eltidx(&ctx->reactor->sched, val),
+                 FMC_INT64_T_PTR_LESS);
+  } while (true);
+}
+  fmc_reactor_ctx_del(ctx);
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
   if (item) {
@@ -601,6 +630,29 @@ cleanup:
     free(item);
   }
   return NULL;
+}
+
+size_t fmc_component_out_idx(struct fmc_component *comp, const char *name,
+                             fmc_error_t **error) {
+  fmc_error_clear(error);
+  struct fmc_reactor_ctx_out *head = comp->_ctx->out_tps;
+  struct fmc_reactor_ctx_out *item;
+  size_t idx = 0;
+  DL_FOREACH(head, item) {
+    if (strcmp(name, item->name) == 0) {
+      return idx;
+    }
+    ++idx;
+  }
+  fmc_error_set(error, "unable to find output with name %s in component", name);
+  return 0;
+}
+
+size_t fmc_component_out_sz(struct fmc_component *comp) {
+  struct fmc_reactor_ctx_out *item;
+  size_t counter = 0;
+  DL_COUNT(comp->_ctx->out_tps, item, counter);
+  return counter;
 }
 
 void fmc_component_del(struct fmc_component *comp) {

@@ -179,11 +179,6 @@ target_link_libraries(
     PUBLIC
     fmc
 )
-set_target_properties(
-    ytp
-    PROPERTIES
-    LINKER_LANGUAGE "C"
-)
 install(
     TARGETS
     ytp
