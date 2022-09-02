@@ -157,17 +157,17 @@ cleanup:
   return NULL;
 };
 
-void consumer_component_on_dep(struct fmc_component *self,
-                               struct fmc_reactor_ctx *ctx, int idx,
+void consumer_component_on_dep(struct fmc_component *self, int idx,
                                struct fmc_shmem in) {
+  struct consumer_component *c = (struct consumer_component *)self;
   if (idx != 0) {
-    _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
+    fmc_error_set(&c->e, "Invalid input updated %d, expected 0", idx);
     return;
   }
   size_t incoming = *(size_t *)*in.view;
   if (incoming != value) {
-    _reactor->set_error(ctx, "Received invalid value %lu, expected %lu",
-                        incoming, value);
+    fmc_error_set(&c->e, "Received invalid value %lu, expected %lu", incoming,
+                  value);
   }
 }
 
@@ -176,6 +176,9 @@ static void consumer_component_process_one(struct fmc_component *self,
                                            fmc_time64_t time) {
   struct consumer_component *c = (struct consumer_component *)self;
   ++c->executed;
+  if (c->e) {
+    _reactor->set_error(ctx, fmc_error_msg(c->e));
+  }
 };
 
 static struct consumer_component *
@@ -198,8 +201,7 @@ cleanup:
   return NULL;
 };
 
-void consumer_component_2_on_dep(struct fmc_component *self,
-                                 struct fmc_reactor_ctx *ctx, int idx,
+void consumer_component_2_on_dep(struct fmc_component *self, int idx,
                                  struct fmc_shmem in) {
   struct consumer_component_2 *c = (struct consumer_component_2 *)self;
   switch (idx) {
@@ -210,7 +212,7 @@ void consumer_component_2_on_dep(struct fmc_component *self,
     ++c->second;
     break;
   default:
-    _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
+    fmc_error_set(&c->e, "Invalid input updated %d, expected 0", idx);
     break;
   }
 }
@@ -220,6 +222,9 @@ static void consumer_component_2_process_one(struct fmc_component *self,
                                              fmc_time64_t time) {
   struct consumer_component_2 *c = (struct consumer_component_2 *)self;
   ++c->executed;
+  if (c->e) {
+    _reactor->set_error(ctx, fmc_error_msg(c->e));
+  }
 };
 
 static struct consumer_component_2 *
@@ -242,8 +247,7 @@ cleanup:
   return NULL;
 };
 
-void consumer_component_3_on_dep(struct fmc_component *self,
-                                 struct fmc_reactor_ctx *ctx, int idx,
+void consumer_component_3_on_dep(struct fmc_component *self, int idx,
                                  struct fmc_shmem in) {
   struct consumer_component_3 *c = (struct consumer_component_3 *)self;
   switch (idx) {
@@ -257,7 +261,7 @@ void consumer_component_3_on_dep(struct fmc_component *self,
     ++c->fifth;
     break;
   default:
-    _reactor->set_error(ctx, "Invalid input updated %d, expected 0", idx);
+    fmc_error_set(&c->e, "Invalid input updated %d, expected 0", idx);
     break;
   }
 }
@@ -267,6 +271,9 @@ static void consumer_component_3_process_one(struct fmc_component *self,
                                              fmc_time64_t time) {
   struct consumer_component_3 *c = (struct consumer_component_3 *)self;
   ++c->executed;
+  if (c->e) {
+    _reactor->set_error(ctx, fmc_error_msg(c->e));
+  }
 };
 
 static struct consumer_component_3 *

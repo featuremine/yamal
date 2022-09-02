@@ -218,7 +218,7 @@ void reactor_notify_v1(struct fmc_reactor_ctx *ctx, size_t idx,
     struct fmc_reactor_ctx_dep *dep = utarray_eltptr(deps, i);
     struct fmc_reactor_ctx *dep_ctx = ctx->reactor->ctxs[dep->idx];
     if (dep_ctx->dep_upd) {
-      dep_ctx->dep_upd(dep_ctx->comp, dep_ctx, dep->inp_idx, mem);
+      dep_ctx->dep_upd(dep_ctx->comp, dep->inp_idx, mem);
     }
     utheap_push(&ctx->reactor->queued, &dep->idx, FMC_SIZE_T_PTR_LESS);
   }
