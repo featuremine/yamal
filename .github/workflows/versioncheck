@@ -41,20 +41,23 @@ def version_check():
 
 ghrepo = Github(os.getenv('GH_TOKEN')).get_repo("featuremine/yamal")
 
-def releases():
+def releases(ret_drafts):
     rels = []
     for release in ghrepo.get_releases():
-        if not release.draft:
-            rels.append(Version(release.tag_name[1:]))
-
-    return sorted(rels, reverse=True)        
+        if not ret_drafts:
+            if not release.draft:
+                rels.append(Version(release.tag_name[1:]))
+        else:
+            if release.draft:
+                rels.append(Version(release.tag_name[1:]))
+    return sorted(rels, reverse=True)
 
 def main_merge():
     return os.getenv('GIT_MERGE_BASE') == 'main'
 
 if __name__ == '__main__':
     ver = version_check()
-    rels = releases()
+    rels = releases(ret_drafts = False)
     version_bump = ver and ver.regular() and (not rels or rels[0] < ver)
     regular_pr = not ver and not main_merge()
     proper_release = main_merge() and version_bump
@@ -71,12 +74,22 @@ if __name__ == '__main__':
             raise "Bug fix needs to extend an existing release and must increase bug fix version"
 
     if proper_release or bug_fix_release:
-        #create draft
         # check if draft release exists
-        #if it does, amment it by changing target_commitish
-        #else create new
-        ghrepo.create_git_release(f'v{ver}', f'v{ver}', f'draft release for version v{ver}',
-            draft=True, prerelease=False, target_commitish=os.getenv('GIT_MERGE_COMMIT'))
+        drafts = releases(ret_drafts = True)
+        if ver in drafts:
+            #if it does, ammend it by changing target_commitish
+            #update_release(name, message, draft=False, prerelease=False, tag_name=NotSet, target_commitish=NotSet)
+            drafts.pop['ver'].update_release(
+                f'v{ver}', f'draft release for version v{ver}', draft=True, prerelease=False, 
+                tag_name=f'v{ver}', target_commitish=os.getenv('GIT_MERGE_COMMIT')
+            )        
+        else:
+            #else create new
+            #create_git_release(tag, name, message, draft=False, prerelease=False, target_commitish=NotSet)
+            ghrepo.create_git_release(
+                f'v{ver}', f'v{ver}', f'draft release for version v{ver}',
+                draft=True, prerelease=False, target_commitish=os.getenv('GIT_MERGE_COMMIT')
+            )
         print("::set-output name=release::release")
     else:
         print("::set-output name=release::regular")
