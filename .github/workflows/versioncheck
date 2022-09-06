@@ -32,7 +32,6 @@ def version():
     return Version(list(open(version_file()))[0].strip())
 
 def version_check():
-    print(version())
     res = subprocess.run(['git', 'diff', f'origin/{os.getenv("GIT_MERGE_BASE")}', '--', version_file()], capture_output=True)
     assert not res.returncode, f'git diff failed to execute with output\n{res.stderr.decode("UTF-8")}'
     if not res.stdout:
@@ -76,7 +75,9 @@ if __name__ == '__main__':
     if proper_release or bug_fix_release:
         # check if draft release exists
         drafts = releases(ret_drafts = True)
+        print(drafts)
         if ver in drafts:
+            print(f'Draft for version {ver} found, ammending target_commitish to {os.getenv("GIT_MERGE_COMMIT")}')
             #if it does, ammend it by changing target_commitish
             #update_release(name, message, draft=False, prerelease=False, tag_name=NotSet, target_commitish=NotSet)
             drafts.pop['ver'].update_release(
@@ -85,6 +86,7 @@ if __name__ == '__main__':
             )        
         else:
             #else create new
+            print(f'No draft found for version {ver}. Creating new draft.')
             #create_git_release(tag, name, message, draft=False, prerelease=False, target_commitish=NotSet)
             ghrepo.create_git_release(
                 f'v{ver}', f'v{ver}', f'draft release for version v{ver}',
