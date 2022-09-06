@@ -80,7 +80,7 @@ if __name__ == '__main__':
         updating_draft = False
         existent_drafts = drafts()
         for draft in existent_drafts:
-            if ver in draft.tag_name:
+            if str(ver) in draft.tag_name:
                 updating_draft = True 
                 print(f'Draft for version {ver} found, ammending target_commitish to {os.getenv("GIT_MERGE_COMMIT")}')
                 #if it does, ammend it by changing target_commitish
