@@ -28,6 +28,7 @@ struct producer_component {
 struct consumer_component {
   fmc_component_HEAD;
   size_t executed;
+  fmc_error_t *e;
 };
 
 /*Components for multiple inputs and outputs test*/
@@ -37,6 +38,7 @@ struct consumer_component_2 {
   size_t first;
   size_t second;
   size_t executed;
+  fmc_error_t *e;
 };
 
 struct consumer_component_3 {
@@ -45,6 +47,7 @@ struct consumer_component_3 {
   size_t fourth;
   size_t fifth;
   size_t executed;
+  fmc_error_t *e;
 };
 
 #ifdef __cplusplus
