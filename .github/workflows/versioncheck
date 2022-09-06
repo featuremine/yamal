@@ -40,23 +40,26 @@ def version_check():
 
 ghrepo = Github(os.getenv('GH_TOKEN')).get_repo("featuremine/yamal")
 
-def releases(ret_drafts):
+def releases():
     rels = []
     for release in ghrepo.get_releases():
-        if not ret_drafts:
-            if not release.draft:
-                rels.append(Version(release.tag_name[1:]))
-        else:
-            if release.draft:
-                rels.append(Version(release.tag_name[1:]))
+        if not release.draft:
+            rels.append(Version(release.tag_name[1:]))
     return sorted(rels, reverse=True)
+
+def drafts():
+    drafts = []
+    for release in ghrepo.get_releases():
+        if release.draft:
+            drafts.append(release)
+    return drafts
 
 def main_merge():
     return os.getenv('GIT_MERGE_BASE') == 'main'
 
 if __name__ == '__main__':
     ver = version_check()
-    rels = releases(ret_drafts = False)
+    rels = releases()
     version_bump = ver and ver.regular() and (not rels or rels[0] < ver)
     regular_pr = not ver and not main_merge()
     proper_release = main_merge() and version_bump
@@ -74,17 +77,20 @@ if __name__ == '__main__':
 
     if proper_release or bug_fix_release:
         # check if draft release exists
-        drafts = releases(ret_drafts = True)
-        print(drafts)
-        if ver in drafts:
-            print(f'Draft for version {ver} found, ammending target_commitish to {os.getenv("GIT_MERGE_COMMIT")}')
-            #if it does, ammend it by changing target_commitish
-            #update_release(name, message, draft=False, prerelease=False, tag_name=NotSet, target_commitish=NotSet)
-            drafts.pop['ver'].update_release(
-                f'v{ver}', f'draft release for version v{ver}', draft=True, prerelease=False, 
-                tag_name=f'v{ver}', target_commitish=os.getenv('GIT_MERGE_COMMIT')
-            )        
-        else:
+        updating_draft = False
+        existent_drafts = drafts()
+        for draft in existent_drafts:
+            if ver in draft.tag_name:
+                updating_draft = True 
+                print(f'Draft for version {ver} found, ammending target_commitish to {os.getenv("GIT_MERGE_COMMIT")}')
+                #if it does, ammend it by changing target_commitish
+                #update_release(name, message, draft=False, prerelease=False, tag_name=NotSet, target_commitish=NotSet)
+                draft.update_release(
+                    f'v{ver}', f'draft release for version v{ver}', draft=True, prerelease=False, 
+                    tag_name=f'v{ver}', target_commitish=os.getenv('GIT_MERGE_COMMIT')
+                )
+                break        
+        if not updating_draft:
             #else create new
             print(f'No draft found for version {ver}. Creating new draft.')
             #create_git_release(tag, name, message, draft=False, prerelease=False, target_commitish=NotSet)
