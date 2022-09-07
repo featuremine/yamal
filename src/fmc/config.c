@@ -510,8 +510,8 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
     }
   } break;
   case FMC_CFG_STR: {
-    // If we start with a quote it must end with a quote, no characters afterwards
-    // If it does not start with a quote we use the whole thing
+    // If we start with a quote it must end with a quote, no characters
+    // afterwards If it does not start with a quote we use the whole thing
     bool quoted = **str == '"';
     ++*str;
     char *endptr = NULL;
