@@ -56,25 +56,12 @@
 #error "Unsupported operating system"
 #endif
 
-static void components_del(struct fmc_component_list **comps) {
-  struct fmc_component_list *head = *comps;
-  struct fmc_component_list *item;
-  struct fmc_component_list *tmp;
-  DL_FOREACH_SAFE(head, item, tmp) {
-    DL_DELETE(head, item);
-    item->comp->_vt->tp_del(item->comp);
-    free(item);
-  }
-  *comps = NULL;
-}
-
 static void component_types_del(struct fmc_component_type **types) {
   struct fmc_component_type *head = *types;
   struct fmc_component_type *item;
   struct fmc_component_type *tmp;
   DL_FOREACH_SAFE(head, item, tmp) {
     DL_DELETE(head, item);
-    components_del(&item->comps);
     free(item);
   }
   *types = NULL;
@@ -576,7 +563,6 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_reactor_ctx_take(ctx, inps, usr_error); // copy the context
   if (*usr_error)
     goto cleanup;
-  DL_APPEND(tp->comps, item);
   for (unsigned int i = 0; i < in_sz; ++i) {
     struct fmc_reactor_ctx *inp_ctx = inps[i].comp->_ctx;
     UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
@@ -656,15 +642,6 @@ size_t fmc_component_out_sz(struct fmc_component *comp) {
 }
 
 void fmc_component_del(struct fmc_component *comp) {
-  struct fmc_component_list *head = comp->_vt->comps;
-  struct fmc_component_list *item;
-  DL_FOREACH(head, item) {
-    if (item->comp == comp) {
-      DL_DELETE(comp->_vt->comps, item);
-      free(item);
-      break;
-    }
-  }
   comp->_vt->tp_del(comp);
 }
 

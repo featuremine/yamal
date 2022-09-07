@@ -143,6 +143,9 @@ void fmc_reactor_ctx_del(struct fmc_reactor_ctx *ctx) {
   ctx->out_tps = NULL;
   utarray_done(&ctx->deps);
   fmc_error_destroy(&ctx->err);
+  if (ctx->comp) {
+    ctx->comp->_vt->tp_del(ctx->comp);
+  }
   free(ctx);
 }
 

@@ -195,7 +195,6 @@ struct fmc_component_type {
   struct fmc_cfg_node_spec *tp_cfgspec; // configuration specifications
   fmc_newfunc tp_new;                   // alloc and initialize the component
   fmc_delfunc tp_del;                   // destroy the component
-  struct fmc_component_list *comps;     // ptr to the containing component
   struct fmc_component_type *next, *prev;
 };
 

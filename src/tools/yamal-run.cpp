@@ -72,7 +72,7 @@ template <typename T, typename InitDestroy> struct scopevar_t {
   scopevar_t(const scopevar_t &) = delete;
   T value;
 };
-using module_ptr = fmc_component_module *;
+using module_ptr = std::unique_ptr<fmc_component_module, deleter_t>;
 using type_ptr = struct fmc_component_type *;
 using config_ptr = std::unique_ptr<fmc_cfg_sect_item, deleter_t>;
 using schema_ptr = struct fmc_cfg_node_spec *;
@@ -261,9 +261,6 @@ int main(int argc, char **argv) {
   std::unordered_map<std::string, fmc_component *> components;
 
   fmc::scope_end_call destroy_reactor([&]() {
-    for (auto &&[name, comp] : components) {
-      fmc_component_del(comp);
-    }
     fmc_reactor_destroy(&r);
   });
 
@@ -287,7 +284,7 @@ int main(int argc, char **argv) {
     fmc_runtime_error_unless(!err)
         << "Unable to load module " << module_name << ": " << fmc_error_msg(err);
 
-    auto type = fmc_component_module_type_get(module, component_name, &err);
+    auto type = fmc_component_module_type_get(module.get(), component_name, &err);
     fmc_runtime_error_unless(!err)
         << "Unable to get component type " << component_name << ": "
         << fmc_error_msg(err);
