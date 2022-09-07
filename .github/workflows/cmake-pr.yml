@@ -133,7 +133,7 @@ jobs:
       run: wget https://github.com/Kitware/CMake/releases/download/v3.21.0/cmake-3.21.0-linux-x86_64.tar.gz && tar xvzf cmake-3.21.0-linux-x86_64.tar.gz 
 
     - name: Install GitHub CLI
-      run: dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && dnf -y install gh
+      run: dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && dnf -y --nogpgcheck install gh
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -160,4 +160,3 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
-
