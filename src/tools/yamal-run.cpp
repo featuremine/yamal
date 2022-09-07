@@ -226,12 +226,11 @@ int main(int argc, char **argv) {
                                       "config.ini", "config_path");
   cmd.add(cfgArg);
 
-  TCLAP::UnlabeledValueArg<std::string> moduleArg("module", "Module name", false,
-                                                  "module", "module");
+  TCLAP::ValueArg<std::string> moduleArg("m", "module", "Module name", false,
+                                         "module", "module");
   cmd.add(moduleArg);
 
-  TCLAP::UnlabeledValueArg<std::string> componentArg(
-      "component", "Component name", false, "component", "component");
+  TCLAP::ValueArg<std::string> componentArg("o", "component", "Component name", false, "component", "component");
   cmd.add(componentArg);
 
   TCLAP::SwitchArg schedArg("k", "sched",
