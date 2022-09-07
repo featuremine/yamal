@@ -24,6 +24,9 @@
 
 #include <ytp/version.h>
 
+#include <unordered_map>
+#include <vector>
+
 struct fmc_reactor r;
 static void sig_handler(int s) { fmc_reactor_stop(&r); }
 
@@ -88,12 +91,12 @@ int main(int argc, char **argv) {
                                       "config.ini", "config_path");
   cmd.add(cfgArg);
 
-  TCLAP::UnlabeledValueArg<std::string> moduleArg("module", "Module name", true,
+  TCLAP::UnlabeledValueArg<std::string> moduleArg("module", "Module name", false,
                                                   "module", "module");
   cmd.add(moduleArg);
 
   TCLAP::UnlabeledValueArg<std::string> componentArg(
-      "component", "Component name", true, "component", "component");
+      "component", "Component name", false, "component", "component");
   cmd.add(componentArg);
 
   TCLAP::SwitchArg schedArg("k", "sched",
@@ -115,35 +118,234 @@ int main(int argc, char **argv) {
   sys_ptr sys;
   fmc_error_t *err;
 
-  auto module = module_ptr(
-      fmc_component_module_get(&sys.value, moduleArg.getValue().c_str(), &err));
-  fmc_runtime_error_unless(!err)
-      << "Unable to load module " << moduleArg.getValue() << ": "
-      << fmc_error_msg(err);
-
-  auto type = fmc_component_module_type_get(
-      module, componentArg.getValue().c_str(), &err);
-  fmc_runtime_error_unless(!err)
-      << "Unable to get component type " << componentArg.getValue() << ": "
-      << fmc_error_msg(err);
-
-  config_ptr cfg;
-  {
-    schema_ptr schema = type->tp_cfgspec;
-    file_ptr config_file(cfgArg.getValue().c_str());
-    cfg = config_ptr(fmc_cfg_sect_parse_ini_file(
-        schema, config_file.value, mainArg.getValue().c_str(), &err));
-    fmc_runtime_error_unless(!err)
-        << "Unable to load configuration file: " << fmc_error_msg(err);
-  }
+  fmc_runtime_error_unless((moduleArg.isSet() && componentArg.isSet()) ||
+                           (!moduleArg.isSet() && !componentArg.isSet()))
+      << "Invalid combination of arguments. module and component must either be provided through args or config.";
 
   fmc_reactor_init(&r);
-  fmc_component *component =
-      fmc_component_new(&r, type, cfg.get(), nullptr, &err);
-  (void)component;
-  fmc_runtime_error_unless(!err)
-      << "Unable to load component " << componentArg.getValue() << ": "
-      << fmc_error_msg(err);
+
+  fmc::scope_end_call destroy_reactor([&](){
+    fmc_reactor_destroy(&r);
+  });
+
+  file_ptr config_file(cfgArg.getValue().c_str());
+
+  auto load_config = [&config_file](config_ptr& cfg, struct fmc_cfg_node_spec *type, const char* section){
+    fmc_error_t *err;
+    cfg = config_ptr(fmc_cfg_sect_parse_ini_file(
+        type, config_file.value, section, &err));
+    fmc_runtime_error_unless(!err)
+        << "Unable to load configuration file: " << fmc_error_msg(err);
+  };
+
+  auto gen_component = [&sys, &load_config](const char* module_name, const char* component_name, const char* section, struct fmc_component_input *inps){
+    config_ptr cfg;
+    fmc_error_t *err;
+    auto module = module_ptr(
+        fmc_component_module_get(&sys.value, module_name, &err));
+    fmc_runtime_error_unless(!err)
+        << "Unable to load module " << module << ": "
+        << fmc_error_msg(err);
+
+    auto type = fmc_component_module_type_get(
+        module, component_name, &err);
+    fmc_runtime_error_unless(!err)
+        << "Unable to get component type " << component_name << ": "
+        << fmc_error_msg(err);
+
+    load_config(cfg, type->tp_cfgspec, section);
+
+    fmc_component *component =
+        fmc_component_new(&r, type, cfg.get(), inps, &err);
+
+    fmc_runtime_error_unless(!err)
+        << "Unable to load component " << component_name << ": "
+        << fmc_error_msg(err);
+
+    return component;
+  };
+
+  if (moduleArg.isSet() && componentArg.isSet()) {
+    gen_component(moduleArg.getValue().c_str(), componentArg.getValue().c_str(), mainArg.getValue().c_str(), nullptr);
+  } else {
+    /*
+    [main]
+    components=component1sec,component2sec
+
+    [component1cfg]
+
+    [component1sec]
+    name="component1"
+    module="mymodule"
+    type="componenttype"
+    config=component1cfg
+
+    [component2cfg]
+    ...
+
+    [component2sec]
+    name="component2"
+    module="mymodule"
+    type="componenttype"
+    inputs=[component1out1, component1out2]
+    config=component2cfg
+
+    [component1out1]
+    component=component1
+    name=outputone
+
+    [component1out2]
+    component=component1
+    index=0
+    */
+
+    fmc_cfg_node_spec input_spec[] = {
+      fmc_cfg_node_spec{
+        .key = "component",
+        .descr = "Component name to be used as input",
+        .required = true,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_STR,
+            },
+      },
+      fmc_cfg_node_spec{
+        .key = "name",
+        .descr = "Component output name to be used as input",
+        .required = false,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_STR,
+            },
+      },
+      fmc_cfg_node_spec{
+        .key = "index",
+        .descr = "Component output index to be used as input",
+        .required = false,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_INT64,
+            },
+      },
+      {NULL}
+    };
+
+    struct fmc_cfg_type input_description_spec = {
+      .type = FMC_CFG_SECT,
+      .spec = {
+        .node = input_spec
+      }
+    };
+
+    fmc_cfg_node_spec component_cfg_spec[] = {
+      fmc_cfg_node_spec{
+        .key = "module",
+        .descr = "Module name",
+        .required = true,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_STR,
+            },
+      },
+      fmc_cfg_node_spec{
+        .key = "type",
+        .descr = "Component type name",
+        .required = true,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_STR,
+            },
+      },
+      fmc_cfg_node_spec{
+        .key = "inputs",
+        .descr = "Input descriptions",
+        .required = true,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_ARR,
+                .spec{
+                    .array = &input_description_spec,
+                },
+            },
+      },
+      fmc_cfg_node_spec{
+        .key = "config",
+        .descr = "Component configuration section name",
+        .required = true,
+        .type =
+            fmc_cfg_type{
+                .type = FMC_CFG_STR,
+            },
+      },
+      {NULL}
+    };
+
+    struct fmc_cfg_type component_description_spec = {
+      .type = FMC_CFG_SECT,
+      .spec = {
+        .node = component_cfg_spec
+      }
+    };
+
+    fmc_cfg_node_spec yamal_run_spec[] = {
+      fmc_cfg_node_spec{
+          .key = "components",
+          .descr = "Array of individual component configurations",
+          .required = true,
+          .type =
+              fmc_cfg_type{
+                  .type = FMC_CFG_ARR,
+                  .spec{
+                      .array = &component_description_spec,
+                  },
+              },
+      },
+      {NULL}
+    };
+
+    config_ptr cfg;
+
+    load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
+
+    std::unordered_map<std::string, fmc_component *> components;
+
+    auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
+    for (auto elem = arr->node.value.arr; elem; elem = elem->next) {
+      auto module = fmc_cfg_sect_item_get(elem->item.value.sect, "module");
+      auto type = fmc_cfg_sect_item_get(elem->item.value.sect, "type");
+      auto inputs = fmc_cfg_sect_item_get(elem->item.value.sect, "inputs");
+      auto config = fmc_cfg_sect_item_get(elem->item.value.sect, "config");
+      auto name = fmc_cfg_sect_item_get(elem->item.value.sect, "name");
+
+      std::vector<struct fmc_component_input> inps;
+      for (auto inp = inputs->node.value.arr; inp; inp = inp->next) {
+        auto input_sect = inp->item.value.sect;
+        auto component = fmc_cfg_sect_item_get(elem->item.value.sect, "component");
+        auto name = fmc_cfg_sect_item_get(elem->item.value.sect, "name");
+        auto index = fmc_cfg_sect_item_get(elem->item.value.sect, "index");
+
+        fmc_runtime_error_unless(components.find(component->node.value.str) != components.end())
+            << "Unable to find component "<<component->node.value.str<<" component has not been created. Please reorder your components appropriately.";
+
+        fmc_runtime_error_unless((name && index) || (!name && !index))
+            << "Invalid combination of arguments for output of component " << name << " please provide name or index.";
+
+        if (name) {
+          size_t idx = fmc_component_out_idx(components[component->node.value.str], name->node.value.str, &err);
+          fmc_runtime_error_unless(!err)
+              << "Unable to obtain index of component: " << fmc_error_msg(err);
+          inps.push_back(fmc_component_input{components[component->node.value.str], idx});
+        } else {
+          fmc_runtime_error_unless(index->node.value.int64 < fmc_component_out_sz(components[component->node.value.str]))
+            << "Index out of range for output of component " << name;
+          inps.push_back(fmc_component_input{components[component->node.value.str], (size_t)index->node.value.int64});
+        }
+      }
+      inps.push_back(fmc_component_input{nullptr, 0});
+
+      components.emplace(name->node.value.str, gen_component(module->node.value.str, type->node.value.str, config->node.value.str, &inps[0]));
+    }
+  }
 
   if (affinityArg.isSet()) {
     fmc_tid threadid = fmc_tid_cur(&err);
@@ -168,6 +370,5 @@ int main(int argc, char **argv) {
   fmc_runtime_error_unless(!err)
       << "Unable to run reactor : " << fmc_error_msg(err);
 
-  fmc_reactor_destroy(&r);
   return 0;
 }

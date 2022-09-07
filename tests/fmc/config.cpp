@@ -671,7 +671,7 @@ TEST(parser, invalid_array_5) {
                         "arr=a,b,c\n"
                         "",
                         main, err);
-  EXPECT_ERR(err, "config error: unable to parse string (line 2)");
+  ASSERT_NOERR(err);
 }
 
 TEST(parser, invalid_array_6) {
@@ -842,7 +842,7 @@ TEST(parser, string_1) {
                    "arr=a\",\"b\",\"c\"\n"
                    "",
                    main, err);
-  EXPECT_ERR(err, "config error: unable to parse string (line 2)");
+  EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
 }
 
 TEST(parser, boolean_1) {
