@@ -188,6 +188,15 @@ fmc_cfg_node_spec component_cfg_spec[] = {
             .type = FMC_CFG_STR,
         },
   },
+  fmc_cfg_node_spec{
+    .key = "name",
+    .descr = "Component configuration section name",
+    .required = true,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_STR,
+        },
+  },
   {NULL}
 };
 
