@@ -326,27 +326,29 @@ int main(int argc, char **argv) {
       auto name = fmc_cfg_sect_item_get(elem->item.value.sect, "name");
 
       std::vector<struct fmc_component_input> inps;
-      for (auto inp = inputs->node.value.arr; inp; inp = inp->next) {
-        auto input_sect = inp->item.value.sect;
-        auto component = fmc_cfg_sect_item_get(elem->item.value.sect, "component");
-        auto name = fmc_cfg_sect_item_get(elem->item.value.sect, "name");
-        auto index = fmc_cfg_sect_item_get(elem->item.value.sect, "index");
+      if (inputs) {
+        for (auto inp = inputs->node.value.arr; inp; inp = inp->next) {
+          auto input_sect = inp->item.value.sect;
+          auto component = fmc_cfg_sect_item_get(elem->item.value.sect, "component");
+          auto name = fmc_cfg_sect_item_get(elem->item.value.sect, "name");
+          auto index = fmc_cfg_sect_item_get(elem->item.value.sect, "index");
 
-        fmc_runtime_error_unless(components.find(component->node.value.str) != components.end())
-            << "Unable to find component "<<component->node.value.str<<" component has not been created. Please reorder your components appropriately.";
+          fmc_runtime_error_unless(components.find(component->node.value.str) != components.end())
+              << "Unable to find component "<<component->node.value.str<<" component has not been created. Please reorder your components appropriately.";
 
-        fmc_runtime_error_unless((name && index) || (!name && !index))
-            << "Invalid combination of arguments for output of component " << name << " please provide name or index.";
+          fmc_runtime_error_unless((name && index) || (!name && !index))
+              << "Invalid combination of arguments for output of component " << name << " please provide name or index.";
 
-        if (name) {
-          size_t idx = fmc_component_out_idx(components[component->node.value.str], name->node.value.str, &err);
-          fmc_runtime_error_unless(!err)
-              << "Unable to obtain index of component: " << fmc_error_msg(err);
-          inps.push_back(fmc_component_input{components[component->node.value.str], idx});
-        } else {
-          fmc_runtime_error_unless(index->node.value.int64 < fmc_component_out_sz(components[component->node.value.str]))
-            << "Index out of range for output of component " << name;
-          inps.push_back(fmc_component_input{components[component->node.value.str], (size_t)index->node.value.int64});
+          if (name) {
+            size_t idx = fmc_component_out_idx(components[component->node.value.str], name->node.value.str, &err);
+            fmc_runtime_error_unless(!err)
+                << "Unable to obtain index of component: " << fmc_error_msg(err);
+            inps.push_back(fmc_component_input{components[component->node.value.str], idx});
+          } else {
+            fmc_runtime_error_unless(index->node.value.int64 < fmc_component_out_sz(components[component->node.value.str]))
+              << "Index out of range for output of component " << name;
+            inps.push_back(fmc_component_input{components[component->node.value.str], (size_t)index->node.value.int64});
+          }
         }
       }
       inps.push_back(fmc_component_input{nullptr, 0});
