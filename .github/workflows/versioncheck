@@ -69,11 +69,11 @@ if __name__ == '__main__':
     good_to_go = regular_pr or proper_release or bug_fix_release
     if not good_to_go:
         if main_merge():
-            raise "Merging to main allowed with a proper version bump only"
+            raise RuntimeError("Merging to main allowed with a proper version bump only")
         elif ver and not ver.bugfix():
-            raise "Version changes other than bug fixes need to increase the version and merge into main"
+            raise RuntimeError("Version changes other than bug fixes need to increase the version and merge into main")
         else:
-            raise "Bug fix needs to extend an existing release and must increase bug fix version"
+            raise RuntimeError("Bug fix needs to extend an existing release and must increase bug fix version")
 
     if proper_release or bug_fix_release:
         # check if draft release exists
