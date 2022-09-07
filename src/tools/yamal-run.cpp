@@ -258,7 +258,14 @@ int main(int argc, char **argv) {
 
   fmc_reactor_init(&r);
 
-  fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
+  std::unordered_map<std::string, fmc_component *> components;
+
+  fmc::scope_end_call destroy_reactor([&]() {
+    for (auto &&[name, comp] : components) {
+      fmc_component_del(comp);
+    }
+    fmc_reactor_destroy(&r);
+  });
 
   auto load_config = [&cfgArg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                                const char *section) {
@@ -299,14 +306,15 @@ int main(int argc, char **argv) {
   };
 
   if (moduleArg.isSet() && componentArg.isSet()) {
-    gen_component(moduleArg.getValue().c_str(), componentArg.getValue().c_str(),
-                  mainArg.getValue().c_str(), nullptr);
+    components.emplace(componentArg.getValue().c_str(),
+                       gen_component(moduleArg.getValue().c_str(),
+                                     componentArg.getValue().c_str(),
+                                     mainArg.getValue().c_str(),
+                                     nullptr));
   } else {
     config_ptr cfg;
 
     load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
-
-    std::unordered_map<std::string, fmc_component *> components;
 
     auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
     for (auto elem = arr->node.value.arr; elem; elem = elem->next) {
