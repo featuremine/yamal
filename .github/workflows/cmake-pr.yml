@@ -88,16 +88,17 @@ jobs:
       run: ctest -C ${{env.BUILD_TYPE}}
       
     - name: Compress documentation
+      if: needs.utility.outputs.isRelease == 'release'
       working-directory: ${{github.workspace}}/build
       run: tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
       
     - name: Upload documentation
+      if: needs.utility.outputs.isRelease == 'release'
       working-directory: ${{github.workspace}}/build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat ../VERSION) docs-v$(cat ../VERSION).tar.gz --clobber
 
-      
     - name: Package
       if: needs.utility.outputs.isRelease == 'release'
       working-directory: ${{github.workspace}}/build
