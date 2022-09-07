@@ -309,8 +309,7 @@ int main(int argc, char **argv) {
     components.emplace(componentArg.getValue().c_str(),
                        gen_component(moduleArg.getValue().c_str(),
                                      componentArg.getValue().c_str(),
-                                     mainArg.getValue().c_str(),
-                                     nullptr));
+                                     mainArg.getValue().c_str(), nullptr));
   } else {
     config_ptr cfg;
 
