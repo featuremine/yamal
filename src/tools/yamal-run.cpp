@@ -79,6 +79,37 @@ using schema_ptr = struct fmc_cfg_node_spec *;
 using sys_ptr = scopevar_t<fmc_component_sys, initdestroy_t>;
 using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
 
+/*
+[main]
+components=component1sec,component2sec
+
+[component1cfg]
+
+[component1sec]
+name="component1"
+module="mymodule"
+type="componenttype"
+config=component1cfg
+
+[component2cfg]
+...
+
+[component2sec]
+name="component2"
+module="mymodule"
+type="componenttype"
+inputs=[component1out1, component1out2]
+config=component2cfg
+
+[component1out1]
+component=component1
+name=outputone
+
+[component1out2]
+component=component1
+index=0
+*/
+
 fmc_cfg_node_spec input_spec[] = {
   fmc_cfg_node_spec{
     .key = "component",
@@ -272,37 +303,6 @@ int main(int argc, char **argv) {
   if (moduleArg.isSet() && componentArg.isSet()) {
     gen_component(moduleArg.getValue().c_str(), componentArg.getValue().c_str(), mainArg.getValue().c_str(), nullptr);
   } else {
-    /*
-    [main]
-    components=component1sec,component2sec
-
-    [component1cfg]
-
-    [component1sec]
-    name="component1"
-    module="mymodule"
-    type="componenttype"
-    config=component1cfg
-
-    [component2cfg]
-    ...
-
-    [component2sec]
-    name="component2"
-    module="mymodule"
-    type="componenttype"
-    inputs=[component1out1, component1out2]
-    config=component2cfg
-
-    [component1out1]
-    component=component1
-    name=outputone
-
-    [component1out2]
-    component=component1
-    index=0
-    */
-
     config_ptr cfg;
 
     load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
