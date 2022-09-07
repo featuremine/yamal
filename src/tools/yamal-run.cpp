@@ -271,9 +271,9 @@ int main(int argc, char **argv) {
     fmc_reactor_destroy(&r);
   });
 
-  file_ptr config_file(cfgArg.getValue().c_str());
 
-  auto load_config = [&config_file](config_ptr& cfg, struct fmc_cfg_node_spec *type, const char* section){
+  auto load_config = [&cfgArg](config_ptr& cfg, struct fmc_cfg_node_spec *type, const char* section){
+    file_ptr config_file(cfgArg.getValue().c_str());
     fmc_error_t *err;
     cfg = config_ptr(fmc_cfg_sect_parse_ini_file(
         type, config_file.value, section, &err));
@@ -329,18 +329,18 @@ int main(int argc, char **argv) {
       if (inputs) {
         for (auto inp = inputs->node.value.arr; inp; inp = inp->next) {
           auto input_sect = inp->item.value.sect;
-          auto component = fmc_cfg_sect_item_get(elem->item.value.sect, "component");
-          auto name = fmc_cfg_sect_item_get(elem->item.value.sect, "name");
-          auto index = fmc_cfg_sect_item_get(elem->item.value.sect, "index");
+          auto component = fmc_cfg_sect_item_get(inp->item.value.sect, "component");
+          auto out_name = fmc_cfg_sect_item_get(inp->item.value.sect, "name");
+          auto index = fmc_cfg_sect_item_get(inp->item.value.sect, "index");
 
           fmc_runtime_error_unless(components.find(component->node.value.str) != components.end())
               << "Unable to find component "<<component->node.value.str<<" component has not been created. Please reorder your components appropriately.";
 
-          fmc_runtime_error_unless((name && index) || (!name && !index))
-              << "Invalid combination of arguments for output of component " << name << " please provide name or index.";
+          fmc_runtime_error_unless((out_name && !index) || (!out_name && index))
+              << "Invalid combination of arguments for output of component " << out_name << " please provide name or index.";
 
-          if (name) {
-            size_t idx = fmc_component_out_idx(components[component->node.value.str], name->node.value.str, &err);
+          if (out_name) {
+            size_t idx = fmc_component_out_idx(components[component->node.value.str], out_name->node.value.str, &err);
             fmc_runtime_error_unless(!err)
                 << "Unable to obtain index of component: " << fmc_error_msg(err);
             inps.push_back(fmc_component_input{components[component->node.value.str], idx});
