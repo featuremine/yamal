@@ -13,9 +13,27 @@ jobs:
 
   utility:
     runs-on: ubuntu-latest
+    outputs:
+      isRelease: ${{ steps.isRelease.outputs.release }}
     
     steps:
     - uses: actions/checkout@main
+      with: 
+        fetch-depth: 0
+    
+    # Install python wrappers for gh
+    - name: Install PyGitHub
+      run: pip3 install PyGithub
+
+    # Detect release
+    - name: Check if PR is release
+      id: isRelease
+      working-directory: ${{github.workspace}}/.github/workflows
+      env: 
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GIT_MERGE_BASE: ${{ github.base_ref }}
+        GIT_MERGE_COMMIT: ${{ github.sha }}
+      run: python3 versioncheck
 
     # Code formatting with Clang linter
     - uses: DoozyX/clang-format-lint-action@v0.14
@@ -67,7 +85,31 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
+      
+    - name: Compress documentation
+      working-directory: ${{github.workspace}}/build
+      run: tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
+      
+    - name: Upload documentation
+      working-directory: ${{github.workspace}}/build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload v$(cat ../VERSION) docs-v$(cat ../VERSION).tar.gz --clobber
 
+      
+    - name: Package
+      if: needs.utility.outputs.isRelease == 'release'
+      working-directory: ${{github.workspace}}/build
+      run: cpack -G DEB
+    
+    - name: Upload package
+      if: needs.utility.outputs.isRelease == 'release'
+      working-directory: ${{github.workspace}}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.deb --clobber
+
+  
   build-centos:
     needs: utility    
     runs-on: ubuntu-latest
@@ -78,7 +120,7 @@ jobs:
     - uses: actions/checkout@main
 
     - name: Install dependencies
-      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget
+      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget rpm-build
     - name: Install tclap
       run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure --prefix=/usr && make && make install && popd && rm -rf tclap-code
     - name: Install gtest
@@ -89,6 +131,9 @@ jobs:
       run: yum -y install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install mistune==0.8.4 && pip3 install m2r && pip3 install sphinx-autodoc-typehints
     - name: Install cmake 3.21.0 from binary
       run: wget https://github.com/Kitware/CMake/releases/download/v3.21.0/cmake-3.21.0-linux-x86_64.tar.gz && tar xvzf cmake-3.21.0-linux-x86_64.tar.gz 
+
+    - name: Install GitHub CLI
+      run: dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && dnf -y --nogpgcheck install gh
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -104,3 +149,14 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ../cmake-3.21.0-linux-x86_64/bin/ctest -C ${{env.BUILD_TYPE}}
+
+    - name: Package
+      if: needs.utility.outputs.isRelease == 'release'
+      working-directory: build
+      run: ../cmake-3.21.0-linux-x86_64/bin/cpack -G RPM
+        
+    - name: Upload package
+      if: needs.utility.outputs.isRelease == 'release'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload v$(cat VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
