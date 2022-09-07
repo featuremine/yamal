@@ -79,6 +79,110 @@ using schema_ptr = struct fmc_cfg_node_spec *;
 using sys_ptr = scopevar_t<fmc_component_sys, initdestroy_t>;
 using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
 
+fmc_cfg_node_spec input_spec[] = {
+  fmc_cfg_node_spec{
+    .key = "component",
+    .descr = "Component name to be used as input",
+    .required = true,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_STR,
+        },
+  },
+  fmc_cfg_node_spec{
+    .key = "name",
+    .descr = "Component output name to be used as input",
+    .required = false,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_STR,
+        },
+  },
+  fmc_cfg_node_spec{
+    .key = "index",
+    .descr = "Component output index to be used as input",
+    .required = false,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_INT64,
+        },
+  },
+  {NULL}
+};
+
+struct fmc_cfg_type input_description_spec = {
+  .type = FMC_CFG_SECT,
+  .spec = {
+    .node = input_spec
+  }
+};
+
+fmc_cfg_node_spec component_cfg_spec[] = {
+  fmc_cfg_node_spec{
+    .key = "module",
+    .descr = "Module name",
+    .required = true,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_STR,
+        },
+  },
+  fmc_cfg_node_spec{
+    .key = "type",
+    .descr = "Component type name",
+    .required = true,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_STR,
+        },
+  },
+  fmc_cfg_node_spec{
+    .key = "inputs",
+    .descr = "Input descriptions",
+    .required = true,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_ARR,
+            .spec{
+                .array = &input_description_spec,
+            },
+        },
+  },
+  fmc_cfg_node_spec{
+    .key = "config",
+    .descr = "Component configuration section name",
+    .required = true,
+    .type =
+        fmc_cfg_type{
+            .type = FMC_CFG_STR,
+        },
+  },
+  {NULL}
+};
+
+struct fmc_cfg_type component_description_spec = {
+  .type = FMC_CFG_SECT,
+  .spec = {
+    .node = component_cfg_spec
+  }
+};
+
+fmc_cfg_node_spec yamal_run_spec[] = {
+  fmc_cfg_node_spec{
+      .key = "components",
+      .descr = "Array of individual component configurations",
+      .required = true,
+      .type =
+          fmc_cfg_type{
+              .type = FMC_CFG_ARR,
+              .spec{
+                  .array = &component_description_spec,
+              },
+          },
+  },
+  {NULL}
+};
+
 int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
@@ -198,110 +302,6 @@ int main(int argc, char **argv) {
     component=component1
     index=0
     */
-
-    fmc_cfg_node_spec input_spec[] = {
-      fmc_cfg_node_spec{
-        .key = "component",
-        .descr = "Component name to be used as input",
-        .required = true,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_STR,
-            },
-      },
-      fmc_cfg_node_spec{
-        .key = "name",
-        .descr = "Component output name to be used as input",
-        .required = false,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_STR,
-            },
-      },
-      fmc_cfg_node_spec{
-        .key = "index",
-        .descr = "Component output index to be used as input",
-        .required = false,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_INT64,
-            },
-      },
-      {NULL}
-    };
-
-    struct fmc_cfg_type input_description_spec = {
-      .type = FMC_CFG_SECT,
-      .spec = {
-        .node = input_spec
-      }
-    };
-
-    fmc_cfg_node_spec component_cfg_spec[] = {
-      fmc_cfg_node_spec{
-        .key = "module",
-        .descr = "Module name",
-        .required = true,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_STR,
-            },
-      },
-      fmc_cfg_node_spec{
-        .key = "type",
-        .descr = "Component type name",
-        .required = true,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_STR,
-            },
-      },
-      fmc_cfg_node_spec{
-        .key = "inputs",
-        .descr = "Input descriptions",
-        .required = true,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_ARR,
-                .spec{
-                    .array = &input_description_spec,
-                },
-            },
-      },
-      fmc_cfg_node_spec{
-        .key = "config",
-        .descr = "Component configuration section name",
-        .required = true,
-        .type =
-            fmc_cfg_type{
-                .type = FMC_CFG_STR,
-            },
-      },
-      {NULL}
-    };
-
-    struct fmc_cfg_type component_description_spec = {
-      .type = FMC_CFG_SECT,
-      .spec = {
-        .node = component_cfg_spec
-      }
-    };
-
-    fmc_cfg_node_spec yamal_run_spec[] = {
-      fmc_cfg_node_spec{
-          .key = "components",
-          .descr = "Array of individual component configurations",
-          .required = true,
-          .type =
-              fmc_cfg_type{
-                  .type = FMC_CFG_ARR,
-                  .spec{
-                      .array = &component_description_spec,
-                  },
-              },
-      },
-      {NULL}
-    };
 
     config_ptr cfg;
 
