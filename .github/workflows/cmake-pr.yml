@@ -32,6 +32,7 @@ jobs:
       env: 
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GIT_MERGE_BASE: ${{ github.base_ref }}
+        GIT_MERGE_HEAD: ${{ github.head_ref }}
         GIT_MERGE_COMMIT: ${{ github.sha }}
       run: python3 versioncheck
 
