@@ -170,7 +170,7 @@ fmc_cfg_node_spec component_cfg_spec[] = {
   fmc_cfg_node_spec{
     .key = "inputs",
     .descr = "Input descriptions",
-    .required = true,
+    .required = false,
     .type =
         fmc_cfg_type{
             .type = FMC_CFG_ARR,
