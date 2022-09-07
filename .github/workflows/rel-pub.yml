@@ -35,4 +35,6 @@ jobs:
     - uses: actions/checkout@main
     
     - name: Publish
+      env: 
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release edit v$(cat VERSION) --draft=false
