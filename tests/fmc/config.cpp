@@ -843,6 +843,15 @@ TEST(parser, string_1) {
                    "",
                    main, err);
   EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "arr=a,b,c\n"
+                   "[a]\n"
+                   "[b]\n"
+                   "[c]\n"
+                   "",
+                   main, err);
+  ASSERT_NOERR(err);
 }
 
 TEST(parser, boolean_1) {
