@@ -16,12 +16,12 @@
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/error.h>
+#include <fmc/memory.h>
 #include <fmc/string.h>
 #include <fmc/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <uthash/utlist.h>
-#include <fmc/memory.h>
 
 struct fmc_reactor_api_v1 *_reactor;
 int64_t value = 9855;
@@ -203,7 +203,8 @@ consumer_component_new(struct fmc_cfg_sect_item *cfg,
   }
   return c;
 cleanup:
-  if (c) free(c);
+  if (c)
+    free(c);
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
   return NULL;
 };

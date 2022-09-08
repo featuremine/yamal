@@ -260,9 +260,7 @@ int main(int argc, char **argv) {
 
   std::unordered_map<std::string, fmc_component *> components;
 
-  fmc::scope_end_call destroy_reactor([&]() {
-    fmc_reactor_destroy(&r);
-  });
+  fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
   auto load_config = [&cfgArg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                                const char *section) {
@@ -281,10 +279,11 @@ int main(int argc, char **argv) {
     config_ptr cfg;
     fmc_error_t *err;
     module_ptr module(fmc_component_module_get(&sys.value, module_name, &err));
-    fmc_runtime_error_unless(!err)
-        << "Unable to load module " << module_name << ": " << fmc_error_msg(err);
+    fmc_runtime_error_unless(!err) << "Unable to load module " << module_name
+                                   << ": " << fmc_error_msg(err);
 
-    auto type = fmc_component_module_type_get(module.get(), component_name, &err);
+    auto type =
+        fmc_component_module_type_get(module.get(), component_name, &err);
     fmc_runtime_error_unless(!err)
         << "Unable to get component type " << component_name << ": "
         << fmc_error_msg(err);
