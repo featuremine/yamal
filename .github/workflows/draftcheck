@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import os
+from os import path
+from github import Github
+
+ghrepo = Github(os.getenv('GH_TOKEN')).get_repo("featuremine/yamal")
+ 
+if __name__ == '__main__':
+    where = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+    version =  list(open(path.join(path.join(where, 'VERSION'))))[0].strip()
+    
+    draft = False
+    for release in ghrepo.get_releases():
+        if release.draft:
+            if f"v{version}" == release.title:
+               draft = True
+
+    if draft:
+        print(f"matching draft found, need to publish the release {version}")
+        print("::set-output name=draft::true")
+    else:
+        print("no matching draft found; not publishing the release")

@@ -57,23 +57,27 @@ def drafts():
 def main_merge():
     return os.getenv('GIT_MERGE_BASE') == 'main'
 
+def from_dev_merge():
+    return os.getenv('GIT_MERGE_HEAD') == 'dev'
+
 if __name__ == '__main__':
     ver = version_check()
     rels = releases()
     version_bump = ver and ver.regular() and (not rels or rels[0] < ver)
-    regular_pr = not ver and not main_merge()
+
+    if ver and not (ver.regular() or ver.bugfix()):
+        raise RuntimeError("Improper version in the VERSION file")
+
+    if main_merge() and not from_dev_merge():
+        raise RuntimeError("Merge to main allowed only from dev branch")
+    
+    if main_merge() and not version_bump:
+        raise RuntimeError("Merging to main allowed with a proper version bump only")
+
+    bug_fix_release = ver and ver.bugfix()
     proper_release = main_merge() and version_bump
     # TODO need to check that bug fix is proper
     # derived from existing release and large than existing bug fixes
-    bug_fix_release = ver and ver.bugfix() and not main_merge()
-    good_to_go = regular_pr or proper_release or bug_fix_release
-    if not good_to_go:
-        if main_merge():
-            raise RuntimeError("Merging to main allowed with a proper version bump only")
-        elif ver and not ver.bugfix():
-            raise RuntimeError("Version changes other than bug fixes need to increase the version and merge into main")
-        else:
-            raise RuntimeError("Bug fix needs to extend an existing release and must increase bug fix version")
 
     if proper_release or bug_fix_release:
         # check if draft release exists
