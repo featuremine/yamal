@@ -611,6 +611,7 @@ cleanup : {
     for (unsigned int i = 0; updated_deps[i]; ++i) {
       utarray_pop_back(updated_deps[i]);
     }
+    free(item);
   }
   return NULL;
 }
