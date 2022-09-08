@@ -347,9 +347,10 @@ int main(int argc, char **argv) {
             inps.push_back(fmc_component_input{
                 components[component->node.value.str], idx});
           } else {
-            fmc_runtime_error_unless((index->node.value.int64 >= 0) ||
+            fmc_runtime_error_unless(
+                (index->node.value.int64 >= 0) ||
                 ((size_t)index->node.value.int64 <
-                fmc_component_out_sz(components[component->node.value.str])))
+                 fmc_component_out_sz(components[component->node.value.str])))
                 << "Index out of range for output of component " << name;
             inps.push_back(
                 fmc_component_input{components[component->node.value.str],
