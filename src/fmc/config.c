@@ -512,21 +512,16 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
   case FMC_CFG_STR: {
     bool quoted = **str == '"';
     *str += quoted;
-    char *endptr = NULL;
-    if (quoted) {
-      endptr = *str;
-      while (endptr < end && *endptr != '"') {
-        ++endptr;
-      }
-      if (endptr == end) {
-        fmc_error_set(
-            err,
-            "config error: unable to find closing quotes for string (line %zu)",
-            line);
-        return;
-      }
-    } else {
-      endptr = end;
+    char *endptr = *str;
+    while (endptr < end && (!quoted || *endptr != '"')) {
+      ++endptr;
+    }
+    if (quoted && endptr == end) {
+      fmc_error_set(
+          err,
+          "config error: unable to find closing quotes for string (line %zu)",
+          line);
+      return;
     }
     out->type = FMC_CFG_STR;
     out->value.str = fmc_cstr_new2(*str, endptr - *str, err);
