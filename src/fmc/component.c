@@ -611,9 +611,6 @@ cleanup : {
     for (unsigned int i = 0; updated_deps[i]; ++i) {
       utarray_pop_back(updated_deps[i]);
     }
-    if (item->comp)
-      tp->tp_del(item->comp);
-    free(item);
   }
   return NULL;
 }
@@ -639,10 +636,6 @@ size_t fmc_component_out_sz(struct fmc_component *comp) {
   size_t counter = 0;
   DL_COUNT(comp->_ctx->out_tps, item, counter);
   return counter;
-}
-
-void fmc_component_del(struct fmc_component *comp) {
-  comp->_vt->tp_del(comp);
 }
 
 void fmc_component_sys_destroy(struct fmc_component_sys *sys) {

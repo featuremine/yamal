@@ -29,6 +29,7 @@ struct consumer_component {
   fmc_component_HEAD;
   size_t executed;
   fmc_error_t *e;
+  struct fmc_shmem mem;
 };
 
 /*Components for multiple inputs and outputs test*/
