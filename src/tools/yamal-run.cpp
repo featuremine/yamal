@@ -284,8 +284,8 @@ int main(int argc, char **argv) {
     config_ptr cfg;
     fmc_error_t *err;
     module_ptr module(fmc_component_module_get(&sys.value, module_name, &err));
-    fmc_runtime_error_unless(!err)
-        << "Unable to load module " << module_name << ": " << fmc_error_msg(err);
+    fmc_runtime_error_unless(!err) << "Unable to load module " << module_name
+                                   << ": " << fmc_error_msg(err);
 
     auto type = fmc_component_module_type_get(module, component_name, &err);
     fmc_runtime_error_unless(!err)
