@@ -183,11 +183,6 @@ struct fmc_component_def_v1 {
   fmc_delfunc tp_del;                   // destroy the component
 };
 
-struct fmc_component_list {
-  struct fmc_component *comp;
-  struct fmc_component_list *next, *prev;
-};
-
 struct fmc_component_type {
   const char *tp_name; // prohibited characters: '-'
   const char *tp_descr;

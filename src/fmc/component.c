@@ -501,7 +501,7 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_error_clear(usr_error);
   size_t size_t_curridx = reactor->size;
   fmc_error_t *error = &reactor->err;
-  struct fmc_component_list *item = NULL;
+  struct fmc_component *comp = NULL;
   unsigned int in_sz = 0;
   for (; inps && inps[in_sz].comp; ++in_sz) {
   }
@@ -515,12 +515,6 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   fmc_cfg_node_spec_check(tp->tp_cfgspec, cfg, usr_error);
   if (*usr_error)
     goto cleanup;
-
-  item = (struct fmc_component_list *)calloc(1, sizeof(*item));
-  if (!item) {
-    fmc_error_set2(usr_error, FMC_ERROR_MEMORY);
-    goto cleanup;
-  }
 
   // fmc_component_input to array of component names
   for (unsigned int i = 0; i < in_sz; ++i) {
@@ -550,16 +544,16 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
   }
   in_types[in_sz] = NULL;
 
-  item->comp = tp->tp_new(cfg, ctx, in_types);
+  comp = tp->tp_new(cfg, ctx, in_types);
   if (fmc_error_has(&ctx->err)) {
     fmc_error_set(usr_error,
                   "failed to create new component of type %s with error: %s",
                   tp->tp_name, fmc_error_msg(&ctx->err));
     goto cleanup;
   }
-  item->comp->_vt = tp;
-  item->comp->_ctx = ctx;
-  ctx->comp = item->comp;
+  comp->_vt = tp;
+  comp->_ctx = ctx;
+  ctx->comp = comp;
   fmc_reactor_ctx_take(ctx, inps, usr_error); // copy the context
   if (*usr_error)
     goto cleanup;
@@ -568,12 +562,12 @@ struct fmc_component *fmc_component_new(struct fmc_reactor *reactor,
     UT_array *deps = (UT_array *)utarray_eltptr(&inp_ctx->deps, inps[i].idx);
     assert(deps);
     struct fmc_reactor_ctx_dep new_dep;
-    new_dep.idx = item->comp->_ctx->idx;
+    new_dep.idx = comp->_ctx->idx;
     new_dep.inp_idx = i;
     utarray_push_back(deps, &new_dep);
     updated_deps[i] = deps;
   }
-  return item->comp;
+  return comp;
 cleanup : {
   void *val = NULL;
   do {
@@ -604,15 +598,14 @@ cleanup : {
                  FMC_INT64_T_PTR_LESS);
   } while (true);
 }
-  fmc_reactor_ctx_del(ctx);
   if (fmc_error_has(error))
     fmc_error_set(usr_error, fmc_error_msg(error));
-  if (item) {
+  if (comp) {
     for (unsigned int i = 0; updated_deps[i]; ++i) {
       utarray_pop_back(updated_deps[i]);
     }
-    free(item);
   }
+  fmc_reactor_ctx_del(ctx);
   return NULL;
 }
 
