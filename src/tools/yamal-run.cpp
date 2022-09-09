@@ -31,9 +31,6 @@ struct fmc_reactor r;
 static void sig_handler(int s) { fmc_reactor_stop(&r); }
 
 struct deleter_t {
-  void operator()(struct fmc_component_module *ptr) {
-    fmc_component_module_del(ptr);
-  }
   void operator()(struct fmc_cfg_sect_item *ptr) { fmc_cfg_sect_del(ptr); }
 };
 struct initdestroy_t {
@@ -260,12 +257,7 @@ int main(int argc, char **argv) {
 
   std::unordered_map<std::string, fmc_component *> components;
 
-  fmc::scope_end_call destroy_reactor([&]() {
-    for (auto &&[name, comp] : components) {
-      fmc_component_del(comp);
-    }
-    fmc_reactor_destroy(&r);
-  });
+  fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
   auto load_config = [&cfgArg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                                const char *section) {
@@ -352,8 +344,9 @@ int main(int argc, char **argv) {
                 components[component->node.value.str], idx});
           } else {
             fmc_runtime_error_unless(
-                index->node.value.int64 <
-                fmc_component_out_sz(components[component->node.value.str]))
+                (index->node.value.int64 >= 0) ||
+                ((size_t)index->node.value.int64 <
+                 fmc_component_out_sz(components[component->node.value.str])))
                 << "Index out of range for output of component " << name;
             inps.push_back(
                 fmc_component_input{components[component->node.value.str],

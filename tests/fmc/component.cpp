@@ -292,7 +292,6 @@ TEST(component, component) {
   ASSERT_EQ(r.finishing, 0);
   ASSERT_EQ(r.ctxs, nullptr);
 
-  fmc_component_del(comp);
   fmc_cfg_sect_del(cfginvalid);
   fmc_cfg_sect_del(cfg);
 
@@ -377,7 +376,6 @@ TEST(reactor, reactorsched) {
   ASSERT_EQ(r.finishing, 0);
   ASSERT_EQ(r.ctxs, nullptr);
 
-  fmc_component_del(comp);
   fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
@@ -468,7 +466,6 @@ TEST(reactor, reactorlive) {
   ASSERT_EQ(r.finishing, 0);
   ASSERT_EQ(r.ctxs, nullptr);
 
-  fmc_component_del(comp);
   fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
@@ -553,9 +550,6 @@ TEST(reactor, io) {
   ASSERT_EQ(typedccomp->executed, 10);
 
   fmc_reactor_destroy(&r);
-
-  fmc_component_del(ccomp);
-  fmc_component_del(pcomp);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
@@ -675,11 +669,6 @@ TEST(reactor, io_multiple_inputs) {
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(c2comp);
-  fmc_component_del(c3comp);
-  fmc_component_del(p2comp);
-  fmc_component_del(p3comp);
-
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
 
@@ -742,8 +731,6 @@ TEST(reactor, io_incorrect_number_of_inputs) {
   ASSERT_NE(err, nullptr);
 
   fmc_reactor_destroy(&r);
-
-  fmc_component_del(p2comp);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
@@ -808,8 +795,6 @@ TEST(reactor, io_incorrect_output_index) {
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(p2comp);
-
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
 
@@ -871,8 +856,6 @@ TEST(reactor, shutdown_no_cb) {
   ASSERT_TRUE(fmc_time64_equal(fmc_reactor_sched(&r), fmc_time64_end()));
 
   fmc_reactor_destroy(&r);
-
-  fmc_component_del(pcomp);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
@@ -944,7 +927,6 @@ TEST(reactor, shutdown_cb) {
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(pcomp);
   fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
@@ -1016,8 +998,6 @@ TEST(reactor, shutdown_cb_no_queue) {
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(pcomp);
-
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
 
@@ -1086,8 +1066,6 @@ TEST(reactor, immediate_shutdown) {
   ASSERT_EQ(typed->post_shutdown_count, 0);
 
   fmc_reactor_destroy(&r);
-
-  fmc_component_del(pcomp);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);
@@ -1184,9 +1162,6 @@ TEST(reactor, multi_shutdown_cb) {
 
   fmc_reactor_destroy(&r);
 
-  fmc_component_del(pcomp);
-  fmc_component_del(pcomp2);
-  fmc_component_del(pcomp3);
   fmc_cfg_sect_del(cfg);
 
   fmc_component_module_del(mod);
@@ -1248,8 +1223,6 @@ TEST(reactor, nostop_shutdown) {
   ASSERT_EQ(typed->shutdown_count, 5);
 
   fmc_reactor_destroy(&r);
-
-  fmc_component_del(pcomp);
 
   fmc_component_module_del(mod);
   ASSERT_EQ(sys.modules, nullptr);

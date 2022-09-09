@@ -842,7 +842,28 @@ TEST(parser, string_1) {
                    "arr=a\",\"b\",\"c\"\n"
                    "",
                    main, err);
-  EXPECT_ERR(err, "config error: comma was expected in array (line 2)");
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    \"a\",\"b\",\"c\"\",\n"
+                                 "  ]\n"
+                                 "}\n");
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "arr=a,b,c\n"
+                   "[a]\n"
+                   "[b]\n"
+                   "[c]\n"
+                   "",
+                   main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    \"a,b,c\",\n"
+                                 "  ]\n"
+                                 "}\n");
 }
 
 TEST(parser, boolean_1) {
