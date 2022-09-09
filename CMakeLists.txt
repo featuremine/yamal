@@ -321,6 +321,11 @@ if(BUILD_TESTING)
             COMMAND yamal-run -c ../tests/fmc/testcomponent_only_cfg.ini -s main
         )
         set_property(TEST fmc_yamal-run_only_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
+        add_test(
+            NAME fmc_yamal-run_array_cfg
+            COMMAND yamal-run -c ../tests/fmc/testcomponent_array_cfg.ini -s main
+        )
+        set_property(TEST fmc_yamal-run_array_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
     endif()
 endif()
 
