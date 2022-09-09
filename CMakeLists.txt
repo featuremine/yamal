@@ -310,23 +310,6 @@ if(BUILD_TESTING)
     set(VALGRIND_COMMAND_OPTIONS "--log-fd=2 --verbose --trace-children=yes --leak-check=full --show-leak-kinds=all --track-origins=yes")
     include(CTest)
     add_subdirectory(tests)
-    if(BUILD_TOOLS)
-        add_test(
-            NAME fmc_yamal-run
-            COMMAND yamal-run -c ../tests/fmc/testcomponent.ini -s main -m testcomponent -o testcomponentsched
-        )
-        set_property(TEST fmc_yamal-run PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
-        add_test(
-            NAME fmc_yamal-run_only_cfg
-            COMMAND yamal-run -c ../tests/fmc/testcomponent_only_cfg.ini -s main
-        )
-        set_property(TEST fmc_yamal-run_only_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
-        add_test(
-            NAME fmc_yamal-run_array_cfg
-            COMMAND yamal-run -c ../tests/fmc/testcomponent_array_cfg.ini -s main
-        )
-        set_property(TEST fmc_yamal-run_array_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
-    endif()
 endif()
 
 set(CPACK_PACKAGE_VENDOR "Featuremine")
