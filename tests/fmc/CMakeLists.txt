@@ -164,3 +164,24 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME fmc_priority_queue COMMAND tests_fmc_priority_queue)
+
+if(BUILD_TOOLS)
+    add_test(
+        NAME fmc_yamal-run
+        COMMAND yamal-run -c ../tests/fmc/testcomponent.ini -s main -m testcomponent -o testcomponentsched
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set_property(TEST fmc_yamal-run PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
+    add_test(
+        NAME fmc_yamal-run_only_cfg
+        COMMAND yamal-run -c ../tests/fmc/testcomponent_only_cfg.ini -s main
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set_property(TEST fmc_yamal-run_only_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
+    add_test(
+        NAME fmc_yamal-run_array_cfg
+        COMMAND yamal-run -c ../tests/fmc/testcomponent_array_cfg.ini -s main
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set_property(TEST fmc_yamal-run_array_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=./tests/fmc")
+endif()
