@@ -1,4 +1,4 @@
-project('yamal', 'cpp', 'c', version:'7.2.13')
+project('yamal', 'cpp', 'c', version:'7.2.16')
 
 version = meson.project_version()
 
