@@ -510,17 +510,13 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
     }
   } break;
   case FMC_CFG_STR: {
-    if (**str != '"') {
-      fmc_error_set(err, "config error: unable to parse string (line %zu)",
-                    line);
-      return;
-    }
-    ++*str;
+    bool quoted = **str == '"';
+    *str += quoted;
     char *endptr = *str;
-    while (endptr < end && *endptr != '"') {
+    while (endptr < end && (!quoted || *endptr != '"')) {
       ++endptr;
     }
-    if (endptr == end) {
+    if (quoted && endptr == end) {
       fmc_error_set(
           err,
           "config error: unable to find closing quotes for string (line %zu)",
@@ -532,7 +528,7 @@ static void parse_value(struct ini_sect *ini, struct fmc_cfg_type *spec,
     if (*err) {
       return;
     }
-    *str = endptr + 1;
+    *str = endptr + quoted;
   } break;
   case FMC_CFG_SECT: {
     char *endptr = *str;

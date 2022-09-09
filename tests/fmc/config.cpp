@@ -671,7 +671,7 @@ TEST(parser, invalid_array_5) {
                         "arr=a,b,c\n"
                         "",
                         main, err);
-  EXPECT_ERR(err, "config error: unable to parse string (line 2)");
+  ASSERT_NOERR(err);
 }
 
 TEST(parser, invalid_array_6) {
@@ -842,7 +842,28 @@ TEST(parser, string_1) {
                    "arr=a\",\"b\",\"c\"\n"
                    "",
                    main, err);
-  EXPECT_ERR(err, "config error: unable to parse string (line 2)");
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    \"a\",\"b\",\"c\"\",\n"
+                                 "  ]\n"
+                                 "}\n");
+  sect = parse_cfg(""
+                   "[main]\n"
+                   "arr=a,b,c\n"
+                   "[a]\n"
+                   "[b]\n"
+                   "[c]\n"
+                   "",
+                   main, err);
+  ASSERT_NOERR(err);
+  EXPECT_EQ(cfg_to_string(sect), ""
+                                 "{\n"
+                                 "  arr = [\n"
+                                 "    \"a,b,c\",\n"
+                                 "  ]\n"
+                                 "}\n");
 }
 
 TEST(parser, boolean_1) {

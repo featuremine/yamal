@@ -16,6 +16,7 @@
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/error.h>
+#include <fmc/memory.h>
 #include <fmc/string.h>
 #include <fmc/time.h>
 #include <stdlib.h>
@@ -195,10 +196,24 @@ consumer_component_new(struct fmc_cfg_sect_item *cfg,
   memset(c, 0, sizeof(*c));
   _reactor->on_exec(ctx, &consumer_component_process_one);
   _reactor->on_dep(ctx, &consumer_component_on_dep);
+  fmc_error_t *e;
+  fmc_shmem_init_alloc(&c->mem, _reactor->get_pool(ctx), 100, &e);
+  if (e) {
+    goto cleanup;
+  }
   return c;
 cleanup:
+  if (c)
+    free(c);
   _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
   return NULL;
+};
+
+static void consumer_component_del(struct fmc_component *comp) {
+  struct consumer_component *c = (struct consumer_component *)comp;
+  fmc_error_t *e;
+  fmc_shmem_destroy(&c->mem, &e);
+  free(comp);
 };
 
 void consumer_component_2_on_dep(struct fmc_component *self, int idx,
@@ -329,7 +344,7 @@ struct fmc_component_def_v1 components[] = {
         .tp_size = sizeof(struct consumer_component),
         .tp_cfgspec = empty_cfg_spec,
         .tp_new = (fmc_newfunc)&consumer_component_new,
-        .tp_del = &generic_component_del,
+        .tp_del = &consumer_component_del,
     },
     {
         .tp_name = "consumercomponent2",
