@@ -24,6 +24,7 @@
 #include <fmc/config.h>
 #include <fmc/error.h>
 #include <fmc/reactor.h>
+#include <fmc/platform.h>
 #include <stdlib.h>
 
 #include <fmc++/fs.hpp>
@@ -37,6 +38,11 @@
 #define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
+#define FMC_LIB_SUFFIX ".so"
+#define FMC_DIR_SEP "/"
+#elif defined(FMC_SYS_MACH)
+#define FMC_LIB_SUFFIX ".dylib"
+#define FMC_DIR_SEP "\\"
 #else
 #error "Unsupported operating system"
 #endif
@@ -196,6 +202,8 @@ TEST(component, module) {
   ASSERT_EQ(std::string(mod->name), std::string("testcomponent"));
   ASSERT_EQ(sys.modules, mod);
   ASSERT_EQ(sys.modules->prev, mod);
+  ASSERT_EQ(std::string(fmc_component_module_file(mod)),
+            components_path + std::string(FMC_DIR_SEP "testcomponent" FMC_LIB_SUFFIX));
 
   struct fmc_component_module *samemod =
       fmc_component_module_get(&sys, "testcomponent", &err);
