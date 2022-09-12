@@ -23,8 +23,8 @@
 #include <fmc/component.h>
 #include <fmc/config.h>
 #include <fmc/error.h>
-#include <fmc/reactor.h>
 #include <fmc/platform.h>
+#include <fmc/reactor.h>
 #include <stdlib.h>
 
 #include <fmc++/fs.hpp>
@@ -203,7 +203,8 @@ TEST(component, module) {
   ASSERT_EQ(sys.modules, mod);
   ASSERT_EQ(sys.modules->prev, mod);
   ASSERT_EQ(std::string(fmc_component_module_file(mod)),
-            components_path + std::string(FMC_DIR_SEP "testcomponent" FMC_LIB_SUFFIX));
+            components_path +
+                std::string(FMC_DIR_SEP "testcomponent" FMC_LIB_SUFFIX));
 
   struct fmc_component_module *samemod =
       fmc_component_module_get(&sys, "testcomponent", &err);
