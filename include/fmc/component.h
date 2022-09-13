@@ -230,6 +230,8 @@ FMMODFUNC void fmc_component_sys_destroy(struct fmc_component_sys *sys);
 FMMODFUNC struct fmc_component_module *
 fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
                          fmc_error_t **error);
+FMMODFUNC const char *
+fmc_component_module_file(struct fmc_component_module *mod);
 FMMODFUNC void fmc_component_module_del(struct fmc_component_module *mod);
 FMMODFUNC struct fmc_component_type *
 fmc_component_module_type_get(struct fmc_component_module *mod,
