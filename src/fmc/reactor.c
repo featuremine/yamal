@@ -64,11 +64,11 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
     DL_DELETE(head, item);
     free(item);
   }
-  fmc_pool_destroy(&reactor->pool);
 
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     fmc_reactor_ctx_del(reactor->ctxs[i]);
   }
+  fmc_pool_destroy(&reactor->pool);
   fmc_error_destroy(&reactor->err);
   free(reactor->ctxs);
   memset(reactor, 0, sizeof(*reactor));
