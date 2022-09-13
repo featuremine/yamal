@@ -68,7 +68,6 @@ void fmc_reactor_destroy(struct fmc_reactor *reactor) {
   for (unsigned int i = 0; reactor->ctxs && i < reactor->size; ++i) {
     fmc_reactor_ctx_del(reactor->ctxs[i]);
   }
-
   fmc_pool_destroy(&reactor->pool);
   fmc_error_destroy(&reactor->err);
   free(reactor->ctxs);
