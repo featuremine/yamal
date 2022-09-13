@@ -454,6 +454,7 @@ fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
 }
 
 void fmc_component_module_del(struct fmc_component_module *mod) {
+  if (!mod) return;
   DL_DELETE(mod->sys->modules, mod);
   fmc_component_module_destroy(mod);
   free(mod);
