@@ -123,8 +123,26 @@ jobs:
 
     - name: Install dependencies
       run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget rpm-build
+
+    - name: Cache tclap
+      id: cache-tclap-1-2-3
+      uses: actions/cache@v3
+      with:
+        path: |
+            /usr/lib64/pkgconfig/tclap.pc
+            /usr/include/tclap
+        key: cache-centos-tclap-1-2-3
+
     - name: Install tclap
-      run: git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code && pushd tclap-code && ./autotools.sh && ./configure --prefix=/usr && make && make install && popd && rm -rf tclap-code
+      if: steps.cache-tclap-1-2-3.outputs.cache-hit != 'true'
+      working-directory: /tmp
+      run: |
+        git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code
+        cd tclap-code
+        ./autotools.sh
+        ./configure --prefix=/usr
+        make && make install
+
     - name: Install gtest
       run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && make install && cd ../../ && rm -rf googletest
     - name: Upgrade packaging
