@@ -24,6 +24,7 @@ jobs:
       working-directory: ${{github.workspace}}/.github/workflows
       env: 
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GIT_REPO: ${{ github.repository }}
       run: python3 draftcheck
 
 
