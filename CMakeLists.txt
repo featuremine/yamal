@@ -165,24 +165,57 @@ target_link_libraries(
 )
 
 add_library(
-    ytp
-    $<TARGET_OBJECTS:ytp_obj>
+    ytp_dep
+    INTERFACE
 )
 target_include_directories(
-    ytp
-    PUBLIC
+    ytp_obj
+    INTERFACE
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
 target_link_libraries(
-    ytp
-    PUBLIC
+    ytp_dep
+    INTERFACE
     fmc
 )
-install(
-    TARGETS
+
+add_library(
     ytp
+    STATIC
+    $<TARGET_OBJECTS:ytp_obj>
 )
+target_link_libraries(
+    ytp
+    PUBLIC
+    ytp_dep
+)
+if (BUILD_SHARED_LIBS)
+    add_library(
+        ytp-shared
+        SHARED
+        $<TARGET_OBJECTS:ytp_obj>
+    )
+    target_link_libraries(
+        ytp-shared
+        PUBLIC
+        ytp_dep
+    )
+    set_target_properties(
+        ytp-shared
+        PROPERTIES
+        OUTPUT_NAME "ytp"
+    )
+    install(
+        TARGETS
+        ytp-shared
+    )
+else()
+    install(
+        TARGETS
+        ytp
+    )
+endif ()
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/ytp"
     DESTINATION "./include"
