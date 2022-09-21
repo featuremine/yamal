@@ -34,6 +34,7 @@ jobs:
         GIT_MERGE_BASE: ${{ github.base_ref }}
         GIT_MERGE_HEAD: ${{ github.head_ref }}
         GIT_MERGE_COMMIT: ${{ github.sha }}
+        GIT_REPO: ${{ github.repository }}
       run: python3 versioncheck
 
     # Code formatting with Clang linter
@@ -51,7 +52,7 @@ jobs:
         author_email: dev@featuremine.com
         message: 'Committing clang-format changes'
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.UTILITY_COMMIT_TOKEN }}
 
   build-ubuntu:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.

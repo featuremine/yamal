@@ -38,7 +38,7 @@ def version_check():
         return None
     return version()
 
-ghrepo = Github(os.getenv('GH_TOKEN')).get_repo("featuremine/yamal")
+ghrepo = Github(os.getenv('GH_TOKEN')).get_repo(os.getenv('GIT_REPO'))
 
 def releases():
     rels = []
