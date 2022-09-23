@@ -19,6 +19,9 @@ jobs:
     steps:
     - id: release-check
       uses: featuremine/actions@main
+      with:
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
+        utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
 
   build-manylinux:
     needs: utility
