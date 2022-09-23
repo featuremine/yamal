@@ -318,6 +318,8 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
+        fmc
+        pthread
     )
     install(
         TARGETS
