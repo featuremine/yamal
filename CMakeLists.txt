@@ -249,7 +249,9 @@ if(BUILD_TOOLS)
        PRIVATE
        ytp
        fmc++
+       fmc
        PkgConfig::TCLAP
+       pthread
     )
     install(
        TARGETS
@@ -265,6 +267,8 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
+        fmc
+        pthread
     )
     install(
         TARGETS
@@ -280,6 +284,8 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
+        fmc
+        pthread
     )
     install(
         TARGETS
@@ -295,6 +301,8 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
+        fmc
+        pthread
     )
     install(
         TARGETS
