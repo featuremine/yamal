@@ -240,6 +240,7 @@ if(BUILD_TOOLS)
        PRIVATE
        ytp
        fmc++
+       PkgConfig::TCLAP
     )
     install(
        TARGETS
