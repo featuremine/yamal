@@ -14,7 +14,6 @@
 
 /**
  * @file timeline.h
- * @author Andres Rangel
  * @date 04 Jan 2022
  * @brief File contains C declaration of timeline API of YTP
  *
