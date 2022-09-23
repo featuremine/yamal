@@ -67,7 +67,7 @@ jobs:
         -DBUILD_TESTING=ON -DBUILD_WHEEL=ON -DBUILD_API_DOCS=ON
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       
-    - name: Build
+    - name: Build ${{ github.event.repository.name }} with fm gcc
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
 
     - name: Test ${{ github.event.repository.name }} with ctest
