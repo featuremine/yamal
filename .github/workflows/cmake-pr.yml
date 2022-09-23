@@ -73,25 +73,21 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
 
     - name: Test ${{ github.event.repository.name }} with ctest
-      working-directory: ${{github.workspace}}/build
-      run: ctest --extra-verbose -C ${{env.BUILD_TYPE}}
+      run: cd ${{github.workspace}}/build && ctest --extra-verbose -C ${{env.BUILD_TYPE}}
 
     - name: Compress documentation
       if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}/build
-      run: tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
+      run: cd ${{github.workspace}}/build && tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
       
     - name: Upload documentation
       if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}/build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat ../VERSION) docs-v$(cat ../VERSION).tar.gz --clobber
+      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/docs-v$(cat VERSION).tar.gz --clobber
 
     - name: Package
       if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}/build
-      run: cpack -G RPM
+      run: cd ${{github.workspace}}/build && cpack -G RPM
     
     - name: Upload package
       if: needs.utility.outputs.isRelease == 'release'
