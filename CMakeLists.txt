@@ -48,64 +48,9 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
-add_library(
-    fmc
-    STATIC
-    "${PROJECT_SOURCE_DIR}/src/cmp/cmp.c"
-    "${PROJECT_SOURCE_DIR}/src/murmur3/murmur3.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/component.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/memory.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
-)
-target_include_directories(
-    fmc
-    PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
-    "${PROJECT_BINARY_DIR}/include"
-)
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
-target_link_libraries(
-    fmc
-    PRIVATE
-    ${DL_LIB}
-    ${PTHREAD_LIB}
-)
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(FMC_LIBS_PRIVATE "-lstdc++fs")
-    set(FMCCPP_LIBS "-lstdc++fs")
 
-    target_link_libraries(
-        fmc
-        PUBLIC
-        stdc++fs
-    )
-endif()
-install(
-    TARGETS
-    fmc
-)
-configure_file(
-    "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc.pc.in"
-    "${PROJECT_BINARY_DIR}/fmc.pc"
-    @ONLY
-)
-install(
-    FILES "${PROJECT_BINARY_DIR}/fmc.pc"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
-)
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
     DESTINATION "./include"
@@ -135,6 +80,27 @@ install(
 )
 
 set(
+    FMC_SRC
+    "${PROJECT_SOURCE_DIR}/src/cmp/cmp.c"
+    "${PROJECT_SOURCE_DIR}/src/murmur3/murmur3.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/component.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/math.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/memory.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
+)
+
+set(
     YTP_SRC
     "${PROJECT_SOURCE_DIR}/src/ytp/yamal.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
@@ -148,6 +114,7 @@ set(
 add_library(
     ytp_obj
     OBJECT
+    ${FMC_SRC}
     ${YTP_SRC}
 )
 target_include_directories(
@@ -158,10 +125,10 @@ target_include_directories(
 )
 target_link_libraries(
     ytp_obj
-    PUBLIC
-    fmc
     PRIVATE
     fmc++
+    ${DL_LIB}
+    ${PTHREAD_LIB}
 )
 
 add_library(
@@ -169,7 +136,7 @@ add_library(
     INTERFACE
 )
 target_include_directories(
-    ytp_obj
+    ytp_dep
     INTERFACE
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
@@ -177,7 +144,9 @@ target_include_directories(
 target_link_libraries(
     ytp_dep
     INTERFACE
-    fmc
+    fmc++
+    ${DL_LIB}
+    ${PTHREAD_LIB}
 )
 
 add_library(
@@ -190,6 +159,26 @@ target_link_libraries(
     PUBLIC
     ytp_dep
 )
+add_library(
+    fmc
+    INTERFACE IMPORTED GLOBAL
+)
+target_link_libraries(
+    fmc
+    INTERFACE
+    ytp
+)
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(FMC_LIBS_PRIVATE "-lstdc++fs")
+    set(FMCCPP_LIBS "-lstdc++fs")
+
+    target_link_libraries(
+        ytp
+        PUBLIC
+        stdc++fs
+    )
+endif()
+
 if (BUILD_SHARED_LIBS)
     add_library(
         ytp-shared

@@ -9,6 +9,6 @@ URL: @PROJECT_HOMEPAGE_URL@
 Version: @PROJECT_VERSION@
 
 Requires:
-Libs: -L${libdir} -lfmc 
+Libs: -L${libdir} -lytp
 Cflags: -I${includedir}
 Libs.private: @FMC_LIBS_PRIVATE@
