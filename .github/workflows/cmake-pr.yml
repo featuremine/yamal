@@ -14,45 +14,11 @@ jobs:
   utility:
     runs-on: ubuntu-latest
     outputs:
-      isRelease: ${{ steps.isRelease.outputs.release }}
+      release-check: ${{ steps.release-check.outputs.release-check }}
     
     steps:
-    - uses: actions/checkout@main
-      with: 
-        fetch-depth: 0
-    
-    # Install python wrappers for gh
-    - name: Install PyGitHub
-      run: pip3 install PyGithub
-
-    # Detect release
-    - name: Check if PR is release
-      id: isRelease
-      working-directory: ${{github.workspace}}/.github/workflows
-      env: 
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GIT_MERGE_BASE: ${{ github.base_ref }}
-        GIT_MERGE_HEAD: ${{ github.head_ref }}
-        GIT_MERGE_COMMIT: ${{ github.sha }}
-        GIT_REPO: ${{ github.repository }}
-      run: python3 versioncheck
-
-    # Code formatting with Clang linter
-    - uses: DoozyX/clang-format-lint-action@v0.14
-      with:
-        source: '.'
-        extensions: 'h,c,hpp,cpp'
-        clangFormatVersion: 14
-        inplace: True
-
-    # Commit clang-format changes
-    - uses: EndBug/add-and-commit@v4
-      with:
-        author_name: CI bot
-        author_email: dev@featuremine.com
-        message: 'Committing clang-format changes'
-      env:
-        GITHUB_TOKEN: ${{ secrets.UTILITY_COMMIT_TOKEN }}
+    - id: release-check
+      uses: featuremine/actions@main
 
   build-manylinux:
     needs: utility
@@ -76,21 +42,21 @@ jobs:
       run: cd ${{github.workspace}}/build && ctest --extra-verbose -C ${{env.BUILD_TYPE}}
 
     - name: Compress documentation
-      if: needs.utility.outputs.isRelease == 'release'
+      if: needs.utility.outputs.release-check == 'release'
       run: cd ${{github.workspace}}/build && tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
       
     - name: Upload documentation
-      if: needs.utility.outputs.isRelease == 'release'
+      if: needs.utility.outputs.release-check == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/docs-v$(cat VERSION).tar.gz --clobber
 
     - name: Package
-      if: needs.utility.outputs.isRelease == 'release'
+      if: needs.utility.outputs.release-check == 'release'
       run: cd ${{github.workspace}}/build && cpack -G RPM
     
     - name: Upload package
-      if: needs.utility.outputs.isRelease == 'release'
+      if: needs.utility.outputs.release-check == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.rpm --clobber
