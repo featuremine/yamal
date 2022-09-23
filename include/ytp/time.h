@@ -14,7 +14,6 @@
 
 /**
  * @file time.h
- * @author Federico Ravchina
  * @date 23 Apr 2021
  * @brief File contains C declaration of time layer of YTP
  *

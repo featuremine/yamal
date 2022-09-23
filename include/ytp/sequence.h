@@ -14,7 +14,6 @@
 
 /**
  * @file sequence.h
- * @author Federico Ravchina
  * @date 23 Apr 2021
  * @brief File contains C declaration of sequence API of YTP
  *

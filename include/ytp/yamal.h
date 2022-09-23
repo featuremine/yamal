@@ -14,7 +14,6 @@
 
 /**
  * @file yamal.h
- * @author Federico Ravchina
  * @date 23 Apr 2021
  * @brief File contains C declaration of yamal layer of YTP
  *
