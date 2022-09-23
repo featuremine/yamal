@@ -5,7 +5,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_compiles_c
     PRIVATE
-    ytp
+    fmc
 )
 add_test(NAME fmc_compiles_c COMMAND tests_fmc_compiles_c)
 
@@ -17,7 +17,7 @@ add_library(
 target_link_libraries(
     testcomponent
     PRIVATE
-    ytp
+    fmc
 )
 set_target_properties(
     testcomponent
@@ -31,7 +31,7 @@ add_library(
 target_link_libraries(
     iocomponent
     PRIVATE
-    ytp
+    fmc
 )
 set_target_properties(
     iocomponent
@@ -45,7 +45,7 @@ add_library(
 target_link_libraries(
     shutdowncomponent
     PRIVATE
-    ytp
+    fmc
 )
 set_target_properties(
     shutdowncomponent
@@ -58,7 +58,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_component
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(
@@ -73,7 +73,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_config_c
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_config_c COMMAND tests_fmc_config_c)
@@ -85,7 +85,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_error
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_error COMMAND tests_fmc_error)
@@ -97,7 +97,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_extension
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(
@@ -112,7 +112,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_files
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_files COMMAND tests_fmc_files)
@@ -124,7 +124,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_math
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_math COMMAND tests_fmc_math)
@@ -136,7 +136,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_time
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_time COMMAND tests_fmc_time)
@@ -148,7 +148,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_memory
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_memory COMMAND tests_fmc_memory)
@@ -160,7 +160,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_priority_queue
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_priority_queue COMMAND tests_fmc_priority_queue)

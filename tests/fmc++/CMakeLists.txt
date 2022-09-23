@@ -5,7 +5,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_config
     PRIVATE
-    ytp
+    fmc
     fmc++
     PkgConfig::GTEST
 )
@@ -18,7 +18,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_shared_map
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_shared_map COMMAND tests_fmc_shared_map)
@@ -30,7 +30,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_threaded
     PRIVATE
-    ytp
+    fmc
     PkgConfig::GTEST
 )
 add_test(NAME fmc_threaded COMMAND tests_fmc_threaded)
@@ -42,7 +42,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_variant_map
     PRIVATE
-    ytp
+    fmc
     fmc++
     PkgConfig::GTEST
 )
@@ -55,7 +55,7 @@ add_executable(
 target_link_libraries(
     tests_fmc_strings
     PRIVATE
-    ytp
+    fmc
     fmc++
     PkgConfig::GTEST
 )

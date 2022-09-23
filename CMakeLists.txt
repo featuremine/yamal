@@ -159,6 +159,15 @@ target_link_libraries(
     PUBLIC
     ytp_dep
 )
+add_library(
+    fmc
+    INTERFACE IMPORTED GLOBAL
+)
+target_link_libraries(
+    fmc
+    INTERFACE
+    ytp
+)
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(FMC_LIBS_PRIVATE "-lstdc++fs")
     set(FMCCPP_LIBS "-lstdc++fs")
