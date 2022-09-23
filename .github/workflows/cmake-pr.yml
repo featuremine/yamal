@@ -56,7 +56,9 @@ jobs:
 
   build-manylinux:
     needs: utility
-    runs-on: 590597527718.dkr.ecr.us-east-1.amazonaws.com/ci-hosted-gh-centos7-gcc10.2.0-test
+    runs-on: ubuntu-20.04
+    container:
+      image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-gcc10.2.0
     
     steps:
     - uses: actions/checkout@main
@@ -96,10 +98,3 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.rpm --clobber
-
-  build-manylinux-ecr:
-    runs-on: ubuntu-20.04
-    container:
-      image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-gcc10.2.0
-    steps:
-      - run: echo "Inside a container pulled from ECR"
