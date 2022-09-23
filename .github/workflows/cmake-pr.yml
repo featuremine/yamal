@@ -74,10 +74,6 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest --extra-verbose -C ${{env.BUILD_TYPE}}
 
-    - name: Test ${{ github.event.repository.name }} logs
-      if: success() || failure()
-      run: cat ${{github.workspace}}/build/Testing/Temporary/LastTest.log
-      
     - name: Compress documentation
       if: needs.utility.outputs.isRelease == 'release'
       working-directory: ${{github.workspace}}/build
