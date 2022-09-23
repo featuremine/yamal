@@ -251,6 +251,7 @@ if(BUILD_TOOLS)
        fmc++
        fmc
        PkgConfig::TCLAP
+
        pthread
     )
     install(
