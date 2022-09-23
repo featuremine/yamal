@@ -56,7 +56,7 @@ jobs:
 
   build-manylinux:
     needs: utility
-    runs-on: hosted-gh-centos7-gcc10.2.0-test
+    runs-on: 590597527718.dkr.ecr.us-east-1.amazonaws.com/ci-hosted-gh-centos7-gcc10.2.0-test
     
     steps:
     - uses: actions/checkout@main
