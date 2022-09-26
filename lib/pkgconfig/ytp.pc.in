@@ -10,3 +10,4 @@ Version: @PROJECT_VERSION@
 
 Libs: -L${libdir} -lytp
 Cflags: -I${includedir}
+Libs.private:@YTP_PRIVATE_LIBS@
