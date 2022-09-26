@@ -37,7 +37,7 @@ jobs:
       uses: featuremine/actions/package/build@main
 
     - name: Test ${{ github.event.repository.name }} with ctest
-      run: cd ${{github.workspace}}/build && ctest --extra-verbose -C ${{env.BUILD_TYPE}}
+      uses: featuremine/actions/package/test@main
 
     - name: Compress documentation
       if: needs.utility.outputs.release-check == 'release'
