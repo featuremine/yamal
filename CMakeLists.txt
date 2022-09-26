@@ -76,7 +76,7 @@ configure_file(
 )
 install(
     FILES "${PROJECT_BINARY_DIR}/fmc++.pc"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+    DESTINATION "lib/pkgconfig"
 )
 
 set(
@@ -233,7 +233,7 @@ configure_file(
 )
 install(
     FILES "${PROJECT_BINARY_DIR}/ytp.pc"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+    DESTINATION "lib/pkgconfig"
 )
 
 if(BUILD_TOOLS)
