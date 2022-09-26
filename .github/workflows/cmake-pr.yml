@@ -42,4 +42,4 @@ jobs:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         cpack: RPM
         docs: true
-        upload: needs.utility.outputs.release-check == 'release'
+        upload: ${{ needs.utility.outputs.release-check == 'release' }}
