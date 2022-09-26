@@ -26,7 +26,7 @@ jobs:
       image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-gcc10.2.0
     
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@v3
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
       uses: featuremine/actions/package/build@main
