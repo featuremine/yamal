@@ -35,26 +35,8 @@ jobs:
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
       uses: featuremine/actions/package/build@main
-
-    - name: Test ${{ github.event.repository.name }} with ctest
-      uses: featuremine/actions/package/test@main
-
-    - name: Compress documentation
-      if: needs.utility.outputs.release-check == 'release'
-      run: cd ${{github.workspace}}/build && tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
-      
-    - name: Upload documentation
-      if: needs.utility.outputs.release-check == 'release'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/docs-v$(cat VERSION).tar.gz --clobber
-
-    - name: Package
-      if: needs.utility.outputs.release-check == 'release'
-      run: cd ${{github.workspace}}/build && cpack -G RPM
-    
-    - name: Upload package
-      if: needs.utility.outputs.release-check == 'release'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.rpm --clobber
+      with:
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
+        cpack: RPM
+        docs: true
+        upload: needs.utility.outputs.release-check == 'release'
