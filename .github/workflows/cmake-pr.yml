@@ -14,170 +14,53 @@ jobs:
   utility:
     runs-on: ubuntu-latest
     outputs:
-      isRelease: ${{ steps.isRelease.outputs.release }}
+      release-check: ${{ steps.release-check.outputs.release-check }}
     
     steps:
-    - uses: actions/checkout@main
-      with: 
-        fetch-depth: 0
-    
-    # Install python wrappers for gh
-    - name: Install PyGitHub
-      run: pip3 install PyGithub
-
-    # Detect release
-    - name: Check if PR is release
-      id: isRelease
-      working-directory: ${{github.workspace}}/.github/workflows
-      env: 
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GIT_MERGE_BASE: ${{ github.base_ref }}
-        GIT_MERGE_HEAD: ${{ github.head_ref }}
-        GIT_MERGE_COMMIT: ${{ github.sha }}
-        GIT_REPO: ${{ github.repository }}
-      run: python3 versioncheck
-
-    # Code formatting with Clang linter
-    - uses: DoozyX/clang-format-lint-action@v0.14
+    - id: release-check
+      uses: featuremine/actions@main
       with:
-        source: '.'
-        extensions: 'h,c,hpp,cpp'
-        clangFormatVersion: 14
-        inplace: True
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
+        utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
+        ci_token: ${{ secrets.CIBOT_TOKEN }}
 
-    # Commit clang-format changes
-    - uses: EndBug/add-and-commit@v4
-      with:
-        author_name: CI bot
-        author_email: dev@featuremine.com
-        message: 'Committing clang-format changes'
-      env:
-        GITHUB_TOKEN: ${{ secrets.UTILITY_COMMIT_TOKEN }}
-
-  build-ubuntu:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  build-manylinux:
     needs: utility
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    container:
+      image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-gcc10.2.0
     
     steps:
     - uses: actions/checkout@main
 
-    - name: Install tclap
-      run: sudo apt-get install libtclap-dev
-    - name: Install gtest
-      run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && sudo make install && cd ../../ && rm -rf googletest
-    - name: Install Doxygen
-      run: sudo apt-get install doxygen
-    - name: Install sphinx
-      run: sudo apt-get install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install m2r && pip3 install mistune==0.8.4 && pip3 install sphinx-autodoc-typehints
-    
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    - name: Configure ${{ github.event.repository.name }} CMake with fm gcc
+      run: >
+        cmake -B ${{github.workspace}}/build
+        -DBUILD_TESTING=ON -DBUILD_WHEEL=ON -DBUILD_API_DOCS=ON
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+    - name: Build ${{ github.event.repository.name }} with fm gcc
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
 
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
-      
+    - name: Test ${{ github.event.repository.name }} with ctest
+      run: cd ${{github.workspace}}/build && ctest --extra-verbose -C ${{env.BUILD_TYPE}}
+
     - name: Compress documentation
-      if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}/build
-      run: tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
+      if: needs.utility.outputs.release-check == 'release'
+      run: cd ${{github.workspace}}/build && tar -czvf docs-v$(cat ../VERSION).tar.gz -C docs/sphinx . 
       
     - name: Upload documentation
-      if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}/build
+      if: needs.utility.outputs.release-check == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat ../VERSION) docs-v$(cat ../VERSION).tar.gz --clobber
+      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/docs-v$(cat VERSION).tar.gz --clobber
 
     - name: Package
-      if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}/build
-      run: cpack -G DEB
+      if: needs.utility.outputs.release-check == 'release'
+      run: cd ${{github.workspace}}/build && cpack -G RPM
     
     - name: Upload package
-      if: needs.utility.outputs.isRelease == 'release'
-      working-directory: ${{github.workspace}}
+      if: needs.utility.outputs.release-check == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.deb --clobber
-
-  
-  build-centos:
-    needs: utility    
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/easybuilders/centos-8.5
-    
-    steps:
-    - uses: actions/checkout@main
-
-    - name: Install dependencies
-      run: yum -y install cmake autoconf automake pkgconfig doxygen libstdc++-static wget rpm-build
-
-    - name: Cache tclap
-      id: cache-tclap-1-2-3
-      uses: actions/cache@v3
-      with:
-        path: |
-            /usr/lib64/pkgconfig/tclap.pc
-            /usr/include/tclap
-        key: cache-centos-tclap-1-2-3
-
-    - name: Install tclap
-      if: steps.cache-tclap-1-2-3.outputs.cache-hit != 'true'
-      working-directory: /tmp
-      run: |
-        git clone --depth 1 -b v1.2.3 https://github.com/mirror/tclap.git tclap-code
-        cd tclap-code
-        ./autotools.sh
-        ./configure --prefix=/usr
-        make && make install
-
-    - name: Install gtest
-      run: git clone --depth 1 https://github.com/google/googletest.git -b release-1.11.0 && cd googletest && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make && make install && cd ../../ && rm -rf googletest
-    - name: Upgrade packaging
-      run: pip3 install packaging==21.3
-    - name: Install sphinx
-      run: yum -y install python3-sphinx && pip3 install breathe && pip3 install sphinx_rtd_theme && pip3 install mistune==0.8.4 && pip3 install m2r && pip3 install sphinx-autodoc-typehints
-    - name: Install cmake 3.21.0 from binary
-      run: wget https://github.com/Kitware/CMake/releases/download/v3.21.0/cmake-3.21.0-linux-x86_64.tar.gz && tar xvzf cmake-3.21.0-linux-x86_64.tar.gz 
-
-    - name: Install GitHub CLI
-      run: dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && dnf -y --nogpgcheck install gh
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake-3.21.0-linux-x86_64/bin/cmake -B $PWD/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake-3.21.0-linux-x86_64/bin/cmake --build $PWD/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ../cmake-3.21.0-linux-x86_64/bin/ctest -C ${{env.BUILD_TYPE}}
-
-    - name: Package
-      if: needs.utility.outputs.isRelease == 'release'
-      working-directory: build
-      run: ../cmake-3.21.0-linux-x86_64/bin/cpack -G RPM
-        
-    - name: Upload package
-      if: needs.utility.outputs.isRelease == 'release'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload v$(cat VERSION) build/yamal-$(cat VERSION)-Linux.rpm --clobber
+      run: gh release upload v$(cat VERSION) ${{github.workspace}}/build/yamal-$(cat VERSION)-Linux.rpm --clobber
