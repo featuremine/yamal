@@ -33,14 +33,8 @@ jobs:
     steps:
     - uses: actions/checkout@main
 
-    - name: Configure ${{ github.event.repository.name }} CMake with fm gcc
-      run: >
-        cmake -B ${{github.workspace}}/build
-        -DBUILD_TESTING=ON -DBUILD_WHEEL=ON -DBUILD_API_DOCS=ON
-        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
+      uses: featuremine/actions/package/build@main
 
     - name: Test ${{ github.event.repository.name }} with ctest
       run: cd ${{github.workspace}}/build && ctest --extra-verbose -C ${{env.BUILD_TYPE}}
