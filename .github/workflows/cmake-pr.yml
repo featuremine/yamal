@@ -33,6 +33,9 @@ jobs:
     steps:
     - uses: actions/checkout@main
 
+    - name: Test
+      run: echo ${{needs.utility.outputs.release-check == 'release'}}
+
     - name: Build ${{ github.event.repository.name }} with fm gcc
       uses: featuremine/actions/package/build@main
       with:
