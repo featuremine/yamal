@@ -22,6 +22,7 @@ jobs:
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
+        ci_token: ${{ secrets.CIBOT_TOKEN }}
 
   build-manylinux:
     needs: utility
