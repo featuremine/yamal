@@ -17,12 +17,12 @@ jobs:
       release-check: ${{ steps.release-check.outputs.release-check }}
     
     steps:
-    - id: release-check
+    - name: Utility tasks
+      id: release-check
       uses: featuremine/actions/utility@main
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
-        ci_token: ${{ secrets.CIBOT_TOKEN }}
 
   build-manylinux:
     needs: utility
