@@ -213,7 +213,7 @@ configure_file(
 )
 install(
     FILES "${PROJECT_BINARY_DIR}/ytp.pc"
-    DESTINATION "lib/pkgconfig"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
 if(BUILD_TOOLS)
