@@ -18,12 +18,8 @@ option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
 option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
 
-# Add the cmake folder so the FindSphinx module is found
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
 find_package(Doxygen)
 if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
-    find_package(Doxygen)
     # Add subdir "docs" for Doxygen + Sphinx to use.
     add_subdirectory ("docs")
 endif ()
@@ -51,13 +47,6 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
 
-install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
-    DESTINATION "./include"
-    FILES_MATCHING
-    PATTERN "*.h"
-)
-
 add_library(
     fmc++
     STATIC
@@ -68,15 +57,6 @@ target_include_directories(
     PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
-)
-configure_file(
-    "${PROJECT_SOURCE_DIR}/lib/pkgconfig/fmc++.pc.in"
-    "${PROJECT_BINARY_DIR}/fmc++.pc"
-    @ONLY
-)
-install(
-    FILES "${PROJECT_BINARY_DIR}/fmc++.pc"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
 )
 
 set(
@@ -127,8 +107,6 @@ target_link_libraries(
     ytp_obj
     PRIVATE
     fmc++
-    ${DL_LIB}
-    ${PTHREAD_LIB}
 )
 
 add_library(
@@ -141,14 +119,6 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
-target_link_libraries(
-    ytp_dep
-    INTERFACE
-    fmc++
-    ${DL_LIB}
-    ${PTHREAD_LIB}
-)
-
 add_library(
     ytp
     STATIC
@@ -156,29 +126,13 @@ add_library(
 )
 target_link_libraries(
     ytp
+
+    PRIVATE
+    fmc++
+
     PUBLIC
     ytp_dep
 )
-add_library(
-    fmc
-    INTERFACE IMPORTED GLOBAL
-)
-target_link_libraries(
-    fmc
-    INTERFACE
-    ytp
-)
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(FMC_LIBS_PRIVATE "-lstdc++fs")
-    set(FMCCPP_LIBS "-lstdc++fs")
-
-    target_link_libraries(
-        ytp
-        PUBLIC
-        stdc++fs
-    )
-endif()
-
 if (BUILD_SHARED_LIBS)
     add_library(
         ytp-shared
@@ -190,6 +144,15 @@ if (BUILD_SHARED_LIBS)
         PUBLIC
         ytp_dep
     )
+    if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        target_link_libraries(
+            ytp-shared
+            PRIVATE
+            stdc++fs
+            ${DL_LIB}
+            ${PTHREAD_LIB}
+        )
+    endif()
     set_target_properties(
         ytp-shared
         PROPERTIES
@@ -200,11 +163,28 @@ if (BUILD_SHARED_LIBS)
         ytp-shared
     )
 else()
+    string(APPEND YTP_PRIVATE_LIBS " -lstdc++fs -ldl -lpthread")
     install(
         TARGETS
         ytp
     )
 endif ()
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+        ytp
+        PRIVATE
+        stdc++fs
+        ${DL_LIB}
+        ${PTHREAD_LIB}
+    )
+endif()
+
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
+)
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/ytp"
     DESTINATION "./include"
@@ -233,7 +213,7 @@ configure_file(
 )
 install(
     FILES "${PROJECT_BINARY_DIR}/ytp.pc"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
 if(BUILD_TOOLS)
@@ -249,9 +229,7 @@ if(BUILD_TOOLS)
        PRIVATE
        ytp
        fmc++
-       fmc
        PkgConfig::TCLAP
-       pthread
     )
     install(
        TARGETS
@@ -267,9 +245,7 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
-        fmc
-        pthread
-    )
+     )
     install(
         TARGETS
         yamal-daemon
@@ -284,9 +260,7 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
-        fmc
-        pthread
-    )
+     )
     install(
         TARGETS
         yamal-tail
@@ -301,9 +275,7 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
-        fmc
-        pthread
-    )
+     )
     install(
         TARGETS
         yamal-perf
@@ -318,9 +290,7 @@ if(BUILD_TOOLS)
         PRIVATE
         ytp
         fmc++
-        fmc
-        pthread
-    )
+     )
     install(
         TARGETS
         yamal-stats
