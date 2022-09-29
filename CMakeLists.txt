@@ -46,6 +46,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
+include(GNUInstallDirs)
 
 add_library(
     fmc++
