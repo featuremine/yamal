@@ -46,6 +46,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
+include(GNUInstallDirs)
 
 add_library(
     fmc++
@@ -308,5 +309,6 @@ endif()
 set(CPACK_PACKAGE_VENDOR "Featuremine")
 set(CPACK_PACKAGE_CONTACT "support@featuremine.com")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 
 include(CPack)
