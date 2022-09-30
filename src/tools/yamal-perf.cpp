@@ -188,6 +188,7 @@ int main(int argc, char **argv) {
       message += "Error getting current thread: ";
       message += fmc_error_msg(error);
       std::cerr << message << std::endl;
+      return -1;
     } else {
       auto cpuid = affinityArg.getValue();
       fmc_set_affinity(cur_thread, cpuid, &error);
@@ -196,6 +197,7 @@ int main(int argc, char **argv) {
         message += "Error set affinity: ";
         message += fmc_error_msg(error);
         std::cerr << message << std::endl;
+        return -1;
       } else {
         if (priorityArg.isSet()) {
           auto priority = priorityArg.getValue();
@@ -205,6 +207,7 @@ int main(int argc, char **argv) {
             message += "Error setting fifo scheduler: ";
             message += fmc_error_msg(error);
             std::cerr << message << std::endl;
+            return -1;
           }
         }
       }
