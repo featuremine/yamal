@@ -38,12 +38,16 @@
 #define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
-#define FMC_LIB_SUFFIX ".so"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
 #define FMC_DIR_SEP "/"
+#if defined(FMC_SYS_LINUX)
+#define FMC_LIB_SUFFIX ".so"
 #elif defined(FMC_SYS_MACH)
 #define FMC_LIB_SUFFIX ".dylib"
-#define FMC_DIR_SEP "\\"
+#endif
 #else
+#define FMC_DIR_SEP "\\"
+#define FMC_MOD_SEARCHPATH_ENV_SEP ";"
 #error "Unsupported operating system"
 #endif
 
