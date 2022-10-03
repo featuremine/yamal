@@ -218,9 +218,6 @@ install(
 )
 
 if(BUILD_TOOLS)
-    find_package(PkgConfig)
-    pkg_check_modules(TCLAP REQUIRED IMPORTED_TARGET tclap)
-
     add_executable(
        yamal-run
        "src/tools/yamal-run.cpp"
@@ -230,7 +227,6 @@ if(BUILD_TOOLS)
        PRIVATE
        ytp
        fmc++
-       PkgConfig::TCLAP
     )
     install(
        TARGETS
