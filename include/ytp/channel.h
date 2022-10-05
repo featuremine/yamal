@@ -39,12 +39,11 @@
 #include <fmc/error.h>
 #include <ytp/peer.h>
 #include <ytp/yamal.h>
+#include <ytp/api.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef uint64_t ytp_channel_t;
 
 /**
  * @brief Reserves memory for data in the memory mapped list

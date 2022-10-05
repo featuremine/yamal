@@ -49,6 +49,7 @@
 
 #include <fmc/error.h>
 #include <ytp/yamal.h>
+#include <ytp/api.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,8 +59,6 @@ extern "C" {
 #define YTP_PEER_CTL 1
 
 #define YTP_PEER_OFF 0x100
-
-typedef uint64_t ytp_peer_t;
 
 /**
  * @brief Reserves memory for data in the memory mapped list
