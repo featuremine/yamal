@@ -58,12 +58,6 @@ typedef struct ytp_sequence ytp_sequence_t;
 struct ytp_sequence_shared;
 typedef struct ytp_sequence_shared ytp_sequence_shared_t;
 
-typedef void (*ytp_sequence_peer_cb_t)(void *closure, ytp_peer_t peer,
-                                       size_t sz, const char *name);
-typedef void (*ytp_sequence_ch_cb_t)(void *closure, ytp_peer_t peer,
-                                     ytp_channel_t channel, uint64_t time,
-                                     size_t sz, const char *name);
-
 /**
  * @brief Allocates and initializes a ytp_sequence_t object
  *
