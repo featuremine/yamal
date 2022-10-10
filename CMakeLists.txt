@@ -183,12 +183,6 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc++"
-    DESTINATION "./include"
-    FILES_MATCHING
-    PATTERN "*.hpp"
-)
-install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
     DESTINATION "./include"
     FILES_MATCHING
