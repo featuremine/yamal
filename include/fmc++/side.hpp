@@ -19,8 +19,6 @@
  * @brief File contains C++ definition of a rational price
  */
 
-// TODO: MOVE TO COMMON, change namespaces to fmc instead
-
 #pragma once
 
 #include "fmc++/convert.hpp"
