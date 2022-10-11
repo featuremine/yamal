@@ -202,3 +202,84 @@ inline fmc_time64_t operator*(int64_t a, fmc_time64_t b) {
 inline fmc_time64_t operator/(fmc_time64_t a, int64_t b) {
   return fmc_time64_int_div(a, b);
 }
+
+namespace std {
+inline istream &operator>>(istream &s, fmc_time64_t &x) {
+  using namespace std;
+  using namespace chrono;
+  std::tm t = {};
+  unsigned nanos;
+  s >> get_time(&t, "%Y-%m-%d %H:%M:%S.") >> setw(9) >> nanos;
+  auto epoch_sec = system_clock::from_time_t(timegm(&t)).time_since_epoch();
+  auto dur = duration_cast<nanoseconds>(epoch_sec) + nanoseconds(nanos);
+  x = fmc_time64_from_nanos(dur.count());
+  return s;
+}
+
+/**
+ * @brief Smaller than operator overload for fmc time and fmc_time64_t
+ * objects
+ *
+ * @param jt Platform time object.
+ * @param et fmc_time64_t object.
+ *
+ * @return result of comparison.
+ */
+inline bool operator<(const fmc::time &jt, const fmc_time64_t &et) {
+  return jt < std::chrono::nanoseconds(fmc_time64_to_nanos(et));
+}
+
+/**
+ * @brief Smaller than operator overload for fmc_time64_t and fmc time
+ * objects
+ *
+ * @param et fmc_time64_t object.
+ * @param jt Platform time object.
+ *
+ * @return Result of comparison.
+ */
+inline bool operator<(const fmc_time64_t &et, const fmc::time &jt) {
+  return std::chrono::nanoseconds(fmc_time64_to_nanos(et)) < jt;
+}
+
+/**
+ * @brief Greater than operator overload for fmc time and fmc_time64_t
+ * objects
+ *
+ * @param jt Platform time object.
+ * @param et fmc_time64_t object.
+ *
+ * @return Result of comparison.
+ */
+inline bool operator>(const fmc::time &jt, const fmc_time64_t &et) {
+  return jt > std::chrono::nanoseconds(fmc_time64_to_nanos(et));
+}
+
+/**
+ * @brief Greater than operator overload for fmc_time64_t and fmc time
+ * objects
+ *
+ * @param jt Platform time object.
+ * @param et fmc_time64_t object.
+ *
+ * @return Result of comparison.
+ */
+inline bool operator>(const fmc_time64_t &et, const fmc::time &jt) {
+  return std::chrono::nanoseconds(fmc_time64_to_nanos(et)) > jt;
+}
+
+} // namespace std
+
+namespace fmc {
+template <> struct conversion<fmc_time64_t, fmc::time> {
+  fmc::time operator()(fmc_time64_t x) {
+    return std::chrono::nanoseconds(fmc_time64_to_nanos(x));
+  }
+};
+
+template <> struct conversion<fmc::time, fmc_time64_t> {
+  fmc_time64_t operator()(fmc::time x) {
+    return fmc_time64_from_nanos(std::chrono::nanoseconds(x).count());
+  }
+};
+} // namespace fmc
