@@ -204,6 +204,17 @@ inline fmc_time64_t operator/(fmc_time64_t a, int64_t b) {
 }
 
 namespace std {
+inline std::ostream &operator<<(std::ostream &s, const fmc_time64_t &x) {
+  using namespace std;
+  using namespace chrono;
+  auto nanos = nanoseconds(fmc_time64_to_nanos(x));
+  auto epoch = time_point<system_clock>(
+      duration_cast<time_point<system_clock>::duration>(nanos));
+  auto t = system_clock::to_time_t(epoch);
+  auto tm = *gmtime(&t);
+  return s << put_time(&tm, "%F %T") << '.' << setw(9) << setfill('0')
+           << (nanos % seconds(1)).count();
+}
 inline istream &operator>>(istream &s, fmc_time64_t &x) {
   using namespace std;
   using namespace chrono;
