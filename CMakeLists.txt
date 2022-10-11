@@ -83,6 +83,7 @@ set(
 
 set(
     YTP_SRC
+    "${PROJECT_SOURCE_DIR}/src/ytp/api.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/yamal.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"

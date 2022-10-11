@@ -20,6 +20,9 @@ typedef void (*ytp_sequence_data_cb_t)(void *closure, ytp_peer_t peer,
                                        ytp_channel_t channel, uint64_t time,
                                        size_t sz, const char *data);
 
+typedef void (*sharedseqinc)(shared_sequence*);
+typedef void (*sharedseqdec)(shared_sequence*, fmc_error_t **);
+
 struct ytp_sequence_api_v1 {
   // Do we need new/init/del method?
 
@@ -106,13 +109,13 @@ struct ytp_sequence_api_v1 {
   size_t (*sequence_tell)(shared_sequence *seq, ytp_iterator_t iterator,
                                    fmc_error_t **error);
   // Increases the reference counter
-  void (*sequence_shared_inc)(shared_sequence*);
+  sharedseqinc sequence_shared_inc;
   // Decreases the reference counter and call ytp_sequence_del the sequence
-  void (*sequence_shared_dec)(shared_sequence*, fmc_error_t **);
+  sharedseqdec sequence_shared_dec;
 };
 
 // function that you can call to return the actual sequence api structure pointer
-ytp_sequence_api_v1* ytp_sequence_api_v1_get();
+struct ytp_sequence_api_v1* ytp_sequence_api_v1_get();
 
 #ifdef __cplusplus
 }
