@@ -48,8 +48,8 @@
 #include <stdint.h>
 
 #include <fmc/error.h>
-#include <ytp/yamal.h>
 #include <ytp/api.h>
+#include <ytp/yamal.h>
 
 #ifdef __cplusplus
 extern "C" {
