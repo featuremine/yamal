@@ -14,7 +14,7 @@
 
 /**
  * @file api.h
- * @date 23 Apr 2021
+ * @date 4 Oct 2022
  * @brief File contains C declaration of yamal sequence API
  *
  * File contains C declaration of yamal sequence API
