@@ -149,3 +149,56 @@ inline std::string to_string(const fmc::time &x) {
 }
 
 } // namespace std
+
+inline int64_t operator/(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_div(a, b);
+}
+
+inline bool operator==(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_equal(a, b);
+}
+
+inline bool operator!=(fmc_time64_t a, fmc_time64_t b) {
+  return !fmc_time64_equal(a, b);
+}
+
+inline fmc_time64_t operator+(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_add(a, b);
+}
+
+inline fmc_time64_t &operator+=(fmc_time64_t &a, const fmc_time64_t &b) {
+  fmc_time64_inc(&a, b);
+  return a;
+}
+
+inline fmc_time64_t operator-(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_sub(a, b);
+}
+
+inline bool operator<(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_less(a, b);
+}
+
+inline bool operator>(fmc_time64_t a, fmc_time64_t b) {
+  return fmc_time64_less(b, a);
+}
+
+inline bool operator<=(fmc_time64_t a, fmc_time64_t b) {
+  return !fmc_time64_less(b, a);
+}
+
+inline bool operator>=(fmc_time64_t a, fmc_time64_t b) {
+  return !fmc_time64_less(a, b);
+}
+
+inline fmc_time64_t operator*(fmc_time64_t a, int64_t b) {
+  return fmc_time64_mul(a, b);
+}
+
+inline fmc_time64_t operator*(int64_t a, fmc_time64_t b) {
+  return fmc_time64_mul(b, a);
+}
+
+inline fmc_time64_t operator/(fmc_time64_t a, int64_t b) {
+  return fmc_time64_int_div(a, b);
+}
