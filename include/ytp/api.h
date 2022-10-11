@@ -1,3 +1,26 @@
+/******************************************************************************
+
+        COPYRIGHT (c) 2022 by Featuremine Corporation.
+        This software has been provided pursuant to a License Agreement
+        containing restrictions on its use.  This software contains
+        valuable trade secrets and proprietary information of
+        Featuremine Corporation and is protected by law.  It may not be
+        copied or distributed in any form or medium, disclosed to third
+        parties, reverse engineered or used in any manner not provided
+        for in said License Agreement except with the prior written
+        authorization from Featuremine Corporation.
+
+ *****************************************************************************/
+
+/**
+ * @file api.h
+ * @date 23 Apr 2021
+ * @brief File contains C declaration of yamal sequence API
+ *
+ * File contains C declaration of yamal sequence API
+ * @see http://www.featuremine.com
+ */
+
 #include <fmc/error.h>
 #include <fmc/files.h>
 
@@ -20,98 +43,120 @@ typedef void (*ytp_sequence_data_cb_t)(void *closure, ytp_peer_t peer,
                                        ytp_channel_t channel, uint64_t time,
                                        size_t sz, const char *data);
 
-typedef void (*sharedseqinc)(shared_sequence*);
-typedef void (*sharedseqdec)(shared_sequence*, fmc_error_t **);
+typedef char *(*sharedseqfunc_reserve)(shared_sequence *, size_t, fmc_error_t **);
+typedef ytp_iterator_t (*sharedseqfunc_commit)(shared_sequence *, ytp_peer_t, ytp_channel_t, uint64_t,
+                                      void *, fmc_error_t **);
+typedef void (*sharedseqfunc_sub)(shared_sequence *, ytp_peer_t ,
+                      uint64_t, size_t, const char *,
+                      fmc_error_t **);
+typedef void (*sharedseqfunc_dir)(shared_sequence *, ytp_peer_t ,
+                      uint64_t , size_t , const char *,
+                      fmc_error_t **);
+typedef void (*sharedseqfunc_ch_name)(shared_sequence *, ytp_channel_t,
+                                  size_t *, const char **,
+                                  fmc_error_t **);
+typedef ytp_channel_t (*sharedseqfunc_ch_decl)(shared_sequence *,
+                                  ytp_peer_t , uint64_t ,
+                                  size_t , const char *,
+                                  fmc_error_t **);
+typedef void (*sharedseqfunc_ch_cb)(shared_sequence *, ytp_sequence_ch_cb_t,
+                        void *, fmc_error_t **);
+typedef void (*sharedseqfunc_ch_cb_rm)(shared_sequence *,
+                          ytp_sequence_ch_cb_t , void *,
+                          fmc_error_t **);
+typedef void (*sharedseqfunc_peer_name)(shared_sequence *, ytp_peer_t ,
+                            size_t *, const char **,
+                            fmc_error_t **);
+typedef ytp_peer_t (*sharedseqfunc_peer_decl)(shared_sequence *, size_t ,
+                                  const char *,
+                                  fmc_error_t **);
+typedef void (*sharedseqfunc_peer_cb)(shared_sequence *,
+                                  ytp_sequence_peer_cb_t , void *,
+                                  fmc_error_t **);
+typedef void (*sharedseqfunc_peer_cb_rm)(shared_sequence *,
+                                      ytp_sequence_peer_cb_t , void *,
+                                      fmc_error_t **);
+typedef void (*sharedseqfunc_prfx_cb)(shared_sequence *, size_t,
+                                  const char *, ytp_sequence_data_cb_t,
+                                  void *, fmc_error_t **);
+typedef void (*sharedseqfunc_prfx_cb_rm)(shared_sequence *, size_t,
+                                      const char *,
+                                      ytp_sequence_data_cb_t, void *,
+                                      fmc_error_t **);
+typedef void (*sharedseqfunc_indx_cb)(shared_sequence *, ytp_channel_t ,
+                          ytp_sequence_data_cb_t, void *,
+                          fmc_error_t **);
+typedef void (*sharedseqfunc_indx_cb_rm)(shared_sequence *,
+                              ytp_channel_t,
+                              ytp_sequence_data_cb_t, void *,
+                              fmc_error_t **);
+typedef bool (*sharedseqfunc_poll)(shared_sequence*, fmc_error_t**);
+typedef bool (*sharedseqfunc_term)(shared_sequence*);
+typedef ytp_iterator_t (*sharedseqfunc_end)(shared_sequence*, fmc_error_t**);
+typedef ytp_iterator_t (*sharedseqfunc_cur)(shared_sequence*);
+typedef ytp_iterator_t (*sharedseqfunc_get_it)(shared_sequence *);
+typedef void (*sharedseqfunc_set_it)(shared_sequence *,
+                        ytp_iterator_t);
+typedef ytp_iterator_t (*sharedseqfunc_seek)(shared_sequence *, size_t,
+                                          fmc_error_t **);
+typedef size_t (*sharedseqfunc_tell)(shared_sequence *, ytp_iterator_t,
+                                  fmc_error_t **);
+typedef void (*sharedseqfunc_inc)(shared_sequence*);
+typedef void (*sharedseqfunc_dec)(shared_sequence*, fmc_error_t **);
 
 struct ytp_sequence_api_v1 {
-  // Do we need new/init/del method?
-
   // Reserves memory for data in the memory mapped list
-  char *(*sequence_reserve)(shared_sequence *, size_t, fmc_error_t **);
+  sharedseqfunc_reserve sequence_reserve;
   // Commits the data to the memory mapped list
-  ytp_iterator_t (*sequence_commit)(shared_sequence *, ytp_peer_t, ytp_channel_t, uint64_t,
-                                        void *, fmc_error_t **);
+  sharedseqfunc_commit sequence_commit;
   // Publishes a subscription message
-  void (*sequence_sub)(shared_sequence *, ytp_peer_t ,
-                       uint64_t, size_t, const char *,
-                       fmc_error_t **);
+  sharedseqfunc_sub sequence_sub;
   // Publishes a directory message
-  void (*sequence_dir)(shared_sequence *, ytp_peer_t ,
-                       uint64_t , size_t , const char *,
-                       fmc_error_t **);
+  sharedseqfunc_dir sequence_dir;
   // Returns the name of the channel, given the channel reference
-  void (*sequence_ch_name)(shared_sequence *, ytp_channel_t,
-                                    size_t *, const char **,
-                                    fmc_error_t **);
+  sharedseqfunc_ch_name sequence_ch_name;
   // Declares an existing/new channel
-  ytp_channel_t (*sequence_ch_decl)(shared_sequence *,
-                                    ytp_peer_t , uint64_t ,
-                                    size_t , const char *,
-                                    fmc_error_t **);
+  sharedseqfunc_ch_decl sequence_ch_decl;
   // Registers a channel announcement callback
-  void (*sequence_ch_cb)(shared_sequence *, ytp_sequence_ch_cb_t,
-                         void *, fmc_error_t **);
+  sharedseqfunc_ch_cb sequence_ch_cb;
   // Unregisters a channel announcement callback
-  void (*sequence_ch_cb_rm)(shared_sequence *,
-                            ytp_sequence_ch_cb_t , void *,
-                            fmc_error_t **);
+  sharedseqfunc_ch_cb_rm sequence_ch_cb_rm;
   // Returns the name of the peer, given the peer reference
-  void (*sequence_peer_name)(shared_sequence *, ytp_peer_t ,
-                             size_t *, const char **,
-                             fmc_error_t **);
+  sharedseqfunc_peer_name sequence_peer_name;
   // Declares an existing/new peer
-  ytp_peer_t (*sequence_peer_decl)(shared_sequence *, size_t ,
-                                   const char *,
-                                   fmc_error_t **);
+  sharedseqfunc_peer_decl sequence_peer_decl;
   // Registers a peer announcement callback
-  void (*sequence_peer_cb)(shared_sequence *seq,
-                                    ytp_sequence_peer_cb_t cb, void *closure,
-                                    fmc_error_t **error);
+  sharedseqfunc_peer_cb sequence_peer_cb;
   // Unregisters a peer announcement callback
-  void (*sequence_peer_cb_rm)(shared_sequence *seq,
-                                       ytp_sequence_peer_cb_t cb, void *closure,
-                                       fmc_error_t **error);
+  sharedseqfunc_peer_cb_rm sequence_peer_cb_rm;
   // Registers a channel data callback by channel name or prefix
-  void (*sequence_prfx_cb)(shared_sequence *seq, size_t sz,
-                                    const char *prfx, ytp_sequence_data_cb_t cb,
-                                    void *closure, fmc_error_t **error);
+  sharedseqfunc_prfx_cb sequence_prfx_cb;
   // Unregisters a channel data callback by channel name or prefix
-  void (*sequence_prfx_cb_rm)(shared_sequence *seq, size_t sz,
-                                       const char *prfx,
-                                       ytp_sequence_data_cb_t cb, void *closure,
-                                       fmc_error_t **error);
+  sharedseqfunc_prfx_cb_rm sequence_prfx_cb_rm;
   // Registers a channel data callback by channel handler
-  void (*sequence_indx_cb)(shared_sequence *, ytp_channel_t ,
-                           ytp_sequence_data_cb_t, void *,
-                           fmc_error_t **);
+  sharedseqfunc_indx_cb sequence_indx_cb;
   // Unregisters a channel data callback by channel handler
-  void (*sequence_indx_cb_rm)(shared_sequence *,
-                               ytp_channel_t,
-                               ytp_sequence_data_cb_t, void *,
-                               fmc_error_t **);
+  sharedseqfunc_indx_cb_rm sequence_indx_cb_rm;
   // Reads one message and executes the callbacks that applies.
-  bool (*sequence_poll)(shared_sequence*, fmc_error_t**);
+  sharedseqfunc_poll sequence_poll;
   // Checks if there are not more messages
-  bool (*sequence_term)(shared_sequence*);
+  sharedseqfunc_term sequence_term;
   // Returns the iterator to the end of yamal
-  ytp_iterator_t (*sequence_end)(shared_sequence*, fmc_error_t**);
+  sharedseqfunc_end sequence_end;
   // Returns the current data iterator
-  ytp_iterator_t (*sequence_cur)(shared_sequence*);
+  sharedseqfunc_cur sequence_cur;
   // Returns the current data iterator
-  ytp_iterator_t (*sequence_get_it)(shared_sequence *);
+  sharedseqfunc_get_it sequence_get_it;
   // Sets the current data iterator
-  void (*sequence_set_it)(shared_sequence *,
-                          ytp_iterator_t);
+  sharedseqfunc_set_it sequence_set_it;
   // Returns an iterator given a serializable offset
-  ytp_iterator_t (*sequence_seek)(shared_sequence *seq, size_t off,
-                                           fmc_error_t **error);
+  sharedseqfunc_seek sequence_seek;
   // Returns serializable offset given an iterator
-  size_t (*sequence_tell)(shared_sequence *seq, ytp_iterator_t iterator,
-                                   fmc_error_t **error);
+  sharedseqfunc_tell sequence_tell;
   // Increases the reference counter
-  sharedseqinc sequence_shared_inc;
+  sharedseqfunc_inc sequence_shared_inc;
   // Decreases the reference counter and call ytp_sequence_del the sequence
-  sharedseqdec sequence_shared_dec;
+  sharedseqfunc_dec sequence_shared_dec;
 };
 
 // function that you can call to return the actual sequence api structure pointer

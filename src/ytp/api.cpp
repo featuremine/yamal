@@ -185,8 +185,8 @@ static struct ytp_sequence_api_v1 api_v1 {
   ytp_sequence_shared_set_it,
   ytp_sequence_shared_seek,
   ytp_sequence_shared_tell,
-  (sharedseqinc)ytp_sequence_shared_inc,
-  (sharedseqdec)ytp_sequence_shared_dec
+  (sharedseqfunc_inc)ytp_sequence_shared_inc,
+  (sharedseqfunc_dec)ytp_sequence_shared_dec
 };
 
 struct ytp_sequence_api_v1* ytp_sequence_api_v1_get() {
