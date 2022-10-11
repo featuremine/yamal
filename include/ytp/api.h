@@ -21,10 +21,10 @@
  * @see http://www.featuremine.com
  */
 
+#pragma once
+
 #include <fmc/error.h>
 #include <fmc/files.h>
-
-#pragma once
 
 #ifdef __cplusplus
 extern "C" {
