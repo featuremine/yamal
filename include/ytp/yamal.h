@@ -26,6 +26,7 @@
 
 #include <fmc/files.h>
 #include <stddef.h>
+#include <ytp/api.h>
 
 #include <fmc/error.h>
 
@@ -37,7 +38,6 @@ extern "C" {
 #endif
 
 typedef struct ytp_yamal ytp_yamal_t;
-typedef void *ytp_iterator_t;
 
 /**
  * @brief Initializes a ytp_yamal_t object

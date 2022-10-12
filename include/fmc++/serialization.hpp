@@ -32,6 +32,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct cmp_mem_t {
@@ -268,6 +269,10 @@ inline bool cmp_write_item(cmp_ctx_t *ctx, double arg) {
 }
 
 inline bool cmp_write_item(cmp_ctx_t *ctx, std::string &arg) {
+  return cmp_write_str(ctx, arg.data(), arg.size());
+}
+
+inline bool cmp_write_item(cmp_ctx_t *ctx, std::string_view &arg) {
   return cmp_write_str(ctx, arg.data(), arg.size());
 }
 

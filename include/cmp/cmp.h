@@ -552,10 +552,10 @@ bool cmp_object_to_bin(cmp_ctx_t *ctx, cmp_object_t *obj, void *data,
 #define cmp_write_uint cmp_write_uinteger
 #define cmp_read_sinteger cmp_read_integer
 
-#endif /* CMP_H__ */
-
 /* vi: set et ts=2 sw=2: */
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* CMP_H__ */
