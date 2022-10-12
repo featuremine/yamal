@@ -37,6 +37,11 @@ typedef struct fmc_time64 {
   int64_t value;
 } fmc_time64_t;
 
+typedef struct {
+  fmc_time64_t start;
+  fmc_time64_t end;
+} fmc_time64_range_t;
+
 FMMODFUNC fmc_time64_t fmc_time64_from_raw(int64_t value);
 FMMODFUNC fmc_time64_t fmc_time64_from_nanos(int64_t value);
 FMMODFUNC fmc_time64_t fmc_time64_from_seconds(int32_t value);

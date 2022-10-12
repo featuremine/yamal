@@ -117,11 +117,6 @@ fmc_time64_t fmc_time64_end() {
 
 bool fmc_time64_is_end(fmc_time64_t time) { return time.value == INT64_MAX; }
 
-typedef struct {
-  fmc_time64_t start;
-  fmc_time64_t end;
-} fmc_time64_range_t;
-
 using namespace std;
 using namespace chrono;
 
