@@ -71,7 +71,7 @@ ytp_channel_t ytp_sequence_shared_ch_decl(shared_sequence *sh_seq,
                                           fmc_error_t **error) {
   ytp_sequence_t *seq =
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
-  ytp_sequence_ch_decl(seq, peer, time, sz, name, error);
+  return ytp_sequence_ch_decl(seq, peer, time, sz, name, error);
 }
 // Registers a channel announcement callback
 void ytp_sequence_shared_ch_cb(shared_sequence *sh_seq, ytp_sequence_ch_cb_t cb,
