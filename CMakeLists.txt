@@ -83,6 +83,7 @@ set(
 
 set(
     YTP_SRC
+    "${PROJECT_SOURCE_DIR}/src/ytp/api.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/yamal.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"
@@ -164,7 +165,9 @@ if (BUILD_SHARED_LIBS)
         ytp-shared
     )
 else()
-    string(APPEND YTP_PRIVATE_LIBS " -lstdc++fs -ldl -lpthread")
+    if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        string(APPEND YTP_PRIVATE_LIBS " -lstdc++fs -ldl -lpthread")
+    endif()
     install(
         TARGETS
         ytp
