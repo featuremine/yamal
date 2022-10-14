@@ -26,9 +26,13 @@
 
 namespace std {
 inline ostream &operator<<(ostream &s, const _Decimal128 &x) {
+  s << fmc_decimal_bid_to_ld(x);
   return s;
 }
-inline istream &operator>>(istream &s, const _Decimal128 &x) {
+inline istream &operator>>(istream &s, _Decimal128 &x) {
+  long double v;
+  s >> v;
+  x = fmc_decimal_bid_from_ld(v);
   return s;
 }
 }

@@ -24,4 +24,12 @@
 
 #ifdef __cplusplus
 typedef float _Decimal128 __attribute__((mode(TD)));
+extern "C" {
+#endif
+
+long double fmc_decimal_bid_to_ld (_Decimal128 a);
+_Decimal128 fmc_decimal_bid_from_ld (long double a);
+
+#ifdef __cplusplus
+}
 #endif
