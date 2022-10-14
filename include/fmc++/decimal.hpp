@@ -26,6 +26,9 @@
 
 namespace std {
 inline ostream &operator<<(ostream &s, const _Decimal128 &x) {
-  return "TODO: Implement";
+  return s;
+}
+inline istream &operator>>(istream &s, const _Decimal128 &x) {
+  return s;
 }
 }
