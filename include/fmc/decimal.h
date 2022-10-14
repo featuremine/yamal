@@ -23,11 +23,5 @@
 #pragma once
 
 #ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef float _Decimal128 __attribute__((mode(TD)));
-
-#ifdef __cplusplus
-}
 #endif
