@@ -136,14 +136,14 @@ struct context_t {
 
   void on_channel(ytp_peer_t peer, ytp_channel_t channel, uint64_t msg_time,
                   std::string_view name) {
-    if(!bytes_) {
+    if (!bytes_) {
       log_ts() << " CHNL " << std::to_string(fmc::time(msg_time)) << " " << name
-              << std::endl;
+               << std::endl;
     }
   }
 
   void on_peer(ytp_peer_t peer, std::string_view name) {
-    if(!bytes_) {
+    if (!bytes_) {
       log_ts() << " PEER " << name << std::endl;
     }
   }
@@ -157,14 +157,13 @@ struct context_t {
   }
 
   void print_stats() {
-    if(bytes_) {
+    if (bytes_) {
       size_t total_bytes = 0;
       for (auto *stats : current_data_) {
         total_bytes += stats->bytes_;
       }
       std::cout << total_bytes << std::endl;
-    }
-    else {
+    } else {
       for (auto *stats : current_data_) {
         log_ts() << " DATA " << std::to_string(fmc::time(stats->last_ts)) << " "
                  << stats->name_ << " " << stats->count_ << std::endl;
