@@ -66,6 +66,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/murmur3/murmur3.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/component.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/decimal128.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
@@ -79,6 +80,8 @@ set(
     "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
+    "${PROJECT_SOURCE_DIR}/src/libdecnumber/decQuad.c"
+    "${PROJECT_SOURCE_DIR}/src/libdecnumber/decContext.c"
 )
 
 set(
@@ -104,6 +107,8 @@ target_include_directories(
     PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/include/libdecnumber"
 )
 target_link_libraries(
     ytp_obj

@@ -29,6 +29,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 /* This include file is always included by decSingle and decDouble,   */
 /* and therefore also holds useful constants used by all three.       */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if !defined(DECQUAD)
   #define DECQUAD
 
@@ -183,4 +187,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
   #define decQuadToNumber(dq, dn) decimal128ToNumber((decimal128 *)(dq), dn)
   #define decQuadFromNumber(dq, dn, set) decimal128FromNumber((decimal128 *)(dq), dn, set)
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
