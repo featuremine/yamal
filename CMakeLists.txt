@@ -79,6 +79,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/test.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/time.cpp"
+    "${PROJECT_SOURCE_DIR}/src/decQuad.c"
 )
 
 set(
