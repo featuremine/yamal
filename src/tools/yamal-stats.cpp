@@ -29,12 +29,14 @@
 struct channel_stats_t {
   std::string_view name_;
   size_t count_ = 0;
+  size_t bytes_ = 0;
   uint64_t last_ts = 0;
 };
 
 struct context_t {
-  context_t(const char *filename, bool peer, bool channel, bool data)
-      : channel_(channel), data_(data) {
+  context_t(const char *filename, bool peer, bool channel, bool data,
+            bool bytes)
+      : channel_(channel), data_(data), bytes_(bytes) {
     fd_ = fmc_fopen(filename, fmc_fmode::READ, &error_);
     if (error_) {
       std::cerr << "Unable to open file " << filename << ": "
@@ -134,23 +136,35 @@ struct context_t {
 
   void on_channel(ytp_peer_t peer, ytp_channel_t channel, uint64_t msg_time,
                   std::string_view name) {
-    log_ts() << " CHNL " << std::to_string(fmc::time(msg_time)) << " " << name
-             << std::endl;
+    if(!bytes_) {
+      log_ts() << " CHNL " << std::to_string(fmc::time(msg_time)) << " " << name
+              << std::endl;
+    }
   }
 
   void on_peer(ytp_peer_t peer, std::string_view name) {
-    log_ts() << " PEER " << name << std::endl;
+    if(!bytes_) {
+      log_ts() << " PEER " << name << std::endl;
+    }
   }
 
   void on_data(channel_stats_t &stats, ytp_peer_t peer, ytp_channel_t channel,
                uint64_t msg_time, std::string_view data) {
     current_data_.emplace(&stats);
     ++stats.count_;
+    ++stats.bytes_ += data.size();
     stats.last_ts = msg_time;
   }
 
   void print_stats() {
-    if (!current_data_.empty()) {
+    if(bytes_) {
+      size_t total_bytes = 0;
+      for (auto *stats : current_data_) {
+        total_bytes += stats->bytes_;
+      }
+      std::cout << total_bytes << std::endl;
+    }
+    else {
       for (auto *stats : current_data_) {
         log_ts() << " DATA " << std::to_string(fmc::time(stats->last_ts)) << " "
                  << stats->name_ << " " << stats->count_ << std::endl;
@@ -161,6 +175,7 @@ struct context_t {
   void reset() {
     for (auto *stats : current_data_) {
       stats->count_ = 0;
+      stats->bytes_ = 0;
     }
     current_data_.clear();
   }
@@ -173,6 +188,7 @@ struct context_t {
   std::unordered_set<channel_stats_t *> current_data_;
   bool channel_;
   bool data_;
+  bool bytes_;
 };
 
 static std::atomic<bool> run = true;
@@ -195,16 +211,20 @@ int main(int argc, char **argv) {
 
   TCLAP::SwitchArg dataArg("d", "data", "data statistics", false);
 
+  TCLAP::SwitchArg bytesArg("b", "bytes", "bytes written", false);
+
   cmd.add(ytpArg);
   cmd.add(followArg);
   cmd.add(peerArg);
   cmd.add(channelArg);
   cmd.add(dataArg);
+  cmd.add(bytesArg);
 
   cmd.parse(argc, argv);
 
   context_t context(ytpArg.getValue().c_str(), peerArg.getValue(),
-                    channelArg.getValue(), dataArg.getValue());
+                    channelArg.getValue(), dataArg.getValue(),
+                    bytesArg.getValue());
   if (context.error_) {
     return -1;
   }
