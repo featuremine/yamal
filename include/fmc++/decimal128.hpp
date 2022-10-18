@@ -49,11 +49,54 @@ public:
         return static_cast<const decimal128 &>(a);
     }
     decimal128 &operator+=(const decimal128 &a) {
+        fmc_decimal128_inc(this, a);
         return *this;
     }
 };
 
-decimal128 operator+(const decimal128 &a, const decimal128 &b);
+inline bool operator==(const decimal128 &a, const decimal128 &b) {
+    return fmc_decimal128_equal(a, b);
+}
+
+inline bool operator!=(const decimal128 &a, const decimal128 &b) {
+    return !fmc_decimal128_equal(a, b);
+}
+
+inline bool operator<(const decimal128 &a, const decimal128 &b) {
+    return fmc_decimal128_less(a, b);
+}
+
+inline bool operator<=(const decimal128 &a, const decimal128 &b) {
+    return fmc_decimal128_less_or_equal(a, b);
+}
+
+inline bool operator>(const decimal128 &a, const decimal128 &b) {
+    return fmc_decimal128_greater(a, b);
+}
+
+inline bool operator>=(const decimal128 &a, const decimal128 &b) {
+    return fmc_decimal128_greater_or_equal(a, b);
+}
+
+inline decimal128 operator+(const decimal128 &a, const decimal128 &b) {
+    return decimal128::upcast(fmc_decimal128_add(a, b));
+}
+
+inline decimal128 operator-(const decimal128 &a, const decimal128 &b) {
+    return decimal128::upcast(fmc_decimal128_sub(a, b));
+}
+
+inline decimal128 operator*(const decimal128 &a, const decimal128 &b) {
+    return decimal128::upcast(fmc_decimal128_mul(a, b));
+}
+
+inline decimal128 operator/(const decimal128 &a, const decimal128 &b) {
+    return decimal128::upcast(fmc_decimal128_div(a, b));
+}
+
+inline decimal128 operator/(const decimal128 &a, const int64_t &b) {
+    return decimal128::upcast(fmc_decimal128_int_div(a, b));
+}
 
 } // namespace fmc
 

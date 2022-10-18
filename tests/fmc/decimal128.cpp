@@ -150,9 +150,17 @@ TEST(decimal128, comparison) {
   ASSERT_FALSE(fmc_decimal128_less(b, b));
   ASSERT_TRUE(fmc_decimal128_less(b, c));
 
+  ASSERT_FALSE(fmc_decimal128_less_or_equal(b, a));
+  ASSERT_TRUE(fmc_decimal128_less_or_equal(b, b));
+  ASSERT_TRUE(fmc_decimal128_less_or_equal(b, c));
+
   ASSERT_TRUE(fmc_decimal128_greater(b, a));
   ASSERT_FALSE(fmc_decimal128_greater(b, b));
   ASSERT_FALSE(fmc_decimal128_greater(b, c));
+
+  ASSERT_TRUE(fmc_decimal128_greater_or_equal(b, a));
+  ASSERT_TRUE(fmc_decimal128_greater_or_equal(b, b));
+  ASSERT_FALSE(fmc_decimal128_greater_or_equal(b, c));
 
   ASSERT_FALSE(fmc_decimal128_equal(b, a));
   ASSERT_TRUE(fmc_decimal128_equal(b, b));
@@ -177,6 +185,14 @@ TEST(decimal128, round) {
   ASSERT_TRUE(fmc_decimal128_equal(e, dr));
 }
 
+TEST(decimal128, increment) {
+  fmc_decimal128_t a, b;
+  fmc_decimal128_from_str(&a, "2.0");
+  fmc_decimal128_from_str(&b, "4.0");
+  fmc_decimal128_inc(&a, a);
+  ASSERT_TRUE(fmc_decimal128_equal(a, b));
+}
+
 // C++ API
 TEST(decimal128, cppconstructor) {
   fmc_decimal128_t a;
@@ -186,6 +202,44 @@ TEST(decimal128, cppconstructor) {
   fmc::decimal128 ppb(a);
   ASSERT_TRUE(fmc_decimal128_equal(a, ppa));
   ASSERT_TRUE(fmc_decimal128_equal(a, ppb));
+}
+
+TEST(decimal128, cppcomparison) {
+  fmc::decimal128 ppa(5);
+  fmc::decimal128 ppb(8);
+  fmc::decimal128 ppc(10);
+
+  ASSERT_FALSE(ppb < ppa);
+  ASSERT_FALSE(ppb < ppb);
+  ASSERT_TRUE(ppb < ppc);
+
+  ASSERT_FALSE(ppb <= ppa);
+  ASSERT_TRUE(ppb <= ppb);
+  ASSERT_TRUE(ppb <= ppc);
+
+  ASSERT_TRUE(ppb > ppa);
+  ASSERT_FALSE(ppb > ppb);
+  ASSERT_FALSE(ppb > ppc);
+
+  ASSERT_TRUE(ppb >= ppa);
+  ASSERT_TRUE(ppb >= ppb);
+  ASSERT_FALSE(ppb >= ppc);
+
+  ASSERT_FALSE(ppb == ppa);
+  ASSERT_TRUE(ppb == ppb);
+  ASSERT_FALSE(ppb == ppc);
+
+  ASSERT_TRUE(ppb != ppa);
+  ASSERT_FALSE(ppb != ppb);
+  ASSERT_TRUE(ppb != ppc);
+
+}
+
+TEST(decimal128, cppincrement) {
+  fmc::decimal128 ppa(5);
+  fmc::decimal128 ppb(10);
+  ppa += ppa;
+  ASSERT_EQ(ppa, ppb);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
