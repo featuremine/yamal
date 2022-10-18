@@ -25,10 +25,12 @@
 
 namespace fmc {
 
-class decimal128 : private fmc_decimal128_t {
+// When private inheritance:
+// error: cannot cast 'const fmc::decimal128' to its private base class 'const fmc_decimal128_t'
+class decimal128 : public fmc_decimal128_t {
 public:
-    decimal128(int64_t i) {}
     decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
+    decimal128(int64_t i) : decimal128(fmc_decimal128_from_int(i)) {}
     decimal128 &operator=(const fmc_decimal128_t &a) {
         return *this;
     }

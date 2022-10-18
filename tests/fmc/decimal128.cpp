@@ -4,6 +4,8 @@
 #include <fmc++/gtestwrap.hpp>
 #include <string.h>
 
+// C API
+
 TEST(decimal128, from_to_flt_str) {
   fmc_decimal128_t a;
   std::string strval = "11111211111.111111111114111111";
@@ -173,6 +175,17 @@ TEST(decimal128, round) {
   ASSERT_TRUE(fmc_decimal128_equal(a, br));
   ASSERT_TRUE(fmc_decimal128_equal(e, cr));
   ASSERT_TRUE(fmc_decimal128_equal(e, dr));
+}
+
+// C++ API
+TEST(decimal128, cppconstructor) {
+  fmc_decimal128_t a;
+  fmc_decimal128_from_str(&a, "5");
+
+  fmc::decimal128 ppa(5);
+  fmc::decimal128 ppb(a);
+  ASSERT_TRUE(fmc_decimal128_equal(a, ppa));
+  ASSERT_TRUE(fmc_decimal128_equal(a, ppb));
 }
 
 GTEST_API_ int main(int argc, char **argv) {
