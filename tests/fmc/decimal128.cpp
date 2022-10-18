@@ -366,6 +366,27 @@ TEST(decimal128, ostream) {
   std::string res = str.str();
   ASSERT_EQ(res.size(), 3);
   ASSERT_STREQ(res.c_str(), "0.5");
+
+  str.str("");
+  str.clear();
+  str << std::numeric_limits<fmc::decimal128>::infinity();
+  res = str.str();
+  ASSERT_EQ(res.size(), 8);
+  ASSERT_STREQ(res.c_str(), "Infinity");
+
+  str.str("");
+  str.clear();
+  str << std::numeric_limits<fmc::decimal128>::quiet_NaN();
+  res = str.str();
+  ASSERT_EQ(res.size(), 3);
+  ASSERT_STREQ(res.c_str(), "NaN");
+
+  str.str("");
+  str.clear();
+  str << std::numeric_limits<fmc::decimal128>::signaling_NaN();
+  res = str.str();
+  ASSERT_EQ(res.size(), 4);
+  ASSERT_STREQ(res.c_str(), "sNaN");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
