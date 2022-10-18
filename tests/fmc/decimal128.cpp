@@ -204,6 +204,40 @@ TEST(decimal128, cppconstructor) {
   ASSERT_TRUE(fmc_decimal128_equal(a, ppb));
 }
 
+TEST(decimal128, cppdivide) {
+  fmc::decimal128 ppa(10);
+  fmc::decimal128 ppb(5);
+  fmc::decimal128 ppc(2);
+  ASSERT_EQ(ppa / ppb, ppc);
+}
+
+TEST(decimal128, cppint_div) {
+  fmc::decimal128 ppa(10);
+  fmc::decimal128 ppb(2);
+  ASSERT_EQ(ppa / 5, ppb);
+}
+
+TEST(decimal128, cppadd) {
+  fmc::decimal128 ppa(7);
+  fmc::decimal128 ppb(5);
+  fmc::decimal128 ppc(2);
+  ASSERT_EQ(ppc + ppb, ppa);
+}
+
+TEST(decimal128, cppsub) {
+  fmc::decimal128 ppa(7);
+  fmc::decimal128 ppb(5);
+  fmc::decimal128 ppc(2);
+  ASSERT_EQ(ppa - ppb, ppc);
+}
+
+TEST(decimal128, cppmul) {
+  fmc::decimal128 ppa(10);
+  fmc::decimal128 ppb(5);
+  fmc::decimal128 ppc(2);
+  ASSERT_EQ(ppc * ppb, ppa);
+}
+
 TEST(decimal128, cppcomparison) {
   fmc::decimal128 ppa(5);
   fmc::decimal128 ppb(8);
