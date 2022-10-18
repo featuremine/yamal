@@ -42,6 +42,15 @@ FMMODFUNC fmc_decimal128_t fmc_decimal128_mul(fmc_decimal128_t lhs, fmc_decimal1
 
 FMMODFUNC fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t val);
 
+FMMODFUNC fmc_decimal128_t fmc_decimal128_qnan();
+FMMODFUNC fmc_decimal128_t fmc_decimal128_snan();
+FMMODFUNC bool fmc_decimal128_is_nan(fmc_decimal128_t val);
+FMMODFUNC bool fmc_decimal128_is_qnan(fmc_decimal128_t val);
+FMMODFUNC bool fmc_decimal128_is_snan(fmc_decimal128_t val);
+
+FMMODFUNC fmc_decimal128_t fmc_decimal128_inf();
+FMMODFUNC bool fmc_decimal128_is_inf(fmc_decimal128_t val);
+
 #ifdef __cplusplus
 }
 #endif

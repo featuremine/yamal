@@ -198,6 +198,33 @@ TEST(decimal128, decrement) {
   ASSERT_TRUE(fmc_decimal128_equal(a, b));
 }
 
+TEST(decimal128, infinity) {
+  fmc_decimal128_t a;
+  fmc_decimal128_from_str(&a, "4.0");
+  ASSERT_FALSE(fmc_decimal128_is_inf(a));
+
+  fmc_decimal128_t inf = fmc_decimal128_inf();
+  ASSERT_TRUE(fmc_decimal128_is_inf(inf));
+}
+
+TEST(decimal128, nan) {
+  fmc_decimal128_t a;
+  fmc_decimal128_from_str(&a, "4.0");
+  ASSERT_FALSE(fmc_decimal128_is_nan(a));
+  ASSERT_FALSE(fmc_decimal128_is_qnan(a));
+  ASSERT_FALSE(fmc_decimal128_is_snan(a));
+
+  fmc_decimal128_t qnan = fmc_decimal128_qnan();
+  ASSERT_TRUE(fmc_decimal128_is_nan(qnan));
+  ASSERT_TRUE(fmc_decimal128_is_qnan(qnan));
+  ASSERT_FALSE(fmc_decimal128_is_snan(qnan));
+
+  fmc_decimal128_t snan = fmc_decimal128_snan();
+  ASSERT_TRUE(fmc_decimal128_is_nan(snan));
+  ASSERT_FALSE(fmc_decimal128_is_qnan(snan));
+  ASSERT_TRUE(fmc_decimal128_is_snan(snan));
+}
+
 // C++ API
 TEST(decimal128, cppconstructor) {
   fmc_decimal128_t a;
@@ -288,19 +315,46 @@ TEST(decimal128, cppdecrement) {
   ASSERT_EQ(ppa, ppb);
 }
 
-TEST(decimal128, upcasting) {
+TEST(decimal128, cppupcasting) {
   fmc_decimal128_t a;
   fmc::decimal128 &ppa = fmc::decimal128::upcast(a);
   ASSERT_EQ(&a, &ppa);
 }
 
-TEST(decimal128, implicit_downcasting) {
+TEST(decimal128, cppimplicit_downcasting) {
   fmc::decimal128 ppa(5);
   auto f = [](const fmc::decimal128 &lhs, const fmc_decimal128_t &rhs) -> bool {
     return &lhs == &rhs;
   };
   ASSERT_TRUE(f(ppa, ppa));
 }
+
+TEST(decimal128, cppinfinity) {
+  fmc::decimal128 a(4);
+
+  ASSERT_FALSE(fmc_decimal128_is_inf(a));
+
+  fmc::decimal128 inf = std::numeric_limits<fmc::decimal128>::infinity();
+  ASSERT_TRUE(fmc_decimal128_is_inf(inf));
+}
+
+TEST(decimal128, cppnan) {
+  fmc::decimal128 a(4);
+  ASSERT_FALSE(fmc_decimal128_is_nan(a));
+  ASSERT_FALSE(fmc_decimal128_is_qnan(a));
+  ASSERT_FALSE(fmc_decimal128_is_snan(a));
+
+  fmc::decimal128 qnan = std::numeric_limits<fmc::decimal128>::quiet_NaN();
+  ASSERT_TRUE(fmc_decimal128_is_nan(qnan));
+  ASSERT_TRUE(fmc_decimal128_is_qnan(qnan));
+  ASSERT_FALSE(fmc_decimal128_is_snan(qnan));
+
+  fmc::decimal128 snan = std::numeric_limits<fmc::decimal128>::signaling_NaN();
+  ASSERT_TRUE(fmc_decimal128_is_nan(snan));
+  ASSERT_FALSE(fmc_decimal128_is_qnan(snan));
+  ASSERT_TRUE(fmc_decimal128_is_snan(snan));
+}
+
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

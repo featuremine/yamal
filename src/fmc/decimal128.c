@@ -145,3 +145,37 @@ fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t val) {
   decQuadToIntegralValue((decQuad *)&val, (decQuad *)&val, get_context(), DEC_ROUND_HALF_UP);
   return val;
 }
+
+fmc_decimal128_t fmc_decimal128_qnan() {
+  fmc_decimal128_t ret;
+  DFWORD((decQuad*)&ret, 0)=0x7c000000;
+  return ret;
+}
+
+fmc_decimal128_t fmc_decimal128_snan() {
+  fmc_decimal128_t ret;
+  DFWORD((decQuad*)&ret, 0)=0x7e000000;
+  return ret;
+}
+
+bool fmc_decimal128_is_nan(fmc_decimal128_t val) {
+  return decQuadIsNaN((decQuad*)&val);
+}
+
+bool fmc_decimal128_is_qnan(fmc_decimal128_t val) {
+  return decQuadIsNaN((decQuad*)&val) && !decQuadIsSignaling((decQuad*)&val);
+}
+
+bool fmc_decimal128_is_snan(fmc_decimal128_t val) {
+  return decQuadIsNaN((decQuad*)&val) && decQuadIsSignaling((decQuad*)&val);
+}
+
+fmc_decimal128_t fmc_decimal128_inf() {
+  fmc_decimal128_t ret;
+  DFWORD((decQuad*)&ret, 0)=0x78000000;
+  return ret;
+}
+
+bool fmc_decimal128_is_inf(fmc_decimal128_t val) {
+  return decQuadIsInfinite((decQuad*)&val);
+}
