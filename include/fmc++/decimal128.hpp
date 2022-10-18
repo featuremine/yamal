@@ -32,16 +32,18 @@ public:
     decimal128 &operator=(const fmc_decimal128_t &a) {
         return *this;
     }
-    const fmc_decimal128_t &operator fmc_decimal128_t() const {
-        return static_cast<fmc_decimal128_t &>(*this);
-    }
-    fmc_decimal128_t &operator fmc_decimal128_t() {
-        return static_cast<fmc_decimal128_t &>(*this);
-    }
+    // Warning, conversion to base class will never be used, review:
+    // https://eel.is/c++draft/class.conv.fct#4
+    // operator fmc_decimal128_t &() {
+    //     return static_cast<fmc_decimal128_t &>(*this);
+    // }
+    // operator const fmc_decimal128_t &() const {
+    //     return static_cast<const fmc_decimal128_t &>(*this);
+    // }
     static decimal128 &upcast(fmc_decimal128_t &a) {
         return static_cast<decimal128 &>(a);
     }
-    static const decimal128 &upcast(const fmc_decimal128_t &a) const {
+    static const decimal128 &upcast(const fmc_decimal128_t &a) {
         return static_cast<const decimal128 &>(a);
     }
     decimal128 &operator+=(const decimal128 &a) {

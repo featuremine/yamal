@@ -1,5 +1,6 @@
 
 #include "fmc/decimal128.h"
+#include "fmc++/decimal128.hpp"
 #include <fmc++/gtestwrap.hpp>
 #include <string.h>
 
@@ -99,7 +100,7 @@ TEST(decimal128, divide) {
 }
 
 TEST(decimal128, int_div) {
-  fmc_decimal128_t a, b;
+  fmc_decimal128_t a;
   char str[256];
   fmc_decimal128_from_str(&a, "66666666666.66666666666666666");
   a = fmc_decimal128_int_div(a, 2);
@@ -139,7 +140,6 @@ TEST(decimal128, mul) {
 
 TEST(decimal128, comparison) {
   fmc_decimal128_t a, b, c;
-  char str[256];
   fmc_decimal128_from_str(&a, "2.0");
   fmc_decimal128_from_str(&b, "2.5");
   fmc_decimal128_from_str(&c, "3.0");
@@ -159,7 +159,6 @@ TEST(decimal128, comparison) {
 
 TEST(decimal128, round) {
   fmc_decimal128_t a, b, c, d, e;
-  char str[256];
   fmc_decimal128_from_str(&a, "2.0");
   fmc_decimal128_from_str(&b, "2.2");
   fmc_decimal128_from_str(&c, "2.5");
