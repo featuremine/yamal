@@ -39,14 +39,39 @@ bool fmc_decimal128_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   return decQuadToInt32((decQuad*)&res, &wrap.set, DEC_ROUND_HALF_UP) == 0;
 }
 
-fmc_decimal128_t fmc_decimal128_divide(fmc_decimal128_t lhs, int64_t *rhs) {
+fmc_decimal128_t fmc_decimal128_divide(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   fmc_decimal128_t res;
   decQuadDivide((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&rhs, &wrap.set);
+  return res;
+}
+
+fmc_decimal128_t fmc_decimal128_intdiv(fmc_decimal128_t lhs, int32_t rhs) {
+  fmc_decimal128_t drhs, res;
+  decQuadFromInt32((decQuad*)&drhs, rhs);
+  decQuadDivide((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&drhs, &wrap.set);
   return res;
 }
 
 fmc_decimal128_t fmc_decimal128_add(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   fmc_decimal128_t res;
   decQuadAdd((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&rhs, &wrap.set);
+  return res;
+}
+
+fmc_decimal128_t fmc_decimal128_sub(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
+  fmc_decimal128_t res;
+  decQuadSubtract((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&rhs, &wrap.set);
+  return res;
+}
+
+fmc_decimal128_t fmc_decimal128_mul(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
+  fmc_decimal128_t res;
+  decQuadMultiply((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&rhs, &wrap.set);
+  return res;
+}
+
+fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t *val) {
+  fmc_decimal128_t res;
+  decQuadToIntegralValue((decQuad *)&res, (decQuad *)&val, &wrap.set, DEC_ROUND_HALF_UP);
   return res;
 }

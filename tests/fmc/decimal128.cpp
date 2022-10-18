@@ -3,6 +3,34 @@
 #include <fmc++/gtestwrap.hpp>
 #include <string.h>
 
+TEST(decimal128, from_to_flt_str) {
+  fmc_decimal128_t a;
+  std::string strval = "11111211111.111111111114111111";
+  fmc_decimal128_from_str(&a, strval.c_str());
+  char str[256];
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, strval.c_str());
+}
+
+TEST(decimal128, from_to_int_str) {
+  fmc_decimal128_t a;
+  std::string strval = "5";
+  fmc_decimal128_from_str(&a, strval.c_str());
+  char str[256];
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, strval.c_str());
+}
+
+TEST(decimal128, divide) {
+  fmc_decimal128_t a, b;
+  char str[256];
+  fmc_decimal128_from_str(&a, "66666666666.66666666666666666");
+  fmc_decimal128_from_str(&b, "2");
+  a = fmc_decimal128_divide(a, b);
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, "33333333333.33333333333333333");
+}
+
 TEST(decimal128, add) {
   fmc_decimal128_t a, b;
   char str[256];

@@ -28,18 +28,10 @@ FMMODFUNC bool fmc_decimal128_less(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC bool fmc_decimal128_greater(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC bool fmc_decimal128_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 
-//extern decQuad * decQuadDivide(decQuad *, const decQuad *, const decQuad *, decContext *);
-FMMODFUNC fmc_decimal128_t fmc_decimal128_divide(fmc_decimal128_t lhs, int64_t rhs);
-
-//extern decQuad * decQuadDivideInteger(decQuad *, const decQuad *, const decQuad *, decContext *);
-FMMODFUNC fmc_decimal128_t fmc_decimal64_intdiv(fmc_decimal128_t lhs, int64_t rhs);
-
+FMMODFUNC fmc_decimal128_t fmc_decimal128_divide(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_intdiv(fmc_decimal128_t lhs, int32_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_add(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
-
-//extern decQuad * decQuadSubtract(decQuad *, const decQuad *, const decQuad *, decContext *);
-FMMODFUNC fmc_decimal128_t fmc_decimal64_sub(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
-
-//extern decQuad * decQuadMultiply(decQuad *, const decQuad *, const decQuad *, decContext *);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_sub(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_mul(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 
 //extern decQuad * decQuadToIntegralValue(decQuad *, const decQuad *, decContext *, enum rounding);
