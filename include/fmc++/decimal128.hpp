@@ -110,6 +110,13 @@ namespace std {
 template<>
 class numeric_limits<fmc::decimal128> {
 public:
+  // There are no definitions for min or max, we could define our own if we still need them
+  // static fmc::decimal128 min() noexcept {
+  //   return fmc::decimal128::upcast(fmc_decimal128_min());
+  // }
+  // static fmc::decimal128 max() noexcept {
+  //   return fmc::decimal128::upcast(fmc_decimal128_max());
+  // }
   static fmc::decimal128 infinity() noexcept {
     return fmc::decimal128::upcast(fmc_decimal128_inf());
   }

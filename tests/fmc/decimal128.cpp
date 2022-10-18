@@ -358,6 +358,15 @@ TEST(decimal128, cppnan) {
   ASSERT_FALSE(fmc_decimal128_is_inf(snan));
 }
 
+TEST(decimal128, ostream) {
+  fmc::decimal128 a(5);
+  a = a / 10;
+  std::ostringstream str;
+  str << a;
+  std::string res = str.str();
+  ASSERT_EQ(res.size(), 3);
+  ASSERT_STREQ(res.c_str(), "0.5");
+}
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
