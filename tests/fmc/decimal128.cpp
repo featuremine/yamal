@@ -32,8 +32,7 @@ TEST(decimal128, from_uint_low) {
 }
 
 TEST(decimal128, from_uint_extreme) {
-  uint64_t max = 18446744073709551615;
-  ASSERT_EQ(max, std::numeric_limits<uint64_t>::max());
+  uint64_t max = std::numeric_limits<uint64_t>::max();
   fmc_decimal128_t a = fmc_decimal128_from_uint(max);
   char str[256];
   fmc_decimal128_to_str(a, str);
@@ -57,8 +56,7 @@ TEST(decimal128, from_int_low) {
 }
 
 TEST(decimal128, from_int_extreme) {
-  int64_t max = 9223372036854775807;
-  ASSERT_EQ(max, std::numeric_limits<int64_t>::max());
+  int64_t max = std::numeric_limits<int64_t>::max();
   fmc_decimal128_t a = fmc_decimal128_from_int(max);
   char str[256];
   fmc_decimal128_to_str(a, str);
@@ -74,8 +72,7 @@ TEST(decimal128, from_int_neg_low) {
 }
 
 TEST(decimal128, from_int_neg_extreme) {
-  int64_t max = -9223372036854775808;
-  ASSERT_EQ(max, std::numeric_limits<int64_t>::min());
+  int64_t max = std::numeric_limits<int64_t>::min();
   fmc_decimal128_t a = fmc_decimal128_from_int(max);
   char str[256];
   fmc_decimal128_to_str(a, str);
