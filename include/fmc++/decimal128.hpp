@@ -110,12 +110,6 @@ namespace std {
 template<>
 class numeric_limits<fmc::decimal128> {
 public:
-  static fmc::decimal128 min() noexcept {
-    return fmc::decimal128::upcast(fmc_decimal128_qnan());
-  }
-  static fmc::decimal128 max() noexcept {
-    return fmc::decimal128::upcast(fmc_decimal128_qnan());
-  }
   static fmc::decimal128 infinity() noexcept {
     return fmc::decimal128::upcast(fmc_decimal128_inf());
   }
