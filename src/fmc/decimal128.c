@@ -31,24 +31,23 @@ void fmc_decimal128_to_str(fmc_decimal128_t src, char* dest) {
   decQuadToString((decQuad *)&src, dest);
 }
 
-//TODO: Confirm if it is possible to avoid int32 conversion and find out result from res
 bool fmc_decimal128_less(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   fmc_decimal128_t res;
   decQuadCompare((decQuad*)&res, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return decQuadToInt32((decQuad*)&res, get_context(), DEC_ROUND_HALF_UP) == -1;
+  return !decQuadIsZero(&res) && decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   fmc_decimal128_t res;
   decQuadCompare((decQuad*)&res, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return decQuadToInt32((decQuad*)&res, get_context(), DEC_ROUND_HALF_UP) == 1;
+  return !decQuadIsZero(&res) && !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   fmc_decimal128_t res;
   decQuadCompare((decQuad*)&res, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return decQuadToInt32((decQuad*)&res, get_context(), DEC_ROUND_HALF_UP) == 0;
+  return decQuadIsZero(&res);
 }
 
-fmc_decimal128_t fmc_decimal128_divide(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
+fmc_decimal128_t fmc_decimal128_div(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   fmc_decimal128_t res;
   decQuadDivide((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&rhs, get_context());
   return res;
@@ -109,7 +108,7 @@ fmc_decimal128_t fmc_decimal128_from_uint(uint64_t u) {
   return result;
 }
 
-fmc_decimal128_t fmc_decimal128_intdiv(fmc_decimal128_t lhs, int64_t rhs) {
+fmc_decimal128_t fmc_decimal128_int_div(fmc_decimal128_t lhs, int64_t rhs) {
   fmc_decimal128_t drhs = fmc_decimal128_from_int(rhs);
   fmc_decimal128_t res;
   decQuadDivide((decQuad *)&res, (decQuad *)&lhs, (decQuad *)&drhs, get_context());
@@ -134,7 +133,7 @@ fmc_decimal128_t fmc_decimal128_mul(fmc_decimal128_t lhs, fmc_decimal128_t rhs) 
   return res;
 }
 
-fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t *val) {
+fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t val) {
   fmc_decimal128_t res;
   decQuadToIntegralValue((decQuad *)&res, (decQuad *)&val, get_context(), DEC_ROUND_HALF_UP);
   return res;
