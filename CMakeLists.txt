@@ -66,7 +66,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/murmur3/murmur3.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/component.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
-    "${PROJECT_SOURCE_DIR}/src/fmc/decimal128.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/decimal128.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"

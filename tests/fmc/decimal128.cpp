@@ -12,6 +12,22 @@ TEST(decimal128, from_to_flt_str) {
   ASSERT_STREQ(str, strval.c_str());
 }
 
+TEST(decimal128, from_int_low) {
+  int64_t max = 15;
+  fmc_decimal128_t a = fmc_decimal128_from_int(max);
+  char str[256];
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, "15");
+}
+
+TEST(decimal128, from_int_high) {
+  int64_t max = 9223372036854775807;
+  fmc_decimal128_t a = fmc_decimal128_from_int(max);
+  char str[256];
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, "9223372036854775807");
+}
+
 TEST(decimal128, from_to_int_str) {
   fmc_decimal128_t a;
   std::string strval = "5";

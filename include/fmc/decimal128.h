@@ -21,15 +21,16 @@ typedef struct {
 // Inplace operations
 
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char* src);
-
 FMMODFUNC void fmc_decimal128_to_str(fmc_decimal128_t src, char* dest);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_from_int(int64_t src);
+FMMODFUNC int64_t fmc_decimal128_to_int(fmc_decimal128_t src);
 
 FMMODFUNC bool fmc_decimal128_less(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC bool fmc_decimal128_greater(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC bool fmc_decimal128_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 
 FMMODFUNC fmc_decimal128_t fmc_decimal128_divide(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
-FMMODFUNC fmc_decimal128_t fmc_decimal128_intdiv(fmc_decimal128_t lhs, int32_t rhs);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_intdiv(fmc_decimal128_t lhs, int64_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_add(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_sub(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_mul(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
