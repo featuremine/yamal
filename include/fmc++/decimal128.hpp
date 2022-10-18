@@ -52,6 +52,10 @@ public:
         fmc_decimal128_inc(this, a);
         return *this;
     }
+    decimal128 &operator-=(const decimal128 &a) {
+        fmc_decimal128_dec(this, a);
+        return *this;
+    }
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) {

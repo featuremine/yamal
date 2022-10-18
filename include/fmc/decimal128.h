@@ -37,6 +37,7 @@ FMMODFUNC fmc_decimal128_t fmc_decimal128_int_div(fmc_decimal128_t lhs, int64_t 
 FMMODFUNC fmc_decimal128_t fmc_decimal128_add(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC void fmc_decimal128_inc(fmc_decimal128_t *lhs, fmc_decimal128_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_sub(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
+FMMODFUNC void fmc_decimal128_dec(fmc_decimal128_t *lhs, fmc_decimal128_t rhs);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_mul(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 
 FMMODFUNC fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t val);

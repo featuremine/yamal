@@ -190,6 +190,14 @@ TEST(decimal128, increment) {
   ASSERT_TRUE(fmc_decimal128_equal(a, b));
 }
 
+TEST(decimal128, decrement) {
+  fmc_decimal128_t a, b;
+  fmc_decimal128_from_str(&a, "4.0");
+  fmc_decimal128_from_str(&b, "2.0");
+  fmc_decimal128_dec(&a, b);
+  ASSERT_TRUE(fmc_decimal128_equal(a, b));
+}
+
 // C++ API
 TEST(decimal128, cppconstructor) {
   fmc_decimal128_t a;
@@ -270,6 +278,13 @@ TEST(decimal128, cppincrement) {
   fmc::decimal128 ppa(5);
   fmc::decimal128 ppb(10);
   ppa += ppa;
+  ASSERT_EQ(ppa, ppb);
+}
+
+TEST(decimal128, cppdecrement) {
+  fmc::decimal128 ppa(10);
+  fmc::decimal128 ppb(5);
+  ppa -= ppb;
   ASSERT_EQ(ppa, ppb);
 }
 

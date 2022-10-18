@@ -127,6 +127,10 @@ void fmc_decimal128_inc(fmc_decimal128_t *lhs, fmc_decimal128_t rhs) {
   decQuadAdd((decQuad *)lhs, (decQuad *)lhs, (decQuad *)&rhs, get_context());
 }
 
+void fmc_decimal128_dec(fmc_decimal128_t *lhs, fmc_decimal128_t rhs) {
+  decQuadSubtract((decQuad *)lhs, (decQuad *)lhs, (decQuad *)&rhs, get_context());
+}
+
 fmc_decimal128_t fmc_decimal128_sub(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   decQuadSubtract((decQuad *)&lhs, (decQuad *)&lhs, (decQuad *)&rhs, get_context());
   return lhs;
