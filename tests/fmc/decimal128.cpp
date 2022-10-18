@@ -218,11 +218,13 @@ TEST(decimal128, nan) {
   ASSERT_TRUE(fmc_decimal128_is_nan(qnan));
   ASSERT_TRUE(fmc_decimal128_is_qnan(qnan));
   ASSERT_FALSE(fmc_decimal128_is_snan(qnan));
+  ASSERT_FALSE(fmc_decimal128_is_inf(qnan));
 
   fmc_decimal128_t snan = fmc_decimal128_snan();
   ASSERT_TRUE(fmc_decimal128_is_nan(snan));
   ASSERT_FALSE(fmc_decimal128_is_qnan(snan));
   ASSERT_TRUE(fmc_decimal128_is_snan(snan));
+  ASSERT_FALSE(fmc_decimal128_is_inf(snan));
 }
 
 // C++ API
@@ -331,7 +333,6 @@ TEST(decimal128, cppimplicit_downcasting) {
 
 TEST(decimal128, cppinfinity) {
   fmc::decimal128 a(4);
-
   ASSERT_FALSE(fmc_decimal128_is_inf(a));
 
   fmc::decimal128 inf = std::numeric_limits<fmc::decimal128>::infinity();
@@ -348,11 +349,13 @@ TEST(decimal128, cppnan) {
   ASSERT_TRUE(fmc_decimal128_is_nan(qnan));
   ASSERT_TRUE(fmc_decimal128_is_qnan(qnan));
   ASSERT_FALSE(fmc_decimal128_is_snan(qnan));
+  ASSERT_FALSE(fmc_decimal128_is_inf(qnan));
 
   fmc::decimal128 snan = std::numeric_limits<fmc::decimal128>::signaling_NaN();
   ASSERT_TRUE(fmc_decimal128_is_nan(snan));
   ASSERT_FALSE(fmc_decimal128_is_qnan(snan));
   ASSERT_TRUE(fmc_decimal128_is_snan(snan));
+  ASSERT_FALSE(fmc_decimal128_is_inf(snan));
 }
 
 
