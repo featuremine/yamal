@@ -273,6 +273,20 @@ TEST(decimal128, cppincrement) {
   ASSERT_EQ(ppa, ppb);
 }
 
+TEST(decimal128, upcasting) {
+  fmc_decimal128_t a;
+  fmc::decimal128 &ppa = fmc::decimal128::upcast(a);
+  ASSERT_EQ(&a, &ppa);
+}
+
+TEST(decimal128, implicit_downcasting) {
+  fmc::decimal128 ppa(5);
+  auto f = [](const fmc::decimal128 &lhs, const fmc_decimal128_t &rhs) -> bool {
+    return &lhs == &rhs;
+  };
+  ASSERT_TRUE(f(ppa, ppa));
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
