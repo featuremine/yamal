@@ -53,6 +53,8 @@ extern "C" {
   /* highest biased exponent (Elimit-1) */
   #define DECQUAD_Ehigh (DECQUAD_Emax + DECQUAD_Bias - (DECQUAD_Pmax-1))
 
+  #define DECUSE64 1
+
   /* Required include						      */
   #include "decContext.h"
 
