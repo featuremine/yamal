@@ -22,6 +22,7 @@ typedef struct {
 
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char* src);
 FMMODFUNC void fmc_decimal128_to_str(fmc_decimal128_t src, char* dest);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_from_uint(uint64_t src);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_from_int(int64_t src);
 FMMODFUNC int64_t fmc_decimal128_to_int(fmc_decimal128_t src);
 

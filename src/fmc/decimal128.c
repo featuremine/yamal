@@ -85,6 +85,30 @@ fmc_decimal128_t fmc_decimal128_from_int(int64_t n) {
   return result;
 }
 
+fmc_decimal128_t fmc_decimal128_from_uint(uint64_t u) {
+  uint64_t encode;				/* work */
+  fmc_decimal128_t result;
+  DFWORD((decQuad*)&result, 0)=ZEROWORD;		/* always */
+  DFWORD((decQuad*)&result, 1)=0;
+  DFWORD((decQuad*)&result, 2)=0;
+  encode=((uint64_t)BIN2DPD[u%1000]);
+  u/=1000;
+  encode|=((uint64_t)BIN2DPD[u%1000])<<10;
+  u/=1000;
+  encode|=((uint64_t)BIN2DPD[u%1000])<<20;
+  u/=1000;
+  encode|=((uint64_t)BIN2DPD[u%1000])<<30;
+  u/=1000;
+  encode|=((uint64_t)BIN2DPD[u%1000])<<40;
+  u/=1000;
+  encode|=((uint64_t)BIN2DPD[u%1000])<<50;
+  u/=1000;
+  encode|=((uint64_t)BIN2DPD[u%1000])<<60;
+  ((decQuad*)&result)->longs[0] = encode;
+  ((decQuad*)&result)->longs[1] |= u>>4;
+  return result;
+}
+
 fmc_decimal128_t fmc_decimal128_intdiv(fmc_decimal128_t lhs, int64_t rhs) {
   fmc_decimal128_t drhs = fmc_decimal128_from_int(rhs);
   fmc_decimal128_t res;
