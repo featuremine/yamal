@@ -494,6 +494,13 @@ TEST(decimal128, cppmin) {
   ASSERT_STREQ(str.str().c_str(), "-9.999999999999999999999999999999999E+6144");
 }
 
+TEST(decimal128, cppdoubleconstructorassign) {
+  fmc::decimal128 a = 2.33;
+  std::ostringstream str;
+  str << a;
+  ASSERT_STREQ(str.str().c_str(), "2.330000");
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
