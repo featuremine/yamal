@@ -8,7 +8,8 @@ extern "C" {
 
 #include <fmc/platform.h>
 
-#define FMC_DECIMAL128_SIZE    16
+#define FMC_DECIMAL128_SIZE       16
+#define FMC_DECIMAL128_STR_SIZE   43
 
 typedef struct {
     uint8_t bytes[FMC_DECIMAL128_SIZE];

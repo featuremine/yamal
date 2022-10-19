@@ -33,23 +33,23 @@ void fmc_decimal128_to_str(fmc_decimal128_t src, char* dest) {
 
 bool fmc_decimal128_less(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   decQuadCompare((decQuad*)&lhs, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return !decQuadIsZero(&lhs) && decQuadIsSigned(&lhs);
+  return !decQuadIsZero((decQuad*)&lhs) && decQuadIsSigned((decQuad*)&lhs);
 }
 bool fmc_decimal128_less_or_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   decQuadCompare((decQuad*)&lhs, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return decQuadIsZero(&lhs) || decQuadIsSigned(&lhs);
+  return decQuadIsZero((decQuad*)&lhs) || decQuadIsSigned((decQuad*)&lhs);
 }
 bool fmc_decimal128_greater(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   decQuadCompare((decQuad*)&lhs, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return !decQuadIsZero(&lhs) && !decQuadIsSigned(&lhs);
+  return !decQuadIsZero((decQuad*)&lhs) && !decQuadIsSigned((decQuad*)&lhs);
 }
 bool fmc_decimal128_greater_or_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   decQuadCompare((decQuad*)&lhs, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return decQuadIsZero(&lhs) || !decQuadIsSigned(&lhs);
+  return decQuadIsZero((decQuad*)&lhs) || !decQuadIsSigned((decQuad*)&lhs);
 }
 bool fmc_decimal128_equal(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {
   decQuadCompare((decQuad*)&lhs, (decQuad*)&lhs, (decQuad*)&rhs, get_context());
-  return decQuadIsZero(&lhs);
+  return decQuadIsZero((decQuad*)&lhs);
 }
 
 fmc_decimal128_t fmc_decimal128_div(fmc_decimal128_t lhs, fmc_decimal128_t rhs) {

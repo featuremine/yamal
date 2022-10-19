@@ -117,8 +117,9 @@ public:
     return fmc::decimal128::upcast(fmc_decimal128_snan());
   }
 };
+
 ostream &operator<<(ostream &os, const fmc::decimal128 &r) {
-  char str[43];
+  char str[FMC_DECIMAL128_STR_SIZE];
   fmc_decimal128_to_str(r, str);
   os << str;
   return os;
