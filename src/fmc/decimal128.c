@@ -24,8 +24,6 @@
 
 #include "decQuad.h"
 
-#define ZEROWORD	 0x22080000
-
 extern const uint16_t BIN2DPD[1000];	/* 0-999 -> DPD 	      */
 
 static decContext* get_context() {
@@ -78,7 +76,7 @@ fmc_decimal128_t fmc_decimal128_from_int(int64_t n) {
   uint64_t u=(uint64_t)n;			/* copy as bits */
   uint64_t encode;				/* work */
   fmc_decimal128_t result;
-  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]=ZEROWORD;		/* always */
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]=0x22080000;		/* always */
   ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 1]=0;
   ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 2]=0;
   if (n<0) {				/* handle -n with care */
@@ -108,7 +106,7 @@ fmc_decimal128_t fmc_decimal128_from_int(int64_t n) {
 fmc_decimal128_t fmc_decimal128_from_uint(uint64_t u) {
   uint64_t encode;				/* work */
   fmc_decimal128_t result;
-  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]=ZEROWORD;		/* always */
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]=0x22080000;		/* always */
   ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 1]=0;
   ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 2]=0;
   encode=((uint64_t)BIN2DPD[u%1000]);
