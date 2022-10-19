@@ -148,13 +148,13 @@ fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t val) {
 
 fmc_decimal128_t fmc_decimal128_qnan() {
   fmc_decimal128_t ret;
-  DFWORD((decQuad*)&ret, 0)=0x7c000000;
+  DFWORD((decQuad*)&ret, 0)=DECFLOAT_qNaN;
   return ret;
 }
 
 fmc_decimal128_t fmc_decimal128_snan() {
   fmc_decimal128_t ret;
-  DFWORD((decQuad*)&ret, 0)=0x7e000000;
+  DFWORD((decQuad*)&ret, 0)=DECFLOAT_sNaN;
   return ret;
 }
 
@@ -172,10 +172,50 @@ bool fmc_decimal128_is_snan(fmc_decimal128_t val) {
 
 fmc_decimal128_t fmc_decimal128_inf() {
   fmc_decimal128_t ret;
-  DFWORD((decQuad*)&ret, 0)=0x78000000;
+  DFWORD((decQuad*)&ret, 0)=DECFLOAT_Inf;
   return ret;
 }
 
 bool fmc_decimal128_is_inf(fmc_decimal128_t val) {
   return decQuadIsInfinite((decQuad*)&val);
+}
+
+fmc_decimal128_t fmc_decimal128_max() {
+  fmc_decimal128_t result;
+  uint64_t encode;				/* work */
+  encode=((uint64_t)BIN2DPD[999]);
+  encode|=((uint64_t)BIN2DPD[999])<<10;
+  encode|=((uint64_t)BIN2DPD[999])<<20;
+  encode|=((uint64_t)BIN2DPD[999])<<30;
+  encode|=((uint64_t)BIN2DPD[999])<<40;
+  encode|=((uint64_t)BIN2DPD[999])<<50;
+  encode|=((uint64_t)BIN2DPD[999])<<60;
+  ((decQuad*)&result)->longs[0] = encode;
+  encode=((uint64_t)0x77FF8000)<<32;
+  encode|=((uint64_t)BIN2DPD[999])>>6;
+  encode|=((uint64_t)BIN2DPD[999])<<4;
+  encode|=((uint64_t)BIN2DPD[999])<<14;
+  encode|=((uint64_t)BIN2DPD[999])<<24;
+  ((decQuad*)&result)->longs[1] = encode;
+  return result;
+}
+
+fmc_decimal128_t fmc_decimal128_min() {
+  fmc_decimal128_t result;
+  uint64_t encode;				/* work */
+  encode=((uint64_t)BIN2DPD[999]);
+  encode|=((uint64_t)BIN2DPD[999])<<10;
+  encode|=((uint64_t)BIN2DPD[999])<<20;
+  encode|=((uint64_t)BIN2DPD[999])<<30;
+  encode|=((uint64_t)BIN2DPD[999])<<40;
+  encode|=((uint64_t)BIN2DPD[999])<<50;
+  encode|=((uint64_t)BIN2DPD[999])<<60;
+  ((decQuad*)&result)->longs[0] = encode;
+  encode=((uint64_t)0xF7FF8000)<<32;
+  encode|=((uint64_t)BIN2DPD[999])>>6;
+  encode|=((uint64_t)BIN2DPD[999])<<4;
+  encode|=((uint64_t)BIN2DPD[999])<<14;
+  encode|=((uint64_t)BIN2DPD[999])<<24;
+  ((decQuad*)&result)->longs[1] = encode;
+  return result;
 }

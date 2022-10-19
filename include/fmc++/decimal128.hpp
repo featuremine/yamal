@@ -23,11 +23,10 @@
 
 #include <limits>
 #include <ostream>
+#include <cmath>
 
 namespace fmc {
 
-// When private inheritance:
-// error: cannot cast 'const fmc::decimal128' to its private base class 'const fmc_decimal128_t'
 class decimal128 : public fmc_decimal128_t {
 public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
@@ -35,14 +34,6 @@ public:
   decimal128 &operator=(const fmc_decimal128_t &a) {
     return *this;
   }
-  // Warning, conversion to base class will never be used, review:
-  // https://eel.is/c++draft/class.conv.fct#4
-  // operator fmc_decimal128_t &() {
-  //     return static_cast<fmc_decimal128_t &>(*this);
-  // }
-  // operator const fmc_decimal128_t &() const {
-  //     return static_cast<const fmc_decimal128_t &>(*this);
-  // }
   static decimal128 &upcast(fmc_decimal128_t &a) {
     return static_cast<decimal128 &>(a);
   }
@@ -110,13 +101,12 @@ namespace std {
 template<>
 class numeric_limits<fmc::decimal128> {
 public:
-  // There are no definitions for min or max, we could define our own if we still need them
-  // static fmc::decimal128 min() noexcept {
-  //   return fmc::decimal128::upcast(fmc_decimal128_min());
-  // }
-  // static fmc::decimal128 max() noexcept {
-  //   return fmc::decimal128::upcast(fmc_decimal128_max());
-  // }
+  static fmc::decimal128 min() noexcept {
+    return fmc::decimal128::upcast(fmc_decimal128_min());
+  }
+  static fmc::decimal128 max() noexcept {
+    return fmc::decimal128::upcast(fmc_decimal128_max());
+  }
   static fmc::decimal128 infinity() noexcept {
     return fmc::decimal128::upcast(fmc_decimal128_inf());
   }
@@ -133,4 +123,13 @@ ostream &operator<<(ostream &os, const fmc::decimal128 &r) {
   os << str;
   return os;
 }
+
+inline bool isinf(fmc::decimal128 x) noexcept {
+ return fmc_decimal128_is_inf(x);
+}
+
+inline bool isnan(fmc::decimal128 x) noexcept {
+ return fmc_decimal128_is_nan(x);
+}
+
 } // namespace std

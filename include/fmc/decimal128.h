@@ -51,6 +51,9 @@ FMMODFUNC bool fmc_decimal128_is_snan(fmc_decimal128_t val);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_inf();
 FMMODFUNC bool fmc_decimal128_is_inf(fmc_decimal128_t val);
 
+FMMODFUNC fmc_decimal128_t fmc_decimal128_max();
+FMMODFUNC fmc_decimal128_t fmc_decimal128_min();
+
 #ifdef __cplusplus
 }
 #endif

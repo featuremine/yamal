@@ -227,6 +227,20 @@ TEST(decimal128, nan) {
   ASSERT_FALSE(fmc_decimal128_is_inf(snan));
 }
 
+TEST(decimal128, max) {
+  fmc_decimal128_t a = fmc_decimal128_max();
+  char str[256];
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, "9.000819879879879999999999999999999E+6143");
+}
+
+TEST(decimal128, min) {
+  fmc_decimal128_t a = fmc_decimal128_min();
+  char str[256];
+  fmc_decimal128_to_str(a, str);
+  ASSERT_STREQ(str, "-9.000819879879879999999999999999999E+6143");
+}
+
 // C++ API
 TEST(decimal128, cppconstructor) {
   fmc_decimal128_t a;
@@ -334,9 +348,13 @@ TEST(decimal128, cppimplicit_downcasting) {
 TEST(decimal128, cppinfinity) {
   fmc::decimal128 a(4);
   ASSERT_FALSE(fmc_decimal128_is_inf(a));
+  ASSERT_FALSE(std::isinf(a));
+  ASSERT_FALSE(std::isnan(a));
 
   fmc::decimal128 inf = std::numeric_limits<fmc::decimal128>::infinity();
   ASSERT_TRUE(fmc_decimal128_is_inf(inf));
+  ASSERT_TRUE(std::isinf(inf));
+  ASSERT_FALSE(std::isnan(inf));
 }
 
 TEST(decimal128, cppnan) {
@@ -344,18 +362,25 @@ TEST(decimal128, cppnan) {
   ASSERT_FALSE(fmc_decimal128_is_nan(a));
   ASSERT_FALSE(fmc_decimal128_is_qnan(a));
   ASSERT_FALSE(fmc_decimal128_is_snan(a));
+  ASSERT_FALSE(fmc_decimal128_is_inf(a));
+  ASSERT_FALSE(std::isinf(a));
+  ASSERT_FALSE(std::isnan(a));
 
   fmc::decimal128 qnan = std::numeric_limits<fmc::decimal128>::quiet_NaN();
   ASSERT_TRUE(fmc_decimal128_is_nan(qnan));
   ASSERT_TRUE(fmc_decimal128_is_qnan(qnan));
   ASSERT_FALSE(fmc_decimal128_is_snan(qnan));
   ASSERT_FALSE(fmc_decimal128_is_inf(qnan));
+  ASSERT_FALSE(std::isinf(qnan));
+  ASSERT_TRUE(std::isnan(qnan));
 
   fmc::decimal128 snan = std::numeric_limits<fmc::decimal128>::signaling_NaN();
   ASSERT_TRUE(fmc_decimal128_is_nan(snan));
   ASSERT_FALSE(fmc_decimal128_is_qnan(snan));
   ASSERT_TRUE(fmc_decimal128_is_snan(snan));
   ASSERT_FALSE(fmc_decimal128_is_inf(snan));
+  ASSERT_FALSE(std::isinf(snan));
+  ASSERT_TRUE(std::isnan(snan));
 }
 
 TEST(decimal128, ostream) {
@@ -387,6 +412,20 @@ TEST(decimal128, ostream) {
   res = str.str();
   ASSERT_EQ(res.size(), 4);
   ASSERT_STREQ(res.c_str(), "sNaN");
+}
+
+TEST(decimal128, cppmax) {
+  fmc::decimal128 a = std::numeric_limits<fmc::decimal128>::max();
+  std::ostringstream str;
+  str << a;
+  ASSERT_STREQ(str.str().c_str(), "9.000819879879879999999999999999999E+6143");
+}
+
+TEST(decimal128, cppmin) {
+  fmc::decimal128 a = std::numeric_limits<fmc::decimal128>::min();
+  std::ostringstream str;
+  str << a;
+  ASSERT_STREQ(str.str().c_str(), "-9.000819879879879999999999999999999E+6143");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
