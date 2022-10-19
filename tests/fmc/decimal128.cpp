@@ -528,6 +528,15 @@ TEST(decimal128, cppdecimalfromint) {
   ASSERT_STREQ(str.str().c_str(), "5");
 }
 
+TEST(decimal128, cppstreams) {
+  std::string s("432325.555342");
+  std::stringstream ss(s);
+  fmc::decimal128 a(432325.555342);
+  fmc::decimal128 b(0.0);
+  ss >> b;
+  ASSERT_EQ(a, b);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
