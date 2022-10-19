@@ -48,7 +48,9 @@ public:
     fmc_decimal128_dec(this, a);
     return *this;
   }
-  decimal128 operator-() const noexcept { return fmc_decimal128_negate(*this); }
+  decimal128 operator-() const noexcept {
+    return upcast(fmc_decimal128_negate(*this));
+  }
   operator double() const noexcept { return fmc_decimal128_to_double(*this); }
 };
 
@@ -135,7 +137,7 @@ inline bool isfinite(fmc::decimal128 x) noexcept {
 }
 
 inline fmc::decimal128 abs(fmc::decimal128 x) noexcept {
-  return fmc_decimal128_abs(x);
+  return fmc::decimal128::upcast(fmc_decimal128_abs(x));
 }
 
 inline bool isnan(fmc::decimal128 x) noexcept {
