@@ -128,11 +128,19 @@ inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) noexcept {
   return os;
 }
 
+inline ostream &operator<<(ostream &os, const fmc_decimal128_t &r) noexcept {
+  return os << fmc::decimal128::upcast(r);
+}
+
 inline istream &operator>>(istream &os, fmc::decimal128 &r) noexcept {
   string str;
   os >> str;
   fmc_decimal128_from_str(&r, str.c_str());
   return os;
+}
+
+inline istream &operator>>(istream &os, fmc_decimal128_t &r) noexcept {
+  return os >> fmc::decimal128::upcast(r);
 }
 
 inline bool isinf(fmc::decimal128 x) noexcept {
