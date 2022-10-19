@@ -97,7 +97,7 @@ inline decimal128 operator/(const decimal128 &a, const int64_t &b) {
 } // namespace fmc
 
 namespace std {
-// limits and stream
+
 template<>
 class numeric_limits<fmc::decimal128> {
 public:
