@@ -192,10 +192,10 @@ fmc_decimal128_t fmc_decimal128_max() {
   encode|=((uint64_t)BIN2DPD[999])<<60;
   ((decQuad*)&result)->longs[0] = encode;
   encode=((uint64_t)0x77FF8000)<<32;
-  encode|=((uint64_t)BIN2DPD[999])>>6;
-  encode|=((uint64_t)BIN2DPD[999])<<4;
-  encode|=((uint64_t)BIN2DPD[999])<<14;
-  encode|=((uint64_t)BIN2DPD[999])<<24;
+  encode|=((uint64_t)BIN2DPD[999])>>4;
+  encode|=((uint64_t)BIN2DPD[999])<<6;
+  encode|=((uint64_t)BIN2DPD[999])<<16;
+  encode|=((uint64_t)BIN2DPD[999])<<26;
   ((decQuad*)&result)->longs[1] = encode;
   return result;
 }
@@ -212,10 +212,10 @@ fmc_decimal128_t fmc_decimal128_min() {
   encode|=((uint64_t)BIN2DPD[999])<<60;
   ((decQuad*)&result)->longs[0] = encode;
   encode=((uint64_t)0xF7FF8000)<<32;
-  encode|=((uint64_t)BIN2DPD[999])>>6;
-  encode|=((uint64_t)BIN2DPD[999])<<4;
-  encode|=((uint64_t)BIN2DPD[999])<<14;
-  encode|=((uint64_t)BIN2DPD[999])<<24;
+  encode|=((uint64_t)BIN2DPD[999])>>4;
+  encode|=((uint64_t)BIN2DPD[999])<<6;
+  encode|=((uint64_t)BIN2DPD[999])<<16;
+  encode|=((uint64_t)BIN2DPD[999])<<26;
   ((decQuad*)&result)->longs[1] = encode;
   return result;
 }
