@@ -20,16 +20,13 @@
  * @see http://www.featuremine.com
  */
 
+#include "fmc/decimal128.h"
+
 #include "decQuad.h"
 
-// Definitions are present in decQuad.c, however, they
-// need to be available for decNumberLocal.h
-#define DECBYTES    DECQUAD_Bytes
-#define DECPMAX     DECQUAD_Pmax
+#define ZEROWORD	 0x22080000
 
-#include "decDPD.h"
-#include "decNumberLocal.h"
-#include "fmc/decimal128.h"
+extern const uint16_t BIN2DPD[1000];	/* 0-999 -> DPD 	      */
 
 static decContext* get_context() {
   // __thread identifier supported by clang and gcc
@@ -81,13 +78,13 @@ fmc_decimal128_t fmc_decimal128_from_int(int64_t n) {
   uint64_t u=(uint64_t)n;			/* copy as bits */
   uint64_t encode;				/* work */
   fmc_decimal128_t result;
-  DFWORD((decQuad*)&result, 0)=ZEROWORD;		/* always */
-  DFWORD((decQuad*)&result, 1)=0;
-  DFWORD((decQuad*)&result, 2)=0;
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]=ZEROWORD;		/* always */
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 1]=0;
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 2]=0;
   if (n<0) {				/* handle -n with care */
     /* [This can be done without the test, but is then slightly slower] */
     u=(~u)+1;
-    DFWORD((decQuad*)&result, 0)|=DECFLOAT_Sign;
+    ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]|=DECFLOAT_Sign;
   }
   /* Since the maximum value of u now is 2**63, only the low word of */
   /* result is affected */
@@ -111,9 +108,9 @@ fmc_decimal128_t fmc_decimal128_from_int(int64_t n) {
 fmc_decimal128_t fmc_decimal128_from_uint(uint64_t u) {
   uint64_t encode;				/* work */
   fmc_decimal128_t result;
-  DFWORD((decQuad*)&result, 0)=ZEROWORD;		/* always */
-  DFWORD((decQuad*)&result, 1)=0;
-  DFWORD((decQuad*)&result, 2)=0;
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 0]=ZEROWORD;		/* always */
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 1]=0;
+  ((decQuad*)&result)->words[DECQUAD_Bytes/4 - 1 - 2]=0;
   encode=((uint64_t)BIN2DPD[u%1000]);
   u/=1000;
   encode|=((uint64_t)BIN2DPD[u%1000])<<10;
@@ -168,13 +165,13 @@ fmc_decimal128_t fmc_decimal128_round(fmc_decimal128_t val) {
 
 fmc_decimal128_t fmc_decimal128_qnan() {
   fmc_decimal128_t ret;
-  DFWORD((decQuad*)&ret, 0)=DECFLOAT_qNaN;
+  ((decQuad*)&ret)->words[DECQUAD_Bytes/4 - 1 - 0]=DECFLOAT_qNaN;
   return ret;
 }
 
 fmc_decimal128_t fmc_decimal128_snan() {
   fmc_decimal128_t ret;
-  DFWORD((decQuad*)&ret, 0)=DECFLOAT_sNaN;
+  ((decQuad*)&ret)->words[DECQUAD_Bytes/4 - 1 - 0]=DECFLOAT_sNaN;
   return ret;
 }
 
@@ -192,7 +189,7 @@ bool fmc_decimal128_is_snan(fmc_decimal128_t val) {
 
 fmc_decimal128_t fmc_decimal128_inf() {
   fmc_decimal128_t ret;
-  DFWORD((decQuad*)&ret, 0)=DECFLOAT_Inf;
+  ((decQuad*)&ret)->words[DECQUAD_Bytes/4 - 1 - 0]=DECFLOAT_Inf;
   return ret;
 }
 
