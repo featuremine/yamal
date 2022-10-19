@@ -36,10 +36,11 @@ public:
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
     return static_cast<decimal128 &>(a);
   }
-  static constexpr const decimal128 &upcast(const fmc_decimal128_t &a) noexcept {
+  static constexpr const decimal128 &
+  upcast(const fmc_decimal128_t &a) noexcept {
     return static_cast<const decimal128 &>(a);
   }
-  decimal128 &operator+=(const decimal128 &a) noexcept{
+  decimal128 &operator+=(const decimal128 &a) noexcept {
     fmc_decimal128_inc(this, a);
     return *this;
   }
@@ -47,9 +48,7 @@ public:
     fmc_decimal128_dec(this, a);
     return *this;
   }
-  decimal128 operator-() const noexcept {
-    return fmc_decimal128_negate(*this);
-  }
+  decimal128 operator-() const noexcept { return fmc_decimal128_negate(*this); }
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) noexcept {
