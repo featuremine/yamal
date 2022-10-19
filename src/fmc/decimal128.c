@@ -278,7 +278,7 @@ bool fmc_decimal128_is_finite(fmc_decimal128_t val) {
 
 fmc_decimal128_t fmc_decimal128_abs(fmc_decimal128_t val) {
   fmc_decimal128_t res;
-  decQuadAbs((decQuad *)&res, (const decQuad *) &val, get_context());
+  decQuadAbs((decQuad *)&res, (const decQuad *)&val, get_context());
   return res;
 }
 

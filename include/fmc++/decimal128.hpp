@@ -47,9 +47,7 @@ public:
     fmc_decimal128_dec(this, a);
     return *this;
   }
-  decimal128 operator-() {
-    return fmc_decimal128_negate(*this);
-  }
+  decimal128 operator-() { return fmc_decimal128_negate(*this); }
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) {
