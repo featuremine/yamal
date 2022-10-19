@@ -231,14 +231,14 @@ TEST(decimal128, max) {
   fmc_decimal128_t a = fmc_decimal128_max();
   char str[256];
   fmc_decimal128_to_str(a, str);
-  ASSERT_STREQ(str, "9.999999999999999999999999999999999E+6143");
+  ASSERT_STREQ(str, "9.999999999999999999999999999999999E+6144");
 }
 
 TEST(decimal128, min) {
   fmc_decimal128_t a = fmc_decimal128_min();
   char str[256];
   fmc_decimal128_to_str(a, str);
-  ASSERT_STREQ(str, "-9.999999999999999999999999999999999E+6143");
+  ASSERT_STREQ(str, "-9.999999999999999999999999999999999E+6144");
 }
 
 // C++ API
@@ -418,14 +418,14 @@ TEST(decimal128, cppmax) {
   fmc::decimal128 a = std::numeric_limits<fmc::decimal128>::max();
   std::ostringstream str;
   str << a;
-  ASSERT_STREQ(str.str().c_str(), "9.999999999999999999999999999999999E+6143");
+  ASSERT_STREQ(str.str().c_str(), "9.999999999999999999999999999999999E+6144");
 }
 
 TEST(decimal128, cppmin) {
   fmc::decimal128 a = std::numeric_limits<fmc::decimal128>::min();
   std::ostringstream str;
   str << a;
-  ASSERT_STREQ(str.str().c_str(), "-9.999999999999999999999999999999999E+6143");
+  ASSERT_STREQ(str.str().c_str(), "-9.999999999999999999999999999999999E+6144");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
