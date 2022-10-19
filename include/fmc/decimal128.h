@@ -15,12 +15,6 @@ typedef struct {
     uint8_t bytes[FMC_DECIMAL128_SIZE];
 } fmc_decimal128_t;
 
-// Pending:
-// To x and from x
-// MAX
-// MIN
-// Inplace operations
-
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char* src);
 FMMODFUNC void fmc_decimal128_to_str(fmc_decimal128_t src, char* dest);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_from_uint(uint64_t src);
