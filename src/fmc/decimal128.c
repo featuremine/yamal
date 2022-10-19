@@ -196,6 +196,7 @@ fmc_decimal128_t fmc_decimal128_max() {
   encode|=((uint64_t)BIN2DPD[999])<<6;
   encode|=((uint64_t)BIN2DPD[999])<<16;
   encode|=((uint64_t)BIN2DPD[999])<<26;
+  encode|=((uint64_t)BIN2DPD[999])<<36;
   ((decQuad*)&result)->longs[1] = encode;
   return result;
 }
@@ -216,6 +217,7 @@ fmc_decimal128_t fmc_decimal128_min() {
   encode|=((uint64_t)BIN2DPD[999])<<6;
   encode|=((uint64_t)BIN2DPD[999])<<16;
   encode|=((uint64_t)BIN2DPD[999])<<26;
+  encode|=((uint64_t)BIN2DPD[999])<<36;
   ((decQuad*)&result)->longs[1] = encode;
   return result;
 }
