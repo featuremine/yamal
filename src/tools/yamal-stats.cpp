@@ -152,7 +152,7 @@ struct context_t {
                uint64_t msg_time, std::string_view data) {
     current_data_.emplace(&stats);
     ++stats.count_;
-    ++stats.bytes_ += data.size();
+    stats.bytes_ += data.size();
     stats.last_ts = msg_time;
   }
 
