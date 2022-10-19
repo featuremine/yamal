@@ -17,9 +17,10 @@ typedef struct {
 
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src);
 FMMODFUNC void fmc_decimal128_to_str(fmc_decimal128_t src, char *dest);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_from_double(double src);
+FMMODFUNC double fmc_decimal128_to_double(fmc_decimal128_t src);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_from_uint(uint64_t src);
 FMMODFUNC fmc_decimal128_t fmc_decimal128_from_int(int64_t src);
-FMMODFUNC int64_t fmc_decimal128_to_int(fmc_decimal128_t src);
 
 FMMODFUNC bool fmc_decimal128_less(fmc_decimal128_t lhs, fmc_decimal128_t rhs);
 FMMODFUNC bool fmc_decimal128_less_or_equal(fmc_decimal128_t lhs,
@@ -53,9 +54,13 @@ FMMODFUNC bool fmc_decimal128_is_snan(fmc_decimal128_t val);
 
 FMMODFUNC fmc_decimal128_t fmc_decimal128_inf();
 FMMODFUNC bool fmc_decimal128_is_inf(fmc_decimal128_t val);
+FMMODFUNC bool fmc_decimal128_is_finite(fmc_decimal128_t val);
 
 FMMODFUNC fmc_decimal128_t fmc_decimal128_max();
 FMMODFUNC fmc_decimal128_t fmc_decimal128_min();
+
+FMMODFUNC fmc_decimal128_t fmc_decimal128_abs(fmc_decimal128_t val);
+FMMODFUNC fmc_decimal128_t fmc_decimal128_negate(fmc_decimal128_t val);
 
 #ifdef __cplusplus
 }

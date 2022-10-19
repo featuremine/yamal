@@ -24,6 +24,8 @@
 
 #include "decQuad.h"
 
+#include <stdlib.h>
+
 extern const uint16_t BIN2DPD[1000]; /* 0-999 -> DPD 	      */
 
 static decContext *get_context() {
@@ -110,6 +112,21 @@ fmc_decimal128_t fmc_decimal128_from_int(int64_t n) {
   encode |= u << 60;
   ((decQuad *)&result)->longs[0] = encode;
   return result;
+}
+
+fmc_decimal128_t fmc_decimal128_from_double(double n) {
+  char str[FMC_DECIMAL128_STR_SIZE];
+  snprintf(str, FMC_DECIMAL128_STR_SIZE, "%f", n);
+  fmc_decimal128_t res;
+  fmc_decimal128_from_str(&res, str);
+  return res;
+}
+
+double fmc_decimal128_to_double(fmc_decimal128_t n) {
+  char str[FMC_DECIMAL128_STR_SIZE];
+  fmc_decimal128_to_str(n, str);
+  char *ptr;
+  return strtod(str, &ptr);
 }
 
 fmc_decimal128_t fmc_decimal128_from_uint(uint64_t u) {
@@ -253,4 +270,20 @@ fmc_decimal128_t fmc_decimal128_min() {
   encode |= ((uint64_t)BIN2DPD[999]) << 36;
   ((decQuad *)&result)->longs[1] = encode;
   return result;
+}
+
+bool fmc_decimal128_is_finite(fmc_decimal128_t val) {
+  return decQuadIsFinite((decQuad *)&val);
+}
+
+fmc_decimal128_t fmc_decimal128_abs(fmc_decimal128_t val) {
+  fmc_decimal128_t res;
+  decQuadAbs((decQuad *)&res, (const decQuad *) &val, get_context());
+  return res;
+}
+
+fmc_decimal128_t fmc_decimal128_negate(fmc_decimal128_t val) {
+  fmc_decimal128_t res;
+  decQuadCopyNegate((decQuad *)&res, (const decQuad *)&val);
+  return res;
 }

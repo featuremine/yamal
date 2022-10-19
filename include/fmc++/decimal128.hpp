@@ -31,6 +31,7 @@ class decimal128 : public fmc_decimal128_t {
 public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int64_t i) : decimal128(fmc_decimal128_from_int(i)) {}
+  decimal128(double i) : decimal128(fmc_decimal128_from_double(i)) {}
   decimal128 &operator=(const fmc_decimal128_t &a) { return *this; }
   static decimal128 &upcast(fmc_decimal128_t &a) {
     return static_cast<decimal128 &>(a);
@@ -45,6 +46,9 @@ public:
   decimal128 &operator-=(const decimal128 &a) {
     fmc_decimal128_dec(this, a);
     return *this;
+  }
+  decimal128 operator-() {
+    return fmc_decimal128_negate(*this);
   }
 };
 
@@ -124,6 +128,14 @@ ostream &operator<<(ostream &os, const fmc::decimal128 &r) {
 
 inline bool isinf(fmc::decimal128 x) noexcept {
   return fmc_decimal128_is_inf(x);
+}
+
+inline bool isfinite(fmc::decimal128 x) noexcept {
+  return fmc_decimal128_is_finite(x);
+}
+
+inline fmc::decimal128 abs(fmc::decimal128 x) noexcept {
+  return fmc_decimal128_abs(x);
 }
 
 inline bool isnan(fmc::decimal128 x) noexcept {

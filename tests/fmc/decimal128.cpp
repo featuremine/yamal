@@ -219,6 +219,17 @@ TEST(decimal128, decrement) {
   ASSERT_TRUE(fmc_decimal128_equal(a, b));
 }
 
+TEST(decimal128, negate) {
+  fmc_decimal128_t a;
+  fmc_decimal128_from_str(&a, "4.0");
+
+  fmc_decimal128_t b = fmc_decimal128_negate(a);
+  ASSERT_FALSE(fmc_decimal128_equal(a, b));
+
+  b = fmc_decimal128_negate(b);
+  ASSERT_TRUE(fmc_decimal128_equal(a, b));
+}
+
 TEST(decimal128, infinity) {
   fmc_decimal128_t a;
   fmc_decimal128_from_str(&a, "4.0");
@@ -267,50 +278,50 @@ TEST(decimal128, cppconstructor) {
   fmc_decimal128_t a;
   fmc_decimal128_from_str(&a, "5");
 
-  fmc::decimal128 ppa(5);
+  fmc::decimal128 ppa(5.0);
   fmc::decimal128 ppb(a);
   ASSERT_TRUE(fmc_decimal128_equal(a, ppa));
   ASSERT_TRUE(fmc_decimal128_equal(a, ppb));
 }
 
 TEST(decimal128, cppdivide) {
-  fmc::decimal128 ppa(10);
-  fmc::decimal128 ppb(5);
-  fmc::decimal128 ppc(2);
+  fmc::decimal128 ppa(10.0);
+  fmc::decimal128 ppb(5.0);
+  fmc::decimal128 ppc(2.0);
   ASSERT_EQ(ppa / ppb, ppc);
 }
 
 TEST(decimal128, cppint_div) {
-  fmc::decimal128 ppa(10);
-  fmc::decimal128 ppb(2);
+  fmc::decimal128 ppa(10.0);
+  fmc::decimal128 ppb(2.0);
   ASSERT_EQ(ppa / 5, ppb);
 }
 
 TEST(decimal128, cppadd) {
-  fmc::decimal128 ppa(7);
-  fmc::decimal128 ppb(5);
-  fmc::decimal128 ppc(2);
+  fmc::decimal128 ppa(7.0);
+  fmc::decimal128 ppb(5LL);
+  fmc::decimal128 ppc(2.0);
   ASSERT_EQ(ppc + ppb, ppa);
 }
 
 TEST(decimal128, cppsub) {
-  fmc::decimal128 ppa(7);
-  fmc::decimal128 ppb(5);
-  fmc::decimal128 ppc(2);
+  fmc::decimal128 ppa(7.0);
+  fmc::decimal128 ppb(5.0);
+  fmc::decimal128 ppc(2.0);
   ASSERT_EQ(ppa - ppb, ppc);
 }
 
 TEST(decimal128, cppmul) {
-  fmc::decimal128 ppa(10);
-  fmc::decimal128 ppb(5);
-  fmc::decimal128 ppc(2);
+  fmc::decimal128 ppa(10LL);
+  fmc::decimal128 ppb(5LL);
+  fmc::decimal128 ppc(2LL);
   ASSERT_EQ(ppc * ppb, ppa);
 }
 
 TEST(decimal128, cppcomparison) {
-  fmc::decimal128 ppa(5);
-  fmc::decimal128 ppb(8);
-  fmc::decimal128 ppc(10);
+  fmc::decimal128 ppa(5.0);
+  fmc::decimal128 ppb(8.0);
+  fmc::decimal128 ppc(10.0);
 
   ASSERT_FALSE(ppb < ppa);
   ASSERT_FALSE(ppb < ppb);
@@ -338,15 +349,15 @@ TEST(decimal128, cppcomparison) {
 }
 
 TEST(decimal128, cppincrement) {
-  fmc::decimal128 ppa(5);
-  fmc::decimal128 ppb(10);
+  fmc::decimal128 ppa(5LL);
+  fmc::decimal128 ppb(10.0);
   ppa += ppa;
   ASSERT_EQ(ppa, ppb);
 }
 
 TEST(decimal128, cppdecrement) {
-  fmc::decimal128 ppa(10);
-  fmc::decimal128 ppb(5);
+  fmc::decimal128 ppa(10.0);
+  fmc::decimal128 ppb(5LL);
   ppa -= ppb;
   ASSERT_EQ(ppa, ppb);
 }
@@ -358,31 +369,68 @@ TEST(decimal128, cppupcasting) {
 }
 
 TEST(decimal128, cppimplicit_downcasting) {
-  fmc::decimal128 ppa(5);
+  fmc::decimal128 ppa(5.0);
   auto f = [](const fmc::decimal128 &lhs, const fmc_decimal128_t &rhs) -> bool {
     return &lhs == &rhs;
   };
   ASSERT_TRUE(f(ppa, ppa));
 }
 
-TEST(decimal128, cppinfinity) {
-  fmc::decimal128 a(4);
-  ASSERT_FALSE(fmc_decimal128_is_inf(a));
+TEST(decimal128, cppnegate) {
+  fmc::decimal128 a(4LL);
   ASSERT_FALSE(std::isinf(a));
   ASSERT_FALSE(std::isnan(a));
+  ASSERT_TRUE(std::isfinite(a));
+
+  fmc::decimal128 b = -a;
+
+  ASSERT_NE(a, b);
+  ASSERT_EQ(a, -b);
+}
+
+TEST(decimal128, cppinfinity) {
+  fmc::decimal128 a(4LL);
+  ASSERT_FALSE(std::isinf(a));
+  ASSERT_FALSE(std::isnan(a));
+  ASSERT_TRUE(std::isfinite(a));
 
   fmc::decimal128 inf = std::numeric_limits<fmc::decimal128>::infinity();
-  ASSERT_TRUE(fmc_decimal128_is_inf(inf));
   ASSERT_TRUE(std::isinf(inf));
   ASSERT_FALSE(std::isnan(inf));
+  ASSERT_FALSE(std::isfinite(inf));
+
+  fmc::decimal128 ninf = -std::numeric_limits<fmc::decimal128>::infinity();
+  ASSERT_TRUE(std::isinf(ninf));
+  ASSERT_FALSE(std::isnan(ninf));
+  ASSERT_FALSE(std::isfinite(ninf));
+
+  ASSERT_TRUE(ninf < inf);
+  ASSERT_TRUE(ninf <= inf);
+  ASSERT_FALSE(inf < ninf);
+  ASSERT_FALSE(inf <= ninf);
+
+  ASSERT_TRUE(inf > ninf);
+  ASSERT_TRUE(inf >= ninf);
+  ASSERT_FALSE(ninf > inf);
+  ASSERT_FALSE(ninf >= inf);
+
+  ASSERT_TRUE(a < inf);
+  ASSERT_TRUE(a <= inf);
+  ASSERT_FALSE(a < ninf);
+  ASSERT_FALSE(a <= ninf);
+
+  ASSERT_FALSE(a > inf);
+  ASSERT_FALSE(a >= inf);
+  ASSERT_TRUE(a > ninf);
+  ASSERT_TRUE(a >= ninf);
+
 }
 
 TEST(decimal128, cppnan) {
-  fmc::decimal128 a(4);
+  fmc::decimal128 a(4LL);
   ASSERT_FALSE(fmc_decimal128_is_nan(a));
   ASSERT_FALSE(fmc_decimal128_is_qnan(a));
   ASSERT_FALSE(fmc_decimal128_is_snan(a));
-  ASSERT_FALSE(fmc_decimal128_is_inf(a));
   ASSERT_FALSE(std::isinf(a));
   ASSERT_FALSE(std::isnan(a));
 
@@ -390,7 +438,6 @@ TEST(decimal128, cppnan) {
   ASSERT_TRUE(fmc_decimal128_is_nan(qnan));
   ASSERT_TRUE(fmc_decimal128_is_qnan(qnan));
   ASSERT_FALSE(fmc_decimal128_is_snan(qnan));
-  ASSERT_FALSE(fmc_decimal128_is_inf(qnan));
   ASSERT_FALSE(std::isinf(qnan));
   ASSERT_TRUE(std::isnan(qnan));
 
@@ -398,13 +445,12 @@ TEST(decimal128, cppnan) {
   ASSERT_TRUE(fmc_decimal128_is_nan(snan));
   ASSERT_FALSE(fmc_decimal128_is_qnan(snan));
   ASSERT_TRUE(fmc_decimal128_is_snan(snan));
-  ASSERT_FALSE(fmc_decimal128_is_inf(snan));
   ASSERT_FALSE(std::isinf(snan));
   ASSERT_TRUE(std::isnan(snan));
 }
 
 TEST(decimal128, ostream) {
-  fmc::decimal128 a(5);
+  fmc::decimal128 a(5LL);
   a = a / 10;
   std::ostringstream str;
   str << a;
