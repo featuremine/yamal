@@ -423,7 +423,6 @@ TEST(decimal128, cppinfinity) {
   ASSERT_FALSE(a >= inf);
   ASSERT_TRUE(a > ninf);
   ASSERT_TRUE(a >= ninf);
-
 }
 
 TEST(decimal128, cppnan) {
