@@ -299,7 +299,7 @@ TEST(decimal128, cppint_div) {
 
 TEST(decimal128, cppadd) {
   fmc::decimal128 ppa(7.0);
-  fmc::decimal128 ppb(5LL);
+  fmc::decimal128 ppb(5.0);
   fmc::decimal128 ppc(2.0);
   ASSERT_EQ(ppc + ppb, ppa);
 }
@@ -312,9 +312,9 @@ TEST(decimal128, cppsub) {
 }
 
 TEST(decimal128, cppmul) {
-  fmc::decimal128 ppa(10LL);
-  fmc::decimal128 ppb(5LL);
-  fmc::decimal128 ppc(2LL);
+  fmc::decimal128 ppa(10.0);
+  fmc::decimal128 ppb(5.0);
+  fmc::decimal128 ppc(2.0);
   ASSERT_EQ(ppc * ppb, ppa);
 }
 
@@ -349,7 +349,7 @@ TEST(decimal128, cppcomparison) {
 }
 
 TEST(decimal128, cppincrement) {
-  fmc::decimal128 ppa(5LL);
+  fmc::decimal128 ppa(5.0);
   fmc::decimal128 ppb(10.0);
   ppa += ppa;
   ASSERT_EQ(ppa, ppb);
@@ -357,7 +357,7 @@ TEST(decimal128, cppincrement) {
 
 TEST(decimal128, cppdecrement) {
   fmc::decimal128 ppa(10.0);
-  fmc::decimal128 ppb(5LL);
+  fmc::decimal128 ppb(5.0);
   ppa -= ppb;
   ASSERT_EQ(ppa, ppb);
 }
@@ -377,7 +377,7 @@ TEST(decimal128, cppimplicit_downcasting) {
 }
 
 TEST(decimal128, cppnegate) {
-  fmc::decimal128 a(4LL);
+  fmc::decimal128 a(4.0);
   ASSERT_FALSE(std::isinf(a));
   ASSERT_FALSE(std::isnan(a));
   ASSERT_TRUE(std::isfinite(a));
@@ -389,7 +389,7 @@ TEST(decimal128, cppnegate) {
 }
 
 TEST(decimal128, cppinfinity) {
-  fmc::decimal128 a(4LL);
+  fmc::decimal128 a(4.0);
   ASSERT_FALSE(std::isinf(a));
   ASSERT_FALSE(std::isnan(a));
   ASSERT_TRUE(std::isfinite(a));
@@ -427,7 +427,7 @@ TEST(decimal128, cppinfinity) {
 }
 
 TEST(decimal128, cppnan) {
-  fmc::decimal128 a(4LL);
+  fmc::decimal128 a(4.0);
   ASSERT_FALSE(fmc_decimal128_is_nan(a));
   ASSERT_FALSE(fmc_decimal128_is_qnan(a));
   ASSERT_FALSE(fmc_decimal128_is_snan(a));
@@ -450,13 +450,13 @@ TEST(decimal128, cppnan) {
 }
 
 TEST(decimal128, ostream) {
-  fmc::decimal128 a(5LL);
+  fmc::decimal128 a(5.0);
   a = a / 10;
   std::ostringstream str;
   str << a;
   std::string res = str.str();
-  ASSERT_EQ(res.size(), 3);
-  ASSERT_STREQ(res.c_str(), "0.5");
+  ASSERT_EQ(res.size(), 8);
+  ASSERT_STREQ(res.c_str(), "0.500000");
 
   str.str("");
   str.clear();
@@ -494,11 +494,35 @@ TEST(decimal128, cppmin) {
   ASSERT_STREQ(str.str().c_str(), "-9.999999999999999999999999999999999E+6144");
 }
 
-TEST(decimal128, cppdoubleconstructorassign) {
+TEST(decimal128, cppdecimalfromdouble) {
   fmc::decimal128 a = 2.33;
+  fmc::decimal128 b = 2.33f;
+  fmc::decimal128 c(2.33);
+  fmc::decimal128 d(2.33f);
+  double de = 2.33;
+  fmc::decimal128 e(de);
+  float ff = 2.33;
+  fmc::decimal128 f(ff);
+  ASSERT_EQ(a, b);
+  ASSERT_EQ(a, c);
+  ASSERT_EQ(a, d);
+  ASSERT_EQ(a, e);
+  ASSERT_EQ(a, f);
   std::ostringstream str;
   str << a;
   ASSERT_STREQ(str.str().c_str(), "2.330000");
+}
+
+TEST(decimal128, cppdecimalfromint) {
+  fmc::decimal128 a = (int64_t)5;
+  fmc::decimal128 b((int64_t)5);
+  int64_t ic = 5;
+  fmc::decimal128 c(ic);
+  ASSERT_EQ(a, b);
+  ASSERT_EQ(a, c);
+  std::ostringstream str;
+  str << a;
+  ASSERT_STREQ(str.str().c_str(), "5");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
