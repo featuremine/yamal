@@ -21,9 +21,9 @@
 
 #include "fmc/decimal128.h"
 
+#include <cmath>
 #include <limits>
 #include <ostream>
-#include <cmath>
 
 namespace fmc {
 
@@ -31,9 +31,7 @@ class decimal128 : public fmc_decimal128_t {
 public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int64_t i) : decimal128(fmc_decimal128_from_int(i)) {}
-  decimal128 &operator=(const fmc_decimal128_t &a) {
-    return *this;
-  }
+  decimal128 &operator=(const fmc_decimal128_t &a) { return *this; }
   static decimal128 &upcast(fmc_decimal128_t &a) {
     return static_cast<decimal128 &>(a);
   }
@@ -98,8 +96,7 @@ inline decimal128 operator/(const decimal128 &a, const int64_t &b) {
 
 namespace std {
 
-template<>
-class numeric_limits<fmc::decimal128> {
+template <> class numeric_limits<fmc::decimal128> {
 public:
   static fmc::decimal128 min() noexcept {
     return fmc::decimal128::upcast(fmc_decimal128_min());
@@ -126,11 +123,11 @@ ostream &operator<<(ostream &os, const fmc::decimal128 &r) {
 }
 
 inline bool isinf(fmc::decimal128 x) noexcept {
- return fmc_decimal128_is_inf(x);
+  return fmc_decimal128_is_inf(x);
 }
 
 inline bool isnan(fmc::decimal128 x) noexcept {
- return fmc_decimal128_is_nan(x);
+  return fmc_decimal128_is_nan(x);
 }
 
 } // namespace std
