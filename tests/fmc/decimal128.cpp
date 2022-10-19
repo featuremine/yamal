@@ -294,7 +294,7 @@ TEST(decimal128, cppdivide) {
 TEST(decimal128, cppint_div) {
   fmc::decimal128 ppa(10.0);
   fmc::decimal128 ppb(2.0);
-  ASSERT_EQ(ppa / 5, ppb);
+  ASSERT_EQ(ppa / (int64_t)5, ppb);
 }
 
 TEST(decimal128, cppadd) {
@@ -450,7 +450,7 @@ TEST(decimal128, cppnan) {
 
 TEST(decimal128, ostream) {
   fmc::decimal128 a(5.0);
-  a = a / 10;
+  a = a / (int64_t)10;
   std::ostringstream str;
   str << a;
   std::string res = str.str();
@@ -510,6 +510,10 @@ TEST(decimal128, cppdecimalfromdouble) {
   std::ostringstream str;
   str << a;
   ASSERT_STREQ(str.str().c_str(), "2.330000");
+  double implicitoutput = a;
+  double explicitoutput = (double)a;
+  ASSERT_DOUBLE_EQ(de, implicitoutput);
+  ASSERT_DOUBLE_EQ(de, explicitoutput);
 }
 
 TEST(decimal128, cppdecimalfromint) {

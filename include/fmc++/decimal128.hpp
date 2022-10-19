@@ -50,6 +50,9 @@ public:
   decimal128 operator-() const noexcept {
     return fmc_decimal128_negate(*this);
   }
+  operator double () const noexcept {
+    return fmc_decimal128_to_double(*this);
+  }
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) noexcept {
