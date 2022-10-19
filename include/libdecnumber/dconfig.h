@@ -24,8 +24,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifdef IN_LIBGCC2
 
-#include "tconfig.h"
 #include "coretypes.h"
+#include "tconfig.h"
 #include "tm.h"
 
 #if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__

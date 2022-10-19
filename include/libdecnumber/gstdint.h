@@ -3,8 +3,8 @@
 #ifndef GCC_GENERATED_STDINT_H
 #define GCC_GENERATED_STDINT_H 1
 
-#include <sys/types.h>
 #include <stdint.h>
+#include <sys/types.h>
 /* glibc uses these symbols as guards to prevent redefinitions.  */
 #ifdef __int8_t_defined
 #define _INT8_T
@@ -14,7 +14,6 @@
 #ifdef __uint32_t_defined
 #define _UINT32_T
 #endif
-
 
 /* Some systems have guard macros to prevent redefinitions, define them.  */
 #ifndef _INT8_T

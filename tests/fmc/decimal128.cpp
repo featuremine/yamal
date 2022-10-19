@@ -335,7 +335,6 @@ TEST(decimal128, cppcomparison) {
   ASSERT_TRUE(ppb != ppa);
   ASSERT_FALSE(ppb != ppb);
   ASSERT_TRUE(ppb != ppc);
-
 }
 
 TEST(decimal128, cppincrement) {
