@@ -107,8 +107,8 @@ typedef long int LI; /* for printf arguments only	      */
 #endif
 
 /* Shared lookup tables					      */
-const uByte DECSTICKYTAB[10]; /* re-round digits if sticky  */
-const uInt DECPOWERS[10];     /* powers of ten table	      */
+extern const uByte DECSTICKYTAB[10]; /* re-round digits if sticky  */
+extern const uInt DECPOWERS[10];     /* powers of ten table	      */
 /* The following are included from decDPD.h			      */
 #include "decDPDSymbols.h"
 extern const uShort DPD2BIN[1024]; /* DPD -> 0-999 	      */
