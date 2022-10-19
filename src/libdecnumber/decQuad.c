@@ -135,8 +135,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define decFloatSameQuantum decQuadSameQuantum
 #define decFloatVersion decQuadVersion
 
-#include "decNumberLocal.h"   /* local includes (need DECPMAX) */
+#include "decNumberLocal.h" /* local includes (need DECPMAX) */
 
-#include "decCommon.c"	      /* non-arithmetic decFloat routines */
+#include "decCommon.c" /* non-arithmetic decFloat routines */
 
-#include "decBasic.c"	      /* basic formats routines */
+#include "decBasic.c" /* basic formats routines */
