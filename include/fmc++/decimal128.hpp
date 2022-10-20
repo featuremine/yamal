@@ -22,9 +22,9 @@
 #include "fmc/decimal128.h"
 
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <ostream>
-#include <cstring>
 
 namespace fmc {
 
