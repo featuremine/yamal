@@ -24,6 +24,7 @@
 #include <cmath>
 #include <limits>
 #include <ostream>
+#include <cstring>
 
 namespace fmc {
 
