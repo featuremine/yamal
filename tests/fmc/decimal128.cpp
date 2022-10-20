@@ -23,8 +23,8 @@
 #include "fmc/decimal128.h"
 #include "fmc++/decimal128.hpp"
 #include <fmc++/gtestwrap.hpp>
-#include <string.h>
 #include <random>
+#include <string.h>
 
 // C API
 
@@ -639,12 +639,13 @@ TEST(decimal128, rand) {
   std::uniform_int_distribution<int64_t> distrib(1, 1000000000);
   for (int i = 0; i < 1000; ++i) {
     int64_t r = distrib(gen);
-    std::cout<<"random value "<<r<<std::endl;
-    r/=1000000;
-    
+    std::cout << "random value " << r << std::endl;
+    r /= 1000000;
+
     // divide the random integer by 10^6
     // get fraction that potentially starts with zeros
-    // print the original number, convert it to decimal, take the decimal and write down string
+    // print the original number, convert it to decimal, take the decimal and
+    // write down string
   }
 }
 
