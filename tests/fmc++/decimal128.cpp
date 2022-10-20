@@ -557,22 +557,22 @@ TEST(decimal128, ostream) {
   str.clear();
   str << std::numeric_limits<fmc::decimal128>::infinity();
   res = str.str();
-  ASSERT_EQ(res.size(), 8);
-  ASSERT_STREQ(res.c_str(), "Infinity");
+  ASSERT_EQ(res.size(), 3);
+  ASSERT_STREQ(res.c_str(), "inf");
 
   str.str("");
   str.clear();
   str << std::numeric_limits<fmc::decimal128>::quiet_NaN();
   res = str.str();
   ASSERT_EQ(res.size(), 3);
-  ASSERT_STREQ(res.c_str(), "NaN");
+  ASSERT_STREQ(res.c_str(), "nan");
 
   str.str("");
   str.clear();
   str << std::numeric_limits<fmc::decimal128>::signaling_NaN();
   res = str.str();
-  ASSERT_EQ(res.size(), 4);
-  ASSERT_STREQ(res.c_str(), "sNaN");
+  ASSERT_EQ(res.size(), 3);
+  ASSERT_STREQ(res.c_str(), "nan");
 
   str.str("");
   str.clear();
