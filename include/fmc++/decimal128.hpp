@@ -31,7 +31,6 @@ class decimal128 : public fmc_decimal128_t {
 public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int64_t i) : decimal128(fmc_decimal128_from_int(i)) {}
-  decimal128(double i) : decimal128(fmc_decimal128_from_double(i)) {}
   decimal128 &operator=(const fmc_decimal128_t &a) { return *this; }
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
     return static_cast<decimal128 &>(a);
@@ -51,7 +50,6 @@ public:
   decimal128 operator-() const noexcept {
     return upcast(fmc_decimal128_negate(*this));
   }
-  operator double() const noexcept { return fmc_decimal128_to_double(*this); }
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) noexcept {
