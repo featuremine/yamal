@@ -42,7 +42,7 @@ void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src) {
   decQuadFromString((decQuad *)dest, src, get_context());
 }
 
-void fmc_decimal128_to_str(const fmc_decimal128_t *src, char *dest) {
+void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src) {
   decQuadToString((const decQuad *)src, dest);
 }
 

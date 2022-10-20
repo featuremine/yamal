@@ -1773,12 +1773,10 @@ char *decFloatToString(const decFloat *df, char *string) {
     exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
   } else {                        /* IS special */
     if (exp == DECFLOAT_Inf) {    /* infinity */
-      strcpy(c, "Infinity");
+      strcpy(c, "inf");
       return string; /* easy */
     }
-    if (sourhi & 0x02000000)
-      *c++ = 's';     /* sNaN */
-    strcpy(c, "NaN"); /* complete word */
+    strcpy(c, "nan"); /* complete word */
     c += 3;           /* step past */
 /* quick exit if the payload is zero */
 #if DECPMAX == 7
@@ -1788,8 +1786,7 @@ char *decFloatToString(const decFloat *df, char *string) {
     if (sourlo == 0 && (sourhi & 0x0003ffff) == 0)
       return string;
 #elif DECPMAX == 34
-    if (sourlo == 0 && sourml == 0 && sourmh == 0 && (sourhi & 0x00003fff) == 0)
-      return string;
+    return string;
 #endif
     /* otherwise drop through to add integer; set correct exp etc. */
     exp = 0;
@@ -1877,8 +1874,13 @@ char *decFloatToString(const decFloat *df, char *string) {
       for (; s >= dotat; s -= 4, t -= 4)
         UBFROMUI(t, UBTOUI(s));
       *dotat = '.';
-      c++; /* length increased by one */
-    }      /* need dot? */
+      while (*c == '0') {
+        --c;
+      }
+      if (*c != '.') {
+        c++; /* length increased by one */
+      }
+    } /* need dot? */
 
     /* finally add the E-part, if needed; it will never be 0, and has */
     /* a maximum length of 3 or 4 digits (asserted above) */

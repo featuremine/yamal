@@ -22,6 +22,7 @@
 #include "fmc/decimal128.h"
 
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <ostream>
 
@@ -31,7 +32,7 @@ class decimal128 : public fmc_decimal128_t {
 public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int64_t i) { fmc_decimal128_from_int(this, i); }
-  decimal128() : decimal128(0) {}
+  decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) { return *this; }
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
     return static_cast<decimal128 &>(a);
@@ -191,7 +192,7 @@ public:
 
 inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) noexcept {
   char str[FMC_DECIMAL128_STR_SIZE];
-  fmc_decimal128_to_str(&r, str);
+  fmc_decimal128_to_str(str, &r);
   os << str;
   return os;
 }
