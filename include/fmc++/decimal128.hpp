@@ -191,7 +191,7 @@ public:
 
 inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) noexcept {
   char str[FMC_DECIMAL128_STR_SIZE];
-  fmc_decimal128_to_str(&r, str);
+  fmc_decimal128_to_str(str, &r);
   os << str;
   return os;
 }
