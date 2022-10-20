@@ -24,6 +24,7 @@
 #include "fmc++/decimal128.hpp"
 #include <fmc++/gtestwrap.hpp>
 #include <string.h>
+#include <random>
 
 // C API
 
@@ -631,6 +632,21 @@ TEST(decimal128, cppstreams) {
   fmc::decimal128 b(0.0);
   ss >> b;
   ASSERT_EQ(a, b);
+}
+
+TEST(decimal128, rand) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int64_t> distrib(1, 1000000000);
+  for (int i = 0; i < 1000; ++i) {
+    int64_t r = distrib(gen);
+    std::cout<<"random value "<<r<<std::endl;
+    r/=1000000;
+    
+    // divide the random integer by 10^6
+    // get fraction that potentially starts with zeros
+    // print the original number, convert it to decimal, take the decimal and write down string
+  }
 }
 
 GTEST_API_ int main(int argc, char **argv) {

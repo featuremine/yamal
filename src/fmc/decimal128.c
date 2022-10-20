@@ -119,6 +119,7 @@ fmc_decimal128_t fmc_decimal128_from_double(double n) {
   snprintf(str, FMC_DECIMAL128_STR_SIZE, "%f", n);
   fmc_decimal128_t res;
   fmc_decimal128_from_str(&res, str);
+
   return res;
 }
 
