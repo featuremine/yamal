@@ -60,3 +60,16 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME fmc_strings COMMAND tests_fmc_strings)
+
+add_executable(
+    tests_fmc_decimal128
+    "decimal128.cpp"
+)
+target_link_libraries(
+    tests_fmc_decimal128
+    PRIVATE
+    ytp
+    fmc++
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_decimal128 COMMAND tests_fmc_decimal128)
