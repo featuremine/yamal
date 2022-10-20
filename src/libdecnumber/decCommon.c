@@ -1880,7 +1880,7 @@ char *decFloatToString(const decFloat *df, char *string) {
       if (*c != '.') {
         c++; /* length increased by one */
       }
-    }      /* need dot? */
+    } /* need dot? */
 
     /* finally add the E-part, if needed; it will never be 0, and has */
     /* a maximum length of 3 or 4 digits (asserted above) */
