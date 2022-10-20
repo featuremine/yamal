@@ -100,47 +100,58 @@ inline decimal128 operator/(const decimal128 &a, const int64_t &b) noexcept {
 
 } // namespace fmc
 
-inline bool operator==(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline bool operator==(const fmc_decimal128_t &a,
+                       const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) == fmc::decimal128::upcast(b);
 }
 
-inline bool operator!=(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline bool operator!=(const fmc_decimal128_t &a,
+                       const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) != fmc::decimal128::upcast(b);
 }
 
-inline bool operator<(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline bool operator<(const fmc_decimal128_t &a,
+                      const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) < fmc::decimal128::upcast(b);
 }
 
-inline bool operator<=(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline bool operator<=(const fmc_decimal128_t &a,
+                       const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) <= fmc::decimal128::upcast(b);
 }
 
-inline bool operator>(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline bool operator>(const fmc_decimal128_t &a,
+                      const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) > fmc::decimal128::upcast(b);
 }
 
-inline bool operator>=(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline bool operator>=(const fmc_decimal128_t &a,
+                       const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) >= fmc::decimal128::upcast(b);
 }
 
-inline fmc_decimal128_t operator+(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline fmc_decimal128_t operator+(const fmc_decimal128_t &a,
+                                  const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) + fmc::decimal128::upcast(b);
 }
 
-inline fmc_decimal128_t operator-(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline fmc_decimal128_t operator-(const fmc_decimal128_t &a,
+                                  const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) - fmc::decimal128::upcast(b);
 }
 
-inline fmc_decimal128_t operator*(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline fmc_decimal128_t operator*(const fmc_decimal128_t &a,
+                                  const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) * fmc::decimal128::upcast(b);
 }
 
-inline fmc_decimal128_t operator/(const fmc_decimal128_t &a, const fmc_decimal128_t &b) noexcept {
+inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
+                                  const fmc_decimal128_t &b) noexcept {
   return fmc::decimal128::upcast(a) / fmc::decimal128::upcast(b);
 }
 
-inline fmc_decimal128_t operator/(const fmc_decimal128_t &a, const int64_t &b) noexcept {
+inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
+                                  const int64_t &b) noexcept {
   return fmc::decimal128::upcast(a) / b;
 }
 

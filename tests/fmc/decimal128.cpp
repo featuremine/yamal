@@ -294,7 +294,6 @@ TEST(decimal128, cppdivide) {
   fmc_decimal128_t ppb = fmc_decimal128_from_double(5.0);
   fmc_decimal128_t ppc = fmc_decimal128_from_double(2.0);
   ASSERT_EQ(ppa / ppb, ppc);
-
 }
 
 TEST(decimal128, cppint_div) {
