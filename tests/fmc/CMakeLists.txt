@@ -165,18 +165,6 @@ target_link_libraries(
 )
 add_test(NAME fmc_priority_queue COMMAND tests_fmc_priority_queue)
 
-add_executable(
-    tests_fmc_decimal128
-    "decimal128.cpp"
-)
-target_link_libraries(
-    tests_fmc_decimal128
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME fmc_decimal128 COMMAND tests_fmc_decimal128)
-
 if(BUILD_TOOLS)
     add_test(
         NAME fmc_yamal-run

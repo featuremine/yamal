@@ -195,12 +195,6 @@ install(
     PATTERN "*.h"
 )
 install(
-    DIRECTORY "${PROJECT_SOURCE_DIR}/include/ytp"
-    DESTINATION "./include"
-    FILES_MATCHING
-    PATTERN "*.h"
-)
-install(
     DIRECTORY "${PROJECT_BINARY_DIR}/include/ytp"
     DESTINATION "./include"
     FILES_MATCHING
