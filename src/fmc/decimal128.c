@@ -29,8 +29,6 @@
 extern const uint16_t BIN2DPD[1000]; /* 0-999 -> DPD 	      */
 
 static decContext *get_context() {
-  // __thread identifier supported by clang and gcc
-  // https://www.ibm.com/docs/en/i/7.1?topic=specifiers-thread-storage-class-specifier
   static __thread bool init = false;
   static __thread decContext set;
   if (!init) {
