@@ -85,7 +85,7 @@ TEST(decimal128, from_int_low) {
 TEST(decimal128, from_int_extreme) {
   int64_t max = std::numeric_limits<int64_t>::max();
   fmc_decimal128_t a;
-  fmc_decimal128_from_int(&a,max);
+  fmc_decimal128_from_int(&a, max);
   char str[256];
   fmc_decimal128_to_str(&a, str);
   ASSERT_STREQ(str, "9223372036854775807");
@@ -293,7 +293,6 @@ TEST(decimal128, cppconstructor) {
   fmc::decimal128 ppc;
   ppa = ppa - ppa;
   ASSERT_TRUE(fmc_decimal128_equal(&ppa, &ppc));
-
 }
 
 TEST(decimal128, cppdivide) {
