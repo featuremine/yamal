@@ -289,6 +289,11 @@ TEST(decimal128, cppconstructor) {
   fmc::decimal128 ppb(a);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ppa));
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ppb));
+
+  fmc::decimal128 ppc;
+  ppa = ppa - ppa;
+  ASSERT_TRUE(fmc_decimal128_equal(&ppa, &ppc));
+
 }
 
 TEST(decimal128, cppdivide) {
