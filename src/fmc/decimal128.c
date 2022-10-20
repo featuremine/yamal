@@ -48,49 +48,46 @@ void fmc_decimal128_to_str(const fmc_decimal128_t *src, char *dest) {
   decQuadToString((const decQuad *)src, dest);
 }
 
-bool fmc_decimal128_less(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
+bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
+                         const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs,
-                 get_context());
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return !decQuadIsZero(&res) && decQuadIsSigned(&res);
 }
-bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
+bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs,
-                 get_context());
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res) || decQuadIsSigned(&res);
 }
-bool fmc_decimal128_greater(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
+bool fmc_decimal128_greater(const fmc_decimal128_t *lhs,
+                            const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs,
-                 get_context());
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return !decQuadIsZero(&res) && !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs,
                                      const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs,
-                 get_context());
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res) || !decQuadIsSigned(&res);
 }
-bool fmc_decimal128_equal(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
+bool fmc_decimal128_equal(const fmc_decimal128_t *lhs,
+                          const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs,
-                 get_context());
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res);
 }
 
 void fmc_decimal128_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                                    const fmc_decimal128_t *rhs) {
-  decQuadDivide((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs,
-                get_context());
+                        const fmc_decimal128_t *rhs) {
+  decQuadDivide((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs, get_context());
 }
 
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   uint64_t u = (uint64_t)n; /* copy as bits */
   uint64_t encode;          /* work */
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] =
-      0x22080000; /* always */
+  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = 0x22080000; /* always */
   ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 1] = 0;
   ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 2] = 0;
   if (n < 0) { /* handle -n with care */
@@ -117,9 +114,8 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
 }
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
-  uint64_t encode; /* work */
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] =
-      0x22080000; /* always */
+  uint64_t encode;                                                 /* work */
+  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = 0x22080000; /* always */
   ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 1] = 0;
   ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 2] = 0;
   encode = ((uint64_t)BIN2DPD[u % 1000]);
@@ -140,7 +136,7 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
 }
 
 void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                                    const fmc_decimal128_t *rhs) {
+                        const fmc_decimal128_t *rhs) {
   decQuadAdd((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs, get_context());
 }
 
@@ -154,13 +150,13 @@ void fmc_decimal128_dec(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
 }
 
 void fmc_decimal128_sub(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                                    const fmc_decimal128_t *rhs) {
+                        const fmc_decimal128_t *rhs) {
   decQuadSubtract((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs,
                   get_context());
 }
 
 void fmc_decimal128_mul(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                                    const fmc_decimal128_t *rhs) {
+                        const fmc_decimal128_t *rhs) {
   decQuadMultiply((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs,
                   get_context());
 }

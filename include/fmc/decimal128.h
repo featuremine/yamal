@@ -42,21 +42,38 @@ FMMODFUNC void fmc_decimal128_to_str(const fmc_decimal128_t *src, char *dest);
 FMMODFUNC void fmc_decimal128_from_uint(fmc_decimal128_t *dest, uint64_t src);
 FMMODFUNC void fmc_decimal128_from_int(fmc_decimal128_t *dest, int64_t src);
 
-FMMODFUNC bool fmc_decimal128_less(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC bool fmc_decimal128_greater(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC bool fmc_decimal128_equal(const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
+FMMODFUNC bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
+                                   const fmc_decimal128_t *rhs);
+FMMODFUNC bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs,
+                                            const fmc_decimal128_t *rhs);
+FMMODFUNC bool fmc_decimal128_greater(const fmc_decimal128_t *lhs,
+                                      const fmc_decimal128_t *rhs);
+FMMODFUNC bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs,
+                                               const fmc_decimal128_t *rhs);
+FMMODFUNC bool fmc_decimal128_equal(const fmc_decimal128_t *lhs,
+                                    const fmc_decimal128_t *rhs);
 
-FMMODFUNC void fmc_decimal128_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs, int64_t rhs);
-FMMODFUNC void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC void fmc_decimal128_inc(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC void fmc_decimal128_sub(fmc_decimal128_t *res, const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC void fmc_decimal128_dec(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
-FMMODFUNC void fmc_decimal128_mul(fmc_decimal128_t *res, const fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_div(fmc_decimal128_t *res,
+                                  const fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_int_div(fmc_decimal128_t *res,
+                                      const fmc_decimal128_t *lhs, int64_t rhs);
+FMMODFUNC void fmc_decimal128_add(fmc_decimal128_t *res,
+                                  const fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_inc(fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_sub(fmc_decimal128_t *res,
+                                  const fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_dec(fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_mul(fmc_decimal128_t *res,
+                                  const fmc_decimal128_t *lhs,
+                                  const fmc_decimal128_t *rhs);
 
-FMMODFUNC void fmc_decimal128_round(fmc_decimal128_t *dest, const fmc_decimal128_t *src);
+FMMODFUNC void fmc_decimal128_round(fmc_decimal128_t *dest,
+                                    const fmc_decimal128_t *src);
 
 FMMODFUNC bool fmc_decimal128_is_nan(const fmc_decimal128_t *val);
 FMMODFUNC bool fmc_decimal128_is_qnan(const fmc_decimal128_t *val);
@@ -71,8 +88,10 @@ FMMODFUNC void fmc_decimal128_inf(fmc_decimal128_t *res);
 FMMODFUNC void fmc_decimal128_max(fmc_decimal128_t *res);
 FMMODFUNC void fmc_decimal128_min(fmc_decimal128_t *res);
 
-FMMODFUNC void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val);
-FMMODFUNC void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val);
+FMMODFUNC void fmc_decimal128_abs(fmc_decimal128_t *res,
+                                  const fmc_decimal128_t *val);
+FMMODFUNC void fmc_decimal128_negate(fmc_decimal128_t *res,
+                                     const fmc_decimal128_t *val);
 
 #ifdef __cplusplus
 }
