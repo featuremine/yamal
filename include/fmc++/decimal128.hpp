@@ -183,6 +183,11 @@ inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
   return fmc::decimal128::upcast(a) / fmc::decimal128::upcast(b);
 }
 
+inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
+                                  const int64_t &b) noexcept {
+  return fmc::decimal128::upcast(a) / b;
+}
+
 namespace std {
 
 template <> class numeric_limits<fmc::decimal128> {
