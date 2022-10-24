@@ -20,6 +20,7 @@
 #pragma once
 
 #include "fmc/decimal128.h"
+#include "fmc++/convert.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -103,6 +104,25 @@ inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
   fmc_decimal128_div(&res, &a, &b);
   return res;
 }
+
+template <> struct conversion<fmc::decimal128, double> {
+  double operator()(fmc::decimal128 x) {
+    char str[FMC_DECIMAL128_STR_SIZE];
+    fmc_decimal128_to_str(str, &x);
+    char *ptr = nullptr;
+    return strtod(str, &ptr);
+  }
+};
+
+template <> struct conversion<double, fmc::decimal128> {
+  fmc::decimal128 operator()(double x) {
+    fmc_decimal128_t res;
+    char str[FMC_DECIMAL128_STR_SIZE];
+    snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", x);
+    fmc_decimal128_from_str(&res, str);
+    return res;
+  }
+};
 
 } // namespace fmc
 
