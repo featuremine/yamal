@@ -56,6 +56,8 @@ FMMODFUNC bool fmc_decimal128_equal(const fmc_decimal128_t *lhs,
 FMMODFUNC void fmc_decimal128_div(fmc_decimal128_t *res,
                                   const fmc_decimal128_t *lhs,
                                   const fmc_decimal128_t *rhs);
+FMMODFUNC void fmc_decimal128_int_div(fmc_decimal128_t *res,
+                                      const fmc_decimal128_t *lhs, int64_t rhs);
 FMMODFUNC void fmc_decimal128_add(fmc_decimal128_t *res,
                                   const fmc_decimal128_t *lhs,
                                   const fmc_decimal128_t *rhs);

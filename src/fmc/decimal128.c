@@ -82,6 +82,13 @@ void fmc_decimal128_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
   decQuadDivide((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs, get_context());
 }
 
+void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
+                            int64_t rhs) {
+  fmc_decimal128_t drhs;
+  fmc_decimal128_from_int(&drhs, rhs);
+  decQuadDivideInteger((decQuad *)res, (decQuad *)lhs, (decQuad *)&drhs, get_context());
+}
+
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   uint64_t u = (uint64_t)n; /* copy as bits */
   uint64_t encode;          /* work */

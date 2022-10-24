@@ -105,6 +105,13 @@ inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
   return res;
 }
 
+inline decimal128 operator/(const decimal128 &a, const int64_t &b) noexcept {
+  decimal128 db(b);
+  decimal128 res;
+  fmc_decimal128_div(&res, &a, &db);
+  return res;
+}
+
 template <> struct conversion<fmc_decimal128_t, double> {
   double operator()(fmc_decimal128_t x) {
     char str[FMC_DECIMAL128_STR_SIZE];
