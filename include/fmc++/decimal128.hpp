@@ -105,8 +105,8 @@ inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
   return res;
 }
 
-template <> struct conversion<fmc::decimal128, double> {
-  double operator()(fmc::decimal128 x) {
+template <> struct conversion<fmc_decimal128_t, double> {
+  double operator()(fmc_decimal128_t x) {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, &x);
     char *ptr = nullptr;
@@ -114,8 +114,8 @@ template <> struct conversion<fmc::decimal128, double> {
   }
 };
 
-template <> struct conversion<double, fmc::decimal128> {
-  fmc::decimal128 operator()(double x) {
+template <> struct conversion<double, fmc_decimal128_t> {
+  fmc_decimal128_t operator()(double x) {
     fmc_decimal128_t res;
     char str[FMC_DECIMAL128_STR_SIZE];
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", x);
