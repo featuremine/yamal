@@ -205,6 +205,39 @@ inline bool cmp_read_item(cmp_ctx_t *ctx, std::string *arg) {
   return cmp_read_string(ctx, *arg);
 }
 
+inline bool cmp_read_item(cmp_ctx_t *ctx, fmc_decimal128_t *arg) {
+  cmp_object_t obj;
+  if (!cmp_read_object(ctx, &obj)) {
+    return false;
+  }
+  if (cmp_object_is_str(&obj)) {
+    char buf[FMC_DECIMAL128_STR_SIZE];
+    uint32_t sz = 0;
+    if (!cmp_object_as_str(&obj, &sz) || sz >= FMC_DECIMAL128_STR_SIZE) {
+      return false;
+    }
+    if (!cmp_object_to_str(ctx, &obj, buf, sz)) {
+      return false;
+    }
+    fmc_decimal128_from_str(arg, buf);
+  } else if (cmp_object_is_sinteger(&obj)) {
+    int64_t num = 0;
+    if (!cmp_object_as_sinteger(&obj, &num)) {
+      return false;
+    }
+    fmc_decimal128_from_int(arg, num);
+  } else if (cmp_object_is_uinteger(&obj)) {
+    uint64_t num = 0;
+    if (!cmp_object_as_uinteger(&obj, &num)) {
+      return false;
+    }
+    fmc_decimal128_from_uint(arg, num);
+  } else {
+    return false;
+  }
+  return true;
+}
+
 template <class... Args>
 bool cmp_read_many(cmp_ctx_t *ctx, uint32_t *left, Args *...args) {
   auto read_one = [ctx, left](auto *arg) {
