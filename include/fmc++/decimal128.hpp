@@ -26,7 +26,6 @@
 #include <cstring>
 #include <limits>
 #include <ostream>
-#include <sstream>
 
 namespace fmc {
 
@@ -238,9 +237,9 @@ inline ostream &operator<<(ostream &os, const fmc_decimal128_t &r) noexcept {
 }
 
 inline string to_string(const fmc::decimal128 &r) noexcept {
-  ostringstream s;
-  s<<r;
-  return s.str();
+  char str[FMC_DECIMAL128_STR_SIZE];
+  fmc_decimal128_to_str(str, &r);
+  return string(str);
 }
 
 inline string to_string(const fmc_decimal128_t &r) noexcept {
