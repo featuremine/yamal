@@ -23,10 +23,21 @@
 #include "fmc/decimal128.h"
 
 #include "decQuad.h"
+#include "decContext.h"
+#include "decNumberLocal.h"
 
 #include <stdlib.h>
 
-extern const uint16_t BIN2DPD[1000]; /* 0-999 -> DPD 	      */
+#define DECBYTES DECQUAD_Bytes
+#define DECBIAS DECQUAD_Bias
+#define DECECONL DECQUAD_EconL
+
+#define GETECON(df)                                                            \
+  ((Int)((DFWORD((df), 0) & 0x03ffffff) >> (32 - 6 - DECECONL)))
+/* Get the biased exponent similarly			      */
+#define GETEXP(df) ((Int)(DECCOMBEXP[DFWORD((df), 0) >> 26] + GETECON(df)))
+/* Get the unbiased exponent similarly			      */
+#define GETEXPUN(df) ((Int)GETEXP(df) - DECBIAS)
 
 static decContext *get_context() {
   static __thread bool init = false;
@@ -118,6 +129,87 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   ((decQuad *)res)->longs[0] = encode;
 }
 
+static uint64_t decToInt64(const decQuad *df, decContext *set, enum rounding rmode,
+                           Flag exact, Flag unsign) {
+  //TODO: Fix logic to properly support int64
+  int64_t exp;                      /* exponent */
+  uint64_t sourhi, sourpen, sourlo; /* top word from source decQuad .. */
+  uint64_t hi, lo;                  /* .. penultimate, least, etc. */
+  decQuad zero, result;        /* work */
+  int64_t i;                        /* .. */
+
+  /* Start decoding the argument */
+  sourhi = DFWORD(df, 0);         /* top word */
+  exp = DECCOMBEXP[sourhi >> 26]; /* get exponent high bits (in place) */
+  if (EXPISSPECIAL(exp)) {        /* is special? */
+    set->status |= DEC_Invalid_operation; /* signal */
+    return 0;
+  }
+
+  /* Here when the argument is finite */
+  if (GETEXPUN(df) == 0)
+    result = *df;                              /* already a true integer */
+  else {                                       /* need to round to integer */
+    enum rounding saveround;                   /* saver */
+    uint64_t savestatus;                           /* .. */
+    saveround = set->round;                    /* save rounding mode .. */
+    savestatus = set->status;                  /* .. and status */
+    set->round = rmode;                        /* set mode */
+    decQuadZero(&zero);                       /* make 0E+0 */
+    set->status = 0;                           /* clear */
+    decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
+    set->round = saveround;                    /* restore rounding mode .. */
+    if (exact)
+      set->status |= savestatus; /* include Inexact */
+    else
+      set->status = savestatus; /* .. or just original status */
+  }
+
+/* only the last four declets of the coefficient can contain */
+/* non-zero; check for others (and also NaN or Infinity from the */
+/* Quantize) first (see DFISZERO for explanation): */
+/* decQuadShow(&result, "sofar"); */
+  if ((DFWORD(&result, 2) & 0xffffff00) != 0 || DFWORD(&result, 1) != 0 ||
+      (DFWORD(&result, 0) & 0x1c003fff) != 0 ||
+      (DFWORD(&result, 0) & 0x60000000) == 0x60000000) {
+    set->status |= DEC_Invalid_operation; /* Invalid or out of range */
+    return 0;
+  }
+  /* get last twelve digits of the coefficent into hi & ho, base */
+  /* 10**9 (see GETCOEFFBILL): */
+  sourlo = DFWORD(&result, DECWORDS - 1);
+  lo = DPD2BIN[sourlo & 0x3ff] + DPD2BINK[(sourlo >> 10) & 0x3ff] +
+       DPD2BINM[(sourlo >> 20) & 0x3ff];
+  sourpen = DFWORD(&result, DECWORDS - 2);
+  hi = DPD2BIN[((sourpen << 2) | (sourlo >> 30)) & 0x3ff];
+
+  /* according to request, check range carefully */
+  if (unsign) {
+    if (hi > 4 || (hi == 4 && lo > 294967295) ||
+        (hi + lo != 0 && DFISSIGNED(&result))) {
+      set->status |= DEC_Invalid_operation; /* out of range */
+      return 0;
+    }
+    return hi * BILLION + lo;
+  }
+  /* signed */
+  if (hi > 2 || (hi == 2 && lo > 147483647)) {
+    /* handle the usual edge case */
+    if (lo == 147483648 && hi == 2 && DFISSIGNED(&result))
+      return 0x80000000;
+    set->status |= DEC_Invalid_operation; /* truly out of range */
+    return 0;
+  }
+  i = hi * BILLION + lo;
+  if (DFISSIGNED(&result))
+    i = -i;
+  return (uint64_t)i;
+}
+
+void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src) {
+  *dest = decToInt64((decQuad*)src, get_context(), DEC_ROUND_HALF_UP, 1, 0);
+}
+
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   uint64_t encode;                                                 /* work */
   ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = 0x22080000; /* always */
@@ -138,6 +230,10 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   encode |= ((uint64_t)BIN2DPD[u % 1000]) << 60;
   ((decQuad *)res)->longs[0] = encode;
   ((decQuad *)res)->longs[1] |= u >> 4;
+}
+
+void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src) {
+  *dest = decToInt64((decQuad*)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
 }
 
 void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
