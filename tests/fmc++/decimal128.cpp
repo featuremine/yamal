@@ -626,6 +626,80 @@ TEST(decimal128, cppstreams) {
   ASSERT_EQ(a, b);
 }
 
+void keep_some_zeros(char *str, int n) {
+  for (auto i = strlen(str); --i > 0;) {
+    if (str[i] != '0') {
+      for (auto j = i; j > 0; --j) {
+        if (str[j] == '.') {
+          if (i + n == j) {
+            str[j] = '\0';
+          } else {
+            str[i + n + 1] = '\0';
+          }
+        }
+      }
+      break;
+    }
+  }
+}
+
+TEST(decimal128, identity_double) {
+  char float_str[256];
+  char dec128_str[256];
+  std::vector<double> decimals;
+  std::vector<double> integers;
+  std::vector<double> signs = {1.0, -1.0};
+  for (double decimal = 0.0000019073486328125; decimal < 1.0; decimal *= 2.0) {
+    decimals.push_back(decimal);
+  }
+  for (double integer = 1.0; integer <= 10779215329.0; integer *= 47.0) {
+    integers.push_back(integer);
+  }
+  decimals.push_back(0.0);
+  integers.push_back(0.0);
+  for (auto &sign : signs) {
+    for (auto &decimal : decimals) {
+      for (auto &integer : integers) {
+        for (int keep_zeros = 12; keep_zeros >= 0; keep_zeros -= 3) {
+          double number = (decimal + integer) * sign;
+          sprintf(float_str, "%.33f", number);
+          keep_some_zeros(float_str, keep_zeros);
+          std::cout << float_str << std::endl;
+          fmc_decimal128_t a;
+          fmc_decimal128_from_str(&a, float_str);
+          fmc_decimal128_to_str(dec128_str, &a);
+          keep_some_zeros(float_str, 0);
+          EXPECT_STREQ(dec128_str, float_str);
+        }
+      }
+    }
+  }
+}
+
+TEST(decimal128, identity_infnan) {
+  char float_str[256];
+  char dec128_str[256];
+
+  auto to_str = [&](double number) {
+    fmc_decimal128_t a;
+    sprintf(float_str, "%.33f", number);
+    fmc_decimal128_from_str(&a, float_str);
+    fmc_decimal128_to_str(dec128_str, &a);
+  };
+
+  to_str(std::numeric_limits<double>::quiet_NaN());
+  EXPECT_STREQ(dec128_str, float_str);
+
+  to_str(-std::numeric_limits<double>::quiet_NaN());
+  EXPECT_STREQ(dec128_str, float_str);
+
+  to_str(std::numeric_limits<double>::infinity());
+  EXPECT_STREQ(dec128_str, float_str);
+
+  to_str(-std::numeric_limits<double>::infinity());
+  EXPECT_STREQ(dec128_str, float_str);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
