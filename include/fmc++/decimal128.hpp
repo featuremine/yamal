@@ -293,14 +293,6 @@ inline bool isnan(fmc_decimal128_t x) noexcept {
   return std::isnan(fmc::decimal128::upcast(x));
 }
 
-template <> struct hash<fmc_decimal128_t> {
-  std::size_t operator()(const fmc_decimal128_t &val) const {
-    uint64_t *vals = (uint64_t*)&val.bytes;
-    return fmc_hash_combine(std::hash<uint64_t>{}(vals[0]),
-                            std::hash<uint64_t>{}(vals[1]));
-  }
-};
-
 } // namespace std
 
 namespace fmc {
