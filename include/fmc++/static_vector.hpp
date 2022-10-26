@@ -52,10 +52,10 @@ template <typename T, std::size_t N> struct static_vector {
     }
   }
   static_vector(static_vector &&v) noexcept : end_iterator(begin() + v.size()) {
-    v.end_iterator = v.begin();
     for (size_type i = size_type(); i < size(); ++i) {
       new (&payload.arr[i]) T(std::move(v.payload.arr[i]));
     }
+    v.clear();
   }
   const static_vector &operator=(const static_vector &v) {
     auto assign_count = std::min(size(), v.size());
