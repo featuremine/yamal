@@ -22,6 +22,7 @@
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
 #include "fmc++/convert.hpp"
+#include "fmc++/side.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -301,3 +302,13 @@ template <> struct hash<fmc_decimal128_t> {
 };
 
 } // namespace std
+
+namespace fmc {
+
+template <> struct sided_initializer<fmc::decimal128> {
+  static constexpr bool is_specialized = true;
+  static fmc::decimal128 min() noexcept { return std::numeric_limits<fmc::decimal128>::min(); }
+  static fmc::decimal128 max() noexcept { return std::numeric_limits<fmc::decimal128>::max(); }
+};
+
+} // namespace fmc
