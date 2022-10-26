@@ -196,9 +196,7 @@ TEST(static_vector, test_type_1) {
   EXPECT_EQ(counters[&s.vector[0]].assigned_move_to, 0);
   EXPECT_EQ(s.vector[0].value, 6);
 
-  static_vector bigger;
-  bigger.emplace_back(15);
-  bigger.emplace_back(16);
+  static_vector bigger({test_type(15), test_type(16)});
 
   s.vector = bigger;
 
@@ -227,7 +225,7 @@ TEST(static_vector, test_type_1) {
   EXPECT_EQ(s.vector[1].value, 16);
 
   static_vector smaller;
-  smaller.emplace_back(31);
+  smaller = {test_type(31)};
 
   s.vector = smaller;
 

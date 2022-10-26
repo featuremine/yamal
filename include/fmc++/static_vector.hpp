@@ -22,6 +22,7 @@
 #include <fmc++/mpl.hpp>
 
 #include <algorithm>
+#include <initializer_list>
 #include <iterator>
 
 namespace fmc {
@@ -44,6 +45,11 @@ template <typename T, std::size_t N> struct static_vector {
   static_vector(std::size_t n) noexcept : end_iterator(begin() + n) {
     for (size_type i = size_type(); i < size(); ++i) {
       new (&payload.arr[i]) T();
+    }
+  }
+  static_vector(std::initializer_list<value_type> l) : end_iterator(begin()) {
+    for (auto &v : l) {
+      push_back(v);
     }
   }
   static_vector(const static_vector &v) : end_iterator(begin() + v.size()) {
@@ -82,6 +88,20 @@ template <typename T, std::size_t N> struct static_vector {
       push_back(std::move(*it));
     }
     v.clear();
+    return *this;
+  }
+  static_vector &operator=(std::initializer_list<value_type> l) {
+    auto assign_count = std::min(size(), l.size());
+    auto it = l.begin();
+    for (size_type i = size_type(); i < assign_count; ++i) {
+      payload.arr[i] = *(it++);
+    }
+    for (size_type i = size(); i-- > assign_count;) {
+      pop_back();
+    }
+    for (; it != l.end(); ++it) {
+      push_back(*it);
+    }
     return *this;
   }
 
