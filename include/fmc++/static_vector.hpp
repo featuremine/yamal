@@ -21,7 +21,8 @@
 
 #include <fmc++/mpl.hpp>
 
-#include <array>
+#include <algorithm>
+#include <iterator>
 
 namespace fmc {
 
@@ -39,35 +40,63 @@ template <typename T, std::size_t N> struct static_vector {
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
   static_vector() noexcept : end_iterator(begin()) {}
+  ~static_vector() noexcept { clear(); }
   static_vector(std::size_t n) noexcept : end_iterator(begin() + n) {
-    fmc_runtime_error_unless(n <= N) << "static_vector overflow";
+    for (size_type i = size_type(); i < size(); ++i) {
+      new (&payload.arr[i]) T();
+    }
   }
-  static_vector(const static_vector &v)
-      : impl(v.impl), end_iterator(begin() + v.size()) {}
-  static_vector(static_vector &&v) noexcept
-      : impl(std::move(v.impl)), end_iterator(begin() + v.size()) {
+  static_vector(const static_vector &v) : end_iterator(begin() + v.size()) {
+    for (size_type i = size_type(); i < size(); ++i) {
+      new (&payload.arr[i]) T(v.payload.arr[i]);
+    }
+  }
+  static_vector(static_vector &&v) noexcept : end_iterator(begin() + v.size()) {
     v.end_iterator = v.begin();
+    for (size_type i = size_type(); i < size(); ++i) {
+      new (&payload.arr[i]) T(std::move(v.payload.arr[i]));
+    }
   }
   const static_vector &operator=(const static_vector &v) {
-    impl = v.impl;
-    end_iterator = begin() + v.size();
+    auto assign_count = std::min(size(), v.size());
+    for (size_type i = size_type(); i < assign_count; ++i) {
+      payload.arr[i] = v.payload.arr[i];
+    }
+    for (size_type i = size(); i-- > assign_count;) {
+      pop_back();
+    }
+    for (auto it = v.begin() + assign_count; it != v.end(); ++it) {
+      push_back(*it);
+    }
     return *this;
   }
   const static_vector &operator=(static_vector &&v) {
-    impl = std::move(v.impl);
-    end_iterator = begin() + v.size();
-    v.end_iterator = v.begin();
+    auto assign_count = std::min(size(), v.size());
+    for (size_type i = size_type(); i < assign_count; ++i) {
+      payload.arr[i] = std::move(v.payload.arr[i]);
+    }
+    for (size_type i = size(); i-- > assign_count;) {
+      pop_back();
+    }
+    for (auto it = v.begin() + assign_count; it != v.end(); ++it) {
+      push_back(std::move(*it));
+    }
+    v.clear();
     return *this;
   }
 
-  constexpr void fill(const value_type &v) { std::fill_n(begin(), size(), v); }
+  constexpr void fill(const value_type &v) { std::fill(begin(), end(), v); }
 
-  constexpr void clear() { end_iterator = begin(); }
+  constexpr void clear() {
+    for (size_type i = size(); i-- > size_type();) {
+      pop_back();
+    }
+  }
 
-  constexpr iterator begin() noexcept { return iterator(&impl[0]); }
+  constexpr iterator begin() noexcept { return iterator(&payload.arr[0]); }
 
   constexpr const_iterator begin() const noexcept {
-    return const_iterator(&impl[0]);
+    return const_iterator(&payload.arr[0]);
   }
 
   constexpr iterator end() noexcept { return end_iterator; }
@@ -106,25 +135,23 @@ template <typename T, std::size_t N> struct static_vector {
     return const_reverse_iterator(begin());
   }
 
-  size_type size() const noexcept { return end() - begin(); }
+  [[nodiscard]] size_type size() const noexcept { return end() - begin(); }
 
-  constexpr size_type max_size() const noexcept { return N; }
+  [[nodiscard]] constexpr size_type max_size() const noexcept { return N; }
 
-  bool empty() const noexcept { return size() == 0; }
+  [[nodiscard]] bool empty() const noexcept { return size() == 0; }
 
   constexpr reference operator[](size_type n) noexcept {
-    fmc_runtime_error_unless(n <= N) << "static_vector out of bounds";
-    return impl[n];
+    return payload.arr[n];
   }
 
   constexpr const_reference operator[](size_type n) const noexcept {
-    fmc_runtime_error_unless(n <= N) << "static_vector out of bounds";
-    return impl[n];
+    return payload.arr[n];
   }
 
-  constexpr reference at(size_type n) { return impl.at(n); }
+  constexpr reference at(size_type n) { return payload.arr[n]; }
 
-  constexpr const_reference at(size_type n) const { return impl.at(n); }
+  constexpr const_reference at(size_type n) const { return payload.arr[n]; }
 
   constexpr reference front() noexcept { return *begin(); }
 
@@ -138,27 +165,33 @@ template <typename T, std::size_t N> struct static_vector {
 
   constexpr const_pointer data() const noexcept { return &*begin(); }
 
-  void push_back(const value_type &v) {
-    fmc_runtime_error_unless(size() < max_size()) << "static_vector overflow";
-    *(end_iterator++) = v;
+  void push_back(const value_type &v) { new (end_iterator++) T(v); }
+
+  void push_back(value_type &&v) { new (end_iterator++) T(std::move(v)); }
+
+  template <typename... Arg> void emplace_back(Arg &&...arg) {
+    new (end_iterator++) T(std::forward<Arg>(arg)...);
   }
 
-  void push_back(value_type &&v) {
-    fmc_runtime_error_unless(size() < max_size()) << "static_vector overflow";
-    *(end_iterator++) = std::move(v);
-  }
-
-  void pop_back() { *(--end_iterator) = T(); }
+  void pop_back() { (--end_iterator)->~T(); }
 
 private:
-  std::array<T, N> impl;
-  typename std::array<T, N>::iterator end_iterator;
+  struct empty_t {};
+  union storage_t {
+    constexpr storage_t() noexcept : empty() {}
+    ~storage_t() {}
+    empty_t empty;
+    T arr[N];
+  };
+  storage_t payload;
+  iterator end_iterator;
 };
 
 template <typename T, std::size_t N>
 inline bool operator==(const static_vector<T, N> &lhs,
                        const static_vector<T, N> &rhs) {
-  return lhs.size() == rhs.size() && lhs.impl == rhs.impl;
+  return lhs.size() == rhs.size() &&
+         std::equal(std::begin(lhs), std::end(lhs), std::begin(rhs));
 }
 
 } // namespace fmc

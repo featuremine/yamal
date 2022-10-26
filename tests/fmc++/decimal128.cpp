@@ -664,7 +664,6 @@ TEST(decimal128, identity_double) {
           double number = (decimal + integer) * sign;
           sprintf(float_str, "%.33f", number);
           keep_some_zeros(float_str, keep_zeros);
-          std::cout << float_str << std::endl;
           fmc_decimal128_t a;
           fmc_decimal128_from_str(&a, float_str);
           fmc_decimal128_to_str(dec128_str, &a);
