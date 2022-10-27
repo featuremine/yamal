@@ -38,23 +38,32 @@ jobs:
 
   build-manylinux-arm64:
     needs: utility
-    runs-on: macos-12
-    container:
-      image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-arm64-gcc10.2.0
+    runs-on: ubuntu-20.04
     
     steps:
-    - name: test echo
-      run: echo "hello world"
 
-    - uses: actions/checkout@v3
-
-    - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+    - uses: docker/setup-qemu-action@master
       with:
-        gh_token: ${{ secrets.GITHUB_TOKEN }}
-        cpack: TGZ
-        docs: true
-        upload: ${{ needs.utility.outputs.release-check == 'release' }}
+        platforms: all
+
+    - name: Run the build process with Docker
+      uses: addnab/docker-run-action@v3
+      with:
+        image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-arm64-gcc10.2.0
+        run: uname -a
+
+    - name: test uname
+      run: uname -a
+
+    # - uses: actions/checkout@v3
+
+    # - name: Build ${{ github.event.repository.name }} with fm gcc
+    #   uses: featuremine/actions/package/build@main
+    #   with:
+    #     gh_token: ${{ secrets.GITHUB_TOKEN }}
+    #     cpack: TGZ
+    #     docs: true
+    #     upload: ${{ needs.utility.outputs.release-check == 'release' }}
 
   build-macos:
     needs: utility
