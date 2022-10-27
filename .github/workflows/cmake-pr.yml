@@ -38,7 +38,7 @@ jobs:
 
   build-manylinux-arm64:
     needs: utility
-    runs-on: ubuntu-20.04
+    runs-on: macos-12
     container:
       image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-arm64-gcc10.2.0
     
