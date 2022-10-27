@@ -22,9 +22,9 @@
 
 #include "fmc/decimal128.h"
 
-#include "decQuad.h"
 #include "decContext.h"
 #include "decNumberLocal.h"
+#include "decQuad.h"
 
 #include <stdlib.h>
 
@@ -97,7 +97,8 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
                             int64_t rhs) {
   fmc_decimal128_t drhs;
   fmc_decimal128_from_int(&drhs, rhs);
-  decQuadDivideInteger((decQuad *)res, (decQuad *)lhs, (decQuad *)&drhs, get_context());
+  decQuadDivideInteger((decQuad *)res, (decQuad *)lhs, (decQuad *)&drhs,
+                       get_context());
 }
 
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
@@ -129,13 +130,13 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   ((decQuad *)res)->longs[0] = encode;
 }
 
-static uint64_t decToInt64(const decQuad *df, decContext *set, enum rounding rmode,
-                           Flag exact, Flag unsign) {
-  //TODO: Fix logic to properly support int64
+static uint64_t decToInt64(const decQuad *df, decContext *set,
+                           enum rounding rmode, Flag exact, Flag unsign) {
+  // TODO: Fix logic to properly support int64
   int64_t exp;                      /* exponent */
   uint64_t sourhi, sourpen, sourlo; /* top word from source decQuad .. */
   uint64_t hi, lo;                  /* .. penultimate, least, etc. */
-  decQuad zero, result;        /* work */
+  decQuad zero, result;             /* work */
   int64_t i;                        /* .. */
 
   /* Start decoding the argument */
@@ -148,27 +149,27 @@ static uint64_t decToInt64(const decQuad *df, decContext *set, enum rounding rmo
 
   /* Here when the argument is finite */
   if (GETEXPUN(df) == 0)
-    result = *df;                              /* already a true integer */
-  else {                                       /* need to round to integer */
-    enum rounding saveround;                   /* saver */
-    uint64_t savestatus;                           /* .. */
-    saveround = set->round;                    /* save rounding mode .. */
-    savestatus = set->status;                  /* .. and status */
-    set->round = rmode;                        /* set mode */
+    result = *df;                             /* already a true integer */
+  else {                                      /* need to round to integer */
+    enum rounding saveround;                  /* saver */
+    uint64_t savestatus;                      /* .. */
+    saveround = set->round;                   /* save rounding mode .. */
+    savestatus = set->status;                 /* .. and status */
+    set->round = rmode;                       /* set mode */
     decQuadZero(&zero);                       /* make 0E+0 */
-    set->status = 0;                           /* clear */
+    set->status = 0;                          /* clear */
     decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
-    set->round = saveround;                    /* restore rounding mode .. */
+    set->round = saveround;                   /* restore rounding mode .. */
     if (exact)
       set->status |= savestatus; /* include Inexact */
     else
       set->status = savestatus; /* .. or just original status */
   }
 
-/* only the last four declets of the coefficient can contain */
-/* non-zero; check for others (and also NaN or Infinity from the */
-/* Quantize) first (see DFISZERO for explanation): */
-/* decQuadShow(&result, "sofar"); */
+  /* only the last four declets of the coefficient can contain */
+  /* non-zero; check for others (and also NaN or Infinity from the */
+  /* Quantize) first (see DFISZERO for explanation): */
+  /* decQuadShow(&result, "sofar"); */
   if ((DFWORD(&result, 2) & 0xffffff00) != 0 || DFWORD(&result, 1) != 0 ||
       (DFWORD(&result, 0) & 0x1c003fff) != 0 ||
       (DFWORD(&result, 0) & 0x60000000) == 0x60000000) {
@@ -207,7 +208,7 @@ static uint64_t decToInt64(const decQuad *df, decContext *set, enum rounding rmo
 }
 
 void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src) {
-  *dest = decToInt64((decQuad*)src, get_context(), DEC_ROUND_HALF_UP, 1, 0);
+  *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 0);
 }
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
@@ -233,7 +234,7 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
 }
 
 void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src) {
-  *dest = decToInt64((decQuad*)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
+  *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
 }
 
 void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
