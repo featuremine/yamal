@@ -178,11 +178,10 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
   /* get last twelve digits of the coefficent into hi & ho, base */
   /* 10**9 (see GETCOEFFBILL): */
   sourlo = DFLONG(&result, DECLONGS - 1);
-  lo = DPD2BIN[sourlo & 0x3ff] +
-       DPD2BINK[(sourlo >> 10) & 0x3ff] +
+  lo = DPD2BIN[sourlo & 0x3ff] + DPD2BINK[(sourlo >> 10) & 0x3ff] +
        DPD2BINM[(sourlo >> 20) & 0x3ff] +
        ((uint64_t)DPD2BINM[(sourlo >> 30) & 0x3ff]) * 1000 +
-       ((uint64_t)DPD2BINM[(sourlo >> 40) & 0x3ff]) * 1000000  +
+       ((uint64_t)DPD2BINM[(sourlo >> 40) & 0x3ff]) * 1000000 +
        ((uint64_t)DPD2BINM[(sourlo >> 50) & 0x3ff]) * 1000000000;
   sourpen = DFLONG(&result, DECLONGS - 2);
   hi = DPD2BIN[((sourpen << 4) | (sourlo >> 60)) & 0x3ff] +

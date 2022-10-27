@@ -376,16 +376,16 @@ typedef struct {
 #define DFBYTE(df, off) ((df)->bytes[DECBYTES - 1 - (off)])
 #define DFWORD(df, off) ((df)->words[DECWORDS - 1 - (off)])
 #define DFWWORD(dfw, off) ((dfw)->words[DECWWORDS - 1 - (off)])
-  #if DECUSE64
-    #define DFLONG(dfw, off) ((dfw)->longs[DECLONGS - 1 - (off)])
-  #endif
+#if DECUSE64
+#define DFLONG(dfw, off) ((dfw)->longs[DECLONGS - 1 - (off)])
+#endif
 #else
 #define DFBYTE(df, off) ((df)->bytes[off])
 #define DFWORD(df, off) ((df)->words[off])
 #define DFWWORD(dfw, off) ((dfw)->words[off])
-  #if DECUSE64
-    #define DFLONG(dfw, off) ((dfw)->longs[off])
-  #endif
+#if DECUSE64
+#define DFLONG(dfw, off) ((dfw)->longs[off])
+#endif
 #endif
 
 /* Tests for sign or specials, directly on DECFLOATs		      */
