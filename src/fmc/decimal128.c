@@ -132,7 +132,6 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
 
 static uint64_t decToInt64(const decQuad *df, decContext *set,
                            enum rounding rmode, Flag exact, Flag unsign) {
-  // TODO: Fix logic to properly support int64
   int64_t exp;                      /* exponent */
   uint64_t sourhi, sourpen, sourlo; /* top word from source decQuad .. */
   uint64_t hi, lo;                  /* .. penultimate, least, etc. */
@@ -166,11 +165,11 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
       set->status = savestatus; /* .. or just original status */
   }
 
-  /* only the last four declets of the coefficient can contain */
+  /* only the last seven declets of the coefficient can contain */
   /* non-zero; check for others (and also NaN or Infinity from the */
   /* Quantize) first (see DFISZERO for explanation): */
   /* decQuadShow(&result, "sofar"); */
-  if ((DFWORD(&result, 2) & 0xffffff00) != 0 || DFWORD(&result, 1) != 0 ||
+  if ((DFWORD(&result, 1) & 0xffffffc0) != 0 ||
       (DFWORD(&result, 0) & 0x1c003fff) != 0 ||
       (DFWORD(&result, 0) & 0x60000000) == 0x60000000) {
     set->status |= DEC_Invalid_operation; /* Invalid or out of range */
@@ -178,30 +177,35 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
   }
   /* get last twelve digits of the coefficent into hi & ho, base */
   /* 10**9 (see GETCOEFFBILL): */
-  sourlo = DFWORD(&result, DECWORDS - 1);
-  lo = DPD2BIN[sourlo & 0x3ff] + DPD2BINK[(sourlo >> 10) & 0x3ff] +
-       DPD2BINM[(sourlo >> 20) & 0x3ff];
-  sourpen = DFWORD(&result, DECWORDS - 2);
-  hi = DPD2BIN[((sourpen << 2) | (sourlo >> 30)) & 0x3ff];
+  sourlo = DFLONG(&result, DECLONGS - 1);
+  lo = DPD2BIN[sourlo & 0x3ff] +
+       DPD2BINK[(sourlo >> 10) & 0x3ff] +
+       DPD2BINM[(sourlo >> 20) & 0x3ff] +
+       ((uint64_t)DPD2BINM[(sourlo >> 30) & 0x3ff]) * 1000 +
+       ((uint64_t)DPD2BINM[(sourlo >> 40) & 0x3ff]) * 1000000  +
+       ((uint64_t)DPD2BINM[(sourlo >> 50) & 0x3ff]) * 1000000000;
+  sourpen = DFLONG(&result, DECLONGS - 2);
+  hi = DPD2BIN[((sourpen << 4) | (sourlo >> 60)) & 0x3ff] +
+       DPD2BINK[(sourpen >> 6) & 0x3ff];
 
   /* according to request, check range carefully */
   if (unsign) {
-    if (hi > 4 || (hi == 4 && lo > 294967295) ||
+    if (hi > 18 || (hi == 18 && lo > 446744073709551615) ||
         (hi + lo != 0 && DFISSIGNED(&result))) {
       set->status |= DEC_Invalid_operation; /* out of range */
       return 0;
     }
-    return hi * BILLION + lo;
+    return hi * 1000000000000000000 + lo;
   }
   /* signed */
-  if (hi > 2 || (hi == 2 && lo > 147483647)) {
+  if (hi > 9 || (hi == 2 && lo > 223372036854775807)) {
     /* handle the usual edge case */
-    if (lo == 147483648 && hi == 2 && DFISSIGNED(&result))
+    if (lo == 223372036854775808 && hi == 9 && DFISSIGNED(&result))
       return 0x80000000;
     set->status |= DEC_Invalid_operation; /* truly out of range */
     return 0;
   }
-  i = hi * BILLION + lo;
+  i = hi * 1000000000000000000 + lo;
   if (DFISSIGNED(&result))
     i = -i;
   return (uint64_t)i;
