@@ -1884,7 +1884,7 @@ char *decFloatToString(const decFloat *df, char *string) {
 
     /* finally add the E-part, if needed; it will never be 0, and has */
     /* a maximum length of 3 or 4 digits (asserted above) */
-    if (e != 0) {
+    if (e != 0 && !(cstart + 1 == c && cstart[0] == '0')) {
       memcpy(c, "E+", 2); /* starts with E, assume + */
       c++;
       if (e < 0) {
@@ -1950,7 +1950,13 @@ char *decFloatToString(const decFloat *df, char *string) {
     *(cstart + pre - 1) = '0';
     memcpy(cstart, "0.", 2);
   }
-  *(c + pre) = '\0'; /* terminate */
+  c += pre;
+  while (*(--c) == '0')
+    ;
+  if (*c != '.') {
+    c++; /* length increased by one */
+  }
+  *c = '\0'; /* terminate */
   return string;
 } /* decFloatToString */
 
