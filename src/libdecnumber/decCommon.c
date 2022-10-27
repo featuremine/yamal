@@ -120,7 +120,7 @@ static Flag decBiStr(const char *, const char *, const char *);
 /* DECCOMBMSD and DECCOMBFROM are not format-dependent and so are     */
 /* only included once, when QUAD is being built 		      */
 /* ------------------------------------------------------------------ */
-const uint32_t DECCOMBEXP[64] = {0,
+const uInt DECCOMBEXP[64] = {0,
                                     0,
                                     0,
                                     0,
