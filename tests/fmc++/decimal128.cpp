@@ -273,8 +273,8 @@ TEST(decimal128, pow10) {
 
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  std::cout<<"WTF IS IN STR: "<<str<<std::endl;
-  std::cout<<"a/1000 "<<a/1000<<std::endl;
+  std::cout << "WTF IS IN STR: " << str << std::endl;
+  std::cout << "a/1000 " << a / 1000 << std::endl;
 
   fmc_decimal128_t b;
   fmc_decimal128_from_str(&b, "4000");

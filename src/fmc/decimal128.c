@@ -102,8 +102,8 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
 }
 
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
-  uint64_t u = (uint64_t)n; /* copy as bits */
-  uint64_t encode;          /* work */
+  uint64_t u = (uint64_t)n;               /* copy as bits */
+  uint64_t encode;                        /* work */
   DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
@@ -215,7 +215,7 @@ void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src) {
 }
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
-  uint64_t encode;                                                 /* work */
+  uint64_t encode;                        /* work */
   DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
@@ -350,7 +350,7 @@ void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
 }
 
 void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
-  int32_t exp = GETEXPUN((decQuad*)res);
-  exp+=pow;
+  int32_t exp = GETEXPUN((decQuad *)res);
+  exp += pow;
   decQuadSetExponent((decQuad *)res, get_context(), exp);
 }
