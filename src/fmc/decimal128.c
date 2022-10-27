@@ -60,31 +60,31 @@ void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src) {
 bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
                          const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
+  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
   return !decQuadIsZero(&res) && decQuadIsSigned(&res);
 }
 bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs,
                                   const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
+  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
   return decQuadIsZero(&res) || decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater(const fmc_decimal128_t *lhs,
                             const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
+  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
   return !decQuadIsZero(&res) && !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs,
                                      const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
+  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
   return decQuadIsZero(&res) || !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_equal(const fmc_decimal128_t *lhs,
                           const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
+  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
   return decQuadIsZero(&res);
 }
 
@@ -104,13 +104,13 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   uint64_t u = (uint64_t)n; /* copy as bits */
   uint64_t encode;          /* work */
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = 0x22080000; /* always */
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 1] = 0;
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 2] = 0;
+  DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
+  DFWORD((decQuad *)res, 1) = 0;
+  DFWORD((decQuad *)res, 2) = 0;
   if (n < 0) { /* handle -n with care */
     /* [This can be done without the test, but is then slightly slower] */
     u = (~u) + 1;
-    ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] |= DECFLOAT_Sign;
+    DFWORD((decQuad *)res, 0) |= DECFLOAT_Sign;
   }
   /* Since the maximum value of u now is 2**63, only the low word of */
   /* result is affected */
@@ -127,7 +127,7 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   encode |= ((uint64_t)BIN2DPD[u % 1000]) << 50;
   u /= 1000; /* now 0, or 1 */
   encode |= u << 60;
-  ((decQuad *)res)->longs[0] = encode;
+  DFLONG((decQuad *)res, 1) = encode;
 }
 
 static uint64_t decToInt64(const decQuad *df, decContext *set,
@@ -217,9 +217,9 @@ void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src) {
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   uint64_t encode;                                                 /* work */
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = 0x22080000; /* always */
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 1] = 0;
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 2] = 0;
+  DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
+  DFWORD((decQuad *)res, 1) = 0;
+  DFWORD((decQuad *)res, 2) = 0;
   encode = ((uint64_t)BIN2DPD[u % 1000]);
   u /= 1000;
   encode |= ((uint64_t)BIN2DPD[u % 1000]) << 10;
@@ -233,8 +233,8 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   encode |= ((uint64_t)BIN2DPD[u % 1000]) << 50;
   u /= 1000;
   encode |= ((uint64_t)BIN2DPD[u % 1000]) << 60;
-  ((decQuad *)res)->longs[0] = encode;
-  ((decQuad *)res)->longs[1] |= u >> 4;
+  DFLONG((decQuad *)res, 1) = encode;
+  DFLONG((decQuad *)res, 0) |= u >> 4;
 }
 
 void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src) {
@@ -273,11 +273,11 @@ void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
 }
 
 void fmc_decimal128_qnan(fmc_decimal128_t *res) {
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = DECFLOAT_qNaN;
+  DFWORD((decQuad *)res, 0) = DECFLOAT_qNaN;
 }
 
 void fmc_decimal128_snan(fmc_decimal128_t *res) {
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = DECFLOAT_sNaN;
+  DFWORD((decQuad *)res, 0) = DECFLOAT_sNaN;
 }
 
 bool fmc_decimal128_is_nan(const fmc_decimal128_t *val) {
@@ -293,7 +293,7 @@ bool fmc_decimal128_is_snan(const fmc_decimal128_t *val) {
 }
 
 void fmc_decimal128_inf(fmc_decimal128_t *res) {
-  ((decQuad *)res)->words[DECQUAD_Bytes / 4 - 1 - 0] = DECFLOAT_Inf;
+  DFWORD((decQuad *)res, 0) = DECFLOAT_Inf;
 }
 
 bool fmc_decimal128_is_inf(const fmc_decimal128_t *val) {
@@ -309,14 +309,14 @@ void fmc_decimal128_max(fmc_decimal128_t *res) {
   encode |= ((uint64_t)BIN2DPD[999]) << 40;
   encode |= ((uint64_t)BIN2DPD[999]) << 50;
   encode |= ((uint64_t)BIN2DPD[999]) << 60;
-  ((decQuad *)res)->longs[0] = encode;
+  DFLONG((decQuad *)res, 1) = encode;
   encode = ((uint64_t)0x77FFC000) << 32;
   encode |= ((uint64_t)BIN2DPD[999]) >> 4;
   encode |= ((uint64_t)BIN2DPD[999]) << 6;
   encode |= ((uint64_t)BIN2DPD[999]) << 16;
   encode |= ((uint64_t)BIN2DPD[999]) << 26;
   encode |= ((uint64_t)BIN2DPD[999]) << 36;
-  ((decQuad *)res)->longs[1] = encode;
+  DFLONG((decQuad *)res, 0) = encode;
 }
 
 void fmc_decimal128_min(fmc_decimal128_t *res) {
@@ -328,14 +328,14 @@ void fmc_decimal128_min(fmc_decimal128_t *res) {
   encode |= ((uint64_t)BIN2DPD[999]) << 40;
   encode |= ((uint64_t)BIN2DPD[999]) << 50;
   encode |= ((uint64_t)BIN2DPD[999]) << 60;
-  ((decQuad *)res)->longs[0] = encode;
+  DFLONG((decQuad *)res, 1) = encode;
   encode = ((uint64_t)0xF7FFC000) << 32;
   encode |= ((uint64_t)BIN2DPD[999]) >> 4;
   encode |= ((uint64_t)BIN2DPD[999]) << 6;
   encode |= ((uint64_t)BIN2DPD[999]) << 16;
   encode |= ((uint64_t)BIN2DPD[999]) << 26;
   encode |= ((uint64_t)BIN2DPD[999]) << 36;
-  ((decQuad *)res)->longs[1] = encode;
+  DFLONG((decQuad *)res, 0) = encode;
 }
 
 bool fmc_decimal128_is_finite(const fmc_decimal128_t *val) {
@@ -348,4 +348,10 @@ void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
 
 void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
   decQuadCopyNegate((decQuad *)res, (const decQuad *)val);
+}
+
+void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
+  int32_t exp = GETEXPUN((decQuad*)res);
+  exp+=pow;
+  decQuadSetExponent((decQuad *)res, get_context(), exp);
 }

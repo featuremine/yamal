@@ -96,6 +96,7 @@ FMMODFUNC void fmc_decimal128_abs(fmc_decimal128_t *res,
                                   const fmc_decimal128_t *val);
 FMMODFUNC void fmc_decimal128_negate(fmc_decimal128_t *res,
                                      const fmc_decimal128_t *val);
+FMMODFUNC void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow);
 
 #ifdef __cplusplus
 }

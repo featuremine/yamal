@@ -265,6 +265,28 @@ TEST(decimal128, negate) {
   ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
 }
 
+TEST(decimal128, pow10) {
+  fmc_decimal128_t a;
+  fmc_decimal128_from_str(&a, "4");
+
+  fmc_decimal128_pow10(&a, 3);
+
+  char str[256];
+  fmc_decimal128_to_str(str, &a);
+  std::cout<<"WTF IS IN STR: "<<str<<std::endl;
+  std::cout<<"a/1000 "<<a/1000<<std::endl;
+
+  fmc_decimal128_t b;
+  fmc_decimal128_from_str(&b, "4000");
+
+  ASSERT_FALSE(fmc_decimal128_equal(&a, &b));
+
+  fmc_decimal128_t c;
+  fmc_decimal128_from_str(&c, "4");
+  fmc_decimal128_pow10(&a, -3);
+  ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
+}
+
 TEST(decimal128, infinity) {
   fmc_decimal128_t a;
   fmc_decimal128_from_str(&a, "4");
@@ -323,7 +345,7 @@ TEST(decimal128, cppconstructor) {
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ppa));
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ppb));
 
-  fmc::decimal128 ppc;
+  fmc::decimal128 ppc(0);
   ppa = ppa - ppa;
   ASSERT_TRUE(fmc_decimal128_equal(&ppa, &ppc));
 }
