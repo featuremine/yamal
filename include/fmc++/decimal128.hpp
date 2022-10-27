@@ -19,7 +19,10 @@
 
 #pragma once
 
+#include "fmc/alignment.h"
 #include "fmc/decimal128.h"
+#include "fmc++/convert.hpp"
+#include "fmc++/side.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -33,7 +36,10 @@ public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int64_t i) { fmc_decimal128_from_int(this, i); }
   decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
-  decimal128 &operator=(const fmc_decimal128_t &a) { return *this; }
+  decimal128 &operator=(const fmc_decimal128_t &a) {
+    memcpy(this->bytes, a.bytes, sizeof(a.bytes));
+    return *this;
+  }
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
     return static_cast<decimal128 &>(a);
   }
@@ -104,6 +110,32 @@ inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
   return res;
 }
 
+inline decimal128 operator/(const decimal128 &a, const int64_t &b) noexcept {
+  decimal128 db(b);
+  decimal128 res;
+  fmc_decimal128_div(&res, &a, &db);
+  return res;
+}
+
+template <> struct conversion<fmc_decimal128_t, double> {
+  double operator()(fmc_decimal128_t x) {
+    char str[FMC_DECIMAL128_STR_SIZE];
+    fmc_decimal128_to_str(str, &x);
+    char *ptr = nullptr;
+    return strtod(str, &ptr);
+  }
+};
+
+template <> struct conversion<double, fmc_decimal128_t> {
+  fmc_decimal128_t operator()(double x) {
+    fmc_decimal128_t res;
+    char str[FMC_DECIMAL128_STR_SIZE];
+    snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", x);
+    fmc_decimal128_from_str(&res, str);
+    return res;
+  }
+};
+
 } // namespace fmc
 
 inline bool operator==(const fmc_decimal128_t &a,
@@ -156,6 +188,11 @@ inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
   return fmc::decimal128::upcast(a) / fmc::decimal128::upcast(b);
 }
 
+inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
+                                  const int64_t &b) noexcept {
+  return fmc::decimal128::upcast(a) / b;
+}
+
 namespace std {
 
 template <> class numeric_limits<fmc::decimal128> {
@@ -199,6 +236,16 @@ inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) noexcept {
 
 inline ostream &operator<<(ostream &os, const fmc_decimal128_t &r) noexcept {
   return os << fmc::decimal128::upcast(r);
+}
+
+inline string to_string(const fmc::decimal128 &r) noexcept {
+  char str[FMC_DECIMAL128_STR_SIZE];
+  fmc_decimal128_to_str(str, &r);
+  return string(str);
+}
+
+inline string to_string(const fmc_decimal128_t &r) noexcept {
+  return to_string(fmc::decimal128::upcast(r));
 }
 
 inline istream &operator>>(istream &os, fmc::decimal128 &r) noexcept {
@@ -247,3 +294,13 @@ inline bool isnan(fmc_decimal128_t x) noexcept {
 }
 
 } // namespace std
+
+namespace fmc {
+
+template <> struct sided_initializer<fmc::decimal128> {
+  static constexpr bool is_specialized = true;
+  static fmc::decimal128 min() noexcept { return std::numeric_limits<fmc::decimal128>::min(); }
+  static fmc::decimal128 max() noexcept { return std::numeric_limits<fmc::decimal128>::max(); }
+};
+
+} // namespace fmc

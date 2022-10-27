@@ -38,9 +38,11 @@ typedef struct {
 } fmc_decimal128_t;
 
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src);
-FMMODFUNC void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *srcs);
+FMMODFUNC void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_from_uint(fmc_decimal128_t *dest, uint64_t src);
+FMMODFUNC void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_from_int(fmc_decimal128_t *dest, int64_t src);
+FMMODFUNC void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src);
 
 FMMODFUNC bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
                                    const fmc_decimal128_t *rhs);
