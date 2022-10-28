@@ -271,9 +271,6 @@ TEST(decimal128, pow10) {
 
   fmc_decimal128_pow10(&a, 3);
 
-  char str[256];
-  fmc_decimal128_to_str(str, &a);
-
   fmc_decimal128_t b;
   fmc_decimal128_from_str(&b, "4000");
 
