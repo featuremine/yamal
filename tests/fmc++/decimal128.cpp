@@ -285,7 +285,6 @@ TEST(decimal128, pow10) {
   fmc_decimal128_from_str(&d, "0.04");
   fmc_decimal128_pow10(&a, -3);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &d));
-
 }
 
 TEST(decimal128, infinity) {
