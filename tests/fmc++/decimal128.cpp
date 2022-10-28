@@ -770,7 +770,8 @@ TEST(decimal128, assign) {
 TEST(decimal128, move) {
   fmc::decimal128 a = (int64_t)5;
   fmc::decimal128 b = std::move(a);
-  ASSERT_EQ(a, b);
+  fmc::decimal128 c = (int64_t)5;
+  ASSERT_EQ(b, c);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
