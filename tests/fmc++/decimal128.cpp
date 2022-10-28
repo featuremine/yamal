@@ -44,6 +44,9 @@ TEST(decimal128, from_uint_zero) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "0");
+  uint64_t res;
+  fmc_decimal128_to_uint(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_uint_low) {
@@ -53,6 +56,9 @@ TEST(decimal128, from_uint_low) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "15");
+  uint64_t res;
+  fmc_decimal128_to_uint(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_uint_extreme) {
@@ -62,6 +68,9 @@ TEST(decimal128, from_uint_extreme) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "18446744073709551615");
+  uint64_t res;
+  fmc_decimal128_to_uint(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_int_zero) {
@@ -71,6 +80,9 @@ TEST(decimal128, from_int_zero) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "0");
+  int64_t res;
+  fmc_decimal128_to_int(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_int_low) {
@@ -80,6 +92,9 @@ TEST(decimal128, from_int_low) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "15");
+  int64_t res;
+  fmc_decimal128_to_int(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_int_extreme) {
@@ -89,6 +104,9 @@ TEST(decimal128, from_int_extreme) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "9223372036854775807");
+  int64_t res;
+  fmc_decimal128_to_int(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_int_neg_low) {
@@ -98,6 +116,9 @@ TEST(decimal128, from_int_neg_low) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "-15");
+  int64_t res;
+  fmc_decimal128_to_int(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_int_neg_extreme) {
@@ -107,6 +128,9 @@ TEST(decimal128, from_int_neg_extreme) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "-9223372036854775808");
+  int64_t res;
+  fmc_decimal128_to_int(&res, &a);
+  ASSERT_EQ(res, max);
 }
 
 TEST(decimal128, from_to_int_str) {
@@ -126,6 +150,15 @@ TEST(decimal128, divide) {
   fmc_decimal128_div(&c, &a, &b);
   fmc_decimal128_to_str(str, &c);
   ASSERT_STREQ(str, "30303030303.0303030303030303");
+}
+
+TEST(decimal128, intdivide) {
+  fmc_decimal128_t cppa;
+  fmc_decimal128_from_int(&cppa, 10);
+  int64_t b = 5;
+  fmc_decimal128_t cppc;
+  fmc_decimal128_from_int(&cppc, 2);
+  ASSERT_EQ(cppa / b, cppc);
 }
 
 TEST(decimal128, add) {
@@ -232,6 +265,28 @@ TEST(decimal128, negate) {
   ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
 }
 
+TEST(decimal128, pow10) {
+  fmc_decimal128_t a;
+  fmc_decimal128_from_str(&a, "4");
+
+  fmc_decimal128_pow10(&a, 3);
+
+  fmc_decimal128_t b;
+  fmc_decimal128_from_str(&b, "4000");
+
+  ASSERT_TRUE(fmc_decimal128_equal(&a, &b));
+
+  fmc_decimal128_t c;
+  fmc_decimal128_from_str(&c, "40");
+  fmc_decimal128_pow10(&a, -2);
+  ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
+
+  fmc_decimal128_t d;
+  fmc_decimal128_from_str(&d, "0.04");
+  fmc_decimal128_pow10(&a, -3);
+  ASSERT_TRUE(fmc_decimal128_equal(&a, &d));
+}
+
 TEST(decimal128, infinity) {
   fmc_decimal128_t a;
   fmc_decimal128_from_str(&a, "4");
@@ -308,6 +363,13 @@ TEST(decimal128, cppdivide) {
   fmc_decimal128_t ppc;
   fmc_decimal128_from_int(&ppc, 2);
   ASSERT_EQ(ppa / ppb, ppc);
+}
+
+TEST(decimal128, cppintdivide) {
+  fmc::decimal128 cppa(10);
+  int64_t b = 5;
+  fmc::decimal128 cppc(2);
+  ASSERT_EQ(cppa / b, cppc);
 }
 
 TEST(decimal128, cppadd) {
@@ -606,12 +668,16 @@ TEST(decimal128, cppepsilon) {
 }
 
 TEST(decimal128, cppdecimalfromint) {
-  fmc::decimal128 a = (int64_t)5;
-  fmc::decimal128 b((int64_t)5);
+  fmc::decimal128 a = 5;
+  fmc::decimal128 b(5);
   int64_t ic = 5;
   fmc::decimal128 c(ic);
   ASSERT_EQ(a, b);
   ASSERT_EQ(a, c);
+  fmc::decimal128 u = 5U;
+  uint64_t ud = 5;
+  fmc::decimal128 d(ud);
+  ASSERT_EQ(a, u);
   std::ostringstream str;
   str << a;
   ASSERT_STREQ(str.str().c_str(), "5");
@@ -620,10 +686,12 @@ TEST(decimal128, cppdecimalfromint) {
 TEST(decimal128, cppstreams) {
   std::string s("432325555342");
   std::stringstream ss(s);
-  fmc::decimal128 a(432325555342);
-  fmc::decimal128 b(0);
+  fmc::decimal128 a((int64_t)432325555342);
+  fmc::decimal128 b;
   ss >> b;
   ASSERT_EQ(a, b);
+  fmc::decimal128 c((uint64_t)432325555342);
+  ASSERT_EQ(c, b);
 }
 
 void keep_some_zeros(char *str, int n) {
@@ -697,6 +765,19 @@ TEST(decimal128, identity_infnan) {
 
   to_str(-std::numeric_limits<double>::infinity());
   EXPECT_STREQ(dec128_str, float_str);
+}
+
+TEST(decimal128, assign) {
+  fmc::decimal128 a = 5;
+  fmc::decimal128 b = a;
+  ASSERT_EQ(a, b);
+}
+
+TEST(decimal128, move) {
+  fmc::decimal128 a = 5;
+  fmc::decimal128 b = std::move(a);
+  fmc::decimal128 c = 5;
+  ASSERT_EQ(b, c);
 }
 
 GTEST_API_ int main(int argc, char **argv) {

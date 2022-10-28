@@ -55,6 +55,18 @@ extern "C" {
 
 #define DECUSE64 1
 
+/* Constant mappings for shared code */
+#define DECPMAX DECQUAD_Pmax
+#define DECEMIN DECQUAD_Emin
+#define DECEMAX DECQUAD_Emax
+#define DECEMAXD DECQUAD_EmaxD
+#define DECBYTES DECQUAD_Bytes
+#define DECSTRING DECQUAD_String
+#define DECECONL DECQUAD_EconL
+#define DECBIAS DECQUAD_Bias
+#define DECLETS DECQUAD_Declets
+#define DECQTINY (-DECQUAD_Bias)
+
 /* Required include						      */
 #include "decContext.h"
 

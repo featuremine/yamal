@@ -118,6 +118,7 @@ extern const uInt DPD2BINM[1024];  /* DPD -> 0-999000000	      */
 extern const uByte DPD2BCD8[4096]; /* DPD -> ddd + len	      */
 extern const uByte BIN2BCD8[4000]; /* 0-999 -> ddd + len	      */
 extern const uShort BCD2DPD[2458]; /* 0-0x999 -> DPD (0x999=2457)*/
+extern const uInt DECCOMBEXP[64];
 
 /* LONGMUL32HI -- set w=(u*v)>>32, where w, u, and v are uInts      */
 /* (that is, sets w to be the high-order word of the 64-bit result; */
@@ -370,14 +371,21 @@ typedef struct {
 /* in the next-wider format (decFloatWider, or dfw)		      */
 #define DECWORDS (DECBYTES / 4)
 #define DECWWORDS (DECWBYTES / 4)
+#define DECLONGS (DECBYTES / 8)
 #if DECLITEND
 #define DFBYTE(df, off) ((df)->bytes[DECBYTES - 1 - (off)])
 #define DFWORD(df, off) ((df)->words[DECWORDS - 1 - (off)])
 #define DFWWORD(dfw, off) ((dfw)->words[DECWWORDS - 1 - (off)])
+#if DECUSE64
+#define DFLONG(dfw, off) ((dfw)->longs[DECLONGS - 1 - (off)])
+#endif
 #else
 #define DFBYTE(df, off) ((df)->bytes[off])
 #define DFWORD(df, off) ((df)->words[off])
 #define DFWWORD(dfw, off) ((dfw)->words[off])
+#if DECUSE64
+#define DFLONG(dfw, off) ((dfw)->longs[off])
+#endif
 #endif
 
 /* Tests for sign or specials, directly on DECFLOATs		      */
