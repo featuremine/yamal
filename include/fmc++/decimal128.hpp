@@ -35,6 +35,11 @@ class decimal128 : public fmc_decimal128_t {
 public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int64_t i) { fmc_decimal128_from_int(this, i); }
+  decimal128(double d) {
+    char str[FMC_DECIMAL128_STR_SIZE];
+    snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", d);
+    fmc_decimal128_from_str(this, str);
+  }
   decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) {
     memcpy(this->bytes, a.bytes, sizeof(a.bytes));
@@ -59,6 +64,17 @@ public:
     decimal128 res;
     fmc_decimal128_negate(&res, this);
     return res;
+  }
+  explicit operator int64_t() {
+    int64_t ret;
+    fmc_decimal128_to_int(&ret, this);
+    return ret;
+  }
+  explicit operator double() {
+    char str[FMC_DECIMAL128_STR_SIZE];
+    fmc_decimal128_to_str(str, this);
+    char *ptr = nullptr;
+    return strtod(str, &ptr);
   }
 };
 
@@ -111,10 +127,7 @@ inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
 }
 
 inline decimal128 operator/(const decimal128 &a, const int64_t &b) noexcept {
-  decimal128 db(b);
-  decimal128 res;
-  fmc_decimal128_div(&res, &a, &db);
-  return res;
+  return a / decimal128(b);
 }
 
 template <> struct conversion<fmc_decimal128_t, double> {
@@ -300,10 +313,10 @@ namespace fmc {
 template <> struct sided_initializer<fmc::decimal128> {
   static constexpr bool is_specialized = true;
   static fmc::decimal128 min() noexcept {
-    return std::numeric_limits<fmc::decimal128>::min();
+    return -std::numeric_limits<fmc::decimal128>::infinity();
   }
   static fmc::decimal128 max() noexcept {
-    return std::numeric_limits<fmc::decimal128>::max();
+    return std::numeric_limits<fmc::decimal128>::infinity();
   }
 };
 

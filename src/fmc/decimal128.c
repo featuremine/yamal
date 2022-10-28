@@ -23,21 +23,11 @@
 #include "fmc/decimal128.h"
 
 #include "decContext.h"
-#include "decNumberLocal.h"
 #include "decQuad.h"
 
+#include "decNumberLocal.h"
+
 #include <stdlib.h>
-
-#define DECBYTES DECQUAD_Bytes
-#define DECBIAS DECQUAD_Bias
-#define DECECONL DECQUAD_EconL
-
-#define GETECON(df)                                                            \
-  ((Int)((DFWORD((df), 0) & 0x03ffffff) >> (32 - 6 - DECECONL)))
-/* Get the biased exponent similarly			      */
-#define GETEXP(df) ((Int)(DECCOMBEXP[DFWORD((df), 0) >> 26] + GETECON(df)))
-/* Get the unbiased exponent similarly			      */
-#define GETEXPUN(df) ((Int)GETEXP(df) - DECBIAS)
 
 static decContext *get_context() {
   static __thread bool init = false;
