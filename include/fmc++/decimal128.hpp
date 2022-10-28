@@ -45,6 +45,14 @@ public:
     memcpy(this->bytes, a.bytes, sizeof(a.bytes));
     return *this;
   }
+  decimal128 &operator=(const int64_t &a) {
+    *this = decimal128(a);
+    return *this;
+  }
+  decimal128 &operator=(const double &a) {
+    *this = decimal128(a);
+    return *this;
+  }
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
     return static_cast<decimal128 &>(a);
   }
