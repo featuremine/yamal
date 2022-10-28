@@ -36,6 +36,8 @@ public:
   decimal128(const fmc_decimal128_t &a) : fmc_decimal128_t(a) {}
   decimal128(int i) { fmc_decimal128_from_int(this, i); }
   decimal128(int64_t i) { fmc_decimal128_from_int(this, i); }
+  decimal128(uint i) { fmc_decimal128_from_uint(this, i); }
+  decimal128(uint64_t i) { fmc_decimal128_from_uint(this, i); }
   decimal128(double d) {
     char str[FMC_DECIMAL128_STR_SIZE];
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", d);
@@ -51,6 +53,14 @@ public:
     return *this;
   }
   decimal128 &operator=(const int64_t &a) {
+    *this = decimal128(a);
+    return *this;
+  }
+  decimal128 &operator=(const uint &a) {
+    *this = decimal128(a);
+    return *this;
+  }
+  decimal128 &operator=(const uint64_t &a) {
     *this = decimal128(a);
     return *this;
   }

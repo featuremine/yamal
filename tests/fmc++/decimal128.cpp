@@ -674,6 +674,10 @@ TEST(decimal128, cppdecimalfromint) {
   fmc::decimal128 c(ic);
   ASSERT_EQ(a, b);
   ASSERT_EQ(a, c);
+  fmc::decimal128 u = 5U;
+  uint64_t ud = 5;
+  fmc::decimal128 d(ud);
+  ASSERT_EQ(a, u);
   std::ostringstream str;
   str << a;
   ASSERT_STREQ(str.str().c_str(), "5");
@@ -686,6 +690,8 @@ TEST(decimal128, cppstreams) {
   fmc::decimal128 b;
   ss >> b;
   ASSERT_EQ(a, b);
+  fmc::decimal128 c((uint64_t)432325555342);
+  ASSERT_EQ(c, b);
 }
 
 void keep_some_zeros(char *str, int n) {
