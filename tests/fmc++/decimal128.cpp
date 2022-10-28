@@ -273,18 +273,22 @@ TEST(decimal128, pow10) {
 
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  std::cout << "WTF IS IN STR: " << str << std::endl;
-  std::cout << "a/1000 " << a / 1000 << std::endl;
 
   fmc_decimal128_t b;
   fmc_decimal128_from_str(&b, "4000");
 
-  ASSERT_FALSE(fmc_decimal128_equal(&a, &b));
+  ASSERT_TRUE(fmc_decimal128_equal(&a, &b));
 
   fmc_decimal128_t c;
-  fmc_decimal128_from_str(&c, "4");
-  fmc_decimal128_pow10(&a, -3);
+  fmc_decimal128_from_str(&c, "40");
+  fmc_decimal128_pow10(&a, -2);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
+
+  fmc_decimal128_t d;
+  fmc_decimal128_from_str(&d, "0.04");
+  fmc_decimal128_pow10(&a, -3);
+  ASSERT_TRUE(fmc_decimal128_equal(&a, &d));
+
 }
 
 TEST(decimal128, infinity) {

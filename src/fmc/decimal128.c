@@ -60,31 +60,31 @@ void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src) {
 bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
                          const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return !decQuadIsZero(&res) && decQuadIsSigned(&res);
 }
 bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs,
                                   const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res) || decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater(const fmc_decimal128_t *lhs,
                             const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return !decQuadIsZero(&res) && !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs,
                                      const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res) || !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_equal(const fmc_decimal128_t *lhs,
                           const fmc_decimal128_t *rhs) {
   decQuad res;
-  decQuadCompareTotal(&res, (decQuad *)lhs, (decQuad *)rhs);
+  decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res);
 }
 
@@ -350,7 +350,7 @@ void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
 }
 
 void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
-  int32_t exp = GETEXPUN((decQuad *)res);
+  int32_t exp = decQuadGetExponent((decQuad *)res);
   exp += pow;
   decQuadSetExponent((decQuad *)res, get_context(), exp);
 }
