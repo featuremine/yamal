@@ -28,6 +28,7 @@
 #include <cstring>
 #include <limits>
 #include <ostream>
+#include <functional>
 
 namespace fmc {
 
@@ -328,6 +329,17 @@ inline bool isnan(fmc::decimal128 x) noexcept {
 inline bool isnan(fmc_decimal128_t x) noexcept {
   return std::isnan(fmc::decimal128::upcast(x));
 }
+
+template <>
+struct hash<fmc_decimal128_t>
+{
+  size_t operator()(const fmc_decimal128_t& k) const
+  {
+    static_assert(FMC_DECIMAL128_SIZE == 16);
+    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t*)&k.bytes[0]),
+                            std::hash<int64_t>{}(*(int64_t*)&k.bytes[7]));
+  }
+};
 
 } // namespace std
 
