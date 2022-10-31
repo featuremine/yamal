@@ -68,6 +68,5 @@ jobs:
       uses: featuremine/actions/package/build@main
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: test package
-      run: cd ${{github.workspace}}/build && cpack -G TGZ && ls -las
+        cpack: TGZ
+        upload: ${{ needs.utility.outputs.release-check == 'release' }}
