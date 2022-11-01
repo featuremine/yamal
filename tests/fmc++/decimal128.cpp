@@ -55,6 +55,18 @@ TEST(decimal128, bad_str) {
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_NE(err, nullptr);
   fmc_error_clear(&err);
+  strval = "-1.2.3";
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = "1.2E3E4";
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = "1.2E-3E-4";
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
 
   // Numerical string length
   strval = std::string(34, '1');  // supports up to 34 decimal digits
