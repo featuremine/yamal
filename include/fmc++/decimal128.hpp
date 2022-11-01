@@ -24,6 +24,7 @@
 #include "fmc++/side.hpp"
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
+#include "fmc/decimal64.h"
 
 #include <cmath>
 #include <cstring>
@@ -45,6 +46,14 @@ public:
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", d);
     fmc_error_t *err;
     fmc_decimal128_from_str(this, str, &err);
+  }
+  decimal128(fm_decimal64_t d) {
+    static decimal128 dec64div(DECIMAL64_FRACTION);
+
+    decimal128 dd;
+    fmc_decimal128_from_int(&dd, d.value);
+    fmc_error_t *err;
+    fmc_decimal128_div(this, &dd, &dec64div, &err);
   }
   decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) {
