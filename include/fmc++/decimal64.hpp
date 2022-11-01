@@ -28,6 +28,8 @@ extern "C" {
 #include "fmc/decimal64.h"
 }
 
+#include <fmc++/side.hpp>
+
 #include <functional>
 
 inline double operator/(fm_decimal64_t a, fm_decimal64_t b) {
@@ -97,6 +99,16 @@ struct hash<fm_decimal64_t>
   {
     return std::hash<int64_t>{}(k.value);
   }
+};
+
+}
+
+namespace fmc {
+
+template <> struct sided_initializer<fm_decimal64> {
+  static constexpr bool is_specialized = true;
+  static constexpr fm_decimal64 min() noexcept { return FM_DECIMAL64_MIN; }
+  static constexpr fm_decimal64 max() noexcept { return FM_DECIMAL64_MAX; }
 };
 
 }
