@@ -128,6 +128,33 @@ TEST(decimal128, from_uint_zero) {
   ASSERT_EQ(res, max);
 }
 
+TEST(decimal128, to_uint_neg) {
+  int64_t max = -4;
+  fmc_decimal128_t a;
+  fmc_error_t *err;
+  fmc_decimal128_from_int(&a, max);
+  char str[256];
+  fmc_decimal128_to_str(str, &a);
+  ASSERT_STREQ(str, "-4");
+  uint64_t res;
+  fmc_decimal128_to_uint(&res, &a, &err);
+  ASSERT_NE(err, nullptr);
+}
+
+TEST(decimal128, to_uint_out_of_range) {
+  uint64_t max = std::numeric_limits<uint64_t>::max();
+  fmc_decimal128_t a;
+  fmc_error_t *err;
+  fmc_decimal128_from_uint(&a, max);
+
+  fmc_decimal128_pow10(&a, 1, &err);
+  ASSERT_EQ(err, nullptr);
+
+  uint64_t res;
+  fmc_decimal128_to_uint(&res, &a, &err);
+  ASSERT_NE(err, nullptr);
+}
+
 TEST(decimal128, from_uint_low) {
   uint64_t max = 15;
   fmc_decimal128_t a;
@@ -226,6 +253,20 @@ TEST(decimal128, from_int_neg_extreme) {
   ASSERT_EQ(res, max);
 }
 
+TEST(decimal128, to_int_out_of_range) {
+  int64_t max = std::numeric_limits<int64_t>::max();
+  fmc_decimal128_t a;
+  fmc_error_t *err;
+  fmc_decimal128_from_int(&a, max);
+
+  fmc_decimal128_pow10(&a, 1, &err);
+  ASSERT_EQ(err, nullptr);
+
+  int64_t res;
+  fmc_decimal128_to_int(&res, &a, &err);
+  ASSERT_NE(err, nullptr);
+}
+
 TEST(decimal128, from_to_int_str) {
   fmc_decimal128_t a;
   std::string strval = "5";
@@ -251,6 +292,26 @@ TEST(decimal128, divide) {
   ASSERT_STREQ(str, "30303030303.0303030303030303");
 }
 
+TEST(decimal128, divide_by_zero) {
+  fmc_decimal128_t a, b, c;
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, "66666666666.66666666666666666", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_from_str(&b, "0", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_div(&c, &a, &b, &err);
+  ASSERT_NE(err, nullptr);
+}
+
+TEST(decimal128, int_divide_by_zero) {
+  fmc_decimal128_t a, c;
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, "66666666666.66666666666666666", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_int_div(&c, &a, 0, &err);
+  ASSERT_NE(err, nullptr);
+}
+
 TEST(decimal128, intdivide) {
   fmc_decimal128_t cppa;
   fmc_decimal128_from_int(&cppa, 10);
@@ -274,6 +335,17 @@ TEST(decimal128, add) {
   ASSERT_STREQ(str, "33333333333.33333333333333333");
 }
 
+TEST(decimal128, add_out_of_range) {
+  fmc_decimal128_t a, b, c;
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_add(&c, &a, &b, &err);
+  ASSERT_NE(err, nullptr);
+}
+
 TEST(decimal128, sub) {
   fmc_decimal128_t a, b, c;
   char str[256];
@@ -288,6 +360,17 @@ TEST(decimal128, sub) {
   ASSERT_STREQ(str, "-11111111111.11111111111111111");
 }
 
+TEST(decimal128, sub_out_of_range) {
+  fmc_decimal128_t a, b, c;
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, "-9.999999999999999999999999999999999E+6144", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_sub(&c, &a, &b, &err);
+  ASSERT_NE(err, nullptr);
+}
+
 TEST(decimal128, mul) {
   fmc_decimal128_t a, b, c;
   char str[256];
@@ -300,6 +383,17 @@ TEST(decimal128, mul) {
   ASSERT_EQ(err, nullptr);
   fmc_decimal128_to_str(str, &c);
   ASSERT_STREQ(str, "24444444444.444444444444444442");
+}
+
+TEST(decimal128, mul_out_of_range) {
+  fmc_decimal128_t a, b, c;
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144", &err);
+  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_mul(&c, &a, &b, &err);
+  ASSERT_NE(err, nullptr);
 }
 
 TEST(decimal128, comparison) {
