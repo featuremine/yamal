@@ -20,6 +20,7 @@
  * @see http://www.featuremine.com
  */
 
+#include "fmc/error.h"
 #include "fmc/decimal128.h"
 #include "fmc++/decimal128.hpp"
 #include <fmc++/gtestwrap.hpp>
@@ -37,6 +38,68 @@ TEST(decimal128, from_to_flt_str) {
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, strval.c_str());
+}
+
+TEST(decimal128, bad_str) {
+  fmc_decimal128_t a;
+
+  // Non numerical string
+  std::string strval = "thisisnotanumber";
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+
+  // Invalid numerical string
+  strval = "1.2.3";
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+
+  // Numerical string length
+  strval = std::string(34, '1');  // supports up to 34 decimal digits
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_EQ(err, nullptr);
+  strval = std::string("-") + std::string(34, '1');
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_EQ(err, nullptr);
+  strval = std::string("1.") + std::string(33, '1') + std::string("E+6144");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_EQ(err, nullptr);
+  strval = std::string("1.") + std::string(33, '1') + std::string("E-6143");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_EQ(err, nullptr);
+  strval = std::string("-1.") + std::string(33, '1') + std::string("E+6144");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_EQ(err, nullptr);
+  strval = std::string("-1.") + std::string(33, '1') + std::string("E-6143");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_EQ(err, nullptr);
+
+  strval = std::string(35, '1');  // supports up to 34 decimal digits
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = std::string("-") + std::string(35, '1');
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = std::string("1.") + std::string(33, '1') + std::string("E+6145");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = std::string("1.") + std::string(33, '1') + std::string("E-6144");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = std::string("-1.") + std::string(33, '1') + std::string("E+6145");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
+  strval = std::string("-1.") + std::string(33, '1') + std::string("E-6144");
+  fmc_decimal128_from_str(&a, strval.c_str(), &err);
+  ASSERT_NE(err, nullptr);
+  fmc_error_clear(&err);
 }
 
 TEST(decimal128, from_uint_zero) {
