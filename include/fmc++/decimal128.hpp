@@ -27,9 +27,9 @@
 
 #include <cmath>
 #include <cstring>
+#include <functional>
 #include <limits>
 #include <ostream>
-#include <functional>
 
 namespace fmc {
 
@@ -98,7 +98,8 @@ public:
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
-    fmc_runtime_error_unless(!err) << "unable to convert decimal object to integer";
+    fmc_runtime_error_unless(!err)
+        << "unable to convert decimal object to integer";
     return ret;
   }
   explicit operator double() {
@@ -351,14 +352,11 @@ inline bool isnan(fmc_decimal128_t x) noexcept {
   return std::isnan(fmc::decimal128::upcast(x));
 }
 
-template <>
-struct hash<fmc_decimal128_t>
-{
-  size_t operator()(const fmc_decimal128_t& k) const
-  {
+template <> struct hash<fmc_decimal128_t> {
+  size_t operator()(const fmc_decimal128_t &k) const {
     static_assert(FMC_DECIMAL128_SIZE == 16);
-    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t*)&k.bytes[0]),
-                            std::hash<int64_t>{}(*(int64_t*)&k.bytes[7]));
+    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t *)&k.bytes[0]),
+                            std::hash<int64_t>{}(*(int64_t *)&k.bytes[7]));
   }
 };
 

@@ -20,9 +20,9 @@
  * @see http://www.featuremine.com
  */
 
-#include "fmc/error.h"
 #include "fmc/decimal128.h"
 #include "fmc++/decimal128.hpp"
+#include "fmc/error.h"
 #include <fmc++/gtestwrap.hpp>
 #include <random>
 #include <string.h>
@@ -69,7 +69,7 @@ TEST(decimal128, bad_str) {
   fmc_error_clear(&err);
 
   // Numerical string length
-  strval = std::string(34, '1');  // supports up to 34 decimal digits
+  strval = std::string(34, '1'); // supports up to 34 decimal digits
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
   strval = std::string("-") + std::string(34, '1');
@@ -88,7 +88,7 @@ TEST(decimal128, bad_str) {
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
 
-  strval = std::string(35, '1');  // supports up to 34 decimal digits
+  strval = std::string(35, '1'); // supports up to 34 decimal digits
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_NE(err, nullptr);
   fmc_error_clear(&err);
@@ -338,9 +338,11 @@ TEST(decimal128, add) {
 TEST(decimal128, add_out_of_range) {
   fmc_decimal128_t a, b, c;
   fmc_error_t *err;
-  fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144", &err);
+  fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144",
+                          &err);
   ASSERT_EQ(err, nullptr);
-  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144", &err);
+  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144",
+                          &err);
   ASSERT_EQ(err, nullptr);
   fmc_decimal128_add(&c, &a, &b, &err);
   ASSERT_NE(err, nullptr);
@@ -363,9 +365,11 @@ TEST(decimal128, sub) {
 TEST(decimal128, sub_out_of_range) {
   fmc_decimal128_t a, b, c;
   fmc_error_t *err;
-  fmc_decimal128_from_str(&a, "-9.999999999999999999999999999999999E+6144", &err);
+  fmc_decimal128_from_str(&a, "-9.999999999999999999999999999999999E+6144",
+                          &err);
   ASSERT_EQ(err, nullptr);
-  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144", &err);
+  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144",
+                          &err);
   ASSERT_EQ(err, nullptr);
   fmc_decimal128_sub(&c, &a, &b, &err);
   ASSERT_NE(err, nullptr);
@@ -388,9 +392,11 @@ TEST(decimal128, mul) {
 TEST(decimal128, mul_out_of_range) {
   fmc_decimal128_t a, b, c;
   fmc_error_t *err;
-  fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144", &err);
+  fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144",
+                          &err);
   ASSERT_EQ(err, nullptr);
-  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144", &err);
+  fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144",
+                          &err);
   ASSERT_EQ(err, nullptr);
   fmc_decimal128_mul(&c, &a, &b, &err);
   ASSERT_NE(err, nullptr);

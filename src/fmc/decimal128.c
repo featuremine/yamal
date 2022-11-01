@@ -47,7 +47,8 @@ void handle_error(fmc_error_t **err) {
   }
 }
 
-void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src, fmc_error_t **err) {
+void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src,
+                             fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadFromString((decQuad *)dest, src, get_context());
   handle_error(err);
@@ -66,7 +67,8 @@ bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
   return !decQuadIsZero(&res) && decQuadIsSigned(&res);
 }
 bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs,
-                                  const fmc_decimal128_t *rhs, fmc_error_t **err) {
+                                  const fmc_decimal128_t *rhs,
+                                  fmc_error_t **err) {
   fmc_error_clear(err);
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
@@ -82,7 +84,8 @@ bool fmc_decimal128_greater(const fmc_decimal128_t *lhs,
   return !decQuadIsZero(&res) && !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs,
-                                     const fmc_decimal128_t *rhs, fmc_error_t **err) {
+                                     const fmc_decimal128_t *rhs,
+                                     fmc_error_t **err) {
   fmc_error_clear(err);
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
@@ -224,7 +227,8 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
   return (uint64_t)i;
 }
 
-void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src, fmc_error_t **err) {
+void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src,
+                           fmc_error_t **err) {
   fmc_error_clear(err);
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 0);
   handle_error(err);
@@ -252,7 +256,8 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   DFLONG((decQuad *)res, 0) |= u >> 4;
 }
 
-void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src, fmc_error_t **err) {
+void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src,
+                            fmc_error_t **err) {
   fmc_error_clear(err);
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
   handle_error(err);
@@ -265,13 +270,15 @@ void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
   handle_error(err);
 }
 
-void fmc_decimal128_inc(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs, fmc_error_t **err) {
+void fmc_decimal128_inc(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs,
+                        fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadAdd((decQuad *)lhs, (decQuad *)lhs, (decQuad *)rhs, get_context());
   handle_error(err);
 }
 
-void fmc_decimal128_dec(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs, fmc_error_t **err) {
+void fmc_decimal128_dec(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs,
+                        fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadSubtract((decQuad *)lhs, (decQuad *)lhs, (decQuad *)rhs,
                   get_context());
@@ -294,7 +301,8 @@ void fmc_decimal128_mul(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
   handle_error(err);
 }
 
-void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val, fmc_error_t **err) {
+void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val,
+                          fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadToIntegralValue((decQuad *)res, (decQuad *)val, get_context(),
                          DEC_ROUND_HALF_UP);
@@ -371,13 +379,15 @@ bool fmc_decimal128_is_finite(const fmc_decimal128_t *val) {
   return decQuadIsFinite((decQuad *)val);
 }
 
-void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val, fmc_error_t **err) {
+void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val,
+                        fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadAbs((decQuad *)res, (const decQuad *)val, get_context());
   handle_error(err);
 }
 
-void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val, fmc_error_t **err) {
+void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val,
+                           fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadCopyNegate((decQuad *)res, (const decQuad *)val);
   handle_error(err);
