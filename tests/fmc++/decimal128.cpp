@@ -965,6 +965,13 @@ TEST(decimal128, cppstreams) {
   ASSERT_EQ(c, b);
 }
 
+TEST(decimal128, invalid_cppstreams) {
+  std::string s("invaliddecimal");
+  std::stringstream ss(s);
+  fmc::decimal128 b;
+  ASSERT_THROW(ss >> b, std::runtime_error);
+}
+
 void keep_some_zeros(char *str, int n) {
   for (auto i = strlen(str); --i > 0;) {
     if (str[i] != '0') {

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "fmc++/convert.hpp"
+#include "fmc++/mpl.hpp"
 #include "fmc++/side.hpp"
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
@@ -44,6 +45,7 @@ public:
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", d);
     fmc_error_t *err;
     fmc_decimal128_from_str(this, str, &err);
+    // does not produce error because double is always within range
   }
   decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) {
@@ -97,6 +99,7 @@ public:
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
+    fmc_runtime_error_unless(!err) << "unable to convert decimal object to integer";
     return ret;
   }
   explicit operator double() {
@@ -141,7 +144,6 @@ inline decimal128 operator+(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
   fmc_error_t *err;
   fmc_decimal128_add(&res, &a, &b, &err);
-  //TODO: Handle error and exception
   return res;
 }
 
@@ -149,7 +151,6 @@ inline decimal128 operator-(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
   fmc_error_t *err;
   fmc_decimal128_sub(&res, &a, &b, &err);
-  //TODO: Handle error and exception
   return res;
 }
 
@@ -157,7 +158,6 @@ inline decimal128 operator*(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
   fmc_error_t *err;
   fmc_decimal128_mul(&res, &a, &b, &err);
-  //TODO: Handle error and exception
   return res;
 }
 
@@ -165,7 +165,6 @@ inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
   fmc_error_t *err;
   fmc_decimal128_div(&res, &a, &b, &err);
-  //TODO: Handle error and exception
   return res;
 }
 
@@ -189,7 +188,7 @@ template <> struct conversion<double, fmc_decimal128_t> {
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", x);
     fmc_error_t *err;
     fmc_decimal128_from_str(&res, str, &err);
-    //TODO: Handle error and exception
+    // does not fail, double is within range
     return res;
   }
 };
@@ -306,16 +305,16 @@ inline string to_string(const fmc_decimal128_t &r) noexcept {
   return to_string(fmc::decimal128::upcast(r));
 }
 
-inline istream &operator>>(istream &os, fmc::decimal128 &r) noexcept {
+inline istream &operator>>(istream &os, fmc::decimal128 &r) {
   string str;
   os >> str;
   fmc_error_t *err;
   fmc_decimal128_from_str(&r, str.c_str(), &err);
-  //TODO: Handle error and exception
+  fmc_runtime_error_unless(!err) << "unable to build decimal from string";
   return os;
 }
 
-inline istream &operator>>(istream &os, fmc_decimal128_t &r) noexcept {
+inline istream &operator>>(istream &os, fmc_decimal128_t &r) {
   return os >> fmc::decimal128::upcast(r);
 }
 
@@ -339,7 +338,6 @@ inline fmc::decimal128 abs(const fmc::decimal128 &x) noexcept {
   fmc::decimal128 res;
   fmc_error_t *err;
   fmc_decimal128_abs(&res, &x, &err);
-  // TODO: Handle error and exception
   return res;
 }
 
