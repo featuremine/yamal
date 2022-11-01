@@ -45,7 +45,6 @@ public:
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", d);
     fmc_error_t *err;
     fmc_decimal128_from_str(this, str, &err);
-    // does not produce error because double is always within range
   }
   decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) {
@@ -188,7 +187,6 @@ template <> struct conversion<double, fmc_decimal128_t> {
     snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", x);
     fmc_error_t *err;
     fmc_decimal128_from_str(&res, str, &err);
-    // does not fail, double is within range
     return res;
   }
 };
