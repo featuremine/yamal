@@ -108,6 +108,12 @@ public:
     char *ptr = nullptr;
     return strtod(str, &ptr);
   }
+  explicit operator float() {
+    char str[FMC_DECIMAL128_STR_SIZE];
+    fmc_decimal128_to_str(str, this);
+    char *ptr = nullptr;
+    return strtof(str, &ptr);
+  }
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) noexcept {
