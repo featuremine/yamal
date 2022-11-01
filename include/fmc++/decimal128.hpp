@@ -98,21 +98,25 @@ public:
     fmc_decimal128_negate(&res, this, &err);
     return res;
   }
-  explicit operator int64_t() {
+  explicit operator int() noexcept {
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to convert decimal object to integer";
     return ret;
   }
-  explicit operator double() {
+  explicit operator int64_t() noexcept {
+    int64_t ret;
+    fmc_error_t *err;
+    fmc_decimal128_to_int(&ret, this, &err);
+    return ret;
+  }
+  explicit operator double() noexcept {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
     char *ptr = nullptr;
     return strtod(str, &ptr);
   }
-  explicit operator float() {
+  explicit operator float() noexcept {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
     char *ptr = nullptr;
