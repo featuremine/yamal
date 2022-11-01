@@ -48,7 +48,7 @@ public:
     fmc_decimal128_from_str(this, str, &err);
   }
   decimal128(fm_decimal64_t d) {
-    static decimal128 dec64div(DECIMAL64_FRACTION);
+    static decimal128 dec64div((int64_t)DECIMAL64_FRACTION);
 
     decimal128 dd;
     fmc_decimal128_from_int(&dd, d.value);

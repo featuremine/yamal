@@ -105,10 +105,10 @@ struct hash<fm_decimal64_t>
 
 namespace fmc {
 
-template <> struct sided_initializer<fm_decimal64> {
+template <> struct sided_initializer<fm_decimal64_t> {
   static constexpr bool is_specialized = true;
-  static constexpr fm_decimal64 min() noexcept { return FM_DECIMAL64_MIN; }
-  static constexpr fm_decimal64 max() noexcept { return FM_DECIMAL64_MAX; }
+  static constexpr fm_decimal64_t min() noexcept { return FM_DECIMAL64_MIN; }
+  static constexpr fm_decimal64_t max() noexcept { return FM_DECIMAL64_MAX; }
 };
 
 }
