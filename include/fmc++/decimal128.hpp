@@ -71,6 +71,10 @@ public:
     *this = decimal128(a);
     return *this;
   }
+  decimal128 &operator=(const float &a) {
+    *this = decimal128(a);
+    return *this;
+  }
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
     return static_cast<decimal128 &>(a);
   }
