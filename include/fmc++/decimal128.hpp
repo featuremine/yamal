@@ -98,25 +98,25 @@ public:
     fmc_decimal128_negate(&res, this, &err);
     return res;
   }
-  explicit operator int() noexcept {
+  explicit operator int() const noexcept {
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
     return ret;
   }
-  explicit operator int64_t() noexcept {
+  explicit operator int64_t() const noexcept {
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
     return ret;
   }
-  explicit operator double() noexcept {
+  explicit operator double() const noexcept {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
     char *ptr = nullptr;
     return strtod(str, &ptr);
   }
-  explicit operator float() noexcept {
+  explicit operator float() const noexcept {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
     char *ptr = nullptr;
