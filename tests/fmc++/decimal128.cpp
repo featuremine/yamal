@@ -27,8 +27,10 @@
 #include <random>
 #include <string.h>
 
-static_assert(sizeof(decQuad) == sizeof(fmc_decimal128_t), "sizeof doesn't match");
-static_assert(alignof(decQuad) == alignof(fmc_decimal128_t), "alignof doesn't match");
+static_assert(sizeof(decQuad) == sizeof(fmc_decimal128_t),
+              "sizeof doesn't match");
+static_assert(alignof(decQuad) == alignof(fmc_decimal128_t),
+              "alignof doesn't match");
 
 // C API
 
