@@ -38,14 +38,10 @@ public:
   decimal128(int64_t i) { fmc_decimal128_from_int(this, i); }
   decimal128(uint i) { fmc_decimal128_from_uint(this, i); }
   decimal128(uint64_t i) { fmc_decimal128_from_uint(this, i); }
-  decimal128(double d) {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", d);
-    fmc_decimal128_from_str(this, str);
-  }
-  decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
+  decimal128(double d) { fmc_decimal128_from_double(this, d); }
+  decimal128() { memset(longs, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) {
-    memcpy(this->bytes, a.bytes, sizeof(a.bytes));
+    memcpy(this->longs, a.longs, sizeof(a.longs));
     return *this;
   }
   decimal128 &operator=(const int &a) {
@@ -96,8 +92,7 @@ public:
   explicit operator double() {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
-    char *ptr = nullptr;
-    return strtod(str, &ptr);
+    return strtod(str, nullptr);
   }
 };
 
@@ -157,17 +152,14 @@ template <> struct conversion<fmc_decimal128_t, double> {
   double operator()(fmc_decimal128_t x) {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, &x);
-    char *ptr = nullptr;
-    return strtod(str, &ptr);
+    return strtod(str, nullptr);
   }
 };
 
 template <> struct conversion<double, fmc_decimal128_t> {
   fmc_decimal128_t operator()(double x) {
     fmc_decimal128_t res;
-    char str[FMC_DECIMAL128_STR_SIZE];
-    snprintf(str, FMC_DECIMAL128_STR_SIZE, "%.15g", x);
-    fmc_decimal128_from_str(&res, str);
+    fmc_decimal128_from_double(&res, x);
     return res;
   }
 };

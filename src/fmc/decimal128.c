@@ -27,6 +27,7 @@
 
 #include "decNumberLocal.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 static decContext *get_context() {
@@ -38,6 +39,27 @@ static decContext *get_context() {
   }
   return &set;
 }
+
+const fmc_decimal128_t fmc_decimal128_exp63[18] = {
+    {{0x0000000000000001ull, 0x2208000000000000ull}},
+    {{0x948df20da5cfd42eull, 0x2208000000000000ull}},
+    {{0x1baaca794cbf6905ull, 0x6a09287164f308e6ull}},
+    {{0x0b73daedbf9026abull, 0x3e0df4c7dce94cddull}},
+    {{0x244dfd3aae310a9eull, 0x3e12937016f76c96ull}},
+    {{0xc01e4a9083dfe45cull, 0x3a17774afe6b54a4ull}},
+    {{0x77d8bec0015d1e40ull, 0x3a1c0d6b8e683ab3ull}},
+    {{0x84f216ae94929435ull, 0x3620f7889eb3b662ull}},
+    {{0xc6782120e94ab0d9ull, 0x3625937891fcccf2ull}},
+    {{0x22f32f33d6dd928eull, 0x322a43cdc58dfc6full}},
+    {{0x5061045a4c626f1bull, 0x322f255a2215d1b7ull}},
+    {{0x6432b208dc600081ull, 0x3233c8982cf312b6ull}},
+    {{0x7dcf83b8d04550d7ull, 0x2e38b9a69df3e2c2ull}},
+    {{0x30df48fddb5d4f67ull, 0x2e3d65bafcdca3f9ull}},
+    {{0xb8b40e238b2b1c5eull, 0x2e4212494ead73a8ull}},
+    {{0x6296fa2939e57c0dull, 0x2a46efc0cf1cb76eull}},
+    {{0xc70727eb8a5aef05ull, 0x2a4bbc3188347ea4ull}},
+    {{0xaea60626d3de3a66ull, 0x2a506b00a0e6705aull}},
+};
 
 void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src) {
   decQuadFromString((decQuad *)dest, src, get_context());
@@ -228,6 +250,56 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
 
 void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src) {
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
+}
+
+void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
+  int64_t mantissa = (*(int64_t *)(&n) & ((1ll << 52ll) - 1ll));
+  int64_t exp = (*(int64_t *)(&n) >> 52ll) & ((1ll << 11ll) - 1ll);
+  bool is_negative = (*(int64_t *)(&n) >> 63ll);
+  if (exp == 0x000ll) {
+    if (mantissa == 0) {
+      fmc_decimal128_from_uint(res, 0);
+      if (is_negative) {
+        fmc_decimal128_negate(res, res);
+      }
+      return;
+    } else {
+      exp = 1ll - 1023ll - 52ll;
+    }
+  } else if (exp == 0x7ffll) {
+    if (mantissa == 0ll) {
+      fmc_decimal128_inf(res);
+    } else {
+      fmc_decimal128_qnan(res);
+    }
+    if (is_negative) {
+      fmc_decimal128_negate(res, res);
+    }
+    return;
+  } else {
+    mantissa += (1ll << 52ll);
+    exp -= 1023ll + 52ll;
+  }
+  int64_t absexp = labs(exp);
+
+  fmc_decimal128_t decmantissa, decexp;
+  fmc_decimal128_from_int(&decmantissa, mantissa);
+  fmc_decimal128_from_int(&decexp, (1ll << (absexp % 63ll)));
+
+  if (exp >= 0ll) {
+    fmc_decimal128_mul(res, &decmantissa, &decexp);
+    if (absexp >= 63ll) {
+      fmc_decimal128_mul(res, res, &fmc_decimal128_exp63[absexp / 63ll]);
+    }
+  } else {
+    fmc_decimal128_div(res, &decmantissa, &decexp);
+    if (absexp >= 63ll) {
+      fmc_decimal128_div(res, res, &fmc_decimal128_exp63[absexp / 63ll]);
+    }
+  }
+  if (is_negative) {
+    fmc_decimal128_negate(res, res);
+  }
 }
 
 void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
