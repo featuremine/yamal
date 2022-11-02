@@ -37,7 +37,7 @@ typedef struct {
   uint64_t longs[2];
 } fmc_decimal128_t;
 
-FMMODFUNC const fmc_decimal128_t *get_exp63table();
+FMMODFUNC extern const fmc_decimal128_t fmc_decimal128_exp63[18];
 
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src);
 FMMODFUNC void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src);
