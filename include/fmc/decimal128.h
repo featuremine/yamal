@@ -34,7 +34,7 @@ extern "C" {
 #define FMC_DECIMAL128_STR_SIZE 43
 
 typedef struct {
-  uint8_t bytes[FMC_DECIMAL128_SIZE];
+  uint64_t longs[2];
 } fmc_decimal128_t;
 
 FMMODFUNC const fmc_decimal128_t *get_exp63table();

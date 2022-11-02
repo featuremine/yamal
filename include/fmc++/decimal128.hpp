@@ -39,9 +39,9 @@ public:
   decimal128(uint i) { fmc_decimal128_from_uint(this, i); }
   decimal128(uint64_t i) { fmc_decimal128_from_uint(this, i); }
   decimal128(double d) { fmc_decimal128_from_double(this, d); }
-  decimal128() { memset(bytes, 0, FMC_DECIMAL128_SIZE); }
+  decimal128() { memset(longs, 0, FMC_DECIMAL128_SIZE); }
   decimal128 &operator=(const fmc_decimal128_t &a) {
-    memcpy(this->bytes, a.bytes, sizeof(a.bytes));
+    memcpy(this->longs, a.longs, sizeof(a.longs));
     return *this;
   }
   decimal128 &operator=(const int &a) {
