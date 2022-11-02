@@ -24,8 +24,14 @@
 #include "fmc++/decimal128.hpp"
 #include "fmc/error.h"
 #include <fmc++/gtestwrap.hpp>
+#include <libdecnumber/decQuad.h>
 #include <random>
 #include <string.h>
+
+static_assert(sizeof(decQuad) == sizeof(fmc_decimal128_t),
+              "sizeof doesn't match");
+static_assert(alignof(decQuad) == alignof(fmc_decimal128_t),
+              "alignof doesn't match");
 
 // C API
 
@@ -978,16 +984,23 @@ TEST(decimal128, invalid_cppstreams) {
   ASSERT_THROW(ss >> b, std::runtime_error);
 }
 
-void keep_some_zeros(char *str, int n) {
+void canonicalize(char *str, int keep_zeros) {
+  for (auto i = strlen(str); --i > 0;) {
+    if (str[i] == 'e') {
+      str[i] = 'E';
+      return;
+    }
+  }
   for (auto i = strlen(str); --i > 0;) {
     if (str[i] != '0') {
       for (auto j = i; j > 0; --j) {
         if (str[j] == '.') {
-          if (i + n == j) {
+          if (i + keep_zeros == j) {
             str[j] = '\0';
           } else {
-            str[i + n + 1] = '\0';
+            str[i + keep_zeros + 1] = '\0';
           }
+          break;
         }
       }
       break;
@@ -1016,12 +1029,17 @@ TEST(decimal128, identity_double) {
         for (int keep_zeros = 12; keep_zeros >= 0; keep_zeros -= 3) {
           double number = (decimal + integer) * sign;
           sprintf(float_str, "%.33f", number);
-          keep_some_zeros(float_str, keep_zeros);
+          canonicalize(float_str, keep_zeros);
           fmc_decimal128_t a;
           fmc_decimal128_from_str(&a, float_str, &err);
           ASSERT_EQ(err, nullptr);
           fmc_decimal128_to_str(dec128_str, &a);
-          keep_some_zeros(float_str, 0);
+          canonicalize(float_str, 0);
+          EXPECT_STREQ(dec128_str, float_str);
+
+          fmc_decimal128_t b;
+          fmc_decimal128_from_double(&b, number);
+          fmc_decimal128_to_str(dec128_str, &b);
           EXPECT_STREQ(dec128_str, float_str);
         }
       }
@@ -1029,30 +1047,77 @@ TEST(decimal128, identity_double) {
   }
 }
 
-TEST(decimal128, identity_infnan) {
-  char float_str[256];
-  char dec128_str[256];
+TEST(decimal128, identity_extreme) {
+  char number_str[512];
+  char dec_fromstr[512];
+  char dec_fromdouble[512];
 
   auto to_str = [&](double number) {
     fmc_decimal128_t a;
+    fmc_decimal128_t b;
+
+#ifdef FMC_SYS_MACH
+    auto isnan = std::isnan(number);
+    auto isnegative = std::signbit(number);
+    sprintf(number_str, "%s%.34g", (isnan && isnegative) ? "-" : "", number);
+#else
+    sprintf(number_str, "%.34g", number);
+#endif
+
     fmc_error_t *err;
-    sprintf(float_str, "%.33f", number);
-    fmc_decimal128_from_str(&a, float_str, &err);
+    fmc_decimal128_from_str(&a, number_str, &err);
     ASSERT_EQ(err, nullptr);
-    fmc_decimal128_to_str(dec128_str, &a);
+    fmc_decimal128_from_double(&b, number);
+
+    fmc_decimal128_to_str(dec_fromstr, &a);
+    fmc_decimal128_to_str(dec_fromdouble, &b);
+
+    canonicalize(number_str, 0);
   };
 
   to_str(std::numeric_limits<double>::quiet_NaN());
-  EXPECT_STREQ(dec128_str, float_str);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
 
   to_str(-std::numeric_limits<double>::quiet_NaN());
-  EXPECT_STREQ(dec128_str, float_str);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(std::numeric_limits<double>::signaling_NaN());
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(-std::numeric_limits<double>::signaling_NaN());
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
 
   to_str(std::numeric_limits<double>::infinity());
-  EXPECT_STREQ(dec128_str, float_str);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
 
   to_str(-std::numeric_limits<double>::infinity());
-  EXPECT_STREQ(dec128_str, float_str);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(std::numeric_limits<double>::denorm_min());
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(-std::numeric_limits<double>::denorm_min());
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(std::numeric_limits<double>::denorm_min() * (double)(1ll << 55ll));
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(std::numeric_limits<double>::max() / 128.0);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+
+  to_str(std::numeric_limits<double>::min() / 128.0);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
 }
 
 TEST(decimal128, assign) {
