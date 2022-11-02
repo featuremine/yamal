@@ -26,7 +26,7 @@
 extern "C" {
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
-#include "fmc/decimal64.h"
+#include "fmc/rprice.h"
 }
 
 #include <cmath>
@@ -44,8 +44,8 @@ public:
   decimal128(int64_t i) { fmc_decimal128_from_int(this, i); }
   decimal128(uint i) { fmc_decimal128_from_uint(this, i); }
   decimal128(uint64_t i) { fmc_decimal128_from_uint(this, i); }
-  decimal128(fm_decimal64_t d) {
-    static decimal128 dec64div((int64_t)DECIMAL64_FRACTION);
+  decimal128(fmc_rprice_t d) {
+    static decimal128 dec64div((int64_t)RPRICE_FRACTION);
 
     decimal128 dd;
     fmc_decimal128_from_int(&dd, d.value);
