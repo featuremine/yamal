@@ -30,6 +30,7 @@ extern "C" {
 
 #include "fmc++/convert.hpp"
 #include "fmc++/side.hpp"
+#include "fmc++/mpl.hpp"
 
 #include <functional>
 #include <iomanip>
@@ -124,71 +125,99 @@ template <> struct sided_initializer<rprice> {
 };
 
 template <> struct conversion<rprice, double> {
-  double operator()(rprice x) { return fmc_rprice_to_double(x); }
+  double operator()(rprice x) {
+    double ret;
+    fmc_rprice_to_double(&ret, &x);
+    return ret;
+  }
 };
 
 template <> struct conversion<double, rprice> {
-  rprice operator()(double x) { return fmc_rprice_from_double(x); }
+  rprice operator()(double x) {
+    rprice ret;
+    fmc_rprice_from_double(&ret, x);
+    return ret;
+  }
 };
 
 }
 
 inline fmc_rprice_t operator/(fmc_rprice_t a, fmc_rprice_t b) {
-  return fmc_rprice_div(a, b);
+  fmc_rprice_t ret;
+  fmc_rprice_div(&ret, &a, &b);
+  return ret;
 }
 
 inline fmc_rprice_t operator/(fmc_rprice_t a, int b) {
-  return fmc_rprice_intdiv(a, b);
+  fmc_rprice_t ret;
+  fmc_rprice_int_div(&ret, &a, b);
+  return ret;
 }
 
 inline bool operator==(fmc_rprice_t a, fmc_rprice_t b) {
-  return fmc_rprice_equal(a, b);
+  return fmc_rprice_equal(&a, &b);
 }
 
 inline bool operator!=(fmc_rprice_t a, fmc_rprice_t b) {
-  return !fmc_rprice_equal(a, b);
+  return !fmc_rprice_equal(&a, &b);
 }
 
 inline fmc_rprice_t operator+(fmc_rprice_t a, fmc_rprice_t b) {
-  return fmc_rprice_add(a, b);
+  fmc_rprice_t ret;
+  fmc_rprice_add(&ret, &a, &b);
+  return ret;
 }
 
 inline fmc_rprice_t &operator+=(fmc_rprice_t &a, fmc_rprice_t b) {
-  fmc_rprice_inc(&a, b);
+  fmc_rprice_inc(&a, &b);
   return a;
 }
 
 inline fmc_rprice_t &operator-=(fmc_rprice_t &a, fmc_rprice_t b) {
-  fmc_rprice_dec(&a, b);
+  fmc_rprice_dec(&a, &b);
   return a;
 }
 
 inline fmc_rprice_t operator-(fmc_rprice_t a, fmc_rprice_t b) {
-  return fmc_rprice_sub(a, b);
+  fmc_rprice_t ret;
+  fmc_rprice_sub(&ret, &a, &b);
+  return ret;
 }
 
 inline bool operator<(fmc_rprice_t a, fmc_rprice_t b) {
-  return fmc_rprice_less(a, b);
+  return fmc_rprice_less(&a, &b);
 }
 
 inline bool operator>(fmc_rprice_t a, fmc_rprice_t b) {
-  return fmc_rprice_less(b, a);
+  return fmc_rprice_greater(&a, &b);
 }
 
 inline bool operator<=(fmc_rprice_t a, fmc_rprice_t b) {
-  return !fmc_rprice_less(b, a);
+  return fmc_rprice_less_or_equal(&a, &b);
 }
 
 inline bool operator>=(fmc_rprice_t a, fmc_rprice_t b) {
-  return !fmc_rprice_less(a, b);
+  return fmc_rprice_greater_or_equal(&a, &b);
+}
+
+inline fmc_rprice_t operator*(fmc_rprice_t a, fmc_rprice_t b) {
+  fmc_rprice_t ret;
+  fmc_rprice_mul(&ret, &a, &b);
+  return ret;
 }
 
 inline fmc_rprice_t operator*(fmc_rprice_t a, int64_t b) {
-  return fmc_rprice_mul(a, b);
+  fmc_rprice_t ret, db;
+  fmc_rprice_from_int(&db, b);
+  fmc_rprice_mul(&ret, &a, &db);
+  return ret;
 }
 
 inline fmc_rprice_t operator*(int64_t a, fmc_rprice_t b) {
-  return fmc_rprice_mul(b, a);
+  fmc_rprice_t ret, da;
+  fmc_rprice_from_int(&da, a);
+  fmc_rprice_mul(&ret, &da, &b);
+  return ret;
 }
 
 namespace std {
@@ -206,6 +235,7 @@ inline istream &operator>>(istream &s, fmc::rprice &x) {
   using namespace std;
   double d;
   s >> d;
+  fmc_runtime_error_unless(s.eof()) << "unable to stream data into rprice";
   x = fmc::to<fmc::rprice>(d);
   return s;
 }
@@ -252,7 +282,9 @@ inline bool isfinite(const fmc_rprice_t &x) noexcept {
 }
 
 inline fmc::rprice abs(const fmc::rprice &x) noexcept {
-  return fmc_rprice_abs(x);
+  fmc::rprice ret;
+  fmc_rprice_abs(&ret, &x);
+  return ret;
 }
 
 inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {

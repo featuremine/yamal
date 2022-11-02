@@ -52,10 +52,10 @@ inline void fmc_rprice_from_ratio(fmc_rprice_t *dest, int64_t num, int64_t denum
 }
 
 inline void fmc_rprice_from_int(fmc_rprice_t *dest, int64_t src) {
-  dest->value = RPRICE_FRACTION;
+  dest->value = src * RPRICE_FRACTION;
 }
 inline void fmc_rprice_to_int(int64_t *dest, const fmc_rprice_t *src) {
-  *dest = src->value / (int64_t)RPRICE_FRACTION;
+  *dest = src->value / RPRICE_FRACTION;
 }
 inline void fmc_rprice_from_double(fmc_rprice_t *dest, double src) {
   dest->value = fmc_llround(src * RPRICE_FRACTION);
@@ -88,7 +88,7 @@ inline bool fmc_rprice_equal(const fmc_rprice_t *lhs,
 inline void fmc_rprice_div(fmc_rprice_t *res,
                               const fmc_rprice_t *lhs,
                               const fmc_rprice_t *rhs) {
-  res->value = lhs->value / rhs->value;
+  res->value = (lhs->value / rhs->value) * RPRICE_FRACTION;
 }
 inline void fmc_rprice_flt_div(double *res,
                                const fmc_rprice_t *lhs,
@@ -120,7 +120,7 @@ inline void fmc_rprice_dec(fmc_rprice_t *lhs,
 inline void fmc_rprice_mul(fmc_rprice_t *res,
                            const fmc_rprice_t *lhs,
                            const fmc_rprice_t *rhs) {
-  res->value = lhs->value * rhs->value;
+  res->value = (lhs->value / RPRICE_FRACTION) * rhs->value;
 }
 
 inline void fmc_rprice_max(fmc_rprice_t *res) {
