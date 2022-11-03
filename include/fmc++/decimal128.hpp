@@ -56,27 +56,27 @@ public:
     return *this;
   }
   decimal128 &operator=(const int &a) {
-    *this = decimal128(a);
+    fmc_decimal128_from_int(this, a);
     return *this;
   }
   decimal128 &operator=(const int64_t &a) {
-    *this = decimal128(a);
+    fmc_decimal128_from_int(this, a);
     return *this;
   }
   decimal128 &operator=(const uint &a) {
-    *this = decimal128(a);
+    fmc_decimal128_from_uint(this, a);
     return *this;
   }
   decimal128 &operator=(const uint64_t &a) {
-    *this = decimal128(a);
+    fmc_decimal128_from_uint(this, a);
     return *this;
   }
   decimal128 &operator=(const double &a) {
-    *this = decimal128(a);
+    fmc_decimal128_from_double(this, a);
     return *this;
   }
   decimal128 &operator=(const float &a) {
-    *this = decimal128(a);
+    fmc_decimal128_from_double(this, a);
     return *this;
   }
   static constexpr decimal128 &upcast(fmc_decimal128_t &a) noexcept {
