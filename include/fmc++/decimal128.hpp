@@ -86,15 +86,15 @@ public:
   upcast(const fmc_decimal128_t &a) noexcept {
     return static_cast<const decimal128 &>(a);
   }
-  decimal128 &operator+=(const decimal128 &a) noexcept {
+  decimal128 &operator+=(const decimal128 &a) {
     fmc_decimal128_inc(this, &a);
     return *this;
   }
-  decimal128 &operator-=(const decimal128 &a) noexcept {
+  decimal128 &operator-=(const decimal128 &a) {
     fmc_decimal128_dec(this, &a);
     return *this;
   }
-  decimal128 operator-() const noexcept {
+  decimal128 operator-() const {
     decimal128 res;
     fmc_decimal128_negate(&res, this);
     return res;
@@ -113,12 +113,12 @@ public:
     fmc_runtime_error_unless(!err) << fmc_error_msg(err);
     return ret;
   }
-  explicit operator double() const noexcept {
+  explicit operator double() const {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
     return strtod(str, nullptr);
   }
-  explicit operator float() const noexcept {
+  explicit operator float() const {
     char str[FMC_DECIMAL128_STR_SIZE];
     fmc_decimal128_to_str(str, this);
     char *ptr = nullptr;
