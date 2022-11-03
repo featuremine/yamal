@@ -390,7 +390,8 @@ TEST(decimal128, divide_by_zero) {
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_div(&c, &a, &b, &err);
-  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fetestexcept(FE_DIVBYZERO));
 }
 
 TEST(decimal128, int_divide_by_zero) {
@@ -401,7 +402,8 @@ TEST(decimal128, int_divide_by_zero) {
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_int_div(&c, &a, 0, &err);
-  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fetestexcept(FE_DIVBYZERO));
 }
 
 TEST(decimal128, intdivide) {
@@ -445,7 +447,8 @@ TEST(decimal128, add_out_of_range) {
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_add(&c, &a, &b, &err);
-  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fetestexcept(FE_OVERFLOW));
 }
 
 TEST(decimal128, sub) {
@@ -479,7 +482,8 @@ TEST(decimal128, sub_out_of_range) {
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_sub(&c, &a, &b, &err);
-  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fetestexcept(FE_OVERFLOW));
 }
 
 TEST(decimal128, mul) {
@@ -513,7 +517,8 @@ TEST(decimal128, mul_out_of_range) {
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_mul(&c, &a, &b, &err);
-  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_TRUE(fetestexcept(FE_OVERFLOW));
 }
 
 TEST(decimal128, comparison) {

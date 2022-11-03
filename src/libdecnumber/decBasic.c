@@ -234,13 +234,11 @@ static decFloat *decDivide(decFloat *result, const decFloat *dfl,
     if (DFISZERO(dfl)) { /* 0/0 is undefined */
       decFloatZero(result);
       DFWORD(result, 0) = DECFLOAT_qNaN;
-      set->status |= DEC_Division_undefined;
       feraiseexcept(FE_INVALID);
       return result;
     }
     if (op & (REMAINDER | REMNEAR))
       return decInvalid(result, set); /* bad rem */
-    set->status |= DEC_Division_by_zero;
     feraiseexcept(FE_DIVBYZERO);
     DFWORD(result, 0) = num.sign;
     return decInfinity(result, result); /* x/0 -> signed Infinity */
@@ -641,7 +639,6 @@ static decFloat *decDivide(decFloat *result, const decFloat *dfl,
   if (length + num.exponent > DECPMAX) { /* cannot fit */
     decFloatZero(result);
     DFWORD(result, 0) = DECFLOAT_qNaN;
-    set->status |= DEC_Division_impossible;
     feraiseexcept(FE_INVALID);
     return result;
   }
@@ -1818,7 +1815,6 @@ decFloat *decFloatCompareSignal(decFloat *result, const decFloat *dfl,
   Int comp; /* work */
   /* NaNs are handled as usual, except that all NaNs signal */
   if (DFISNAN(dfl) || DFISNAN(dfr)) {
-    set->status |= DEC_Invalid_operation;
     feraiseexcept(FE_INVALID);
     return decNaNs(result, dfl, dfr, set);
   }
@@ -2629,7 +2625,6 @@ decFloat *decFloatLogB(decFloat *result, const decFloat *df, decContext *set) {
     return decInfinity(result, result); /* canonical +Infinity */
   }
   if (DFISZERO(df)) {
-    set->status |= DEC_Division_by_zero; /* as per 754 */
     feraiseexcept(FE_DIVBYZERO);
     DFWORD(result, 0) = DECFLOAT_Sign;   /* make negative */
     return decInfinity(result, result);  /* canonical -Infinity */
@@ -2853,7 +2848,6 @@ decFloat *decFloatMultiply(decFloat *result, const decFloat *dfl,
 decFloat *decFloatNextMinus(decFloat *result, const decFloat *dfl,
                             decContext *set) {
   decFloat delta;          /* tiny increment */
-  uInt savestat;           /* saves status */
   enum rounding saveround; /* .. and mode */
 
   /* +Infinity is the special case */
@@ -2872,13 +2866,10 @@ decFloat *decFloatNextMinus(decFloat *result, const decFloat *dfl,
   /* set up for the directional round */
   saveround = set->round;       /* save mode */
   set->round = DEC_ROUND_FLOOR; /* .. round towards -Infinity */
-  savestat = set->status;       /* save status */
   decFloatAdd(result, dfl, &delta, set);
   /* Add rules mess up the sign when going from +Ntiny to 0 */
   if (DFISZERO(result))
     DFWORD(result, 0) ^= DECFLOAT_Sign; /* correct */
-  set->status &= DEC_Invalid_operation; /* preserve only sNaN status */
-  set->status |= savestat;              /* restore pending flags */
   set->round = saveround;               /* .. and mode */
   return result;
 } /* decFloatNextMinus */
@@ -2896,7 +2887,6 @@ decFloat *decFloatNextMinus(decFloat *result, const decFloat *dfl,
 /* ------------------------------------------------------------------ */
 decFloat *decFloatNextPlus(decFloat *result, const decFloat *dfl,
                            decContext *set) {
-  uInt savestat;           /* saves status */
   enum rounding saveround; /* .. and mode */
   decFloat delta;          /* tiny increment */
 
@@ -2917,13 +2907,10 @@ decFloat *decFloatNextPlus(decFloat *result, const decFloat *dfl,
   /* set up for the directional round */
   saveround = set->round;         /* save mode */
   set->round = DEC_ROUND_CEILING; /* .. round towards +Infinity */
-  savestat = set->status;         /* save status */
   decFloatAdd(result, dfl, &delta, set);
   /* Add rules mess up the sign when going from -Ntiny to -0 */
   if (DFISZERO(result))
     DFWORD(result, 0) ^= DECFLOAT_Sign; /* correct */
-  set->status &= DEC_Invalid_operation; /* preserve only sNaN status */
-  set->status |= savestat;              /* restore pending flags */
   set->round = saveround;               /* .. and mode */
   return result;
 } /* decFloatNextPlus */
@@ -2945,7 +2932,6 @@ decFloat *decFloatNextToward(decFloat *result, const decFloat *dfl,
                              const decFloat *dfr, decContext *set) {
   decFloat delta;          /* tiny increment or decrement */
   decFloat pointone;       /* 1e-1 */
-  uInt savestat;           /* saves status */
   enum rounding saveround; /* .. and mode */
   uInt deltatop;           /* top word for delta */
   Int comp;                /* work */
@@ -2976,7 +2962,6 @@ decFloat *decFloatNextToward(decFloat *result, const decFloat *dfl,
     set->round = DEC_ROUND_FLOOR; /* .. round towards -Infinity */
     deltatop = DECFLOAT_Sign;     /* negative delta */
   }
-  savestat = set->status; /* save status */
   /* Here, Inexact is needed where appropriate (and hence Underflow, */
   /* etc.).  Therefore the tiny delta which is otherwise */
   /* unrepresentable (see NextPlus and NextMinus) is constructed */
@@ -2988,8 +2973,6 @@ decFloat *decFloatNextToward(decFloat *result, const decFloat *dfl,
   decFloatFMA(result, &delta, &pointone, dfl, set);
   /* [Delta is truly tiny, so no need to correct sign of zero] */
   /* use new status unless the result is normal */
-  if (decFloatIsNormal(result))
-    set->status = savestat; /* else goes forward */
   set->round = saveround;   /* restore mode */
   return result;
 } /* decFloatNextToward */
@@ -3175,7 +3158,6 @@ decFloat *decFloatQuantize(decFloat *result, const decFloat *dfl,
 
     if (reround != 0) { /* discarding non-zero */
       uInt bump = 0;
-      set->status |= DEC_Inexact;
       feraiseexcept(FE_INEXACT);
 
       /* next decide whether to increment the coefficient */
@@ -3230,7 +3212,6 @@ decFloat *decFloatQuantize(decFloat *result, const decFloat *dfl,
           break;
         }          /* r-r */
         default: { /* e.g., DEC_ROUND_MAX */
-          set->status |= DEC_Invalid_context;
           feraiseexcept(FE_INVALID);
 #if DECCHECK
           printf("Unknown rounding mode: %ld\n", (LI)set->round);
@@ -3477,7 +3458,7 @@ decFloat *decFloatRotate(decFloat *result, const decFloat *dfl,
                          const decFloat *dfr, decContext *set) {
   Int rotate;                 /* dfr as an Int */
   uByte buf[DECPMAX + PHALF]; /* coefficient + half */
-  uInt digits, savestat;      /* work */
+  uInt digits;      /* work */
   bcdnum num;                 /* .. */
   uByte *ub;                  /* .. */
 
@@ -3526,9 +3507,7 @@ decFloat *decFloatRotate(decFloat *result, const decFloat *dfl,
   num.lsd = num.msd + DECPMAX - 1;
   num.sign = DFWORD(dfl, 0) & DECFLOAT_Sign;
   num.exponent = GETEXPUN(dfl);
-  savestat = set->status; /* record */
   decFinalize(result, &num, set);
-  set->status = savestat; /* restore */
   return result;
 } /* decFloatRotate */
 
@@ -3624,7 +3603,7 @@ decFloat *decFloatShift(decFloat *result, const decFloat *dfl,
                         const decFloat *dfr, decContext *set) {
   Int shift;              /* dfr as an Int */
   uByte buf[DECPMAX * 2]; /* coefficient + padding */
-  uInt digits, savestat;  /* work */
+  uInt digits;  /* work */
   bcdnum num;             /* .. */
   uInt uiwork;            /* for macros */
 
@@ -3668,9 +3647,7 @@ decFloat *decFloatShift(decFloat *result, const decFloat *dfl,
     num.msd += shift;
     num.lsd = num.msd + DECPMAX - 1;
   }
-  savestat = set->status; /* record */
   decFinalize(result, &num, set);
-  set->status = savestat; /* restore */
   return result;
 } /* decFloatShift */
 
@@ -3791,7 +3768,6 @@ decFloat *decFloatXor(decFloat *result, const decFloat *dfl,
 static decFloat *decInvalid(decFloat *result, decContext *set) {
   decFloatZero(result);
   DFWORD(result, 0) = DECFLOAT_qNaN;
-  set->status |= DEC_Invalid_operation;
   feraiseexcept(FE_INVALID);
   return result;
 } /* decInvalid */
@@ -3835,7 +3811,6 @@ static decFloat *decNaNs(decFloat *result, const decFloat *dfl,
   if (DFISSNAN(dfl)) {
     decCanonical(result, dfl); /* propagate canonical sNaN */
     DFWORD(result, 0) &= ~(DECFLOAT_qNaN ^ DECFLOAT_sNaN); /* quiet */
-    set->status |= DEC_Invalid_operation;
     feraiseexcept(FE_INVALID);
     return result;
   }
@@ -4064,7 +4039,6 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
   sourhi = DFWORD(df, 0);         /* top word */
   exp = DECCOMBEXP[sourhi >> 26]; /* get exponent high bits (in place) */
   if (EXPISSPECIAL(exp)) {        /* is special? */
-    set->status |= DEC_Invalid_operation; /* signal */
     feraiseexcept(FE_INVALID);
     return 0;
   }
@@ -4076,16 +4050,10 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
     enum rounding saveround;                   /* saver */
     uInt savestatus;                           /* .. */
     saveround = set->round;                    /* save rounding mode .. */
-    savestatus = set->status;                  /* .. and status */
     set->round = rmode;                        /* set mode */
     decFloatZero(&zero);                       /* make 0E+0 */
-    set->status = 0;                           /* clear */
     decFloatQuantize(&result, df, &zero, set); /* [this may fail] */
     set->round = saveround;                    /* restore rounding mode .. */
-    if (exact)
-      set->status |= savestatus; /* include Inexact */
-    else
-      set->status = savestatus; /* .. or just original status */
   }
 
 /* only the last four declets of the coefficient can contain */
@@ -4100,7 +4068,6 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
       (DFWORD(&result, 0) & 0x1c003fff) != 0 ||
       (DFWORD(&result, 0) & 0x60000000) == 0x60000000) {
 #endif
-    set->status |= DEC_Invalid_operation; /* Invalid or out of range */
     feraiseexcept(FE_INVALID);
     return 0;
   }
@@ -4116,7 +4083,6 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
   if (unsign) {
     if (hi > 4 || (hi == 4 && lo > 294967295) ||
         (hi + lo != 0 && DFISSIGNED(&result))) {
-      set->status |= DEC_Invalid_operation; /* out of range */
       feraiseexcept(FE_INVALID);
       return 0;
     }
@@ -4127,7 +4093,6 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
     /* handle the usual edge case */
     if (lo == 147483648 && hi == 2 && DFISSIGNED(&result))
       return 0x80000000;
-    set->status |= DEC_Invalid_operation; /* truly out of range */
     feraiseexcept(FE_INVALID);
     return 0;
   }
@@ -4176,12 +4141,9 @@ static decFloat *decToIntegral(decFloat *result, const decFloat *df,
     return decCanonical(result, df); /* already integral */
 
   saveround = set->round;                   /* save rounding mode .. */
-  savestatus = set->status;                 /* .. and status */
   set->round = rmode;                       /* set mode */
   decFloatZero(&zero);                      /* make 0E+0 */
   decFloatQuantize(result, df, &zero, set); /* 'integrate'; cannot fail */
   set->round = saveround;                   /* restore rounding mode .. */
-  if (!exact)
-    set->status = savestatus; /* .. and status, unless exact */
   return result;
 } /* decToIntegral */
