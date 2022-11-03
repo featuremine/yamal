@@ -42,7 +42,8 @@ typedef struct {
 
 FMMODFUNC void fmc_rprice_from_raw(fmc_rprice_t *dest, int64_t src);
 FMMODFUNC void fmc_rprice_from_old(fmc_rprice_t *dest, const fmc_rprice_t *src);
-FMMODFUNC void fmc_rprice_from_ratio(fmc_rprice_t *dest, int64_t num, int64_t denum);
+FMMODFUNC void fmc_rprice_from_ratio(fmc_rprice_t *dest, int64_t num,
+                                     int64_t denum);
 
 FMMODFUNC void fmc_rprice_from_int(fmc_rprice_t *dest, int64_t src);
 FMMODFUNC void fmc_rprice_to_int(int64_t *dest, const fmc_rprice_t *src);
@@ -50,42 +51,34 @@ FMMODFUNC void fmc_rprice_from_double(fmc_rprice_t *dest, double src);
 FMMODFUNC void fmc_rprice_to_double(double *dest, const fmc_rprice_t *src);
 
 FMMODFUNC bool fmc_rprice_less(const fmc_rprice_t *lhs,
-                     const fmc_rprice_t *rhs);
+                               const fmc_rprice_t *rhs);
 FMMODFUNC bool fmc_rprice_less_or_equal(const fmc_rprice_t *lhs,
-                              const fmc_rprice_t *rhs);
+                                        const fmc_rprice_t *rhs);
 FMMODFUNC bool fmc_rprice_greater(const fmc_rprice_t *lhs,
-                       const fmc_rprice_t *rhs);
+                                  const fmc_rprice_t *rhs);
 FMMODFUNC bool fmc_rprice_greater_or_equal(const fmc_rprice_t *lhs,
-                                 const fmc_rprice_t *rhs);
+                                           const fmc_rprice_t *rhs);
 FMMODFUNC bool fmc_rprice_equal(const fmc_rprice_t *lhs,
-                      const fmc_rprice_t *rhs);
+                                const fmc_rprice_t *rhs);
 
-FMMODFUNC void fmc_rprice_div(fmc_rprice_t *res,
-                    const fmc_rprice_t *lhs,
-                    const fmc_rprice_t *rhs);
-FMMODFUNC void fmc_rprice_int_div(fmc_rprice_t *res,
-                        const fmc_rprice_t *lhs, int64_t rhs);
-FMMODFUNC void fmc_rprice_add(fmc_rprice_t *res,
-                    const fmc_rprice_t *lhs,
-                    const fmc_rprice_t *rhs);
-FMMODFUNC void fmc_rprice_inc(fmc_rprice_t *lhs,
-                    const fmc_rprice_t *rhs);
-FMMODFUNC void fmc_rprice_sub(fmc_rprice_t *res,
-                    const fmc_rprice_t *lhs,
-                    const fmc_rprice_t *rhs);
-FMMODFUNC void fmc_rprice_dec(fmc_rprice_t *lhs,
-                    const fmc_rprice_t *rhs);
-FMMODFUNC void fmc_rprice_mul(fmc_rprice_t *res,
-                    const fmc_rprice_t *lhs,
-                    const fmc_rprice_t *rhs);
+FMMODFUNC void fmc_rprice_div(fmc_rprice_t *res, const fmc_rprice_t *lhs,
+                              const fmc_rprice_t *rhs);
+FMMODFUNC void fmc_rprice_int_div(fmc_rprice_t *res, const fmc_rprice_t *lhs,
+                                  int64_t rhs);
+FMMODFUNC void fmc_rprice_add(fmc_rprice_t *res, const fmc_rprice_t *lhs,
+                              const fmc_rprice_t *rhs);
+FMMODFUNC void fmc_rprice_inc(fmc_rprice_t *lhs, const fmc_rprice_t *rhs);
+FMMODFUNC void fmc_rprice_sub(fmc_rprice_t *res, const fmc_rprice_t *lhs,
+                              const fmc_rprice_t *rhs);
+FMMODFUNC void fmc_rprice_dec(fmc_rprice_t *lhs, const fmc_rprice_t *rhs);
+FMMODFUNC void fmc_rprice_mul(fmc_rprice_t *res, const fmc_rprice_t *lhs,
+                              const fmc_rprice_t *rhs);
 
 FMMODFUNC void fmc_rprice_max(fmc_rprice_t *res);
 FMMODFUNC void fmc_rprice_min(fmc_rprice_t *res);
 
-FMMODFUNC void fmc_rprice_abs(fmc_rprice_t *res,
-                    const fmc_rprice_t *val);
-FMMODFUNC void fmc_rprice_negate(fmc_rprice_t *res,
-                       const fmc_rprice_t *val);
+FMMODFUNC void fmc_rprice_abs(fmc_rprice_t *res, const fmc_rprice_t *val);
+FMMODFUNC void fmc_rprice_negate(fmc_rprice_t *res, const fmc_rprice_t *val);
 
 #ifdef __cplusplus
 }
