@@ -27,9 +27,9 @@
 
 #include "decNumberLocal.h"
 
+#include <fenv.h>
 #include <math.h>
 #include <stdlib.h>
-#include <fenv.h>
 
 static decContext *get_context() {
   static __thread bool init = false;
