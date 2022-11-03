@@ -79,11 +79,7 @@ enum rounding {
 #define DEC_ROUND_DEFAULT DEC_ROUND_HALF_EVEN;
 
 typedef struct {
-  int32_t digits;      /* working precision 	      */
-  int32_t emax;        /* maximum positive exponent       */
-  int32_t emin;        /* minimum negative exponent       */
   enum rounding round; /* rounding mode		      */
-  uint32_t traps;      /* trap-enabler flags	      */
   uint8_t clamp;       /* flag: apply IEEE exponent clamp */
 #if DECSUBSET
   uint8_t extended; /* flag: special-values allowed    */

@@ -70,12 +70,7 @@ const uInt DECPOWERS[10] = {1,      10,      100,      1000,      10000,
 /* ------------------------------------------------------------------ */
 decContext *decContextDefault(decContext *context, Int kind) {
   /* set defaults... */
-  context->digits = 9;                /* 9 digits */
-  context->emax = DEC_MAX_EMAX;       /* 9-digit exponents */
-  context->emin = DEC_MIN_EMIN;       /* .. balanced */
   context->round = DEC_ROUND_HALF_UP; /* 0.5 rises */
-  context->traps = DEC_Errors;        /* all but informational */
-  context->clamp = 0;                 /* no clamping */
 #if DECSUBSET
   context->extended = 0; /* cleared */
 #endif
@@ -84,34 +79,19 @@ decContext *decContextDefault(decContext *context, Int kind) {
     /* [use defaults] */
     break;
   case DEC_INIT_DECIMAL32:
-    context->digits = 7;                  /* digits */
-    context->emax = 96;                   /* Emax */
-    context->emin = -95;                  /* Emin */
     context->round = DEC_ROUND_HALF_EVEN; /* 0.5 to nearest even */
-    context->traps = 0;                   /* no traps set */
-    context->clamp = 1;                   /* clamp exponents */
 #if DECSUBSET
     context->extended = 1; /* set */
 #endif
     break;
   case DEC_INIT_DECIMAL64:
-    context->digits = 16;                 /* digits */
-    context->emax = 384;                  /* Emax */
-    context->emin = -383;                 /* Emin */
     context->round = DEC_ROUND_HALF_EVEN; /* 0.5 to nearest even */
-    context->traps = 0;                   /* no traps set */
-    context->clamp = 1;                   /* clamp exponents */
 #if DECSUBSET
     context->extended = 1; /* set */
 #endif
     break;
   case DEC_INIT_DECIMAL128:
-    context->digits = 34;                 /* digits */
-    context->emax = 6144;                 /* Emax */
-    context->emin = -6143;                /* Emin */
     context->round = DEC_ROUND_HALF_EVEN; /* 0.5 to nearest even */
-    context->traps = 0;                   /* no traps set */
-    context->clamp = 1;                   /* clamp exponents */
 #if DECSUBSET
     context->extended = 1; /* set */
 #endif

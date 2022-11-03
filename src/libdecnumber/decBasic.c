@@ -4048,7 +4048,6 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
     result = *df;                              /* already a true integer */
   else {                                       /* need to round to integer */
     enum rounding saveround;                   /* saver */
-    uInt savestatus;                           /* .. */
     saveround = set->round;                    /* save rounding mode .. */
     set->round = rmode;                        /* set mode */
     decFloatZero(&zero);                       /* make 0E+0 */
@@ -4118,7 +4117,6 @@ static decFloat *decToIntegral(decFloat *result, const decFloat *df,
   Int exp;                 /* exponent */
   uInt sourhi;             /* top word from source decFloat */
   enum rounding saveround; /* saver */
-  uInt savestatus;         /* .. */
   decFloat zero;           /* work */
 
   /* Start decoding the argument */
