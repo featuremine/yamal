@@ -23,11 +23,9 @@
 #include "fmc++/mpl.hpp"
 #include "fmc++/side.hpp"
 
-extern "C" {
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
 #include "fmc/rprice.h"
-}
 
 #include <cmath>
 #include <cstring>

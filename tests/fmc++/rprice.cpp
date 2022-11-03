@@ -83,7 +83,7 @@ TEST(rprice, divide) {
   fmc_rprice_from_double(&b, 2.2);
   fmc_rprice_div(&c, &a, &b);
   fmc_rprice_to_double(&bc, &c);
-  ASSERT_DOUBLE_EQ(bc, 303030303);
+  ASSERT_DOUBLE_EQ(bc, 303030303.0303027);
 }
 
 TEST(rprice, intdivide) {
@@ -122,7 +122,7 @@ TEST(rprice, mul) {
   fmc_rprice_from_double(&b, 2.2);
   fmc_rprice_mul(&c, &a, &b);
   fmc_rprice_to_double(&bc, &c);
-  ASSERT_DOUBLE_EQ(bc, 244444444.19999999);
+  ASSERT_DOUBLE_EQ(bc, 244444444.4444442);
 }
 
 TEST(rprice, comparison) {
