@@ -45,6 +45,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 /* OR) or the rounding mode read; all other fields are ignored and */
 /* untouched. */
 
+#include <fenv.h>
+
 #include "decCommonSymbols.h"
 
 /* names for simpler testing and default context */
@@ -428,11 +430,14 @@ static decFloat *decFinalize(decFloat *df, bcdnum *num, decContext *set) {
       if (reround != 0) { /* discarding non-zero */
         uInt bump = 0;
         set->status |= DEC_Inexact;
+        feraiseexcept(FE_INEXACT);
         /* if adjusted exponent [exp+digits-1] is < EMIN then num is */
         /* subnormal -- so raise Underflow */
         if (num->exponent < DECEMIN &&
-            (num->exponent + (ulsd - umsd + 1) - 1) < DECEMIN)
+            (num->exponent + (ulsd - umsd + 1) - 1) < DECEMIN) {
           set->status |= DEC_Underflow;
+          feraiseexcept(FE_UNDERFLOW);
+        }
 
         /* next decide whether increment of the coefficient is needed */
         if (set->round == DEC_ROUND_HALF_EVEN) { /* fastpath slowest case */
@@ -487,6 +492,7 @@ static decFloat *decFinalize(decFloat *df, bcdnum *num, decContext *set) {
           }          /* r-r */
           default: { /* e.g., DEC_ROUND_MAX */
             set->status |= DEC_Invalid_context;
+            feraiseexcept(FE_INVALID);
 #if DECCHECK
             printf("Unknown rounding mode: %ld\n", (LI)set->round);
 #endif
@@ -550,6 +556,7 @@ static decFloat *decFinalize(decFloat *df, bcdnum *num, decContext *set) {
         /* instead num is adjusted to keep the code cleaner */
         Flag needmax = 0; /* 1 for finite result */
         set->status |= (DEC_Overflow | DEC_Inexact);
+        feraiseexcept(FE_OVERFLOW | FE_INEXACT);
         switch (set->round) {
         case DEC_ROUND_DOWN: {
           needmax = 1; /* never Infinity */
@@ -1206,6 +1213,7 @@ decFloat *decFloatFromString(decFloat *result, const char *string,
 
   if (error != 0) {
     set->status |= error;
+    feraiseexcept(FE_INEXACT);
     num.exponent = DECFLOAT_qNaN; /* set up quiet NaN */
     num.sign = 0;                 /* .. with 0 sign */
     buffer[0] = 0;                /* .. and coefficient */

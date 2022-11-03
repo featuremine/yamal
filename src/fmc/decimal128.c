@@ -29,6 +29,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <fenv.h>
 
 static decContext *get_context() {
   static __thread bool init = false;
@@ -73,7 +74,11 @@ void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src,
                              fmc_error_t **err) {
   fmc_error_clear(err);
   decQuadFromString((decQuad *)dest, src, get_context());
-  handle_error(err);
+  decContext *ctx = get_context();
+  if (decContextGetStatus(ctx)) {
+    fmc_error_set(err, "unable to process string");
+    decContextZeroStatus(ctx);
+  }
 }
 
 void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src) {
@@ -182,6 +187,7 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
   exp = DECCOMBEXP[sourhi >> 26]; /* get exponent high bits (in place) */
   if (EXPISSPECIAL(exp)) {        /* is special? */
     set->status |= DEC_Invalid_operation; /* signal */
+    feraiseexcept(FE_INVALID);
     return 0;
   }
 
@@ -212,6 +218,7 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
       (DFWORD(&result, 0) & 0x1c003fff) != 0 ||
       (DFWORD(&result, 0) & 0x60000000) == 0x60000000) {
     set->status |= DEC_Invalid_operation; /* Invalid or out of range */
+    feraiseexcept(FE_INVALID);
     return 0;
   }
   /* get last twelve digits of the coefficent into hi & ho, base */
@@ -231,6 +238,7 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
     if (hi > 18 || (hi == 18 && lo > 446744073709551615) ||
         (hi + lo != 0 && DFISSIGNED(&result))) {
       set->status |= DEC_Invalid_operation; /* out of range */
+      feraiseexcept(FE_INVALID);
       return 0;
     }
     return hi * 1000000000000000000 + lo;
@@ -241,6 +249,7 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
     if (lo == 223372036854775808 && hi == 9 && DFISSIGNED(&result))
       return 0x80000000;
     set->status |= DEC_Invalid_operation; /* truly out of range */
+    feraiseexcept(FE_INVALID);
     return 0;
   }
   i = hi * 1000000000000000000 + lo;
@@ -294,7 +303,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
     if (mantissa == 0) {
       fmc_decimal128_from_uint(res, 0);
       if (is_negative) {
-        fmc_decimal128_negate(res, res, &err);
+        fmc_decimal128_negate(res, res);
       }
       return;
     } else {
@@ -307,7 +316,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
       fmc_decimal128_qnan(res);
     }
     if (is_negative) {
-      fmc_decimal128_negate(res, res, &err);
+      fmc_decimal128_negate(res, res);
     }
     return;
   } else {
@@ -332,7 +341,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
     }
   }
   if (is_negative) {
-    fmc_decimal128_negate(res, res, &err);
+    fmc_decimal128_negate(res, res);
   }
 }
 
@@ -459,11 +468,8 @@ void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val,
   handle_error(err);
 }
 
-void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val,
-                           fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
   decQuadCopyNegate((decQuad *)res, (const decQuad *)val);
-  handle_error(err);
 }
 
 void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow, fmc_error_t **err) {

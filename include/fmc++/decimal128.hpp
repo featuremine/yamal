@@ -99,8 +99,7 @@ public:
   }
   decimal128 operator-() const noexcept {
     decimal128 res;
-    fmc_error_t *err;
-    fmc_decimal128_negate(&res, this, &err);
+    fmc_decimal128_negate(&res, this);
     return res;
   }
   explicit operator int() const noexcept {

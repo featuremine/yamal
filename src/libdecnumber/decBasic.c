@@ -41,6 +41,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 /* Names here refer to decFloat rather than to decDouble, etc., and */
 /* the functions are in strict alphabetical order. */
 
+#include <fenv.h>
+
 /* The compile-time flags SINGLE, DOUBLE, and QUAD are set up in */
 /* decCommon.c */
 #if !defined(QUAD)
@@ -3783,6 +3785,7 @@ static decFloat *decInvalid(decFloat *result, decContext *set) {
   decFloatZero(result);
   DFWORD(result, 0) = DECFLOAT_qNaN;
   set->status |= DEC_Invalid_operation;
+  feraiseexcept(FE_INVALID);
   return result;
 } /* decInvalid */
 
