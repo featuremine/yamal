@@ -1512,14 +1512,12 @@ TEST(decimal128, exp63_checkdec) {
 }
 
 TEST(decimal128, assign) {
-  feclearexcept(FE_ALL_EXCEPT);
   fmc::decimal128 a = 5;
   fmc::decimal128 b = a;
   ASSERT_EQ(a, b);
 }
 
 TEST(decimal128, move) {
-  feclearexcept(FE_ALL_EXCEPT);
   fmc::decimal128 a = 5;
   fmc::decimal128 b = std::move(a);
   fmc::decimal128 c = 5;
@@ -1528,6 +1526,5 @@ TEST(decimal128, move) {
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  feclearexcept(FE_ALL_EXCEPT);
   return RUN_ALL_TESTS();
 }
