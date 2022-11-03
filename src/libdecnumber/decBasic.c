@@ -2626,8 +2626,8 @@ decFloat *decFloatLogB(decFloat *result, const decFloat *df, decContext *set) {
   }
   if (DFISZERO(df)) {
     feraiseexcept(FE_DIVBYZERO);
-    DFWORD(result, 0) = DECFLOAT_Sign;   /* make negative */
-    return decInfinity(result, result);  /* canonical -Infinity */
+    DFWORD(result, 0) = DECFLOAT_Sign;  /* make negative */
+    return decInfinity(result, result); /* canonical -Infinity */
   }
   ae = GETEXPUN(df)              /* get unbiased exponent .. */
        + decFloatDigits(df) - 1; /* .. and make adjusted exponent */
@@ -2973,7 +2973,7 @@ decFloat *decFloatNextToward(decFloat *result, const decFloat *dfl,
   decFloatFMA(result, &delta, &pointone, dfl, set);
   /* [Delta is truly tiny, so no need to correct sign of zero] */
   /* use new status unless the result is normal */
-  set->round = saveround;   /* restore mode */
+  set->round = saveround; /* restore mode */
   return result;
 } /* decFloatNextToward */
 
@@ -3458,7 +3458,7 @@ decFloat *decFloatRotate(decFloat *result, const decFloat *dfl,
                          const decFloat *dfr, decContext *set) {
   Int rotate;                 /* dfr as an Int */
   uByte buf[DECPMAX + PHALF]; /* coefficient + half */
-  uInt digits;      /* work */
+  uInt digits;                /* work */
   bcdnum num;                 /* .. */
   uByte *ub;                  /* .. */
 
@@ -3603,7 +3603,7 @@ decFloat *decFloatShift(decFloat *result, const decFloat *dfl,
                         const decFloat *dfr, decContext *set) {
   Int shift;              /* dfr as an Int */
   uByte buf[DECPMAX * 2]; /* coefficient + padding */
-  uInt digits;  /* work */
+  uInt digits;            /* work */
   bcdnum num;             /* .. */
   uInt uiwork;            /* for macros */
 
