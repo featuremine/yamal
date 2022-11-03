@@ -47,8 +47,7 @@ public:
 
     decimal128 dd;
     fmc_decimal128_from_int(&dd, d.value);
-    fmc_error_t *err;
-    fmc_decimal128_div(this, &dd, &dec64div, &err);
+    fmc_decimal128_div(this, &dd, &dec64div);
   }
   decimal128(double d) { fmc_decimal128_from_double(this, d); }
   decimal128() { memset(longs, 0, FMC_DECIMAL128_SIZE); }
@@ -88,13 +87,11 @@ public:
     return static_cast<const decimal128 &>(a);
   }
   decimal128 &operator+=(const decimal128 &a) noexcept {
-    fmc_error_t *err;
-    fmc_decimal128_inc(this, &a, &err);
+    fmc_decimal128_inc(this, &a);
     return *this;
   }
   decimal128 &operator-=(const decimal128 &a) noexcept {
-    fmc_error_t *err;
-    fmc_decimal128_dec(this, &a, &err);
+    fmc_decimal128_dec(this, &a);
     return *this;
   }
   decimal128 operator-() const noexcept {
@@ -102,16 +99,18 @@ public:
     fmc_decimal128_negate(&res, this);
     return res;
   }
-  explicit operator int() const noexcept {
+  explicit operator int() const {
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
+    fmc_runtime_error_unless(!err) << fmc_error_msg(err);
     return ret;
   }
-  explicit operator int64_t() const noexcept {
+  explicit operator int64_t() const {
     int64_t ret;
     fmc_error_t *err;
     fmc_decimal128_to_int(&ret, this, &err);
+    fmc_runtime_error_unless(!err) << fmc_error_msg(err);
     return ret;
   }
   explicit operator double() const noexcept {
@@ -128,60 +127,50 @@ public:
 };
 
 inline bool operator==(const decimal128 &a, const decimal128 &b) noexcept {
-  fmc_error_t *err;
-  return fmc_decimal128_equal(&a, &b, &err);
+  return fmc_decimal128_equal(&a, &b);
 }
 
 inline bool operator!=(const decimal128 &a, const decimal128 &b) noexcept {
-  fmc_error_t *err;
-  return !fmc_decimal128_equal(&a, &b, &err);
+  return !fmc_decimal128_equal(&a, &b);
 }
 
 inline bool operator<(const decimal128 &a, const decimal128 &b) noexcept {
-  fmc_error_t *err;
-  return fmc_decimal128_less(&a, &b, &err);
+  return fmc_decimal128_less(&a, &b);
 }
 
 inline bool operator<=(const decimal128 &a, const decimal128 &b) noexcept {
-  fmc_error_t *err;
-  return fmc_decimal128_less_or_equal(&a, &b, &err);
+  return fmc_decimal128_less_or_equal(&a, &b);
 }
 
 inline bool operator>(const decimal128 &a, const decimal128 &b) noexcept {
-  fmc_error_t *err;
-  return fmc_decimal128_greater(&a, &b, &err);
+  return fmc_decimal128_greater(&a, &b);
 }
 
 inline bool operator>=(const decimal128 &a, const decimal128 &b) noexcept {
-  fmc_error_t *err;
-  return fmc_decimal128_greater_or_equal(&a, &b, &err);
+  return fmc_decimal128_greater_or_equal(&a, &b);
 }
 
 inline decimal128 operator+(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
-  fmc_error_t *err;
-  fmc_decimal128_add(&res, &a, &b, &err);
+  fmc_decimal128_add(&res, &a, &b);
   return res;
 }
 
 inline decimal128 operator-(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
-  fmc_error_t *err;
-  fmc_decimal128_sub(&res, &a, &b, &err);
+  fmc_decimal128_sub(&res, &a, &b);
   return res;
 }
 
 inline decimal128 operator*(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
-  fmc_error_t *err;
-  fmc_decimal128_mul(&res, &a, &b, &err);
+  fmc_decimal128_mul(&res, &a, &b);
   return res;
 }
 
 inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
   decimal128 res;
-  fmc_error_t *err;
-  fmc_decimal128_div(&res, &a, &b, &err);
+  fmc_decimal128_div(&res, &a, &b);
   return res;
 }
 
@@ -348,8 +337,7 @@ inline bool isfinite(const fmc_decimal128_t &x) noexcept {
 
 inline fmc::decimal128 abs(const fmc::decimal128 &x) noexcept {
   fmc::decimal128 res;
-  fmc_error_t *err;
-  fmc_decimal128_abs(&res, &x, &err);
+  fmc_decimal128_abs(&res, &x);
   return res;
 }
 

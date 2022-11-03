@@ -76,52 +76,43 @@ void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src) {
 }
 
 bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
-                         const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                         const fmc_decimal128_t *rhs) {
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return !decQuadIsZero(&res) && decQuadIsSigned(&res);
 }
 bool fmc_decimal128_less_or_equal(const fmc_decimal128_t *lhs,
-                                  const fmc_decimal128_t *rhs,
-                                  fmc_error_t **err) {
-  fmc_error_clear(err);
+                                  const fmc_decimal128_t *rhs) {
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res) || decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater(const fmc_decimal128_t *lhs,
-                            const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                            const fmc_decimal128_t *rhs) {
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return !decQuadIsZero(&res) && !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_greater_or_equal(const fmc_decimal128_t *lhs,
-                                     const fmc_decimal128_t *rhs,
-                                     fmc_error_t **err) {
-  fmc_error_clear(err);
+                                     const fmc_decimal128_t *rhs) {
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res) || !decQuadIsSigned(&res);
 }
 bool fmc_decimal128_equal(const fmc_decimal128_t *lhs,
-                          const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                          const fmc_decimal128_t *rhs) {
   decQuad res;
   decQuadCompare(&res, (decQuad *)lhs, (decQuad *)rhs, get_context());
   return decQuadIsZero(&res);
 }
 
 void fmc_decimal128_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                        const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                        const fmc_decimal128_t *rhs) {
   decQuadDivide((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs, get_context());
 }
 
 void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                            int64_t rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                            int64_t rhs) {
   fmc_decimal128_t drhs;
   fmc_decimal128_from_int(&drhs, rhs);
   decQuadDivideInteger((decQuad *)res, (decQuad *)lhs, (decQuad *)&drhs,
@@ -178,7 +169,6 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
     result = *df;                             /* already a true integer */
   else {                                      /* need to round to integer */
     enum rounding saveround;                  /* saver */
-    uint64_t savestatus;                      /* .. */
     saveround = set->round;                   /* save rounding mode .. */
     set->round = rmode;                       /* set mode */
     decQuadZero(&zero);                       /* make 0E+0 */
@@ -275,7 +265,6 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
   int64_t mantissa = (*(int64_t *)(&n) & ((1ll << 52ll) - 1ll));
   int64_t exp = (*(int64_t *)(&n) >> 52ll) & ((1ll << 11ll) - 1ll);
   bool is_negative = (*(int64_t *)(&n) >> 63ll);
-  fmc_error_t *err;
   if (exp == 0x000ll) {
     if (mantissa == 0) {
       fmc_decimal128_from_uint(res, 0);
@@ -307,14 +296,14 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
   fmc_decimal128_from_int(&decexp, (1ll << (absexp % 63ll)));
 
   if (exp >= 0ll) {
-    fmc_decimal128_mul(res, &decmantissa, &decexp, &err);
+    fmc_decimal128_mul(res, &decmantissa, &decexp);
     if (absexp >= 63ll) {
-      fmc_decimal128_mul(res, res, &fmc_decimal128_exp63[absexp / 63ll], &err);
+      fmc_decimal128_mul(res, res, &fmc_decimal128_exp63[absexp / 63ll]);
     }
   } else {
-    fmc_decimal128_div(res, &decmantissa, &decexp, &err);
+    fmc_decimal128_div(res, &decmantissa, &decexp);
     if (absexp >= 63ll) {
-      fmc_decimal128_div(res, res, &fmc_decimal128_exp63[absexp / 63ll], &err);
+      fmc_decimal128_div(res, res, &fmc_decimal128_exp63[absexp / 63ll]);
     }
   }
   if (is_negative) {
@@ -323,41 +312,32 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
 }
 
 void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                        const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                        const fmc_decimal128_t *rhs) {
   decQuadAdd((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs, get_context());
 }
 
-void fmc_decimal128_inc(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs,
-                        fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_inc(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
   decQuadAdd((decQuad *)lhs, (decQuad *)lhs, (decQuad *)rhs, get_context());
 }
 
-void fmc_decimal128_dec(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs,
-                        fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_dec(fmc_decimal128_t *lhs, const fmc_decimal128_t *rhs) {
   decQuadSubtract((decQuad *)lhs, (decQuad *)lhs, (decQuad *)rhs,
                   get_context());
 }
 
 void fmc_decimal128_sub(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                        const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                        const fmc_decimal128_t *rhs) {
   decQuadSubtract((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs,
                   get_context());
 }
 
 void fmc_decimal128_mul(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
-                        const fmc_decimal128_t *rhs, fmc_error_t **err) {
-  fmc_error_clear(err);
+                        const fmc_decimal128_t *rhs) {
   decQuadMultiply((decQuad *)res, (decQuad *)lhs, (decQuad *)rhs,
                   get_context());
 }
 
-void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val,
-                          fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
   decQuadToIntegralValue((decQuad *)res, (decQuad *)val, get_context(),
                          DEC_ROUND_HALF_UP);
 }
@@ -432,9 +412,7 @@ bool fmc_decimal128_is_finite(const fmc_decimal128_t *val) {
   return decQuadIsFinite((decQuad *)val);
 }
 
-void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val,
-                        fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
   decQuadAbs((decQuad *)res, (const decQuad *)val, get_context());
 }
 
@@ -442,8 +420,7 @@ void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
   decQuadCopyNegate((decQuad *)res, (const decQuad *)val);
 }
 
-void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow, fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
   int32_t exp = decQuadGetExponent((decQuad *)res);
   exp += pow;
   decQuadSetExponent((decQuad *)res, get_context(), exp);
