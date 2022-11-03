@@ -29,8 +29,8 @@ extern "C" {
 }
 
 #include "fmc++/convert.hpp"
-#include "fmc++/side.hpp"
 #include "fmc++/mpl.hpp"
+#include "fmc++/side.hpp"
 
 #include <functional>
 #include <iomanip>
@@ -78,8 +78,7 @@ public:
   static constexpr rprice &upcast(fmc_rprice_t &a) noexcept {
     return static_cast<rprice &>(a);
   }
-  static constexpr const rprice &
-  upcast(const fmc_rprice_t &a) noexcept {
+  static constexpr const rprice &upcast(const fmc_rprice_t &a) noexcept {
     return static_cast<const rprice &>(a);
   }
   rprice &operator+=(const rprice &a) noexcept {
@@ -115,7 +114,6 @@ public:
     fmc_rprice_to_double(&res, this);
     return res;
   }
-
 };
 
 template <> struct sided_initializer<rprice> {
@@ -140,7 +138,7 @@ template <> struct conversion<double, rprice> {
   }
 };
 
-}
+} // namespace fmc
 
 inline fmc_rprice_t operator/(fmc_rprice_t a, fmc_rprice_t b) {
   fmc_rprice_t ret;
@@ -254,28 +252,18 @@ inline string to_string(fmc_rprice_t &x) {
 
 template <> class numeric_limits<fmc::rprice> {
 public:
-  static fmc::rprice min() noexcept {
-    return FMC_RPRICE_MIN;
-  }
-  static fmc::rprice max() noexcept {
-    return FMC_RPRICE_MAX;
-  }
-  static fmc::rprice epsilon() noexcept {
-    return fmc::rprice((int64_t)0);
-  }
+  static fmc::rprice min() noexcept { return FMC_RPRICE_MIN; }
+  static fmc::rprice max() noexcept { return FMC_RPRICE_MAX; }
+  static fmc::rprice epsilon() noexcept { return fmc::rprice((int64_t)0); }
 };
 
-inline bool isinf(const fmc::rprice &x) noexcept {
-  return false;
-}
+inline bool isinf(const fmc::rprice &x) noexcept { return false; }
 
 inline bool isinf(const fmc_rprice_t &x) noexcept {
   return std::isinf(fmc::rprice::upcast(x));
 }
 
-inline bool isfinite(const fmc::rprice &x) noexcept {
-  return true;
-}
+inline bool isfinite(const fmc::rprice &x) noexcept { return true; }
 
 inline bool isfinite(const fmc_rprice_t &x) noexcept {
   return std::isfinite(fmc::rprice::upcast(x));
@@ -291,19 +279,14 @@ inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {
   return std::abs(fmc::rprice::upcast(x));
 }
 
-inline bool isnan(fmc::rprice x) noexcept {
-  return false;
-}
+inline bool isnan(fmc::rprice x) noexcept { return false; }
 
 inline bool isnan(fmc_rprice_t x) noexcept {
   return std::isnan(fmc::rprice::upcast(x));
 }
 
-template <>
-struct hash<fmc_rprice_t>
-{
-  size_t operator()(const fmc_rprice_t& k) const
-  {
+template <> struct hash<fmc_rprice_t> {
+  size_t operator()(const fmc_rprice_t &k) const {
     return std::hash<int64_t>{}(k.value);
   }
 };
