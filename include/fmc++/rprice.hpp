@@ -52,27 +52,27 @@ public:
     return *this;
   }
   rprice &operator=(const int &a) {
-    *this = rprice(a);
+    fmc_rprice_from_int(this, a);
     return *this;
   }
   rprice &operator=(const int64_t &a) {
-    *this = rprice(a);
+    fmc_rprice_from_int(this, a);
     return *this;
   }
   rprice &operator=(const uint &a) {
-    *this = rprice(a);
+    fmc_rprice_from_int(this, a);
     return *this;
   }
   rprice &operator=(const uint64_t &a) {
-    *this = rprice(a);
+    fmc_rprice_from_int(this, a);
     return *this;
   }
   rprice &operator=(const double &a) {
-    *this = rprice(a);
+    fmc_rprice_from_double(this, a);
     return *this;
   }
   rprice &operator=(const float &a) {
-    *this = rprice(a);
+    fmc_rprice_from_double(this, a);
     return *this;
   }
   static constexpr rprice &upcast(fmc_rprice_t &a) noexcept {
