@@ -71,30 +71,18 @@ const uInt DECPOWERS[10] = {1,      10,      100,      1000,      10000,
 decContext *decContextDefault(decContext *context, Int kind) {
   /* set defaults... */
   context->round = DEC_ROUND_HALF_UP; /* 0.5 rises */
-#if DECSUBSET
-  context->extended = 0; /* cleared */
-#endif
   switch (kind) {
   case DEC_INIT_BASE:
     /* [use defaults] */
     break;
   case DEC_INIT_DECIMAL32:
     context->round = DEC_ROUND_HALF_EVEN; /* 0.5 to nearest even */
-#if DECSUBSET
-    context->extended = 1; /* set */
-#endif
     break;
   case DEC_INIT_DECIMAL64:
     context->round = DEC_ROUND_HALF_EVEN; /* 0.5 to nearest even */
-#if DECSUBSET
-    context->extended = 1; /* set */
-#endif
     break;
   case DEC_INIT_DECIMAL128:
     context->round = DEC_ROUND_HALF_EVEN; /* 0.5 to nearest even */
-#if DECSUBSET
-    context->extended = 1; /* set */
-#endif
     break;
 
   default: /* invalid Kind */

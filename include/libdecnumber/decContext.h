@@ -81,9 +81,6 @@ enum rounding {
 typedef struct {
   enum rounding round; /* rounding mode		      */
   uint8_t clamp;       /* flag: apply IEEE exponent clamp */
-#if DECSUBSET
-  uint8_t extended; /* flag: special-values allowed    */
-#endif
 } decContext;
 
 /* Maxima and Minima for context settings			      */
