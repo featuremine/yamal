@@ -235,11 +235,13 @@ static decFloat *decDivide(decFloat *result, const decFloat *dfl,
       decFloatZero(result);
       DFWORD(result, 0) = DECFLOAT_qNaN;
       set->status |= DEC_Division_undefined;
+      feraiseexcept(FE_INVALID);
       return result;
     }
     if (op & (REMAINDER | REMNEAR))
       return decInvalid(result, set); /* bad rem */
     set->status |= DEC_Division_by_zero;
+    feraiseexcept(FE_DIVBYZERO);
     DFWORD(result, 0) = num.sign;
     return decInfinity(result, result); /* x/0 -> signed Infinity */
   }
@@ -640,6 +642,7 @@ static decFloat *decDivide(decFloat *result, const decFloat *dfl,
     decFloatZero(result);
     DFWORD(result, 0) = DECFLOAT_qNaN;
     set->status |= DEC_Division_impossible;
+    feraiseexcept(FE_INVALID);
     return result;
   }
 
@@ -1816,6 +1819,7 @@ decFloat *decFloatCompareSignal(decFloat *result, const decFloat *dfl,
   /* NaNs are handled as usual, except that all NaNs signal */
   if (DFISNAN(dfl) || DFISNAN(dfr)) {
     set->status |= DEC_Invalid_operation;
+    feraiseexcept(FE_INVALID);
     return decNaNs(result, dfl, dfr, set);
   }
   /* numeric comparison needed */
@@ -2626,6 +2630,7 @@ decFloat *decFloatLogB(decFloat *result, const decFloat *df, decContext *set) {
   }
   if (DFISZERO(df)) {
     set->status |= DEC_Division_by_zero; /* as per 754 */
+    feraiseexcept(FE_DIVBYZERO);
     DFWORD(result, 0) = DECFLOAT_Sign;   /* make negative */
     return decInfinity(result, result);  /* canonical -Infinity */
   }
@@ -3171,6 +3176,7 @@ decFloat *decFloatQuantize(decFloat *result, const decFloat *dfl,
     if (reround != 0) { /* discarding non-zero */
       uInt bump = 0;
       set->status |= DEC_Inexact;
+      feraiseexcept(FE_INEXACT);
 
       /* next decide whether to increment the coefficient */
       if (set->round == DEC_ROUND_HALF_EVEN) { /* fastpath slowest case */
@@ -3225,6 +3231,7 @@ decFloat *decFloatQuantize(decFloat *result, const decFloat *dfl,
         }          /* r-r */
         default: { /* e.g., DEC_ROUND_MAX */
           set->status |= DEC_Invalid_context;
+          feraiseexcept(FE_INVALID);
 #if DECCHECK
           printf("Unknown rounding mode: %ld\n", (LI)set->round);
 #endif
@@ -3829,6 +3836,7 @@ static decFloat *decNaNs(decFloat *result, const decFloat *dfl,
     decCanonical(result, dfl); /* propagate canonical sNaN */
     DFWORD(result, 0) &= ~(DECFLOAT_qNaN ^ DECFLOAT_sNaN); /* quiet */
     set->status |= DEC_Invalid_operation;
+    feraiseexcept(FE_INVALID);
     return result;
   }
   /* one or both is a quiet NaN */
@@ -4057,6 +4065,7 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
   exp = DECCOMBEXP[sourhi >> 26]; /* get exponent high bits (in place) */
   if (EXPISSPECIAL(exp)) {        /* is special? */
     set->status |= DEC_Invalid_operation; /* signal */
+    feraiseexcept(FE_INVALID);
     return 0;
   }
 
@@ -4092,6 +4101,7 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
       (DFWORD(&result, 0) & 0x60000000) == 0x60000000) {
 #endif
     set->status |= DEC_Invalid_operation; /* Invalid or out of range */
+    feraiseexcept(FE_INVALID);
     return 0;
   }
   /* get last twelve digits of the coefficent into hi & ho, base */
@@ -4107,6 +4117,7 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
     if (hi > 4 || (hi == 4 && lo > 294967295) ||
         (hi + lo != 0 && DFISSIGNED(&result))) {
       set->status |= DEC_Invalid_operation; /* out of range */
+      feraiseexcept(FE_INVALID);
       return 0;
     }
     return hi * BILLION + lo;
@@ -4117,6 +4128,7 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
     if (lo == 147483648 && hi == 2 && DFISSIGNED(&result))
       return 0x80000000;
     set->status |= DEC_Invalid_operation; /* truly out of range */
+    feraiseexcept(FE_INVALID);
     return 0;
   }
   i = hi * BILLION + lo;

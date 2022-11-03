@@ -202,12 +202,18 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
     set->round = rmode;                       /* set mode */
     decQuadZero(&zero);                       /* make 0E+0 */
     set->status = 0;                          /* clear */
-    decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
-    set->round = saveround;                   /* restore rounding mode .. */
-    if (exact)
+    if (exact) {
+      decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
       set->status |= savestatus; /* include Inexact */
-    else
+    }
+    else {
+      fexcept_t excepts;
+      fegetexceptflag(&excepts,FE_ALL_EXCEPT);
+      decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
       set->status = savestatus; /* .. or just original status */
+      fesetexceptflag(&excepts,FE_ALL_EXCEPT);
+    }
+    set->round = saveround;                   /* restore rounding mode .. */
   }
 
   /* only the last seven declets of the coefficient can contain */

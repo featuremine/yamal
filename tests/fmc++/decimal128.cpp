@@ -35,7 +35,6 @@ static_assert(alignof(decQuad) == alignof(fmc_decimal128_t),
               "alignof doesn't match");
 
 // C API
-
 TEST(decimal128, from_to_flt_str) {
   feclearexcept(FE_ALL_EXCEPT);
   fmc_decimal128_t a;
@@ -605,13 +604,16 @@ TEST(decimal128, round) {
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_round(&br, &b, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  feclearexcept(FE_ALL_EXCEPT);
   fmc_decimal128_round(&cr, &c, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  feclearexcept(FE_ALL_EXCEPT);
   fmc_decimal128_round(&dr, &d, &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  feclearexcept(FE_ALL_EXCEPT);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ar, &err));
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
