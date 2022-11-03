@@ -23,11 +23,11 @@
 #include "fmc/decimal128.h"
 #include "fmc++/decimal128.hpp"
 #include "fmc/error.h"
+#include <fenv.h>
 #include <fmc++/gtestwrap.hpp>
 #include <libdecnumber/decQuad.h>
 #include <random>
 #include <string.h>
-#include <fenv.h>
 
 static_assert(sizeof(decQuad) == sizeof(fmc_decimal128_t),
               "sizeof doesn't match");
@@ -1326,7 +1326,8 @@ TEST(decimal128, identity_extreme) {
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
 
-  to_str(std::numeric_limits<double>::denorm_min() * (double)(1ll << 55ll), FE_INEXACT);
+  to_str(std::numeric_limits<double>::denorm_min() * (double)(1ll << 55ll),
+         FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
 
