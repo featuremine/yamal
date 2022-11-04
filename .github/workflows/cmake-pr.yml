@@ -38,7 +38,7 @@ jobs:
 
   build-macos:
     needs: utility
-    runs-on: [ macos-11 , macos-12 ]
+    runs-on: macos-11
 
     steps:
     - uses: actions/checkout@v3
