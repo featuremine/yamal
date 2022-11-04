@@ -158,6 +158,6 @@ bool fmc_rational64_is_inf(const fmc_rational64_t *src) {
   return (src->num == 1 || src->num == -1) && src->den == 0;
 }
 
-void fmc_rational64_abs(fmc_rational64_t *dest, fmc_rational64_t *src) {
+void fmc_rational64_abs(fmc_rational64_t *dest, const fmc_rational64_t *src) {
   dest->num = std::abs(src->num);
 }
