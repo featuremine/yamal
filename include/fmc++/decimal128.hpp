@@ -112,23 +112,22 @@ public:
     return ret;
   }
   explicit operator double() const noexcept {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    fmc_decimal128_to_str(str, this);
-    return strtod(str, nullptr);
+    double value;
+    fmc_decimal128_to_double(&value, this);
+    return value;
   }
   explicit operator float() const noexcept {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    fmc_decimal128_to_str(str, this);
-    char *ptr = nullptr;
-    return strtof(str, &ptr);
+    double value;
+    fmc_decimal128_to_double(&value, this);
+    return value;
   }
 };
 
 template <> struct conversion<fmc_decimal128_t, double> {
   double operator()(fmc_decimal128_t x) noexcept {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    fmc_decimal128_to_str(str, &x);
-    return strtod(str, nullptr);
+    double value;
+    fmc_decimal128_to_double(&value, &x);
+    return value;
   }
 };
 

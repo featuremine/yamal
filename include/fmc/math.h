@@ -107,6 +107,42 @@ FMMODFUNC double fmc_remainder(double x);
  */
 #define FMC_ALMOST_LESS(x, y) ((x) - (y) < DBL_EPSILON)
 
+/**
+ * @brief Creates a double value by providing the raw mantissa, exponent and
+ * sign bit
+ *
+ * @param mantissa
+ * @param exp
+ * @param sign
+ * @return the IEEE 754 double value
+ */
+FMMODFUNC double fmc_double_make(uint64_t mantissa, uint64_t exp,
+                                 uint64_t sign);
+
+/**
+ * @brief Extract the mantissa bits from a IEEE 754 double value
+ *
+ * @param value
+ * @return the mantissa
+ */
+uint64_t fmc_double_mantissa(double value);
+
+/**
+ * @brief Extract the exponent bits from a IEEE 754 double value
+ *
+ * @param value
+ * @return the exponent
+ */
+uint64_t fmc_double_exp(double value);
+
+/**
+ * @brief Extract the sign bit from a IEEE 754 double value
+ *
+ * @param value
+ * @return the sign bit
+ */
+bool fmc_double_sign(double value);
+
 #ifdef __cplusplus
 }
 #endif

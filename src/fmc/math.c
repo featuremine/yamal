@@ -58,3 +58,20 @@ long long fmc_llround(double x) {
 }
 
 double fmc_remainder(double x) { return x - (double)fmc_llround(x); }
+
+double fmc_double_make(uint64_t mantissa, uint64_t exp, uint64_t sign) {
+  double res;
+  *(uint64_t *)&res = (mantissa & ((1ull << 52ull) - 1)) | (exp << 52ull) |
+                      ((uint64_t)sign << 63ull);
+  return res;
+}
+
+uint64_t fmc_double_mantissa(double value) {
+  return (*(uint64_t *)(&value)) & ((1ull << 52ull) - 1ull);
+}
+
+uint64_t fmc_double_exp(double value) {
+  return (*(uint64_t *)(&value) >> 52ll) & ((1ll << 11ll) - 1ll);
+}
+
+bool fmc_double_sign(double value) { return (*(int64_t *)(&value) >> 63ll); }

@@ -21,6 +21,8 @@
  */
 
 #include "fmc/decimal128.h"
+#include "fmc/alignment.h"
+#include "fmc/math.h"
 
 #include "decContext.h"
 #include "decQuad.h"
@@ -262,9 +264,9 @@ void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src,
 }
 
 void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
-  int64_t mantissa = (*(int64_t *)(&n) & ((1ll << 52ll) - 1ll));
-  int64_t exp = (*(int64_t *)(&n) >> 52ll) & ((1ll << 11ll) - 1ll);
-  bool is_negative = (*(int64_t *)(&n) >> 63ll);
+  int64_t mantissa = fmc_double_mantissa(n);
+  int64_t exp = fmc_double_exp(n);
+  bool is_negative = fmc_double_sign(n);
   if (exp == 0x000ll) {
     if (mantissa == 0) {
       fmc_decimal128_from_uint(res, 0);
@@ -292,8 +294,8 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
   int64_t absexp = labs(exp);
 
   fmc_decimal128_t decmantissa, decexp;
-  fmc_decimal128_from_int(&decmantissa, mantissa);
-  fmc_decimal128_from_int(&decexp, (1ll << (absexp % 63ll)));
+  fmc_decimal128_from_uint(&decmantissa, mantissa);
+  fmc_decimal128_from_uint(&decexp, (1ll << (absexp % 63ll)));
 
   if (exp >= 0ll) {
     fmc_decimal128_mul(res, &decmantissa, &decexp);
@@ -309,6 +311,64 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
   if (is_negative) {
     fmc_decimal128_negate(res, res);
   }
+}
+
+void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
+  bool sign = decQuadIsSigned((const decQuad *)src);
+  fmc_decimal128_t positive_src;
+  fmc_decimal128_abs(&positive_src, src);
+
+  int digits10 = fmc_decimal128_flog10(&positive_src);
+  if (digits10 == INT32_MIN) {
+    if (decQuadIsZero((const decQuad *)src)) {
+      *res = 0.0;
+    } else {
+      *res = fmc_decimal128_is_inf(src) ? INFINITY : NAN;
+    }
+    if (sign) {
+      *res = -*res;
+    }
+    return;
+  }
+
+  int digits2 = digits10 * 33219 / 10000;
+  int exp = 53 - digits2;
+  int absexp = labs(exp);
+  fmc_decimal128_t decexp;
+  fmc_decimal128_from_int(&decexp, (1ll << (absexp % 63ll)));
+  if (exp >= 0ll) {
+    fmc_decimal128_mul(&positive_src, &positive_src, &decexp);
+    if (absexp >= 63ll) {
+      fmc_decimal128_mul(&positive_src, &positive_src,
+                         &fmc_decimal128_exp63[absexp / 63ll]);
+    }
+  } else {
+    fmc_decimal128_div(&positive_src, &positive_src, &decexp);
+    if (absexp >= 63ll) {
+      fmc_decimal128_div(&positive_src, &positive_src,
+                         &fmc_decimal128_exp63[absexp / 63ll]);
+    }
+  }
+
+  fmc_error_t *error;
+  uint64_t mantissa;
+  fmc_decimal128_to_uint(&mantissa, &positive_src, &error);
+
+  uint64_t actual_digit2 = FMC_FLOORLOG2(mantissa);
+  if (actual_digit2 < 52ull) {
+    printf("%lu %lx %d %d\n", actual_digit2, mantissa, digits2, digits10);
+    abort();
+  }
+  uint64_t correction = actual_digit2 - 52ull;
+  mantissa >>= correction;
+
+  int64_t dexp = digits2 + correction + 1022ull;
+  if (dexp < 0) {
+    mantissa >>= (-dexp + 1ull);
+    dexp = 0;
+  }
+
+  *res = fmc_double_make(mantissa, dexp, sign);
 }
 
 void fmc_decimal128_add(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
@@ -424,4 +484,79 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
   int32_t exp = decQuadGetExponent((decQuad *)res);
   exp += pow;
   decQuadSetExponent((decQuad *)res, get_context(), exp);
+}
+
+int fmc_decimal128_flog10(const fmc_decimal128_t *val) {
+  const decQuad *df = (const decQuad *)val;
+  uInt msd;       /* coefficient MSD */
+  Int exp;        /* exponent top two bits or full */
+  uInt comb;      /* combination field */
+  const uByte *u; /* .. */
+
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD(df, 0); /* word with sign */
+#if DECPMAX == 16
+  uInt sourlo = DFWORD(df, 1);
+#elif DECPMAX == 34
+  uInt sourmh = DFWORD(df, 1);
+  uInt sourml = DFWORD(df, 2);
+  uInt sourlo = DFWORD(df, 3);
+#endif
+
+  if (((Int)sourhi) < 0) {
+    return INT32_MIN;
+  }
+
+  comb = sourhi >> 26;    /* sign+combination field */
+  msd = DECCOMBMSD[comb]; /* decode the combination field */
+  exp = DECCOMBEXP[comb]; /* .. */
+
+  if (!EXPISSPECIAL(exp)) { /* finite */
+    /* complete exponent; top two bits are in place */
+    exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
+  } else {                        /* IS special */
+    return INT32_MIN;
+  }
+
+  bool stop = msd != 0;
+  int left_zeros = !stop;
+
+#define dpd2deccount(dpdin)                                                    \
+  u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
+  left_zeros += (!stop) * (3 - *(u + 3));                                      \
+  stop |= *(u + 3);
+
+#if DECPMAX == 7
+  dpd2deccount(sourhi >> 10); /* declet 1 */
+  dpd2deccount(sourhi);       /* declet 2 */
+  const int max_digits = 2 * 3 + 1;
+
+#elif DECPMAX == 16
+  dpd2deccount(sourhi >> 8);                    /* declet 1 */
+  dpd2deccount((sourhi << 2) | (sourlo >> 30)); /* declet 2 */
+  dpd2deccount(sourlo >> 20);                   /* declet 3 */
+  dpd2deccount(sourlo >> 10);                   /* declet 4 */
+  dpd2deccount(sourlo);                         /* declet 5 */
+  const int max_digits = 5 * 3 + 1;
+
+#elif DECPMAX == 34
+  dpd2deccount(sourhi >> 4);                    /* declet 1 */
+  dpd2deccount((sourhi << 6) | (sourmh >> 26)); /* declet 2 */
+  dpd2deccount(sourmh >> 16);                   /* declet 3 */
+  dpd2deccount(sourmh >> 6);                    /* declet 4 */
+  dpd2deccount((sourmh << 4) | (sourml >> 28)); /* declet 5 */
+  dpd2deccount(sourml >> 18);                   /* declet 6 */
+  dpd2deccount(sourml >> 8);                    /* declet 7 */
+  dpd2deccount((sourml << 2) | (sourlo >> 30)); /* declet 8 */
+  dpd2deccount(sourlo >> 20);                   /* declet 9 */
+  dpd2deccount(sourlo >> 10);                   /* declet 10 */
+  dpd2deccount(sourlo);                         /* declet 11 */
+  const int max_digits = 11 * 3 + 1;
+#endif
+
+  if (max_digits == left_zeros) {
+    return INT32_MIN;
+  }
+
+  return max_digits - left_zeros + exp - 1;
 }
