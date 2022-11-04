@@ -82,7 +82,7 @@ inline fmc_rational64_t operator*(fmc_rational64_t a, fmc_rational64_t b) {
 }
 
 inline fmc_rational64_t &operator+=(fmc_rational64_t &a, fmc_rational64_t b) {
-  fmc_rational64_div(&a, &a, &b);
+  fmc_rational64_add(&a, &a, &b);
   return a;
 }
 
