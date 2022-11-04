@@ -29,7 +29,6 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 /*								      */
 /* Context variables must always have valid values:		      */
 /*								      */
-/*  status   -- [any bits may be cleared, but not set, by user]       */
 /*  round    -- must be one of the enumerated rounding modes	      */
 /*								      */
 /* The following variables are implied for fixed size formats (i.e.,  */
@@ -80,16 +79,8 @@ enum rounding {
 #define DEC_ROUND_DEFAULT DEC_ROUND_HALF_EVEN;
 
 typedef struct {
-  int32_t digits;      /* working precision 	      */
-  int32_t emax;        /* maximum positive exponent       */
-  int32_t emin;        /* minimum negative exponent       */
   enum rounding round; /* rounding mode		      */
-  uint32_t traps;      /* trap-enabler flags	      */
-  uint32_t status;     /* status flags		      */
   uint8_t clamp;       /* flag: apply IEEE exponent clamp */
-#if DECSUBSET
-  uint8_t extended; /* flag: special-values allowed    */
-#endif
 } decContext;
 
 /* Maxima and Minima for context settings			      */
@@ -246,23 +237,10 @@ enum decClass {
 extern "C" {
 #endif
 
-extern decContext *decContextClearStatus(decContext *, uint32_t);
 extern decContext *decContextDefault(decContext *, int32_t);
 extern enum rounding decContextGetRounding(decContext *);
-extern uint32_t decContextGetStatus(decContext *);
-extern decContext *decContextRestoreStatus(decContext *, uint32_t, uint32_t);
-extern uint32_t decContextSaveStatus(decContext *, uint32_t);
 extern decContext *decContextSetRounding(decContext *, enum rounding);
-extern decContext *decContextSetStatus(decContext *, uint32_t);
-extern decContext *decContextSetStatusFromString(decContext *, const char *);
-extern decContext *decContextSetStatusFromStringQuiet(decContext *,
-                                                      const char *);
-extern decContext *decContextSetStatusQuiet(decContext *, uint32_t);
-extern const char *decContextStatusToString(const decContext *);
 extern int32_t decContextTestEndian(uint8_t);
-extern uint32_t decContextTestSavedStatus(uint32_t, uint32_t);
-extern uint32_t decContextTestStatus(decContext *, uint32_t);
-extern decContext *decContextZeroStatus(decContext *);
 
 #ifdef __cplusplus
 }
