@@ -79,6 +79,7 @@ FMMODFUNC void fmc_rprice_min(fmc_rprice_t *res);
 
 FMMODFUNC void fmc_rprice_abs(fmc_rprice_t *res, const fmc_rprice_t *val);
 FMMODFUNC void fmc_rprice_negate(fmc_rprice_t *res, const fmc_rprice_t *val);
+FMMODFUNC int64_t fmc_rprice_round(fmc_rprice_t *num);
 
 #ifdef __cplusplus
 }
