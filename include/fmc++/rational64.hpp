@@ -152,7 +152,7 @@ inline istream &operator>>(istream &s, fmc_rational64_t &x) {
   return s;
 }
 
-inline bool isnan(fmc_rational64_t x) { return fmc_rational64_isnan(x); }
+inline bool isnan(fmc_rational64_t x) { return fmc_rational64_is_nan(x); }
 
 inline string to_string(const fmc_rational64_t &x) {
   return to_string(x.num) + "/" + to_string(x.den);
