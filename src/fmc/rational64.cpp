@@ -126,19 +126,19 @@ void fmc_rational64_sub(fmc_rational64_t *dest, const fmc_rational64_t *lhs, con
   fmc_rational64_new(dest, num, den);
 }
 
-bool fmc_rational64_less(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
+bool fmc_rational64_less(const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   return int64_t(lhs->num) * int64_t(rhs->den) < int64_t(rhs->num) * int64_t(lhs->den);
 }
 
-bool fmc_rational64_greater(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
+bool fmc_rational64_greater(const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   return int64_t(lhs->num) * int64_t(rhs->den) > int64_t(rhs->num) * int64_t(lhs->den);
 }
 
-bool fmc_rational64_equal(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
+bool fmc_rational64_equal(const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   return int64_t(lhs->num) * int64_t(rhs->den) == int64_t(rhs->num) * int64_t(lhs->den);
 }
 
-bool fmc_rational64_notequal(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
+bool fmc_rational64_notequal(const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   return int64_t(lhs->num) * int64_t(rhs->den) != int64_t(rhs->num) * int64_t(lhs->den);
 }
 
