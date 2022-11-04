@@ -1279,20 +1279,11 @@ TEST(decimal128, identity_extreme) {
     ASSERT_EQ(err, nullptr);
     ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
     fmc_decimal128_from_double(&b, number);
-    if (expected_signal)
-      ASSERT_TRUE(fetestexcept(expected_signal));
-    else
-      ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+    ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
     fmc_decimal128_to_str(dec_fromstr, &a);
-    if (expected_signal)
-      ASSERT_TRUE(fetestexcept(expected_signal));
-    else
-      ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+    ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
     fmc_decimal128_to_str(dec_fromdouble, &b);
-    if (expected_signal)
-      ASSERT_TRUE(fetestexcept(expected_signal));
-    else
-      ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+    ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
 
     canonicalize(number_str, 0);
   };

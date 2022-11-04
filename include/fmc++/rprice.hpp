@@ -116,22 +116,22 @@ public:
   }
 };
 
-template <> struct sided_initializer<rprice> {
+template <> struct sided_initializer<fmc_rprice_t> {
   static constexpr bool is_specialized = true;
-  static rprice min() noexcept { return FMC_RPRICE_MIN; }
-  static rprice max() noexcept { return FMC_RPRICE_MAX; }
+  static fmc_rprice_t min() noexcept { return FMC_RPRICE_MIN; }
+  static fmc_rprice_t max() noexcept { return FMC_RPRICE_MAX; }
 };
 
-template <> struct conversion<rprice, double> {
-  double operator()(rprice x) {
+template <> struct conversion<fmc_rprice_t, double> {
+  double operator()(fmc_rprice_t x) {
     double ret;
     fmc_rprice_to_double(&ret, &x);
     return ret;
   }
 };
 
-template <> struct conversion<double, rprice> {
-  rprice operator()(double x) {
+template <> struct conversion<double, fmc_rprice_t> {
+  fmc_rprice_t operator()(double x) {
     rprice ret;
     fmc_rprice_from_double(&ret, x);
     return ret;
@@ -220,16 +220,12 @@ inline fmc_rprice_t operator*(int64_t a, fmc_rprice_t b) {
 
 namespace std {
 
-inline ostream &operator<<(ostream &s, const fmc::rprice &x) {
+inline ostream &operator<<(ostream &s, const fmc_rprice_t &x) {
   using namespace std;
   return s << setprecision(15) << fmc::to<double>(x);
 }
 
-inline ostream &operator<<(ostream &s, const fmc_rprice_t &x) {
-  return s << fmc::rprice::upcast(x);
-}
-
-inline istream &operator>>(istream &s, fmc::rprice &x) {
+inline istream &operator>>(istream &s, fmc_rprice_t &x) {
   using namespace std;
   double d;
   s >> d;
@@ -238,16 +234,8 @@ inline istream &operator>>(istream &s, fmc::rprice &x) {
   return s;
 }
 
-inline istream &operator>>(istream &s, fmc_rprice_t &x) {
-  return s >> fmc::rprice::upcast(x);
-}
-
-inline string to_string(fmc::rprice &x) {
-  return to_string(fmc::to<double>(x));
-}
-
 inline string to_string(fmc_rprice_t &x) {
-  return to_string(fmc::rprice::upcast(x));
+  return to_string(fmc::to<double>(x));
 }
 
 template <> class numeric_limits<fmc::rprice> {
@@ -257,32 +245,22 @@ public:
   static fmc::rprice epsilon() noexcept { return fmc::rprice((int64_t)0); }
 };
 
-inline bool isinf(const fmc::rprice &x) noexcept { return false; }
-
 inline bool isinf(const fmc_rprice_t &x) noexcept {
-  return std::isinf(fmc::rprice::upcast(x));
+  return false;
 }
-
-inline bool isfinite(const fmc::rprice &x) noexcept { return true; }
 
 inline bool isfinite(const fmc_rprice_t &x) noexcept {
-  return std::isfinite(fmc::rprice::upcast(x));
+  return true;
 }
 
-inline fmc::rprice abs(const fmc::rprice &x) noexcept {
+inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {
   fmc::rprice ret;
   fmc_rprice_abs(&ret, &x);
   return ret;
 }
 
-inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {
-  return std::abs(fmc::rprice::upcast(x));
-}
-
-inline bool isnan(fmc::rprice x) noexcept { return false; }
-
 inline bool isnan(fmc_rprice_t x) noexcept {
-  return std::isnan(fmc::rprice::upcast(x));
+  return false;
 }
 
 template <> struct hash<fmc_rprice_t> {

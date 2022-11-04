@@ -454,30 +454,6 @@ TEST(rprice, invalid_cppstreams) {
   ASSERT_THROW(ss >> b, std::runtime_error);
 }
 
-void canonicalize(char *str, int keep_zeros) {
-  for (auto i = strlen(str); --i > 0;) {
-    if (str[i] == 'e') {
-      str[i] = 'E';
-      return;
-    }
-  }
-  for (auto i = strlen(str); --i > 0;) {
-    if (str[i] != '0') {
-      for (auto j = i; j > 0; --j) {
-        if (str[j] == '.') {
-          if (i + keep_zeros == j) {
-            str[j] = '\0';
-          } else {
-            str[i + keep_zeros + 1] = '\0';
-          }
-          break;
-        }
-      }
-      break;
-    }
-  }
-}
-
 TEST(rprice, assign) {
   fmc::rprice a = 5;
   fmc::rprice b = a;
