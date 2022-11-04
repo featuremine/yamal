@@ -245,13 +245,9 @@ public:
   static fmc::rprice epsilon() noexcept { return fmc::rprice((int64_t)0); }
 };
 
-inline bool isinf(const fmc_rprice_t &x) noexcept {
-  return false;
-}
+inline bool isinf(const fmc_rprice_t &x) noexcept { return false; }
 
-inline bool isfinite(const fmc_rprice_t &x) noexcept {
-  return true;
-}
+inline bool isfinite(const fmc_rprice_t &x) noexcept { return true; }
 
 inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {
   fmc::rprice ret;
@@ -259,9 +255,7 @@ inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {
   return ret;
 }
 
-inline bool isnan(fmc_rprice_t x) noexcept {
-  return false;
-}
+inline bool isnan(fmc_rprice_t x) noexcept { return false; }
 
 template <> struct hash<fmc_rprice_t> {
   size_t operator()(const fmc_rprice_t &k) const {
