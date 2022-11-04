@@ -116,10 +116,10 @@ public:
   }
 };
 
-template <> struct sided_initializer<fmc_rprice_t> {
+template <> struct sided_initializer<fmc::rprice> {
   static constexpr bool is_specialized = true;
-  static fmc_rprice_t min() noexcept { return FMC_RPRICE_MIN; }
-  static fmc_rprice_t max() noexcept { return FMC_RPRICE_MAX; }
+  static fmc::rprice min() noexcept { return FMC_RPRICE_MIN; }
+  static fmc::rprice max() noexcept { return FMC_RPRICE_MAX; }
 };
 
 template <> struct conversion<fmc_rprice_t, double> {
