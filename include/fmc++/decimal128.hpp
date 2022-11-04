@@ -43,7 +43,7 @@ public:
   decimal128(uint i) noexcept { fmc_decimal128_from_uint(this, i); }
   decimal128(uint64_t i) noexcept { fmc_decimal128_from_uint(this, i); }
   decimal128(fmc_rprice_t d) noexcept {
-    static decimal128 dec64div((int64_t)RPRICE_FRACTION);
+    static decimal128 dec64div((int64_t)FMC_RPRICE_FRACTION);
 
     decimal128 dd;
     fmc_decimal128_from_int(&dd, d.value);

@@ -30,23 +30,23 @@
 
 void fmc_rprice_from_raw(fmc_rprice_t *dest, int64_t src) { dest->value = src; }
 void fmc_rprice_from_old(fmc_rprice_t *dest, const fmc_rprice_t *src) {
-  dest->value = src->value * NEW2OLD_RPRICE_FRACTION;
+  dest->value = src->value * FMC_NEW2OLD_RPRICE_FRACTION;
 }
 void fmc_rprice_from_ratio(fmc_rprice_t *dest, int64_t num, int64_t denum) {
-  dest->value = (RPRICE_FRACTION / denum) * num;
+  dest->value = (FMC_RPRICE_FRACTION / denum) * num;
 }
 
 void fmc_rprice_from_int(fmc_rprice_t *dest, int64_t src) {
-  dest->value = src * RPRICE_FRACTION;
+  dest->value = src * FMC_RPRICE_FRACTION;
 }
 void fmc_rprice_to_int(int64_t *dest, const fmc_rprice_t *src) {
-  *dest = src->value / RPRICE_FRACTION;
+  *dest = src->value / FMC_RPRICE_FRACTION;
 }
 void fmc_rprice_from_double(fmc_rprice_t *dest, double src) {
-  dest->value = fmc_llround(src * RPRICE_FRACTION);
+  dest->value = fmc_llround(src * FMC_RPRICE_FRACTION);
 }
 void fmc_rprice_to_double(double *dest, const fmc_rprice_t *src) {
-  *dest = (double)src->value / double(RPRICE_FRACTION);
+  *dest = (double)src->value / double(FMC_RPRICE_FRACTION);
 }
 
 bool fmc_rprice_less(const fmc_rprice_t *lhs, const fmc_rprice_t *rhs) {
@@ -69,7 +69,7 @@ bool fmc_rprice_equal(const fmc_rprice_t *lhs, const fmc_rprice_t *rhs) {
 
 void fmc_rprice_div(fmc_rprice_t *res, const fmc_rprice_t *lhs,
                     const fmc_rprice_t *rhs) {
-  __int128 tmp1 = __int128(lhs->value) * __int128(RPRICE_FRACTION);
+  __int128 tmp1 = __int128(lhs->value) * __int128(FMC_RPRICE_FRACTION);
   __int128 tmp2 = __int128(rhs->value);
   res->value = int64_t(tmp1 / tmp2);
 }
@@ -94,7 +94,7 @@ void fmc_rprice_dec(fmc_rprice_t *lhs, const fmc_rprice_t *rhs) {
 void fmc_rprice_mul(fmc_rprice_t *res, const fmc_rprice_t *lhs,
                     const fmc_rprice_t *rhs) {
   __int128 tmp1 = __int128(lhs->value) * __int128(rhs->value);
-  __int128 tmp2 = __int128(RPRICE_FRACTION);
+  __int128 tmp2 = __int128(FMC_RPRICE_FRACTION);
   res->value = int64_t(tmp1 / tmp2);
 }
 

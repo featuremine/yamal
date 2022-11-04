@@ -30,8 +30,8 @@
 extern "C" {
 #endif
 
-#define NEW2OLD_RPRICE_FRACTION 100LL
-#define RPRICE_FRACTION 1000000000LL
+#define FMC_NEW2OLD_RPRICE_FRACTION 100LL
+#define FMC_RPRICE_FRACTION 1000000000LL
 
 typedef struct {
   int64_t value;

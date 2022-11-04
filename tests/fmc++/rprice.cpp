@@ -50,7 +50,7 @@ TEST(rprice, from_int_low) {
 }
 
 TEST(rprice, from_int_extreme) {
-  int64_t max = std::numeric_limits<int64_t>::max() / RPRICE_FRACTION;
+  int64_t max = std::numeric_limits<int64_t>::max() / FMC_RPRICE_FRACTION;
   fmc_rprice_t a;
   fmc_rprice_from_int(&a, max);
   int64_t res;
@@ -68,7 +68,7 @@ TEST(rprice, from_int_neg_low) {
 }
 
 TEST(rprice, from_int_neg_extreme) {
-  int64_t max = std::numeric_limits<int64_t>::min() / RPRICE_FRACTION;
+  int64_t max = std::numeric_limits<int64_t>::min() / FMC_RPRICE_FRACTION;
   fmc_rprice_t a;
   fmc_rprice_from_int(&a, max);
   int64_t res;
