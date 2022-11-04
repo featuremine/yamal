@@ -355,10 +355,6 @@ void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
   fmc_decimal128_to_uint(&mantissa, &positive_src, &error);
 
   uint64_t actual_digit2 = FMC_FLOORLOG2(mantissa);
-  if (actual_digit2 < 52ull) {
-    printf("%lu %lx %d %d\n", actual_digit2, mantissa, digits2, digits10);
-    abort();
-  }
   uint64_t correction = actual_digit2 - 52ull;
   mantissa >>= correction;
 
