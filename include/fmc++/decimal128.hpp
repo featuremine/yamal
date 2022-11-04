@@ -196,33 +196,27 @@ template <> struct conversion<double, fmc_decimal128_t> {
 
 } // namespace fmc
 
-inline bool operator==(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) {
+inline bool operator==(const fmc_decimal128_t &a, const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) == fmc::decimal128::upcast(b);
 }
 
-inline bool operator!=(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) {
+inline bool operator!=(const fmc_decimal128_t &a, const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) != fmc::decimal128::upcast(b);
 }
 
-inline bool operator<(const fmc_decimal128_t &a,
-                      const fmc_decimal128_t &b) {
+inline bool operator<(const fmc_decimal128_t &a, const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) < fmc::decimal128::upcast(b);
 }
 
-inline bool operator<=(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) {
+inline bool operator<=(const fmc_decimal128_t &a, const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) <= fmc::decimal128::upcast(b);
 }
 
-inline bool operator>(const fmc_decimal128_t &a,
-                      const fmc_decimal128_t &b) {
+inline bool operator>(const fmc_decimal128_t &a, const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) > fmc::decimal128::upcast(b);
 }
 
-inline bool operator>=(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) {
+inline bool operator>=(const fmc_decimal128_t &a, const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) >= fmc::decimal128::upcast(b);
 }
 
@@ -246,8 +240,7 @@ inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
   return fmc::decimal128::upcast(a) / fmc::decimal128::upcast(b);
 }
 
-inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
-                                  const int64_t &b) {
+inline fmc_decimal128_t operator/(const fmc_decimal128_t &a, const int64_t &b) {
   return fmc::decimal128::upcast(a) / b;
 }
 
@@ -280,9 +273,7 @@ public:
     fmc_decimal128_snan(&res);
     return res;
   }
-  static fmc::decimal128 epsilon() {
-    return fmc::decimal128((int64_t)0);
-  }
+  static fmc::decimal128 epsilon() { return fmc::decimal128((int64_t)0); }
 };
 
 inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) {
@@ -345,9 +336,7 @@ inline fmc_decimal128_t abs(fmc_decimal128_t x) {
   return std::abs(fmc::decimal128::upcast(x));
 }
 
-inline bool isnan(fmc::decimal128 x) {
-  return fmc_decimal128_is_nan(&x);
-}
+inline bool isnan(fmc::decimal128 x) { return fmc_decimal128_is_nan(&x); }
 
 inline bool isnan(fmc_decimal128_t x) {
   return std::isnan(fmc::decimal128::upcast(x));
