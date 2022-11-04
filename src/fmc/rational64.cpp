@@ -105,25 +105,25 @@ void fmc_rational64_to_rprice(fmc_rprice_t *dest, fmc_rational64_t *src) {
 void fmc_rational64_div(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   auto num = int64_t(lhs->num) * int64_t(rhs->den);
   auto den = int64_t(lhs->den) * int64_t(rhs->num);
-  fmc_rational64_new(dest, num, den);
+  fmc_rational64_new2(dest, num, den);
 }
 
 void fmc_rational64_mul(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   auto num = int64_t(lhs->num) * int64_t(rhs->num);
   auto den = int64_t(lhs->den) * int64_t(rhs->den);
-  fmc_rational64_new(dest, num, den);
+  fmc_rational64_new2(dest, num, den);
 }
 
 void fmc_rational64_add(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   auto num = int64_t(lhs->num) * int64_t(rhs->den) + int64_t(rhs->num) * int64_t(lhs->den);
   auto den = int64_t(lhs->den) * int64_t(rhs->den);
-  fmc_rational64_new(dest, num, den);
+  fmc_rational64_new2(dest, num, den);
 }
 
 void fmc_rational64_sub(fmc_rational64_t *dest, const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
   auto num = int64_t(lhs->num) * int64_t(rhs->den) - int64_t(rhs->num) * int64_t(lhs->den);
   auto den = int64_t(lhs->den) * int64_t(rhs->den);
-  fmc_rational64_new(dest, num, den);
+  fmc_rational64_new2(dest, num, den);
 }
 
 bool fmc_rational64_less(const fmc_rational64_t *lhs, const fmc_rational64_t *rhs) {
