@@ -73,8 +73,16 @@ void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
 }
 
 void fmc_rational64_from_double(fmc_rational64_t*dest, double value, int32_t base) {
-  dest->num = (int32_t)lround(floor(value * double(base)));
-  dest->den = base;
+  if (std::isnan(value)) {
+    dest->num = 0;
+    dest->den = 0;
+  } else if (std::isinf(value)) {
+    dest->num = 1 - 2 * (value < 0);
+    dest->den = 0;
+  } else {
+    dest->num = (int32_t)lround(floor(value * double(base)));
+    dest->den = base;
+  }
 }
 
 void fmc_rational64_from_rprice(fmc_rational64_t*dest, fmc_rprice_t *src) {
