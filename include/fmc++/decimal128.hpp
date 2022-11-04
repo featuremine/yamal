@@ -126,55 +126,55 @@ public:
   }
 };
 
-inline bool operator==(const decimal128 &a, const decimal128 &b) noexcept {
+inline bool operator==(const decimal128 &a, const decimal128 &b) {
   return fmc_decimal128_equal(&a, &b);
 }
 
-inline bool operator!=(const decimal128 &a, const decimal128 &b) noexcept {
+inline bool operator!=(const decimal128 &a, const decimal128 &b) {
   return !fmc_decimal128_equal(&a, &b);
 }
 
-inline bool operator<(const decimal128 &a, const decimal128 &b) noexcept {
+inline bool operator<(const decimal128 &a, const decimal128 &b) {
   return fmc_decimal128_less(&a, &b);
 }
 
-inline bool operator<=(const decimal128 &a, const decimal128 &b) noexcept {
+inline bool operator<=(const decimal128 &a, const decimal128 &b) {
   return fmc_decimal128_less_or_equal(&a, &b);
 }
 
-inline bool operator>(const decimal128 &a, const decimal128 &b) noexcept {
+inline bool operator>(const decimal128 &a, const decimal128 &b) {
   return fmc_decimal128_greater(&a, &b);
 }
 
-inline bool operator>=(const decimal128 &a, const decimal128 &b) noexcept {
+inline bool operator>=(const decimal128 &a, const decimal128 &b) {
   return fmc_decimal128_greater_or_equal(&a, &b);
 }
 
-inline decimal128 operator+(const decimal128 &a, const decimal128 &b) noexcept {
+inline decimal128 operator+(const decimal128 &a, const decimal128 &b) {
   decimal128 res;
   fmc_decimal128_add(&res, &a, &b);
   return res;
 }
 
-inline decimal128 operator-(const decimal128 &a, const decimal128 &b) noexcept {
+inline decimal128 operator-(const decimal128 &a, const decimal128 &b) {
   decimal128 res;
   fmc_decimal128_sub(&res, &a, &b);
   return res;
 }
 
-inline decimal128 operator*(const decimal128 &a, const decimal128 &b) noexcept {
+inline decimal128 operator*(const decimal128 &a, const decimal128 &b) {
   decimal128 res;
   fmc_decimal128_mul(&res, &a, &b);
   return res;
 }
 
-inline decimal128 operator/(const decimal128 &a, const decimal128 &b) noexcept {
+inline decimal128 operator/(const decimal128 &a, const decimal128 &b) {
   decimal128 res;
   fmc_decimal128_div(&res, &a, &b);
   return res;
 }
 
-inline decimal128 operator/(const decimal128 &a, const int64_t &b) noexcept {
+inline decimal128 operator/(const decimal128 &a, const int64_t &b) {
   return a / decimal128(b);
 }
 
@@ -197,57 +197,57 @@ template <> struct conversion<double, fmc_decimal128_t> {
 } // namespace fmc
 
 inline bool operator==(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) noexcept {
+                       const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) == fmc::decimal128::upcast(b);
 }
 
 inline bool operator!=(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) noexcept {
+                       const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) != fmc::decimal128::upcast(b);
 }
 
 inline bool operator<(const fmc_decimal128_t &a,
-                      const fmc_decimal128_t &b) noexcept {
+                      const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) < fmc::decimal128::upcast(b);
 }
 
 inline bool operator<=(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) noexcept {
+                       const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) <= fmc::decimal128::upcast(b);
 }
 
 inline bool operator>(const fmc_decimal128_t &a,
-                      const fmc_decimal128_t &b) noexcept {
+                      const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) > fmc::decimal128::upcast(b);
 }
 
 inline bool operator>=(const fmc_decimal128_t &a,
-                       const fmc_decimal128_t &b) noexcept {
+                       const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) >= fmc::decimal128::upcast(b);
 }
 
 inline fmc_decimal128_t operator+(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
+                                  const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) + fmc::decimal128::upcast(b);
 }
 
 inline fmc_decimal128_t operator-(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
+                                  const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) - fmc::decimal128::upcast(b);
 }
 
 inline fmc_decimal128_t operator*(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
+                                  const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) * fmc::decimal128::upcast(b);
 }
 
 inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
+                                  const fmc_decimal128_t &b) {
   return fmc::decimal128::upcast(a) / fmc::decimal128::upcast(b);
 }
 
 inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
-                                  const int64_t &b) noexcept {
+                                  const int64_t &b) {
   return fmc::decimal128::upcast(a) / b;
 }
 
@@ -255,54 +255,54 @@ namespace std {
 
 template <> class numeric_limits<fmc::decimal128> {
 public:
-  static fmc::decimal128 min() noexcept {
+  static fmc::decimal128 min() {
     fmc::decimal128 res;
     fmc_decimal128_min(&res);
     return res;
   }
-  static fmc::decimal128 max() noexcept {
+  static fmc::decimal128 max() {
     fmc::decimal128 res;
     fmc_decimal128_max(&res);
     return res;
   }
-  static fmc::decimal128 infinity() noexcept {
+  static fmc::decimal128 infinity() {
     fmc::decimal128 res;
     fmc_decimal128_inf(&res);
     return res;
   }
-  static fmc::decimal128 quiet_NaN() noexcept {
+  static fmc::decimal128 quiet_NaN() {
     fmc::decimal128 res;
     fmc_decimal128_qnan(&res);
     return res;
   }
-  static fmc::decimal128 signaling_NaN() noexcept {
+  static fmc::decimal128 signaling_NaN() {
     fmc::decimal128 res;
     fmc_decimal128_snan(&res);
     return res;
   }
-  static fmc::decimal128 epsilon() noexcept {
+  static fmc::decimal128 epsilon() {
     return fmc::decimal128((int64_t)0);
   }
 };
 
-inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) noexcept {
+inline ostream &operator<<(ostream &os, const fmc::decimal128 &r) {
   char str[FMC_DECIMAL128_STR_SIZE];
   fmc_decimal128_to_str(str, &r);
   os << str;
   return os;
 }
 
-inline ostream &operator<<(ostream &os, const fmc_decimal128_t &r) noexcept {
+inline ostream &operator<<(ostream &os, const fmc_decimal128_t &r) {
   return os << fmc::decimal128::upcast(r);
 }
 
-inline string to_string(const fmc::decimal128 &r) noexcept {
+inline string to_string(const fmc::decimal128 &r) {
   char str[FMC_DECIMAL128_STR_SIZE];
   fmc_decimal128_to_str(str, &r);
   return string(str);
 }
 
-inline string to_string(const fmc_decimal128_t &r) noexcept {
+inline string to_string(const fmc_decimal128_t &r) {
   return to_string(fmc::decimal128::upcast(r));
 }
 
@@ -319,37 +319,37 @@ inline istream &operator>>(istream &os, fmc_decimal128_t &r) {
   return os >> fmc::decimal128::upcast(r);
 }
 
-inline bool isinf(const fmc::decimal128 &x) noexcept {
+inline bool isinf(const fmc::decimal128 &x) {
   return fmc_decimal128_is_inf(&x);
 }
 
-inline bool isinf(const fmc_decimal128_t &x) noexcept {
+inline bool isinf(const fmc_decimal128_t &x) {
   return std::isinf(fmc::decimal128::upcast(x));
 }
 
-inline bool isfinite(const fmc::decimal128 &x) noexcept {
+inline bool isfinite(const fmc::decimal128 &x) {
   return fmc_decimal128_is_finite(&x);
 }
 
-inline bool isfinite(const fmc_decimal128_t &x) noexcept {
+inline bool isfinite(const fmc_decimal128_t &x) {
   return std::isfinite(fmc::decimal128::upcast(x));
 }
 
-inline fmc::decimal128 abs(const fmc::decimal128 &x) noexcept {
+inline fmc::decimal128 abs(const fmc::decimal128 &x) {
   fmc::decimal128 res;
   fmc_decimal128_abs(&res, &x);
   return res;
 }
 
-inline fmc_decimal128_t abs(fmc_decimal128_t x) noexcept {
+inline fmc_decimal128_t abs(fmc_decimal128_t x) {
   return std::abs(fmc::decimal128::upcast(x));
 }
 
-inline bool isnan(fmc::decimal128 x) noexcept {
+inline bool isnan(fmc::decimal128 x) {
   return fmc_decimal128_is_nan(&x);
 }
 
-inline bool isnan(fmc_decimal128_t x) noexcept {
+inline bool isnan(fmc_decimal128_t x) {
   return std::isnan(fmc::decimal128::upcast(x));
 }
 
@@ -367,10 +367,10 @@ namespace fmc {
 
 template <> struct sided_initializer<fmc::decimal128> {
   static constexpr bool is_specialized = true;
-  static fmc::decimal128 min() noexcept {
+  static fmc::decimal128 min() {
     return -std::numeric_limits<fmc::decimal128>::infinity();
   }
-  static fmc::decimal128 max() noexcept {
+  static fmc::decimal128 max() {
     return std::numeric_limits<fmc::decimal128>::infinity();
   }
 };

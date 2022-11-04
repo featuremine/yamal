@@ -80,7 +80,7 @@ FMMODFUNC void fmc_decimal128_dec(fmc_decimal128_t *lhs,
                                   const fmc_decimal128_t *rhs);
 FMMODFUNC void fmc_decimal128_mul(fmc_decimal128_t *res,
                                   const fmc_decimal128_t *lhs,
-                                  const fmc_decimal128_t *rh);
+                                  const fmc_decimal128_t *rhs);
 
 FMMODFUNC void fmc_decimal128_round(fmc_decimal128_t *dest,
                                     const fmc_decimal128_t *src);
