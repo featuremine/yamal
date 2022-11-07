@@ -39,7 +39,6 @@ struct test_msg {
 };
 
 const unsigned test_batch = 10000;
-const unsigned max_misses = 100;
 const unsigned batch_count = 500;
 const unsigned test_size = test_batch * batch_count;
 

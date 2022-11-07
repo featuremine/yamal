@@ -378,6 +378,7 @@ TEST(rprice, cppnegate) {
 
   ASSERT_NE(a, b);
   ASSERT_EQ(a, -b);
+  ASSERT_EQ(a, std::abs(b));
 }
 
 TEST(rprice, ostream) {
