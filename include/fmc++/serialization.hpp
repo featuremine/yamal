@@ -219,10 +219,12 @@ inline bool cmp_read_item(cmp_ctx_t *ctx, fmc_decimal128_t *arg) {
     if (!cmp_object_to_str(ctx, &obj, buf, FMC_DECIMAL128_STR_SIZE)) {
       return false;
     }
-    fmc_decimal128_from_str(arg, buf);
-    return true;
-  }
-  if (cmp_object_is_sinteger(&obj)) {
+    fmc_error_t *err;
+    fmc_decimal128_from_str(arg, buf, &err);
+    if (err) {
+      return false;
+    }
+  } else if (cmp_object_is_sinteger(&obj)) {
     int64_t num = 0;
     if (!cmp_object_as_sinteger(&obj, &num)) {
       return false;

@@ -75,6 +75,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/rprice.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
