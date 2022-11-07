@@ -261,33 +261,37 @@ inline istream &operator>>(istream &os, fmc_decimal128_t &r) {
   return os;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, bool>
-isinf(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> ||
+                                     std::is_same_v<T, fmc_decimal128_t>,
+                                 bool>
+isinf(T x) {
   return fmc_decimal128_is_inf(&x);
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, bool>
-isfinite(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> ||
+                                     std::is_same_v<T, fmc_decimal128_t>,
+                                 bool>
+isfinite(T x) {
   return fmc_decimal128_is_finite(&x);
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, fmc::decimal128>
-abs(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> ||
+                                     std::is_same_v<T, fmc_decimal128_t>,
+                                 fmc::decimal128>
+abs(T x) {
   fmc::decimal128 res;
   fmc_decimal128_abs(&res, &x);
   return res;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, bool>
-isnan(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> ||
+                                     std::is_same_v<T, fmc_decimal128_t>,
+                                 bool>
+isnan(T x) {
   return fmc_decimal128_is_nan(&x);
 }
 

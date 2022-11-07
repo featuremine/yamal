@@ -260,33 +260,37 @@ inline istream &operator>>(istream &s, fmc::rational64 &x) {
   return s;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, bool>
-isinf(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> ||
+                                     std::is_same_v<T, fmc_rational64_t>,
+                                 bool>
+isinf(T x) {
   return fmc_rational64_is_inf(&x);
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, bool>
-isfinite(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> ||
+                                     std::is_same_v<T, fmc_rational64_t>,
+                                 bool>
+isfinite(T x) {
   return fmc_rational64_is_finite(&x);
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, fmc::rational64>
-abs(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> ||
+                                     std::is_same_v<T, fmc_rational64_t>,
+                                 fmc::rational64>
+abs(T x) {
   fmc::rational64 res;
   fmc_rational64_abs(&res, &x);
   return res;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, bool>
-isnan(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> ||
+                                     std::is_same_v<T, fmc_rational64_t>,
+                                 bool>
+isnan(T x) {
   return fmc_rational64_is_nan(&x);
 }
 

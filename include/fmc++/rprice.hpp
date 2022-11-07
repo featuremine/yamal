@@ -235,33 +235,34 @@ public:
   static fmc::rprice epsilon() noexcept { return fmc::rprice((int64_t)0); }
 };
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
-isinf(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<
+    std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isinf(T x) {
   return false;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
-isfinite(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<
+    std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isfinite(T x) {
   return true;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, fmc::rprice>
-abs(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> ||
+                                     std::is_same_v<T, fmc_rprice_t>,
+                                 fmc::rprice>
+abs(T x) {
   fmc::rprice res;
   fmc_rprice_abs(&res, &x);
   return res;
 }
 
-template<typename T>
-inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
-isnan(T x)
-{
+template <typename T>
+inline typename std::enable_if_t<
+    std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isnan(T x) {
   return false;
 }
 

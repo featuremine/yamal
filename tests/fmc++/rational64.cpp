@@ -25,8 +25,8 @@
 #include "fmc++/rprice.hpp"
 
 #include "fmc++/gtestwrap.hpp"
-#include <sstream>
 #include <cmath>
+#include <sstream>
 
 TEST(rational, api) {
   fmc_rational64_t zero;
