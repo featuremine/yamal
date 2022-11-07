@@ -38,10 +38,10 @@ jobs:
 
   build-macos:
     needs: utility
-    runs-on: macos-12
+    runs-on: macos-11
 
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -55,3 +55,4 @@ jobs:
       uses: featuremine/actions/package/build@main
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
+        cpack: TGZ
