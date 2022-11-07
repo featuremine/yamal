@@ -116,8 +116,14 @@ FMMODFUNC double fmc_remainder(double x);
  * @param sign
  * @return the IEEE 754 double value
  */
-FMMODFUNC double fmc_double_make(uint64_t mantissa, uint64_t exp,
-                                 uint64_t sign);
+#define fmc_double_make(mantissa, exp, sign)                                   \
+  ({                                                                           \
+    double _res;                                                               \
+    *(uint64_t *)&_res = ((uint64_t)(mantissa) & ((1ull << 52ull) - 1)) |      \
+                         ((uint64_t)(exp) << 52ull) |                          \
+                         ((uint64_t)(!!(sign)) << 63ull);                      \
+    _res;                                                                      \
+  })
 
 /**
  * @brief Extract the mantissa bits from a IEEE 754 double value
@@ -125,7 +131,11 @@ FMMODFUNC double fmc_double_make(uint64_t mantissa, uint64_t exp,
  * @param value
  * @return the mantissa
  */
-uint64_t fmc_double_mantissa(double value);
+#define fmc_double_mantissa(value)                                             \
+  ({                                                                           \
+    double _val = (value);                                                     \
+    (*(uint64_t *)(&_val)) & ((1ull << 52ull) - 1ull);                         \
+  })
 
 /**
  * @brief Extract the exponent bits from a IEEE 754 double value
@@ -133,7 +143,11 @@ uint64_t fmc_double_mantissa(double value);
  * @param value
  * @return the exponent
  */
-uint64_t fmc_double_exp(double value);
+#define fmc_double_exp(value)                                                  \
+  ({                                                                           \
+    double _val = (value);                                                     \
+    (*(uint64_t *)(&_val) >> 52ll) & ((1ll << 11ll) - 1ll);                    \
+  })
 
 /**
  * @brief Extract the sign bit from a IEEE 754 double value
@@ -141,7 +155,24 @@ uint64_t fmc_double_exp(double value);
  * @param value
  * @return the sign bit
  */
-bool fmc_double_sign(double value);
+#define fmc_double_sign(value)                                                 \
+  ({                                                                           \
+    double _val = (value);                                                     \
+    (*(int64_t *)(&_val) >> 63ll);                                             \
+  })
+
+/**
+ * @brief Set the sign bit to a IEEE 754 double value
+ *
+ * @param value
+ * @return the sign bit
+ */
+#define fmc_double_setsign(value, sign)                                        \
+  ({                                                                           \
+    double *_val = &(value);                                                   \
+    (*(uint64_t *)_val & ~(1ull << 63ull)) |                                   \
+        ((uint64_t)((!!(sign))) << 63ull);                                     \
+  })
 
 #ifdef __cplusplus
 }

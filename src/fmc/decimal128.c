@@ -325,9 +325,7 @@ void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
     } else {
       *res = fmc_decimal128_is_inf(src) ? INFINITY : NAN;
     }
-    if (sign) {
-      *res = -*res;
-    }
+    fmc_double_setsign(*res, sign);
     return;
   }
 
