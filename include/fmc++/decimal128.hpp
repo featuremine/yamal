@@ -37,7 +37,7 @@ namespace fmc {
 
 class decimal128 : public fmc_decimal128_t {
 public:
-  decimal128(const fmc_decimal128_t &a) noexcept : fmc_decimal128_t(a) {}
+  constexpr decimal128(const fmc_decimal128_t &a) noexcept : fmc_decimal128_t(a) {}
   decimal128(int i) noexcept { fmc_decimal128_from_int(this, i); }
   decimal128(int64_t i) noexcept { fmc_decimal128_from_int(this, i); }
   decimal128(uint i) noexcept { fmc_decimal128_from_uint(this, i); }
@@ -50,7 +50,7 @@ public:
     fmc_decimal128_div(this, &dd, &dec64div);
   }
   decimal128(double d) noexcept { fmc_decimal128_from_double(this, d); }
-  decimal128() noexcept { memset(longs, 0, FMC_DECIMAL128_SIZE); }
+  constexpr decimal128() noexcept : fmc_decimal128_t{{0,0}} { }
   decimal128 &operator=(const fmc_decimal128_t &a) noexcept {
     memcpy(this->longs, a.longs, sizeof(a.longs));
     return *this;
