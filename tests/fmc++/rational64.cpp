@@ -187,6 +187,14 @@ TEST(rprice, cppnegate) {
   ASSERT_EQ(a, std::abs(c));
 }
 
+TEST(rprice, cppincdec) {
+  fmc::rprice a(4);
+  a += fmc::rprice(2);
+  ASSERT_EQ(a, fmc::rprice(6));
+  a -= fmc::rprice(4);
+  ASSERT_EQ(a, fmc::rprice(2));
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -40,38 +40,38 @@ namespace fmc {
 
 class rprice : public fmc_rprice_t {
 public:
-  rprice(const fmc_rprice_t &a) : fmc_rprice_t(a) {}
-  rprice(int i) { fmc_rprice_from_int(this, i); }
-  rprice(int64_t i) { fmc_rprice_from_int(this, i); }
-  rprice(uint i) { fmc_rprice_from_int(this, i); }
-  rprice(uint64_t i) { fmc_rprice_from_int(this, i); }
-  rprice(double d) { fmc_rprice_from_double(this, d); }
-  constexpr rprice() : fmc_rprice_t{0} {}
-  rprice &operator=(const fmc_rprice_t &a) {
+  constexpr rprice(const fmc_rprice_t &a) noexcept : fmc_rprice_t(a) {}
+  rprice(int i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(int64_t i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(uint i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(uint64_t i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(double d) noexcept { fmc_rprice_from_double(this, d); }
+  constexpr rprice() noexcept : fmc_rprice_t{0} {}
+  rprice &operator=(const fmc_rprice_t &a) noexcept {
     value = a.value;
     return *this;
   }
-  rprice &operator=(const int &a) {
+  rprice &operator=(const int &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const int64_t &a) {
+  rprice &operator=(const int64_t &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const uint &a) {
+  rprice &operator=(const uint &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const uint64_t &a) {
+  rprice &operator=(const uint64_t &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const double &a) {
+  rprice &operator=(const double &a) noexcept {
     fmc_rprice_from_double(this, a);
     return *this;
   }
-  rprice &operator=(const float &a) {
+  rprice &operator=(const float &a) noexcept {
     fmc_rprice_from_double(this, a);
     return *this;
   }

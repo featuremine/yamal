@@ -212,10 +212,10 @@ void fmc_rational64_negate(fmc_rational64_t *dest,
   dest->den = src->den;
 }
 
-void fmc_rprice_dec(fmc_rational64_t *res, const fmc_rational64_t *src) {
+void fmc_rational64_dec(fmc_rational64_t *res, const fmc_rational64_t *src) {
   fmc_rational64_sub(res, res, src);
 }
 
-void fmc_rprice_inc(fmc_rational64_t *res, const fmc_rational64_t *src) {
+void fmc_rational64_inc(fmc_rational64_t *res, const fmc_rational64_t *src) {
   fmc_rational64_add(res, res, src);
 }

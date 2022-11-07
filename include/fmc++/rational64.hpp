@@ -39,40 +39,40 @@ namespace fmc {
 
 class rational64 : public fmc_rational64_t {
 public:
-  rational64(const fmc_rational64_t &a) : fmc_rational64_t(a) {}
-  rational64(int i) { fmc_rational64_from_int(this, i); }
-  rational64(int64_t i) { fmc_rational64_from_int(this, i); }
-  rational64(uint i) { fmc_rational64_from_int(this, i); }
-  rational64(uint64_t i) { fmc_rational64_from_int(this, i); }
-  rational64(double d) { fmc_rational64_from_double(this, d, 32); }
-  constexpr rational64() : fmc_rational64_t{0, 1} {}
-  constexpr rational64(int32_t num, int32_t den) : fmc_rational64_t{num, den} {}
-  rational64 &operator=(const fmc_rational64_t &a) {
+  constexpr rational64(const fmc_rational64_t &a) noexcept : fmc_rational64_t(a) {}
+  rational64(int i) noexcept { fmc_rational64_from_int(this, i); }
+  rational64(int64_t i) noexcept { fmc_rational64_from_int(this, i); }
+  rational64(uint i) noexcept { fmc_rational64_from_int(this, i); }
+  rational64(uint64_t i) noexcept { fmc_rational64_from_int(this, i); }
+  rational64(double d) noexcept { fmc_rational64_from_double(this, d, 32); }
+  constexpr rational64() noexcept : fmc_rational64_t{0, 1} {}
+  constexpr rational64(int32_t num, int32_t den) noexcept : fmc_rational64_t{num, den} {}
+  rational64 &operator=(const fmc_rational64_t &a) noexcept {
     num = a.num;
     den = a.den;
     return *this;
   }
-  rational64 &operator=(const int &a) {
+  rational64 &operator=(const int &a) noexcept {
     fmc_rational64_from_int(this, a);
     return *this;
   }
-  rational64 &operator=(const int64_t &a) {
+  rational64 &operator=(const int64_t &a) noexcept {
     fmc_rational64_from_int(this, a);
     return *this;
   }
-  rational64 &operator=(const uint &a) {
+  rational64 &operator=(const uint &a) noexcept {
     fmc_rational64_from_int(this, a);
     return *this;
   }
-  rational64 &operator=(const uint64_t &a) {
+  rational64 &operator=(const uint64_t &a) noexcept {
     fmc_rational64_from_int(this, a);
     return *this;
   }
-  rational64 &operator=(const double &a) {
+  rational64 &operator=(const double &a) noexcept {
     fmc_rational64_from_double(this, a, 32);
     return *this;
   }
-  rational64 &operator=(const float &a) {
+  rational64 &operator=(const float &a) noexcept {
     fmc_rational64_from_double(this, a, 32);
     return *this;
   }
