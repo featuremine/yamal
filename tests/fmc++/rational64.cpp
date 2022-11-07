@@ -79,6 +79,9 @@ TEST(rational, api) {
   ASSERT_EQ(inf_div.num, 1);
   ASSERT_EQ(inf_div.den, 0);
   ASSERT_TRUE(inf_div == sample_from_int / zero);
+  ASSERT_TRUE(std::isinf(inf_div));
+  ASSERT_FALSE(std::isfinite(inf_div));
+  ASSERT_FALSE(std::isnan(inf_div));
 
   fmc_rational64_t res_add;
   fmc_rational64_add(&res_add, &sample, &sample_from_double);
@@ -102,15 +105,20 @@ TEST(rational, api) {
   fmc_rational64_nan(&nan);
   ASSERT_EQ(nan.num, 0);
   ASSERT_EQ(nan.den, 0);
+  ASSERT_FALSE(std::isinf(nan));
+  ASSERT_FALSE(std::isfinite(nan));
+  ASSERT_TRUE(std::isnan(nan));
 
   ASSERT_TRUE(fmc_rational64_is_nan(&nan));
-  ASSERT_TRUE(std::isnan(nan));
   ASSERT_FALSE(fmc_rational64_is_nan(&res_div));
 
   fmc_rational64_t inf;
   fmc_rational64_inf(&inf);
   ASSERT_EQ(inf.num, 1);
   ASSERT_EQ(inf.den, 0);
+  ASSERT_TRUE(std::isinf(inf));
+  ASSERT_FALSE(std::isfinite(inf));
+  ASSERT_FALSE(std::isnan(inf));
 
   ASSERT_TRUE(fmc_rational64_is_inf(&inf));
   ASSERT_TRUE(fmc_rational64_is_inf(&inf_div));
@@ -158,6 +166,19 @@ TEST(rational, serialization) {
   s6 << d;
   ASSERT_EQ(s5.str().compare("3257/1000"), 0);
   ASSERT_EQ(s6.str().compare("3.257"), 0);
+}
+
+TEST(rprice, cppnegate) {
+  fmc::rprice a(4);
+  ASSERT_FALSE(std::isinf(a));
+  ASSERT_FALSE(std::isnan(a));
+  ASSERT_TRUE(std::isfinite(a));
+
+  fmc::rprice b = -a;
+
+  ASSERT_NE(a, b);
+  ASSERT_EQ(a, -b);
+  ASSERT_EQ(a, std::abs(b));
 }
 
 GTEST_API_ int main(int argc, char **argv) {
