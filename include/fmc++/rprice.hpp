@@ -40,38 +40,38 @@ namespace fmc {
 
 class rprice : public fmc_rprice_t {
 public:
-  rprice(const fmc_rprice_t &a) : fmc_rprice_t(a) {}
-  rprice(int i) { fmc_rprice_from_int(this, i); }
-  rprice(int64_t i) { fmc_rprice_from_int(this, i); }
-  rprice(uint i) { fmc_rprice_from_int(this, i); }
-  rprice(uint64_t i) { fmc_rprice_from_int(this, i); }
-  rprice(double d) { fmc_rprice_from_double(this, d); }
-  rprice() { value = 0; }
-  rprice &operator=(const fmc_rprice_t &a) {
+  constexpr rprice(const fmc_rprice_t &a) noexcept : fmc_rprice_t(a) {}
+  rprice(int i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(int64_t i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(uint i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(uint64_t i) noexcept { fmc_rprice_from_int(this, i); }
+  rprice(double d) noexcept { fmc_rprice_from_double(this, d); }
+  constexpr rprice() noexcept : fmc_rprice_t{0} {}
+  rprice &operator=(const fmc_rprice_t &a) noexcept {
     value = a.value;
     return *this;
   }
-  rprice &operator=(const int &a) {
+  rprice &operator=(const int &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const int64_t &a) {
+  rprice &operator=(const int64_t &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const uint &a) {
+  rprice &operator=(const uint &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const uint64_t &a) {
+  rprice &operator=(const uint64_t &a) noexcept {
     fmc_rprice_from_int(this, a);
     return *this;
   }
-  rprice &operator=(const double &a) {
+  rprice &operator=(const double &a) noexcept {
     fmc_rprice_from_double(this, a);
     return *this;
   }
-  rprice &operator=(const float &a) {
+  rprice &operator=(const float &a) noexcept {
     fmc_rprice_from_double(this, a);
     return *this;
   }
@@ -140,79 +140,69 @@ template <> struct conversion<double, fmc_rprice_t> {
 
 } // namespace fmc
 
-inline fmc_rprice_t operator/(fmc_rprice_t a, fmc_rprice_t b) {
-  fmc_rprice_t ret;
+inline fmc::rprice operator/(fmc::rprice a, fmc::rprice b) {
+  fmc::rprice ret;
   fmc_rprice_div(&ret, &a, &b);
   return ret;
 }
 
-inline fmc_rprice_t operator/(fmc_rprice_t a, int b) {
-  fmc_rprice_t ret;
+inline fmc::rprice operator/(fmc::rprice a, int b) {
+  fmc::rprice ret;
   fmc_rprice_int_div(&ret, &a, b);
   return ret;
 }
 
-inline bool operator==(fmc_rprice_t a, fmc_rprice_t b) {
+inline bool operator==(fmc::rprice a, fmc::rprice b) {
   return fmc_rprice_equal(&a, &b);
 }
 
-inline bool operator!=(fmc_rprice_t a, fmc_rprice_t b) {
+inline bool operator!=(fmc::rprice a, fmc::rprice b) {
   return !fmc_rprice_equal(&a, &b);
 }
 
-inline fmc_rprice_t operator+(fmc_rprice_t a, fmc_rprice_t b) {
-  fmc_rprice_t ret;
+inline fmc::rprice operator+(fmc::rprice a, fmc::rprice b) {
+  fmc::rprice ret;
   fmc_rprice_add(&ret, &a, &b);
   return ret;
 }
 
-inline fmc_rprice_t &operator+=(fmc_rprice_t &a, fmc_rprice_t b) {
-  fmc_rprice_inc(&a, &b);
-  return a;
-}
-
-inline fmc_rprice_t &operator-=(fmc_rprice_t &a, fmc_rprice_t b) {
-  fmc_rprice_dec(&a, &b);
-  return a;
-}
-
-inline fmc_rprice_t operator-(fmc_rprice_t a, fmc_rprice_t b) {
-  fmc_rprice_t ret;
+inline fmc::rprice operator-(fmc::rprice a, fmc::rprice b) {
+  fmc::rprice ret;
   fmc_rprice_sub(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator<(fmc_rprice_t a, fmc_rprice_t b) {
+inline bool operator<(fmc::rprice a, fmc::rprice b) {
   return fmc_rprice_less(&a, &b);
 }
 
-inline bool operator>(fmc_rprice_t a, fmc_rprice_t b) {
+inline bool operator>(fmc::rprice a, fmc::rprice b) {
   return fmc_rprice_greater(&a, &b);
 }
 
-inline bool operator<=(fmc_rprice_t a, fmc_rprice_t b) {
+inline bool operator<=(fmc::rprice a, fmc::rprice b) {
   return fmc_rprice_less_or_equal(&a, &b);
 }
 
-inline bool operator>=(fmc_rprice_t a, fmc_rprice_t b) {
+inline bool operator>=(fmc::rprice a, fmc::rprice b) {
   return fmc_rprice_greater_or_equal(&a, &b);
 }
 
-inline fmc_rprice_t operator*(fmc_rprice_t a, fmc_rprice_t b) {
-  fmc_rprice_t ret;
+inline fmc::rprice operator*(fmc::rprice a, fmc::rprice b) {
+  fmc::rprice ret;
   fmc_rprice_mul(&ret, &a, &b);
   return ret;
 }
 
-inline fmc_rprice_t operator*(fmc_rprice_t a, int64_t b) {
-  fmc_rprice_t ret, db;
+inline fmc::rprice operator*(fmc::rprice a, int64_t b) {
+  fmc::rprice ret, db;
   fmc_rprice_from_int(&db, b);
   fmc_rprice_mul(&ret, &a, &db);
   return ret;
 }
 
-inline fmc_rprice_t operator*(int64_t a, fmc_rprice_t b) {
-  fmc_rprice_t ret, da;
+inline fmc::rprice operator*(int64_t a, fmc::rprice b) {
+  fmc::rprice ret, da;
   fmc_rprice_from_int(&da, a);
   fmc_rprice_mul(&ret, &da, &b);
   return ret;
@@ -220,12 +210,12 @@ inline fmc_rprice_t operator*(int64_t a, fmc_rprice_t b) {
 
 namespace std {
 
-inline ostream &operator<<(ostream &s, const fmc_rprice_t &x) {
+inline ostream &operator<<(ostream &s, const fmc::rprice &x) {
   using namespace std;
   return s << setprecision(15) << fmc::to<double>(x);
 }
 
-inline istream &operator>>(istream &s, fmc_rprice_t &x) {
+inline istream &operator>>(istream &s, fmc::rprice &x) {
   using namespace std;
   double d;
   s >> d;
@@ -234,7 +224,7 @@ inline istream &operator>>(istream &s, fmc_rprice_t &x) {
   return s;
 }
 
-inline string to_string(fmc_rprice_t &x) {
+inline string to_string(fmc::rprice &x) {
   return to_string(fmc::to<double>(x));
 }
 
@@ -245,20 +235,39 @@ public:
   static fmc::rprice epsilon() noexcept { return fmc::rprice((int64_t)0); }
 };
 
-inline bool isinf(const fmc_rprice_t &x) noexcept { return false; }
-
-inline bool isfinite(const fmc_rprice_t &x) noexcept { return true; }
-
-inline fmc_rprice_t abs(fmc_rprice_t x) noexcept {
-  fmc::rprice ret;
-  fmc_rprice_abs(&ret, &x);
-  return ret;
+template <typename T>
+inline typename std::enable_if_t<
+    std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isinf(T x) {
+  return false;
 }
 
-inline bool isnan(fmc_rprice_t x) noexcept { return false; }
+template <typename T>
+inline typename std::enable_if_t<
+    std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isfinite(T x) {
+  return true;
+}
 
-template <> struct hash<fmc_rprice_t> {
-  size_t operator()(const fmc_rprice_t &k) const {
+template <typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> ||
+                                     std::is_same_v<T, fmc_rprice_t>,
+                                 fmc::rprice>
+abs(T x) {
+  fmc::rprice res;
+  fmc_rprice_abs(&res, &x);
+  return res;
+}
+
+template <typename T>
+inline typename std::enable_if_t<
+    std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isnan(T x) {
+  return false;
+}
+
+template <> struct hash<fmc::rprice> {
+  size_t operator()(const fmc::rprice &k) const {
     return std::hash<int64_t>{}(k.value);
   }
 };

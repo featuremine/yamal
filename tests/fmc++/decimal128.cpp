@@ -1229,7 +1229,8 @@ TEST(decimal128, identity_double_1) {
       for (auto &integer : integers) {
         for (int keep_zeros = 12; keep_zeros >= 0; keep_zeros -= 3) {
           double number = (decimal + integer) * sign;
-          sprintf(float_str, "%.33f", number);
+          snprintf(float_str, sizeof(float_str) / sizeof(char), "%.33f",
+                   number);
           feclearexcept(FE_ALL_EXCEPT); // Clear everything including sprintf
           canonicalize(float_str, keep_zeros);
           fmc_decimal128_t a;
@@ -1376,9 +1377,10 @@ TEST(decimal128, identity_extreme) {
 #ifdef FMC_SYS_MACH
     auto isnan = std::isnan(number);
     auto isnegative = std::signbit(number);
-    sprintf(number_str, "%s%.34g", (isnan && isnegative) ? "-" : "", number);
+    snprintf(number_str, sizeof(number_str) / sizeof(char), "%s%.34g",
+             (isnan && isnegative) ? "-" : "", number);
 #else
-    sprintf(number_str, "%.34g", number);
+    snprintf(number_str, sizeof(number_str) / sizeof(char), "%.34g", number);
 #endif
 
     feclearexcept(FE_ALL_EXCEPT); // Clear everything including sprintf
@@ -1642,7 +1644,7 @@ TEST(decimal128, log10) {
   auto t = [&](double n) {
     fmc_decimal128_t a;
     fmc_decimal128_from_double(&a, n);
-    actual = floor(log10(n));
+    actual = (std::isfinite(n) && n > 0.0) ? floor(log10(n)) : INT32_MIN;
     result = fmc_decimal128_flog10(&a);
   };
 
