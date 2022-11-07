@@ -179,6 +179,12 @@ TEST(rprice, cppnegate) {
   ASSERT_NE(a, b);
   ASSERT_EQ(a, -b);
   ASSERT_EQ(a, std::abs(b));
+
+  fmc::rprice c(-4);
+
+  ASSERT_EQ(a, -c);
+  ASSERT_EQ(b, c);
+  ASSERT_EQ(a, std::abs(c));
 }
 
 GTEST_API_ int main(int argc, char **argv) {
