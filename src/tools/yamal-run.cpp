@@ -318,8 +318,7 @@ int main(int argc, char **argv) {
       if (inputs) {
         for (auto inp = inputs->node.value.arr; inp; inp = inp->next) {
           auto input_sect = inp->item.value.sect;
-          auto component =
-              fmc_cfg_sect_item_get(input_sect, "component");
+          auto component = fmc_cfg_sect_item_get(input_sect, "component");
           auto out_name = fmc_cfg_sect_item_get(input_sect, "name");
           auto index = fmc_cfg_sect_item_get(input_sect, "index");
 

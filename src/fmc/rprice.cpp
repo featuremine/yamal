@@ -110,5 +110,5 @@ void fmc_rprice_negate(fmc_rprice_t *res, const fmc_rprice_t *val) {
 
 void fmc_rprice_round(int64_t *dest, const fmc_rprice_t *src) {
   *dest = (src->value + fmc_sign(src->value) * (FMC_RPRICE_FRACTION / 2)) /
-         FMC_RPRICE_FRACTION;
+          FMC_RPRICE_FRACTION;
 }

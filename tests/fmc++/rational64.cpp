@@ -21,8 +21,8 @@
  * @see http://www.featuremine.com
  */
 
-#include "fmc++/rprice.hpp"
 #include "fmc++/rational64.hpp"
+#include "fmc++/rprice.hpp"
 
 #include "fmc++/gtestwrap.hpp"
 #include <sstream>

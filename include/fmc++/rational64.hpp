@@ -43,8 +43,8 @@ public:
   rational64(uint i) { fmc_rational64_from_int(this, i); }
   rational64(uint64_t i) { fmc_rational64_from_int(this, i); }
   rational64(double d) { fmc_rational64_from_double(this, d, 32); }
-  constexpr rational64(): fmc_rational64_t{0, 1} { }
-  constexpr rational64(int32_t num, int32_t den): fmc_rational64_t{num, den} { }
+  constexpr rational64() : fmc_rational64_t{0, 1} {}
+  constexpr rational64(int32_t num, int32_t den) : fmc_rational64_t{num, den} {}
   rational64 &operator=(const fmc_rational64_t &a) {
     num = a.num;
     den = a.den;
@@ -77,7 +77,8 @@ public:
   static constexpr rational64 &upcast(fmc_rational64_t &a) noexcept {
     return static_cast<rational64 &>(a);
   }
-  static constexpr const rational64 &upcast(const fmc_rational64_t &a) noexcept {
+  static constexpr const rational64 &
+  upcast(const fmc_rational64_t &a) noexcept {
     return static_cast<const rational64 &>(a);
   }
   rational64 &operator+=(const rational64 &a) noexcept {
@@ -258,11 +259,17 @@ inline istream &operator>>(istream &s, fmc::rational64 &x) {
   return s;
 }
 
-inline bool isinf(fmc::rational64 x) noexcept { return fmc_rational64_is_inf(&x); }
+inline bool isinf(fmc::rational64 x) noexcept {
+  return fmc_rational64_is_inf(&x);
+}
 
-inline bool isfinite(fmc::rational64 x) noexcept { return fmc_rational64_is_finite(&x); }
+inline bool isfinite(fmc::rational64 x) noexcept {
+  return fmc_rational64_is_finite(&x);
+}
 
-inline bool isnan(fmc::rational64 x) noexcept { return fmc_rational64_is_nan(&x); }
+inline bool isnan(fmc::rational64 x) noexcept {
+  return fmc_rational64_is_nan(&x);
+}
 
 inline fmc::rational64 abs(fmc::rational64 x) noexcept {
   fmc::rational64 ret;

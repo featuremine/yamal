@@ -46,7 +46,7 @@ public:
   rprice(uint i) { fmc_rprice_from_int(this, i); }
   rprice(uint64_t i) { fmc_rprice_from_int(this, i); }
   rprice(double d) { fmc_rprice_from_double(this, d); }
-  constexpr rprice() : fmc_rprice_t{0} { }
+  constexpr rprice() : fmc_rprice_t{0} {}
   rprice &operator=(const fmc_rprice_t &a) {
     value = a.value;
     return *this;
