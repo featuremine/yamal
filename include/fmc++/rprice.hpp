@@ -235,17 +235,35 @@ public:
   static fmc::rprice epsilon() noexcept { return fmc::rprice((int64_t)0); }
 };
 
-inline bool isinf(const fmc::rprice &x) noexcept { return false; }
-
-inline bool isfinite(const fmc::rprice &x) noexcept { return true; }
-
-inline fmc::rprice abs(fmc::rprice x) noexcept {
-  fmc::rprice ret;
-  fmc_rprice_abs(&ret, &x);
-  return ret;
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isinf(T x)
+{
+  return false;
 }
 
-inline bool isnan(fmc::rprice x) noexcept { return false; }
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isfinite(T x)
+{
+  return true;
+}
+
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, fmc::rprice>
+abs(T x)
+{
+  fmc::rprice res;
+  fmc_rprice_abs(&res, &x);
+  return res;
+}
+
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rprice> || std::is_same_v<T, fmc_rprice_t>, bool>
+isnan(T x)
+{
+  return false;
+}
 
 template <> struct hash<fmc::rprice> {
   size_t operator()(const fmc::rprice &k) const {

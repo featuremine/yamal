@@ -26,6 +26,7 @@
 
 #include "fmc++/gtestwrap.hpp"
 #include <sstream>
+#include <cmath>
 
 TEST(rational, api) {
   fmc_rational64_t zero;
@@ -168,31 +169,91 @@ TEST(rational, serialization) {
   ASSERT_EQ(s6.str().compare("3.257"), 0);
 }
 
-TEST(rprice, cppnegate) {
-  fmc::rprice a(4);
+TEST(rational64, cppnegate) {
+  fmc::rational64 a(4);
   ASSERT_FALSE(std::isinf(a));
   ASSERT_FALSE(std::isnan(a));
   ASSERT_TRUE(std::isfinite(a));
 
-  fmc::rprice b = -a;
+  fmc::rational64 b = -a;
 
   ASSERT_NE(a, b);
   ASSERT_EQ(a, -b);
   ASSERT_EQ(a, std::abs(b));
 
-  fmc::rprice c(-4);
+  fmc::rational64 c(-4);
 
   ASSERT_EQ(a, -c);
   ASSERT_EQ(b, c);
   ASSERT_EQ(a, std::abs(c));
 }
 
-TEST(rprice, cppincdec) {
-  fmc::rprice a(4);
-  a += fmc::rprice(2);
-  ASSERT_EQ(a, fmc::rprice(6));
-  a -= fmc::rprice(4);
-  ASSERT_EQ(a, fmc::rprice(2));
+TEST(rational64, cppincdec) {
+  fmc::rational64 a(4);
+  a += fmc::rational64(2);
+  ASSERT_EQ(a, fmc::rational64(6));
+  a -= fmc::rational64(4);
+  ASSERT_EQ(a, fmc::rational64(2));
+}
+
+TEST(rational64, doubleconersions) {
+  double a = std::numeric_limits<double>::infinity();
+  fmc::rational64 ra(a);
+  ASSERT_DOUBLE_EQ(double(ra), a);
+
+  a = -std::numeric_limits<double>::infinity();
+  ra = fmc::rational64(a);
+  ASSERT_DOUBLE_EQ(double(ra), a);
+
+  a = std::numeric_limits<double>::quiet_NaN();
+  ra = fmc::rational64(a);
+  ASSERT_TRUE(std::isnan(a));
+  ASSERT_TRUE(std::isnan(double(ra)));
+
+  a = -std::numeric_limits<double>::quiet_NaN();
+  ra = fmc::rational64(a);
+  ASSERT_TRUE(std::isnan(a));
+  ASSERT_TRUE(std::isnan(double(ra)));
+}
+
+TEST(rational64, numeric_limits) {
+  fmc_rational64_t val;
+  fmc_rational64_inf(&val);
+  ASSERT_EQ(std::numeric_limits<fmc::rational64>::infinity(), val);
+  ASSERT_FALSE(std::isfinite(val));
+  ASSERT_TRUE(std::isinf(val));
+  ASSERT_FALSE(std::isnan(val));
+
+  val = fmc::rational64(0.5);
+  ASSERT_EQ(std::numeric_limits<fmc::rational64>::round_error(), val);
+  ASSERT_TRUE(std::isfinite(val));
+  ASSERT_FALSE(std::isinf(val));
+  ASSERT_FALSE(std::isnan(val));
+
+  val = fmc::rational64(-std::numeric_limits<fmc::rational64>::infinity());
+  ASSERT_EQ(-std::numeric_limits<fmc::rational64>::infinity(), val);
+  ASSERT_FALSE(std::isfinite(val));
+  ASSERT_TRUE(std::isinf(val));
+  ASSERT_FALSE(std::isnan(val));
+
+  fmc_rational64_nan(&val);
+  ASSERT_EQ(std::numeric_limits<fmc::rational64>::quiet_NaN(), val);
+  ASSERT_FALSE(std::isfinite(val));
+  ASSERT_FALSE(std::isinf(val));
+  ASSERT_TRUE(std::isnan(val));
+
+  fmc_rational64_min(&val);
+  ASSERT_EQ(std::numeric_limits<fmc::rational64>::min(), val);
+  ASSERT_EQ(std::numeric_limits<fmc::rational64>::lowest(), val);
+  ASSERT_TRUE(std::isfinite(val));
+  ASSERT_FALSE(std::isinf(val));
+  ASSERT_FALSE(std::isnan(val));
+
+  fmc_rational64_max(&val);
+  ASSERT_EQ(std::numeric_limits<fmc::rational64>::max(), val);
+  ASSERT_TRUE(std::isfinite(val));
+  ASSERT_FALSE(std::isinf(val));
+  ASSERT_FALSE(std::isnan(val));
 }
 
 GTEST_API_ int main(int argc, char **argv) {

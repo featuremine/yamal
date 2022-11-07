@@ -261,21 +261,33 @@ inline istream &operator>>(istream &os, fmc_decimal128_t &r) {
   return os;
 }
 
-inline bool isinf(const fmc_decimal128_t &x) noexcept {
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, bool>
+isinf(T x)
+{
   return fmc_decimal128_is_inf(&x);
 }
 
-inline bool isfinite(const fmc_decimal128_t &x) noexcept {
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, bool>
+isfinite(T x)
+{
   return fmc_decimal128_is_finite(&x);
 }
 
-inline fmc_decimal128_t abs(fmc_decimal128_t x) noexcept {
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, fmc::decimal128>
+abs(T x)
+{
   fmc::decimal128 res;
   fmc_decimal128_abs(&res, &x);
   return res;
 }
 
-inline bool isnan(fmc_decimal128_t x) noexcept {
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::decimal128> || std::is_same_v<T, fmc_decimal128_t>, bool>
+isnan(T x)
+{
   return fmc_decimal128_is_nan(&x);
 }
 

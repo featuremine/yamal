@@ -192,18 +192,9 @@ inline fmc::rational64 operator*(fmc::rational64 a, fmc::rational64 b) {
   return ret;
 }
 
-inline fmc::rational64 &operator+=(fmc::rational64 &a, fmc::rational64 b) {
-  fmc_rational64_add(&a, &a, &b);
-  return a;
-}
-
-inline fmc::rational64 &operator-=(fmc::rational64 &a, fmc::rational64 b) {
-  fmc_rational64_sub(&a, &a, &b);
-  return a;
-}
-
 namespace std {
 template <> class numeric_limits<fmc::rational64> {
+public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = true;
   static constexpr bool is_integer = false;
@@ -225,19 +216,25 @@ template <> class numeric_limits<fmc::rational64> {
   static constexpr bool traps = false;
   static constexpr bool tinyness_before = true;
   static constexpr fmc::rational64 min() noexcept {
-    return fmc::rational64(1, numeric_limits<int32_t>::max());
+    return fmc::rational64(numeric_limits<int32_t>::min(), 1);
   }
   static constexpr fmc::rational64 lowest() noexcept {
-    return fmc::rational64(numeric_limits<int32_t>::lowest(), 1);
+    return fmc::rational64(numeric_limits<int32_t>::min(), 1);
   }
   static constexpr fmc::rational64 max() noexcept {
     return fmc::rational64(numeric_limits<int32_t>::max(), 1);
   }
   static constexpr fmc::rational64 epsilon() noexcept {
-    return fmc::rational64(1, numeric_limits<int32_t>::max());
+    return fmc::rational64(0, 1);
   }
   static constexpr fmc::rational64 round_error() noexcept {
     return fmc::rational64(1, 2);
+  }
+  static constexpr fmc::rational64 quiet_NaN() noexcept {
+    return fmc::rational64(0, 0);
+  }
+  static constexpr fmc::rational64 infinity() noexcept {
+    return fmc::rational64(1, 0);
   }
 };
 
@@ -263,22 +260,34 @@ inline istream &operator>>(istream &s, fmc::rational64 &x) {
   return s;
 }
 
-inline bool isinf(fmc::rational64 x) noexcept {
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, bool>
+isinf(T x)
+{
   return fmc_rational64_is_inf(&x);
 }
 
-inline bool isfinite(fmc::rational64 x) noexcept {
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, bool>
+isfinite(T x)
+{
   return fmc_rational64_is_finite(&x);
 }
 
-inline bool isnan(fmc::rational64 x) noexcept {
-  return fmc_rational64_is_nan(&x);
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, fmc::rational64>
+abs(T x)
+{
+  fmc::rational64 res;
+  fmc_rational64_abs(&res, &x);
+  return res;
 }
 
-inline fmc::rational64 abs(fmc::rational64 x) noexcept {
-  fmc::rational64 ret;
-  fmc_rational64_abs(&ret, &x);
-  return ret;
+template<typename T>
+inline typename std::enable_if_t<std::is_same_v<T, fmc::rational64> || std::is_same_v<T, fmc_rational64_t>, bool>
+isnan(T x)
+{
+  return fmc_rational64_is_nan(&x);
 }
 
 inline string to_string(const fmc::rational64 &x) {
