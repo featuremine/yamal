@@ -1642,7 +1642,7 @@ TEST(decimal128, log10) {
   auto t = [&](double n) {
     fmc_decimal128_t a;
     fmc_decimal128_from_double(&a, n);
-    actual = floor(log10(n));
+    actual = (std::isfinite(n) && n > 0.0) ? floor(log10(n)) : INT32_MIN;
     result = fmc_decimal128_flog10(&a);
   };
 
