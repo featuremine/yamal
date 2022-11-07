@@ -68,6 +68,7 @@ FMMODFUNC void fmc_rational64_dec(fmc_rational64_t *dest, const fmc_rational64_t
 FMMODFUNC void fmc_rational64_inc(fmc_rational64_t *dest, const fmc_rational64_t *src);
 FMMODFUNC bool fmc_rational64_is_nan(const fmc_rational64_t *src);
 FMMODFUNC bool fmc_rational64_is_inf(const fmc_rational64_t *src);
+FMMODFUNC bool fmc_rational64_is_finite(const fmc_rational64_t *src);
 FMMODFUNC void fmc_rational64_abs(fmc_rational64_t *dest, const fmc_rational64_t *src);
 FMMODFUNC void fmc_rational64_negate(fmc_rational64_t *dest, const fmc_rational64_t *src);
 

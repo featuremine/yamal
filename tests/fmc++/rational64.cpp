@@ -136,7 +136,7 @@ TEST(rational, decimal_conversions) {
 }
 
 TEST(rational, serialization) {
-  fmc_rational64_t a;
+  fmc::rational64 a;
   fmc_rational64_new(&a, 4, 5);
   std::stringstream s1;
   s1 << a;

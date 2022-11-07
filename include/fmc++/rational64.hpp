@@ -43,7 +43,8 @@ public:
   rational64(uint i) { fmc_rational64_from_int(this, i); }
   rational64(uint64_t i) { fmc_rational64_from_int(this, i); }
   rational64(double d) { fmc_rational64_from_double(this, d, 32); }
-  rational64() { num = 0; den = 1; }
+  constexpr rational64(): fmc_rational64_t{0, 1} { }
+  constexpr rational64(int32_t num, int32_t den): fmc_rational64_t{num, den} { }
   rational64 &operator=(const fmc_rational64_t &a) {
     num = a.num;
     den = a.den;
@@ -138,66 +139,66 @@ template <> struct conversion<double, fmc_rational64_t> {
 
 } // namespace fmc
 
-inline fmc_rational64_t operator/(fmc_rational64_t a, fmc_rational64_t b) {
-  fmc_rational64_t ret;
+inline fmc::rational64 operator/(fmc::rational64 a, fmc::rational64 b) {
+  fmc::rational64 ret;
   fmc_rational64_div(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator==(fmc_rational64_t a, fmc_rational64_t b) {
+inline bool operator==(fmc::rational64 a, fmc::rational64 b) {
   return fmc_rational64_equal(&a, &b);
 }
 
-inline bool operator!=(fmc_rational64_t a, fmc_rational64_t b) {
+inline bool operator!=(fmc::rational64 a, fmc::rational64 b) {
   return fmc_rational64_notequal(&a, &b);
 }
 
-inline fmc_rational64_t operator+(fmc_rational64_t a, fmc_rational64_t b) {
-  fmc_rational64_t ret;
+inline fmc::rational64 operator+(fmc::rational64 a, fmc::rational64 b) {
+  fmc::rational64 ret;
   fmc_rational64_add(&ret, &a, &b);
   return ret;
 }
 
-inline fmc_rational64_t operator-(fmc_rational64_t a, fmc_rational64_t b) {
-  fmc_rational64_t ret;
+inline fmc::rational64 operator-(fmc::rational64 a, fmc::rational64 b) {
+  fmc::rational64 ret;
   fmc_rational64_sub(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator<(fmc_rational64_t a, fmc_rational64_t b) {
+inline bool operator<(fmc::rational64 a, fmc::rational64 b) {
   return fmc_rational64_less(&a, &b);
 }
 
-inline bool operator>(fmc_rational64_t a, fmc_rational64_t b) {
+inline bool operator>(fmc::rational64 a, fmc::rational64 b) {
   return fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator<=(fmc_rational64_t a, fmc_rational64_t b) {
+inline bool operator<=(fmc::rational64 a, fmc::rational64 b) {
   return !fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator>=(fmc_rational64_t a, fmc_rational64_t b) {
+inline bool operator>=(fmc::rational64 a, fmc::rational64 b) {
   return !fmc_rational64_less(&a, &b);
 }
 
-inline fmc_rational64_t operator*(fmc_rational64_t a, fmc_rational64_t b) {
-  fmc_rational64_t ret;
+inline fmc::rational64 operator*(fmc::rational64 a, fmc::rational64 b) {
+  fmc::rational64 ret;
   fmc_rational64_mul(&ret, &a, &b);
   return ret;
 }
 
-inline fmc_rational64_t &operator+=(fmc_rational64_t &a, fmc_rational64_t b) {
+inline fmc::rational64 &operator+=(fmc::rational64 &a, fmc::rational64 b) {
   fmc_rational64_add(&a, &a, &b);
   return a;
 }
 
-inline fmc_rational64_t &operator-=(fmc_rational64_t &a, fmc_rational64_t b) {
+inline fmc::rational64 &operator-=(fmc::rational64 &a, fmc::rational64 b) {
   fmc_rational64_sub(&a, &a, &b);
   return a;
 }
 
 namespace std {
-template <> class numeric_limits<fmc_rational64_t> {
+template <> class numeric_limits<fmc::rational64> {
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = true;
   static constexpr bool is_integer = false;
@@ -218,27 +219,27 @@ template <> class numeric_limits<fmc_rational64_t> {
   static constexpr int max_exponent10 = 0;
   static constexpr bool traps = false;
   static constexpr bool tinyness_before = true;
-  static constexpr fmc_rational64_t min() noexcept {
-    return fmc_rational64_t{1, numeric_limits<int32_t>::max()};
+  static constexpr fmc::rational64 min() noexcept {
+    return fmc::rational64(1, numeric_limits<int32_t>::max());
   }
-  static constexpr fmc_rational64_t lowest() noexcept {
-    return fmc_rational64_t{numeric_limits<int32_t>::lowest(), 1};
+  static constexpr fmc::rational64 lowest() noexcept {
+    return fmc::rational64(numeric_limits<int32_t>::lowest(), 1);
   }
-  static constexpr fmc_rational64_t max() noexcept {
-    return fmc_rational64_t{numeric_limits<int32_t>::max(), 1};
+  static constexpr fmc::rational64 max() noexcept {
+    return fmc::rational64(numeric_limits<int32_t>::max(), 1);
   }
-  static constexpr fmc_rational64_t epsilon() noexcept {
-    return fmc_rational64_t{1, numeric_limits<int32_t>::max()};
+  static constexpr fmc::rational64 epsilon() noexcept {
+    return fmc::rational64(1, numeric_limits<int32_t>::max());
   }
-  static constexpr fmc_rational64_t round_error() noexcept {
-    return fmc_rational64_t{1, 2};
+  static constexpr fmc::rational64 round_error() noexcept {
+    return fmc::rational64(1, 2);
   }
 };
 
-inline ostream &operator<<(ostream &s, const fmc_rational64_t &x) {
+inline ostream &operator<<(ostream &s, const fmc::rational64 &x) {
   return s << x.num << "/" << x.den;
 }
-inline istream &operator>>(istream &s, fmc_rational64_t &x) {
+inline istream &operator>>(istream &s, fmc::rational64 &x) {
   string str;
   s >> str;
   size_t div_pos = str.find("/");
@@ -257,9 +258,19 @@ inline istream &operator>>(istream &s, fmc_rational64_t &x) {
   return s;
 }
 
-inline bool isnan(fmc_rational64_t x) { return fmc_rational64_is_nan(&x); }
+inline bool isinf(fmc::rational64 x) noexcept { return fmc_rational64_is_inf(&x); }
 
-inline string to_string(const fmc_rational64_t &x) {
+inline bool isfinite(fmc::rational64 x) noexcept { return fmc_rational64_is_finite(&x); }
+
+inline bool isnan(fmc::rational64 x) noexcept { return fmc_rational64_is_nan(&x); }
+
+inline fmc::rational64 abs(fmc::rational64 x) noexcept {
+  fmc::rational64 ret;
+  fmc_rational64_abs(&ret, &x);
+  return ret;
+}
+
+inline string to_string(const fmc::rational64 &x) {
   return to_string(x.num) + "/" + to_string(x.den);
 }
 
