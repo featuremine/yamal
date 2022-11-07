@@ -1,4 +1,4 @@
-set(Sphinx_DIR "${PROJECT_SOURCE_DIR}/cmake")
+set(Sphinx_DIR "${PROJECT_SOURCE_DIR}")
 
 find_package(Doxygen)
 find_package(Sphinx)
