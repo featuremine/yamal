@@ -209,7 +209,7 @@ void fmc_rational64_abs(fmc_rational64_t *dest, const fmc_rational64_t *src) {
 void fmc_rational64_negate(fmc_rational64_t *dest,
                            const fmc_rational64_t *src) {
   dest->num = -src->num;
-  dest->den = -src->den;
+  dest->den = src->den;
 }
 
 void fmc_rprice_dec(fmc_rational64_t *res, const fmc_rational64_t *src) {

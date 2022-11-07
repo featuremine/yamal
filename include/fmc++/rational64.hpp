@@ -28,6 +28,8 @@ extern "C" {
 #include "fmc/rational64.h"
 }
 
+#include "fmc++/side.hpp"
+
 #include <cstdlib>
 #include <iostream>
 #include <limits>
