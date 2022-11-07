@@ -1208,7 +1208,7 @@ void canonicalize(char *str, int keep_zeros) {
   }
 }
 
-TEST(decimal128, identity_double) {
+TEST(decimal128, identity_double_1) {
   feclearexcept(FE_ALL_EXCEPT);
   char float_str[256];
   char dec128_str[256];
@@ -1247,10 +1247,119 @@ TEST(decimal128, identity_double) {
           fmc_decimal128_to_str(dec128_str, &b);
           ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
           EXPECT_STREQ(dec128_str, float_str);
+
+          double converted;
+          fmc_decimal128_to_double(&converted, &a);
+          EXPECT_EQ(converted, number);
         }
       }
     }
   }
+}
+
+TEST(decimal128, identity_double_2) {
+  double converted;
+  double original;
+  auto convert = [&](double number) {
+    original = number;
+    fmc_decimal128_t a;
+    fmc_decimal128_from_double(&a, number);
+    fmc_decimal128_to_double(&converted, &a);
+  };
+
+  convert(
+      0.0000000000000000001074223844953689117151110868383255222897488847765205106053743033811542773037217557430267333984375);
+  EXPECT_EQ(converted, original);
+  convert(
+      0.000000000000000000111517125575639286799006683430006308009755884298229238436872545747746698907576501369476318359375);
+  EXPECT_EQ(converted, original);
+  convert(
+      -0.0000000000000000002718103111667332437926182560333733906119770008170846535555664758021521265618503093719482421875);
+  EXPECT_EQ(converted, original);
+  convert(-4412.3590295387484729872085154056549072265625);
+  EXPECT_EQ(converted, original);
+  convert(-5595.4715197982832251000218093395233154296875);
+  EXPECT_EQ(converted, original);
+  convert(14034.19794058726984076201915740966796875);
+  EXPECT_EQ(converted, original);
+  convert(24100.59487783108124858699738979339599609375);
+  EXPECT_EQ(converted, original);
+  convert(68379.09565273471525870263576507568359375);
+  EXPECT_EQ(converted, original);
+  convert(-75935.856705480997334234416484832763671875);
+  EXPECT_EQ(converted, original);
+  convert(86158.302008547514560632407665252685546875);
+  EXPECT_EQ(converted, original);
+  convert(598370.85907518700696527957916259765625);
+  EXPECT_EQ(converted, original);
+  convert(2360501.5847463184036314487457275390625);
+  EXPECT_EQ(converted, original);
+  convert(3920244.8222818146459758281707763671875);
+  EXPECT_EQ(converted, original);
+  convert(6030139.461389503441751003265380859375);
+  EXPECT_EQ(converted, original);
+  convert(9986334.22264326550066471099853515625);
+  EXPECT_EQ(converted, original);
+  convert(110367338.88334478437900543212890625);
+  EXPECT_EQ(converted, original);
+  convert(232863465.5218646228313446044921875);
+  EXPECT_EQ(converted, original);
+  convert(297581596.830785691738128662109375);
+  EXPECT_EQ(converted, original);
+  convert(364181915.17104339599609375);
+  EXPECT_EQ(converted, original);
+  convert(-445464211.388862311840057373046875);
+  EXPECT_EQ(converted, original);
+  convert(505788598.10503494739532470703125);
+  EXPECT_EQ(converted, original);
+  convert(538651182.4585511684417724609375);
+  EXPECT_EQ(converted, original);
+  convert(762722659.79106426239013671875);
+  EXPECT_EQ(converted, original);
+  convert(962612880.8451635837554931640625);
+  EXPECT_EQ(converted, original);
+  convert(976451324.891252994537353515625);
+  EXPECT_EQ(converted, original);
+  convert(-2277953182515.47265625);
+  EXPECT_EQ(converted, original);
+  convert(2696170217385.513671875);
+  EXPECT_EQ(converted, original);
+  convert(2926970179449.04052734375);
+  EXPECT_EQ(converted, original);
+  convert(3969252460837.57568359375);
+  EXPECT_EQ(converted, original);
+  convert(5888875542576.8427734375);
+  EXPECT_EQ(converted, original);
+  convert(6676174390470.93359375);
+  EXPECT_EQ(converted, original);
+  convert(6872537948155.7353515625);
+  EXPECT_EQ(converted, original);
+  convert(-7422573333287.1533203125);
+  EXPECT_EQ(converted, original);
+  convert(8030198688345.638671875);
+  EXPECT_EQ(converted, original);
+  convert(9901494043192.171875);
+  EXPECT_EQ(converted, original);
+  convert(82889918991823536.0);
+  EXPECT_EQ(converted, original);
+  convert(124536052943002528.0);
+  EXPECT_EQ(converted, original);
+  convert(144156884135999968.0);
+  EXPECT_EQ(converted, original);
+  convert(212839053581483936.0);
+  EXPECT_EQ(converted, original);
+  convert(218801490682184032.0);
+  EXPECT_EQ(converted, original);
+  convert(-536470472374601792.0);
+  EXPECT_EQ(converted, original);
+  convert(537654832563489984.0);
+  EXPECT_EQ(converted, original);
+  convert(652938785621731200.0);
+  EXPECT_EQ(converted, original);
+  convert(-659372859226975744.0);
+  EXPECT_EQ(converted, original);
+  convert(793418214483531648.0);
+  EXPECT_EQ(converted, original);
 }
 
 TEST(decimal128, identity_extreme) {
@@ -1258,6 +1367,7 @@ TEST(decimal128, identity_extreme) {
   char number_str[512];
   char dec_fromstr[512];
   char dec_fromdouble[512];
+  double converted;
 
   auto to_str = [&](double number, int expected_signal = 0) {
     fmc_decimal128_t a;
@@ -1286,52 +1396,76 @@ TEST(decimal128, identity_extreme) {
     ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
 
     canonicalize(number_str, 0);
+
+    fmc_decimal128_to_double(&converted, &a);
   };
 
   to_str(std::numeric_limits<double>::quiet_NaN());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_TRUE(std::isnan(converted));
 
   to_str(-std::numeric_limits<double>::quiet_NaN());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_TRUE(std::isnan(converted));
 
   to_str(std::numeric_limits<double>::signaling_NaN());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_TRUE(std::isnan(converted));
 
   to_str(-std::numeric_limits<double>::signaling_NaN());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_TRUE(std::isnan(converted));
 
   to_str(std::numeric_limits<double>::infinity());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_TRUE(std::isinf(converted));
 
   to_str(-std::numeric_limits<double>::infinity());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_TRUE(std::isinf(converted));
 
   to_str(std::numeric_limits<double>::denorm_min(), FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, std::numeric_limits<double>::denorm_min());
 
   to_str(-std::numeric_limits<double>::denorm_min(), FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, -std::numeric_limits<double>::denorm_min());
 
   to_str(std::numeric_limits<double>::denorm_min() * (double)(1ll << 55ll),
          FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted,
+            std::numeric_limits<double>::denorm_min() * (double)(1ll << 55ll));
 
   to_str(std::numeric_limits<double>::max() / 128.0, FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, std::numeric_limits<double>::max() / 128.0);
 
   to_str(std::numeric_limits<double>::min() / 128.0, FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, std::numeric_limits<double>::min() / 128.0);
+
+  to_str(0.0);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, 0.0);
+
+  to_str(-0.0);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, -0.0);
 }
 
 TEST(decimal128, exp63_check) {
@@ -1500,6 +1634,72 @@ TEST(decimal128, exp63_checkdec) {
   for (auto i = 0; i < 18; ++i) {
     EXPECT_EQ(fmc_decimal128_exp63[i], table[i]);
   }
+}
+
+TEST(decimal128, log10) {
+  int actual;
+  int result;
+  auto t = [&](double n) {
+    fmc_decimal128_t a;
+    fmc_decimal128_from_double(&a, n);
+    actual = floor(log10(n));
+    result = fmc_decimal128_flog10(&a);
+  };
+
+  t(-2.0);
+  EXPECT_EQ(result, actual);
+  t(0.0);
+  EXPECT_EQ(result, actual);
+  t(0.00048828125);
+  EXPECT_EQ(result, actual);
+  t(0.0625);
+  EXPECT_EQ(result, actual);
+  t(0.5);
+  EXPECT_EQ(result, actual);
+  t(2.0);
+  EXPECT_EQ(result, actual);
+  t(101.0);
+  EXPECT_EQ(result, actual);
+  t(744.015625);
+  EXPECT_EQ(result, actual);
+  t(1085.0);
+  EXPECT_EQ(result, actual);
+  t(4631.0);
+  EXPECT_EQ(result, actual);
+  t(9111.25);
+  EXPECT_EQ(result, actual);
+  t(9999.0);
+  EXPECT_EQ(result, actual);
+  t(10001.0);
+  EXPECT_EQ(result, actual);
+  t(64541.00048828125);
+  EXPECT_EQ(result, actual);
+  t(99781.0);
+  EXPECT_EQ(result, actual);
+  t(105011.0);
+  EXPECT_EQ(result, actual);
+  t(670964.1);
+  EXPECT_EQ(result, actual);
+  t(999999.99999);
+  EXPECT_EQ(result, actual);
+  t(1000000.25);
+  EXPECT_EQ(result, actual);
+  t(4177892.0);
+  EXPECT_EQ(result, actual);
+  t(std::numeric_limits<double>::max());
+  EXPECT_EQ(result, actual);
+  t(std::numeric_limits<double>::min());
+  EXPECT_EQ(result, actual);
+  t(std::numeric_limits<double>::denorm_min());
+  EXPECT_EQ(result, actual);
+  t(std::numeric_limits<double>::infinity());
+  EXPECT_EQ(result, actual);
+  t(-std::numeric_limits<double>::infinity());
+  EXPECT_EQ(result, actual);
+  t(std::numeric_limits<double>::quiet_NaN());
+  EXPECT_EQ(result, actual);
+  t(-std::numeric_limits<double>::quiet_NaN());
+  EXPECT_EQ(result, actual);
 }
 
 TEST(decimal128, assign) {
