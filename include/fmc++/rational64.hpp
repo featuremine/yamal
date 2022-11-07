@@ -33,6 +33,111 @@ extern "C" {
 #include <limits>
 #include <string>
 
+namespace fmc {
+
+class rational64 : public fmc_rational64_t {
+public:
+  rational64(const fmc_rational64_t &a) : fmc_rational64_t(a) {}
+  rational64(int i) { fmc_rational64_from_int(this, i); }
+  rational64(int64_t i) { fmc_rational64_from_int(this, i); }
+  rational64(uint i) { fmc_rational64_from_int(this, i); }
+  rational64(uint64_t i) { fmc_rational64_from_int(this, i); }
+  rational64(double d) { fmc_rational64_from_double(this, d, 32); }
+  rational64() { num = 0; den = 1; }
+  rational64 &operator=(const fmc_rational64_t &a) {
+    num = a.num;
+    den = a.den;
+    return *this;
+  }
+  rational64 &operator=(const int &a) {
+    fmc_rational64_from_int(this, a);
+    return *this;
+  }
+  rational64 &operator=(const int64_t &a) {
+    fmc_rational64_from_int(this, a);
+    return *this;
+  }
+  rational64 &operator=(const uint &a) {
+    fmc_rational64_from_int(this, a);
+    return *this;
+  }
+  rational64 &operator=(const uint64_t &a) {
+    fmc_rational64_from_int(this, a);
+    return *this;
+  }
+  rational64 &operator=(const double &a) {
+    fmc_rational64_from_double(this, a, 32);
+    return *this;
+  }
+  rational64 &operator=(const float &a) {
+    fmc_rational64_from_double(this, a, 32);
+    return *this;
+  }
+  static constexpr rational64 &upcast(fmc_rational64_t &a) noexcept {
+    return static_cast<rational64 &>(a);
+  }
+  static constexpr const rational64 &upcast(const fmc_rational64_t &a) noexcept {
+    return static_cast<const rational64 &>(a);
+  }
+  rational64 &operator+=(const rational64 &a) noexcept {
+    fmc_rational64_inc(this, &a);
+    return *this;
+  }
+  rational64 &operator-=(const rational64 &a) noexcept {
+    fmc_rational64_dec(this, &a);
+    return *this;
+  }
+  rational64 operator-() const noexcept {
+    rational64 res;
+    fmc_rational64_negate(&res, this);
+    return res;
+  }
+  explicit operator int() const noexcept {
+    int64_t res;
+    fmc_rational64_to_int(&res, this);
+    return res;
+  }
+  explicit operator int64_t() const noexcept {
+    int64_t res;
+    fmc_rational64_to_int(&res, this);
+    return res;
+  }
+  explicit operator double() const noexcept {
+    double res;
+    fmc_rational64_to_double(&res, this);
+    return res;
+  }
+  explicit operator float() const noexcept {
+    double res;
+    fmc_rational64_to_double(&res, this);
+    return res;
+  }
+};
+
+template <> struct sided_initializer<fmc::rational64> {
+  static constexpr bool is_specialized = true;
+  static fmc::rational64 min() noexcept { return FMC_RATIONAL64_MIN; }
+  static fmc::rational64 max() noexcept { return FMC_RATIONAL64_MAX; }
+};
+
+template <> struct conversion<fmc_rational64_t, double> {
+  double operator()(fmc_rational64_t x) {
+    double ret;
+    fmc_rational64_to_double(&ret, &x);
+    return ret;
+  }
+};
+
+template <> struct conversion<double, fmc_rational64_t> {
+  fmc_rational64_t operator()(double x) {
+    rational64 ret;
+    fmc_rational64_from_double(&ret, x, 32);
+    return ret;
+  }
+};
+
+} // namespace fmc
+
 inline fmc_rational64_t operator/(fmc_rational64_t a, fmc_rational64_t b) {
   fmc_rational64_t ret;
   fmc_rational64_div(&ret, &a, &b);

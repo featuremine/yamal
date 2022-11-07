@@ -319,9 +319,9 @@ int main(int argc, char **argv) {
         for (auto inp = inputs->node.value.arr; inp; inp = inp->next) {
           auto input_sect = inp->item.value.sect;
           auto component =
-              fmc_cfg_sect_item_get(inp->item.value.sect, "component");
-          auto out_name = fmc_cfg_sect_item_get(inp->item.value.sect, "name");
-          auto index = fmc_cfg_sect_item_get(inp->item.value.sect, "index");
+              fmc_cfg_sect_item_get(input_sect, "component");
+          auto out_name = fmc_cfg_sect_item_get(input_sect, "name");
+          auto index = fmc_cfg_sect_item_get(input_sect, "index");
 
           fmc_runtime_error_unless(components.find(component->node.value.str) !=
                                    components.end())

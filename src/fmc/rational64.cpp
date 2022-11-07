@@ -33,6 +33,16 @@ void fmc_rational64_zero(fmc_rational64_t *dest) {
     dest->den = 1;
 }
 
+void fmc_rational64_max(fmc_rational64_t *res) {
+  res->num = FMC_RATIONAL64_MAX.num;
+  res->den = FMC_RATIONAL64_MAX.den;
+}
+
+void fmc_rational64_min(fmc_rational64_t *res) {
+  res->num = FMC_RATIONAL64_MIN.num;
+  res->den = FMC_RATIONAL64_MIN.den;
+}
+
 void fmc_rational64_new(fmc_rational64_t *dest, int32_t num, int32_t den) {
   auto mult = -2 * (den < 0) + 1;
   den *= mult;
@@ -94,6 +104,10 @@ void fmc_rational64_from_int(fmc_rational64_t *dest, int value) {
   dest->den = 1;
 }
 
+void fmc_rational64_to_int(int64_t *dest, const fmc_rational64_t *src) {
+  *dest = src->num / src->den;
+}
+
 void fmc_rational64_to_double(double *dest, const fmc_rational64_t *src) {
   if (fmc_rational64_is_nan(src)) {
     *dest = std::numeric_limits<double>::quiet_NaN();
@@ -106,7 +120,7 @@ void fmc_rational64_to_double(double *dest, const fmc_rational64_t *src) {
   }
 }
 
-void fmc_rational64_to_rprice(fmc_rprice_t *dest, fmc_rational64_t *src) {
+void fmc_rational64_to_rprice(fmc_rprice_t *dest, const fmc_rational64_t *src) {
   fmc_rprice_from_ratio(dest, int64_t(src->num), int64_t(src->den));
 }
 
@@ -169,4 +183,17 @@ bool fmc_rational64_is_inf(const fmc_rational64_t *src) {
 void fmc_rational64_abs(fmc_rational64_t *dest, const fmc_rational64_t *src) {
   dest->num = std::abs(src->num);
   dest->den = src->den;
+}
+
+void fmc_rational64_negate(fmc_rational64_t *dest, const fmc_rational64_t *src) {
+  dest->num = -src->num;
+  dest->den = -src->den;
+}
+
+void fmc_rprice_dec(fmc_rational64_t *res, const fmc_rational64_t *src) {
+  fmc_rational64_sub(res, res, src);
+}
+
+void fmc_rprice_inc(fmc_rational64_t *res, const fmc_rational64_t *src) {
+  fmc_rational64_add(res, res, src);
 }

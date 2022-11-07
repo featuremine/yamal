@@ -201,7 +201,7 @@ inline constexpr bool tuple_has = _tuple_has<U>(typify<T>());
 inline std::string &append_int(std::string &str, int num) {
   using namespace std;
   char number[32];
-  int i = sprintf(number, "%i", num);
+  int i = snprintf(number, sizeof(number)/sizeof(char), "%i", num);
   str.append(number, number + i);
   return str;
 }
