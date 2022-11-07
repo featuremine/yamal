@@ -112,23 +112,22 @@ public:
     return ret;
   }
   explicit operator double() const noexcept {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    fmc_decimal128_to_str(str, this);
-    return strtod(str, nullptr);
+    double value;
+    fmc_decimal128_to_double(&value, this);
+    return value;
   }
   explicit operator float() const noexcept {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    fmc_decimal128_to_str(str, this);
-    char *ptr = nullptr;
-    return strtof(str, &ptr);
+    double value;
+    fmc_decimal128_to_double(&value, this);
+    return value;
   }
 };
 
 template <> struct conversion<fmc_decimal128_t, double> {
   double operator()(fmc_decimal128_t x) noexcept {
-    char str[FMC_DECIMAL128_STR_SIZE];
-    fmc_decimal128_to_str(str, &x);
-    return strtod(str, nullptr);
+    double value;
+    fmc_decimal128_to_double(&value, &x);
+    return value;
   }
 };
 
@@ -172,36 +171,36 @@ inline bool operator>=(const fmc_decimal128_t &a,
   return fmc_decimal128_greater_or_equal(&a, &b);
 }
 
-inline fmc_decimal128_t operator+(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
-  fmc_decimal128_t res;
+inline fmc::decimal128 operator+(const fmc::decimal128 &a,
+                                 const fmc::decimal128 &b) noexcept {
+  fmc::decimal128 res;
   fmc_decimal128_add(&res, &a, &b);
   return res;
 }
 
-inline fmc_decimal128_t operator-(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
-  fmc_decimal128_t res;
+inline fmc::decimal128 operator-(const fmc::decimal128 &a,
+                                 const fmc::decimal128 &b) noexcept {
+  fmc::decimal128 res;
   fmc_decimal128_sub(&res, &a, &b);
   return res;
 }
 
-inline fmc_decimal128_t operator*(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
-  fmc_decimal128_t res;
+inline fmc::decimal128 operator*(const fmc::decimal128 &a,
+                                 const fmc::decimal128 &b) noexcept {
+  fmc::decimal128 res;
   fmc_decimal128_mul(&res, &a, &b);
   return res;
 }
 
-inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
-                                  const fmc_decimal128_t &b) noexcept {
-  fmc_decimal128_t res;
+inline fmc::decimal128 operator/(const fmc::decimal128 &a,
+                                 const fmc::decimal128 &b) noexcept {
+  fmc::decimal128 res;
   fmc_decimal128_div(&res, &a, &b);
   return res;
 }
 
-inline fmc_decimal128_t operator/(const fmc_decimal128_t &a,
-                                  const int64_t &b) noexcept {
+inline fmc::decimal128 operator/(const fmc::decimal128 &a,
+                                 const int64_t &b) noexcept {
   return a / fmc::decimal128(b);
 }
 
