@@ -39,14 +39,16 @@ namespace fmc {
 
 class rational64 : public fmc_rational64_t {
 public:
-  constexpr rational64(const fmc_rational64_t &a) noexcept : fmc_rational64_t(a) {}
+  constexpr rational64(const fmc_rational64_t &a) noexcept
+      : fmc_rational64_t(a) {}
   rational64(int i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(int64_t i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(uint i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(uint64_t i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(double d) noexcept { fmc_rational64_from_double(this, d, 32); }
   constexpr rational64() noexcept : fmc_rational64_t{0, 1} {}
-  constexpr rational64(int32_t num, int32_t den) noexcept : fmc_rational64_t{num, den} {}
+  constexpr rational64(int32_t num, int32_t den) noexcept
+      : fmc_rational64_t{num, den} {}
   rational64 &operator=(const fmc_rational64_t &a) noexcept {
     num = a.num;
     den = a.den;
