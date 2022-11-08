@@ -315,10 +315,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
 
 void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
   bool sign = decQuadIsSigned((const decQuad *)src);
-  fmc_decimal128_t positive_src;
-  fmc_decimal128_abs(&positive_src, src);
-
-  int digits10 = fmc_decimal128_flog10(&positive_src);
+  int digits10 = fmc_decimal128_flog10abs(src);
   if (digits10 == INT32_MIN) {
     if (decQuadIsZero((const decQuad *)src)) {
       *res = 0.0;
@@ -332,25 +329,24 @@ void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
   int digits2 = digits10 * 33219 / 10000;
   int exp = 53 - digits2;
   int absexp = labs(exp);
-  fmc_decimal128_t decexp;
-  fmc_decimal128_from_int(&decexp, (1ll << (absexp % 63ll)));
+  fmc_decimal128_t d;
+  fmc_decimal128_from_int(&d, (1ll << (absexp % 63ll)));
   if (exp >= 0ll) {
-    fmc_decimal128_mul(&positive_src, &positive_src, &decexp);
+    fmc_decimal128_mul(&d, src, &d);
     if (absexp >= 63ll) {
-      fmc_decimal128_mul(&positive_src, &positive_src,
-                         &fmc_decimal128_exp63[absexp / 63ll]);
+      fmc_decimal128_mul(&d, &d, &fmc_decimal128_exp63[absexp / 63ll]);
     }
   } else {
-    fmc_decimal128_div(&positive_src, &positive_src, &decexp);
+    fmc_decimal128_div(&d, src, &d);
     if (absexp >= 63ll) {
-      fmc_decimal128_div(&positive_src, &positive_src,
-                         &fmc_decimal128_exp63[absexp / 63ll]);
+      fmc_decimal128_div(&d, &d, &fmc_decimal128_exp63[absexp / 63ll]);
     }
   }
 
   fmc_error_t *error;
-  uint64_t mantissa;
-  fmc_decimal128_to_uint(&mantissa, &positive_src, &error);
+  int64_t mantissa;
+  fmc_decimal128_to_int(&mantissa, &d, &error);
+  mantissa = labs(mantissa);
 
   uint64_t actual_digit2 = FMC_FLOORLOG2(mantissa);
   uint64_t correction = actual_digit2 - 52ull;
@@ -391,9 +387,29 @@ void fmc_decimal128_mul(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
                   get_context());
 }
 
-void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
-  decQuadToIntegralValue((decQuad *)res, (decQuad *)val, get_context(),
-                         DEC_ROUND_HALF_UP);
+void fmc_decimal128_round(fmc_decimal128_t *res, const fmc_decimal128_t *val,
+                          int decimals) {
+  Int exp;     /* exponent */
+  uInt sourhi; /* top word from source decFloat */
+
+  /* Start decoding the argument */
+  sourhi = DFWORD((const decQuad *)val, 0); /* top word */
+  exp = DECCOMBEXP[sourhi >> 26]; /* get exponent high bits (in place) */
+
+  if (EXPISSPECIAL(exp)) { /* is special? */
+    *res = *val;
+    return;
+  }
+
+  fmc_decimal128_t decdigits = fmc_decimal128_exp63[0];
+  decContext *ctx = get_context();
+  decQuadSetExponent((decQuad *)&decdigits, ctx, -decimals);
+
+  enum rounding saveround = ctx->round;
+  ctx->round = DEC_ROUND_HALF_UP;
+  decQuadQuantize((decQuad *)res, (const decQuad *)val,
+                  (const decQuad *)&decdigits, ctx);
+  ctx->round = saveround;
 }
 
 void fmc_decimal128_qnan(fmc_decimal128_t *res) {
@@ -480,7 +496,7 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
   decQuadSetExponent((decQuad *)res, get_context(), exp);
 }
 
-int fmc_decimal128_flog10(const fmc_decimal128_t *val) {
+int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
   const decQuad *df = (const decQuad *)val;
   uInt msd;       /* coefficient MSD */
   Int exp;        /* exponent top two bits or full */
@@ -496,10 +512,6 @@ int fmc_decimal128_flog10(const fmc_decimal128_t *val) {
   uInt sourml = DFWORD(df, 2);
   uInt sourlo = DFWORD(df, 3);
 #endif
-
-  if (((Int)sourhi) < 0) {
-    return INT32_MIN;
-  }
 
   comb = sourhi >> 26;    /* sign+combination field */
   msd = DECCOMBMSD[comb]; /* decode the combination field */
