@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 file (STRINGS "VERSION" YAMAL_VERSION)
 
 project(
@@ -13,7 +10,6 @@ project(
 )
 
 set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
