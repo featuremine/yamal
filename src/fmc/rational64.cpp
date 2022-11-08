@@ -60,34 +60,10 @@ void fmc_rational64_new(fmc_rational64_t *dest, int32_t num, int32_t den) {
   }
 }
 
+// TODO: needs to find closest representable rational number
 void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
   std::cout<<"num "<<std::hex<<num<<std::endl;
   std::cout<<"den "<<std::dec<<den<<std::endl;
-  auto mult = -2 * (den < 0) + 1;
-  den *= mult;
-  num *= mult;
-  auto div = std::gcd(num, den);
-
-  if (!div) {
-    dest->num = 0;
-    dest->den = 0;
-    return;
-  }
-
-  auto num_n = num / div;
-  auto den_n = den / div;
-  if (num_n > std::numeric_limits<int32_t>::max() ||
-      num_n < std::numeric_limits<int32_t>::lowest() ||
-      den_n > std::numeric_limits<int32_t>::max()) {
-    num_n = 0;
-    den_n = 0;
-    feraiseexcept(FE_OVERFLOW);
-  }
-  dest->num = int32_t(num_n);
-  dest->den = int32_t(den_n);
-}
-
-void fmc_rational64_new3(fmc_rational64_t *dest, __int128_t num, __int128_t den) {
   auto mult = -2 * (den < 0) + 1;
   den *= mult;
   num *= mult;
@@ -118,21 +94,21 @@ void fmc_rational64_from_double(fmc_rational64_t *res, double n) {
     return;
   }
 
-  int64_t mantissa = fmc_double_mantissa(n) + (1ll << 52ll);
-  int64_t exp = fmc_double_exp(n) - 1023ll;
-  uint64_t is_negative = fmc_double_sign(n);
-  int64_t x = std::min(62LL, 62LL + exp);
-  int16_t p = x - 52;
-  bool f = p < 0;
-  uint64_t tmp = f * (mantissa >> -p) + !f * (mantissa << p);
+  int32_t mantissa = (fmc_double_mantissa(n) + (1ll << 52ll)) >> 22ll;
+  int32_t exp = 30 - int32_t(fmc_double_exp(n) - 1023ll);
+  int32_t sgn = fmc_double_sign(n);
+  sgn = !sgn - sgn;
+  int32_t p = exp - std::min(30, exp);
+  uint32_t tmp = mantissa >> p;
+  exp -= p;
+  int32_t num = sgn * tmp;
+  int32_t den = (1ll << exp) * (exp >= 0);
 
-  if (x < 0) {
-    fmc_rational64_zero(res);
-  } else if (x < exp) {
-    fmc_rational64_inf(res);
-  } else {
-    fmc_rational64_new2(res, (is_negative << 63) | tmp, 1ll << (x - exp));
-  }
+  printf("=================================\n");
+  printf("n: %f\nmantissa: 0x%x\nexp: %i\nsgn: %i\np: %i\ntmp: 0x%x\nnum: 0x%x\nden: 0x%x\n",
+          n,     mantissa,       exp,     sgn,     p,     tmp,       num,       den);
+
+  fmc_rational64_new(res, num, den);
 }
 
 void fmc_rational64_from_rprice(fmc_rational64_t *dest, fmc_rprice_t *src) {
