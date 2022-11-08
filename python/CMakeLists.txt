@@ -112,3 +112,24 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 else()
     set_property(TARGET yamal-python_module PROPERTY BUILD_RPATH_USE_ORIGIN TRUE)
 endif()
+
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(test)
+    find_program(PYTHON3_BIN "python3" REQUIRED)
+    # add_test(
+    #     NAME extractor_py COMMAND
+
+    #     "/bin/sh"
+    #     "-c"
+    #     "test-extractor-python"
+
+    #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python
+    # )
+    # set_tests_properties(
+    #     extractor_py
+    #     PROPERTIES
+    #     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build/lib:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH}"
+    #     TIMEOUT 100
+    # )
+endif()

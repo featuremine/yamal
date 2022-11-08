@@ -354,12 +354,6 @@ file(
     DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
 )
 
-#configure_file(
-#    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test-yamal-python"
-#    "${CMAKE_BINARY_DIR}/python_dist/scripts/test-yamal-python"
-#    COPYONLY
-#)
-
 if(CMAKE_BUILD_TYPE MATCHES DEBUG)
     set(DEBUG_FLAG "--debug")
 endif()
