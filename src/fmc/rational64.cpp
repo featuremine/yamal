@@ -28,7 +28,6 @@
 
 #include <fenv.h>
 #include <numeric>
-#include <iostream>
 #include <algorithm>
 
 void fmc_rational64_zero(fmc_rational64_t *dest) {
