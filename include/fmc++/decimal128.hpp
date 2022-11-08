@@ -123,9 +123,9 @@ public:
     return value;
   }
   explicit operator rprice() const noexcept {
-    static decimal128 dec64mult((int64_t)FMC_RPRICE_FRACTION);
+    static decimal128 dec64mul((int64_t)FMC_RPRICE_FRACTION);
     decimal128 tmp;
-    fmc_decimal128_mult(&tmp, this, &dec64mult);
+    fmc_decimal128_mul(&tmp, this, &dec64mul);
     int64_t num;
     fmc_error_t *err;
     fmc_decimal128_to_int(&num, &tmp, &err);
