@@ -194,6 +194,10 @@ file(
     DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
 )
 
+file(
+    COPY "${PROJECT_SOURCE_DIR}/LICENSE"
+    DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
+)
 
 if(CMAKE_BUILD_TYPE MATCHES DEBUG)
     set(DEBUG_FLAG "--debug")
