@@ -5,6 +5,10 @@ if (NOT PYTHON_FOUND)
 endif (NOT PYTHON_FOUND)
 
 find_program(PYTHON3_BIN "python3" REQUIRED)
+execute_process(COMMAND ${PYTHON3_BIN} -c "import sys;sys.stdout.write('scripts-%d.%d' % sys.version_info[:2])" OUTPUT_VARIABLE PYTHON3_SCRIPTS_DIR)
+
+set(YAMAL_PYTHON_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 add_library(
     py_yamal_obj
@@ -218,58 +222,65 @@ else()
     message(FATAL_ERROR "Platform not supported")
 endif()
 
-add_custom_target(
-    yamal-whl ALL
+if(BUILD_WHEEL)
+    add_custom_target(
+        yamal-whl ALL
 
-    COMMAND
-    "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
+        COMMAND
+        "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
 
-    "build"
-    "--build-base=${CMAKE_BINARY_DIR}/python_dist/build"
-    ${DEBUG_FLAG}
+        "build"
+        "--build-base=${CMAKE_BINARY_DIR}/python_dist/build"
+        ${DEBUG_FLAG}
 
-    "egg_info"
-    "--egg-base" "${CMAKE_BINARY_DIR}/python_dist"
+        "egg_info"
+        "--egg-base" "${CMAKE_BINARY_DIR}/python_dist"
 
-    "bdist_wheel"
-    "--bdist-dir=${CMAKE_BINARY_DIR}/python_dist/bdist"
-    "--dist-dir=${CMAKE_BINARY_DIR}/output"
+        "bdist_wheel"
+        "--bdist-dir=${CMAKE_BINARY_DIR}/python_dist/bdist"
+        "--dist-dir=${CMAKE_BINARY_DIR}/output"
 
-    "--plat-name=${PYTHON_PLATFORM}"
+        "--plat-name=${PYTHON_PLATFORM}"
 
-    COMMAND
-    "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
+        COMMAND
+        "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
 
-    "build"
-    "--build-base=${CMAKE_BINARY_DIR}/python_dist/build"
-    "--build-lib=${CMAKE_BINARY_DIR}/python_dist/build/lib"
-    ${DEBUG_FLAG}
+        "build"
+        "--build-base=${CMAKE_BINARY_DIR}/python_dist/build"
+        "--build-lib=${CMAKE_BINARY_DIR}/python_dist/build/lib"
+        ${DEBUG_FLAG}
 
-    "build_scripts"
-    "--executable=${PYTHON3_BIN}"
-    "-f"
+        "build_scripts"
+        "--executable=${PYTHON3_BIN}"
+        "-f"
 
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python_dist
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python_dist
 
-    DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
-)
+        DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
+    )
+endif()
 
 if(BUILD_TESTING)
+    enable_testing()
     add_subdirectory(tests)
-    find_program(PYTHON3_BIN "python3" REQUIRED)
-    add_test(
-        NAME yamal_py COMMAND
+    if(TEST_EXTENSIONS)
+        if(BUILD_WHEEL)
+            find_program(PYTHON3_BIN "python3" REQUIRED)
+            add_test(
+                NAME yamal_py COMMAND
 
-        "/bin/sh"
-        "-c"
-        "test-yamal-python"
+                "/bin/sh"
+                "-c"
+                "test-yamal-python"
 
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    set_tests_properties(
-        yamal_py
-        PROPERTIES
-        ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/python_dist:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_BINARY_DIR}/python_dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH};YAMALCOMPPATH=$<TARGET_FILE_DIR:yamal-python_testmodule>"
-        TIMEOUT 100
-    )
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+            set_tests_properties(
+                yamal_py
+                PROPERTIES
+                ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/python_dist:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_BINARY_DIR}/python_dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH};YAMALCOMPPATH=$<TARGET_FILE_DIR:yamal-python_testmodule>"
+                TIMEOUT 100
+            )
+        endif()
+    endif()
 endif()

@@ -5,7 +5,7 @@ if (NOT PYTHON_FOUND)
     pkg_check_modules(PYTHON REQUIRED IMPORTED_TARGET python3)
 endif (NOT PYTHON_FOUND)
 
-macro(extr_unit_test)
+macro(yamal_unit_test)
     set(oneValueArgs "NAME;DIR")
     set(multiValueArgs "FILES")
     cmake_parse_arguments(ARG
@@ -37,13 +37,13 @@ macro(extr_unit_test)
     add_test(NAME ${ARG_NAME} COMMAND ${ARG_NAME} ${CMAKE_CURRENT_SOURCE_DIR})
 endmacro()
 
-extr_unit_test(
+yamal_unit_test(
     NAME
     config
     DIR
     fmc++
 )
-extr_unit_test(
+yamal_unit_test(
     NAME
     variant_map
     DIR
