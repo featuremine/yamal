@@ -122,6 +122,17 @@ public:
     fmc_decimal128_to_double(&value, this);
     return value;
   }
+  explicit operator rprice() const noexcept {
+    static decimal128 dec64mult((int64_t)FMC_RPRICE_FRACTION);
+    decimal128 tmp;
+    fmc_decimal128_mult(&tmp, this, &dec64mult);
+    int64_t num;
+    fmc_error_t *err;
+    fmc_decimal128_to_int(&num, &tmp, &err);
+    rprice ret;
+    fmc_rprice_from_raw(&ret, num);
+    return ret;
+  }
 };
 
 template <> struct conversion<fmc_decimal128_t, double> {
