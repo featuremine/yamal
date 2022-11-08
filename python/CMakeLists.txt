@@ -186,7 +186,7 @@ file(
 )
 
 file(
-    COPY ${PROJECT_SOURCE_DIR}/scripts
+    COPY ${PROJECT_SOURCE_DIR}/python/scripts
     DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
 )
 
