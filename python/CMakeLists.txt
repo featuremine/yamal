@@ -136,7 +136,7 @@ set_target_properties(
     PROPERTIES
     OUTPUT_NAME "testmodule"
     PREFIX ""
-    SUFFIX ".so"
+    SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python_dist/yamal"
 )
 target_include_directories(
