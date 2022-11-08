@@ -21,11 +21,11 @@
 
 #include "fmc++/convert.hpp"
 #include "fmc++/mpl.hpp"
+#include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
 
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
-#include "fmc/rprice.h"
 
 #include <cmath>
 #include <cstring>
