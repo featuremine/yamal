@@ -23,8 +23,10 @@
  */
 
 #include "fmc/rational64.h"
+#include "fmc/math.h"
 #include "fmc/rprice.h"
 
+#include <algorithm>
 #include <fenv.h>
 #include <numeric>
 
@@ -57,6 +59,7 @@ void fmc_rational64_new(fmc_rational64_t *dest, int32_t num, int32_t den) {
   }
 }
 
+// TODO: needs to find closest representable rational number
 void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
   auto mult = -2 * (den < 0) + 1;
   den *= mult;
@@ -82,22 +85,27 @@ void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
   dest->den = int32_t(den_n);
 }
 
-void fmc_rational64_from_double(fmc_rational64_t *dest, double value,
-                                int32_t base) {
-  if (std::isnan(value)) {
-    dest->num = 0;
-    dest->den = 0;
-  } else if (std::isinf(value)) {
-    dest->num = 1 - 2 * (value < 0);
-    dest->den = 0;
-  } else {
-    dest->num = (int32_t)lround(floor(value * double(base)));
-    dest->den = base;
+void fmc_rational64_from_double(fmc_rational64_t *res, double n) {
+  if (std::isnan(n)) {
+    fmc_rational64_nan(res);
+    return;
   }
+
+  int32_t mantissa = (fmc_double_mantissa(n) + (1ll << 52ll)) >> 22ll;
+  int32_t exp = 30 - int32_t(fmc_double_exp(n) - 1023ll);
+  int32_t sgn = fmc_double_sign(n);
+  sgn = !sgn - sgn;
+  int32_t p = exp - std::min(30, exp);
+  uint32_t tmp = mantissa >> p;
+  exp -= p;
+  int32_t num = sgn * tmp;
+  int32_t den = (1ll << exp) * (exp >= 0);
+
+  fmc_rational64_new(res, num, den);
 }
 
 void fmc_rational64_from_rprice(fmc_rational64_t *dest, fmc_rprice_t *src) {
-  return fmc_rational64_new2(dest, src->value, FMC_RPRICE_FRACTION);
+  fmc_rational64_new2(dest, src->value, FMC_RPRICE_FRACTION);
 }
 
 void fmc_rational64_from_int(fmc_rational64_t *dest, int value) {
@@ -198,7 +206,7 @@ bool fmc_rational64_is_inf(const fmc_rational64_t *src) {
 }
 
 bool fmc_rational64_is_finite(const fmc_rational64_t *src) {
-  return (src->num != 1 && src->num != -1) && src->den != 0;
+  return !fmc_rational64_is_inf(src) && !fmc_rational64_is_nan(src);
 }
 
 void fmc_rational64_abs(fmc_rational64_t *dest, const fmc_rational64_t *src) {

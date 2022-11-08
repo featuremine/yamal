@@ -50,8 +50,7 @@ FMMODFUNC void fmc_rational64_new(fmc_rational64_t *dest, int32_t num,
                                   int32_t den);
 FMMODFUNC void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num,
                                    int64_t den);
-FMMODFUNC void fmc_rational64_from_double(fmc_rational64_t *dest, double value,
-                                          int32_t base);
+FMMODFUNC void fmc_rational64_from_double(fmc_rational64_t *dest, double value);
 FMMODFUNC void fmc_rational64_from_int(fmc_rational64_t *dest, int value);
 FMMODFUNC void fmc_rational64_from_rprice(fmc_rational64_t *dest,
                                           fmc_rprice_t *src);
