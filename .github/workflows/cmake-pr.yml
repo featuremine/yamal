@@ -18,6 +18,7 @@ jobs:
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
+        mypy: true
 
   build-manylinux:
     needs: utility
@@ -34,16 +35,18 @@ jobs:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         cpack: TGZ
         docs: true
+        wheel: true
         upload: ${{ needs.utility.outputs.release-check == 'release' }}
+        test_pypi_token: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
   build-macos:
     needs: utility
-    runs-on: macos-12
+    runs-on: macos-11
 
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        submodules: recursive
 
     - name: Install dependencies
       run: brew install pkg-config cmake googletest python doxygen
@@ -55,3 +58,6 @@ jobs:
       uses: featuremine/actions/package/build@main
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
+        docs: false
+        wheel: true
+        upload: ${{ needs.utility.outputs.release-check == 'release' }}
