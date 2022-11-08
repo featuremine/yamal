@@ -45,7 +45,7 @@ public:
   rational64(int64_t i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(uint i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(uint64_t i) noexcept { fmc_rational64_from_int(this, i); }
-  rational64(double d) noexcept { fmc_rational64_from_double(this, d, 32); }
+  rational64(double d) noexcept { fmc_rational64_from_double(this, d); }
   constexpr rational64() noexcept : fmc_rational64_t{0, 1} {}
   constexpr rational64(int32_t num, int32_t den) noexcept
       : fmc_rational64_t{num, den} {}
@@ -71,11 +71,11 @@ public:
     return *this;
   }
   rational64 &operator=(const double &a) noexcept {
-    fmc_rational64_from_double(this, a, 32);
+    fmc_rational64_from_double(this, a);
     return *this;
   }
   rational64 &operator=(const float &a) noexcept {
-    fmc_rational64_from_double(this, a, 32);
+    fmc_rational64_from_double(this, a);
     return *this;
   }
   static constexpr rational64 &upcast(fmc_rational64_t &a) noexcept {
@@ -137,7 +137,7 @@ template <> struct conversion<fmc_rational64_t, double> {
 template <> struct conversion<double, fmc_rational64_t> {
   fmc_rational64_t operator()(double x) {
     rational64 ret;
-    fmc_rational64_from_double(&ret, x, 32);
+    fmc_rational64_from_double(&ret, x);
     return ret;
   }
 };

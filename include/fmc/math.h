@@ -158,7 +158,7 @@ FMMODFUNC double fmc_remainder(double x);
 #define fmc_double_sign(value)                                                 \
   ({                                                                           \
     double _val = (value);                                                     \
-    (*(int64_t *)(&_val) >> 63ll);                                             \
+    (*(uint64_t *)(&_val) >> 63ll);                                            \
   })
 
 /**

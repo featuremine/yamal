@@ -44,7 +44,7 @@ TEST(rational, api) {
   ASSERT_DOUBLE_EQ(val, 0.96875);
 
   fmc_rational64_t sample_from_double;
-  fmc_rational64_from_double(&sample_from_double, val, 32);
+  fmc_rational64_from_double(&sample_from_double, val);
   ASSERT_EQ(sample_from_double.num, 31);
   ASSERT_EQ(sample_from_double.den, 32);
 
@@ -127,11 +127,11 @@ TEST(rational, api) {
 }
 
 TEST(rational, decimal_conversions) {
-  double val = -9 - (31 / 32);
+  double val = -9.0 - (31.0 / 32.0);
   fmc_rprice_t d, tmpd;
   fmc_rprice_from_double(&d, val);
   fmc_rational64_t r, tmpr;
-  fmc_rational64_from_double(&r, val, 32);
+  fmc_rational64_from_double(&r, val);
   fmc_rational64_from_rprice(&tmpr, &d);
   ASSERT_EQ(r, tmpr);
   fmc_rational64_to_rprice(&tmpd, &r);
@@ -214,6 +214,18 @@ TEST(rational64, doubleconersions) {
   ra = fmc::rational64(a);
   ASSERT_TRUE(std::isnan(a));
   ASSERT_TRUE(std::isnan(double(ra)));
+
+  a = -9.0;
+  ra = fmc::rational64(a);
+  ASSERT_DOUBLE_EQ(double(ra), a);
+
+  a = 22.0;
+  ra = fmc::rational64(a);
+  ASSERT_DOUBLE_EQ(double(ra), a);
+
+  a = 0.0;
+  ra = fmc::rational64(a);
+  ASSERT_DOUBLE_EQ(double(ra), a);
 }
 
 TEST(rational64, numeric_limits) {
