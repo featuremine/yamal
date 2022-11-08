@@ -12,11 +12,32 @@ project(
     HOMEPAGE_URL "https://www.featuremine.com"
 )
 
+set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
 option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
+option (BUILD_PACKAGE "Enable build of the self-extracting package." ON)
+option (BUILD_WHEEL "Enable build of the python package." ON)
+option (TEST_EXTENSIONS "Enable testing the extensions." ON)
+
+find_program(PYTHON3_BIN "python3" REQUIRED)
+
+set(YAMAL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(YAMAL_PYTHON_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/python/include")
+set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/python/src")
+set(YAMAL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(YAMAL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/bin")
+set(YAMAL_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/lib")
+
+set(FmConfig_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(FmConfig REQUIRED)
+fm_config()
+execute_process(COMMAND ${PYTHON3_BIN} -c "import sys;sys.stdout.write('scripts-%d.%d' % sys.version_info[:2])" OUTPUT_VARIABLE PYTHON3_SCRIPTS_DIR)
+include(GNUInstallDirs)
 
 find_package(Doxygen)
 if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
@@ -317,3 +338,79 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 
 include(CPack)
+
+add_subdirectory(python)
+
+file(
+    COPY ${PROJECT_SOURCE_DIR}/python/include
+    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    FILES_MATCHING
+        PATTERN .h
+        PATTERN .hpp
+)
+
+file(
+    COPY ${PROJECT_SOURCE_DIR}/scripts
+    DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
+)
+
+#configure_file(
+#    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test-yamal-python"
+#    "${CMAKE_BINARY_DIR}/python_dist/scripts/test-yamal-python"
+#    COPYONLY
+#)
+
+if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+    set(DEBUG_FLAG "--debug")
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(PYTHON_PLATFORM "manylinux_2_17_${CMAKE_SYSTEM_PROCESSOR}")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    execute_process(COMMAND sw_vers -productVersion
+                    OUTPUT_VARIABLE MACOS_VERSION
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    STRING(REGEX REPLACE "^([0-9]+)\\.?([0-9]+)\\.?([0-9]+)?$" "\\1" MACOS_VERSION_MAJOR "${MACOS_VERSION}")
+    STRING(REGEX REPLACE "^([0-9]+)\\.?([0-9]+)\\.?([0-9]+)?$" "\\2" MACOS_VERSION_MINOR "${MACOS_VERSION}")
+    set(PYTHON_PLATFORM "macosx_${MACOS_VERSION_MAJOR}_0_${CMAKE_SYSTEM_PROCESSOR}")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(PYTHON_PLATFORM "win_${CMAKE_SYSTEM_PROCESSOR}")
+else()
+    message(FATAL_ERROR "Platform not supported")
+endif()
+
+add_custom_target(
+    yamal-whl ALL
+
+    COMMAND
+    "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
+
+    "build"
+    "--build-base=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build"
+    ${DEBUG_FLAG}
+
+    "egg_info"
+    "--egg-base" "${CMAKE_CURRENT_BINARY_DIR}/python_dist"
+
+    "bdist_wheel"
+    "--bdist-dir=${CMAKE_CURRENT_BINARY_DIR}/python_dist/bdist"
+    "--dist-dir=${CMAKE_BINARY_DIR}/output"
+
+    "--plat-name=${PYTHON_PLATFORM}"
+
+    COMMAND
+    "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
+
+    "build"
+    "--build-base=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build"
+    "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build/lib"
+    ${DEBUG_FLAG}
+
+    "build_scripts"
+    "--executable=${PYTHON3_BIN}"
+    "-f"
+
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python_dist
+
+    DEPENDS yamal-python_module
+)
