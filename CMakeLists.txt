@@ -359,9 +359,19 @@ file(
 )
 
 file(
+    GLOB PYI_FILES
+    "${PROJECT_SOURCE_DIR}/python/src/*.pyi"
+)
+file(
+    COPY ${PYI_FILES}
+    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
+)
+
+file(
     COPY ${PROJECT_SOURCE_DIR}/scripts
     DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
 )
+
 
 if(CMAKE_BUILD_TYPE MATCHES DEBUG)
     set(DEBUG_FLAG "--debug")

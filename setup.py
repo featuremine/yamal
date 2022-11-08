@@ -34,7 +34,7 @@ setuptools.setup (
         'Programming Language :: Python :: 3 :: Only',
     ],
     package_data={
-        'yamal': ['ytp.so', 'include', 'include/*', 'include/*/*', 'include/*/*/*']
+        'yamal': ['*.so', '*.pyi','include', 'include/*', 'include/*/*', 'include/*/*/*']
     },
     license='COPYRIGHT (c) 2022 by Featuremine Corporation',
     packages=['yamal', 'yamal.tests'],
