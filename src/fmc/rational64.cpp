@@ -23,12 +23,12 @@
  */
 
 #include "fmc/rational64.h"
-#include "fmc/rprice.h"
 #include "fmc/math.h"
+#include "fmc/rprice.h"
 
+#include <algorithm>
 #include <fenv.h>
 #include <numeric>
-#include <algorithm>
 
 void fmc_rational64_zero(fmc_rational64_t *dest) {
   dest->num = 0;

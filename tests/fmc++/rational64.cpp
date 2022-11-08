@@ -226,7 +226,6 @@ TEST(rational64, doubleconersions) {
   a = 0.0;
   ra = fmc::rational64(a);
   ASSERT_DOUBLE_EQ(double(ra), a);
-
 }
 
 TEST(rational64, numeric_limits) {
