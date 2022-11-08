@@ -345,8 +345,8 @@ file(
     COPY ${PROJECT_SOURCE_DIR}/python/include
     DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
     FILES_MATCHING
-        PATTERN .h
-        PATTERN .hpp
+        PATTERN "*.h"
+        PATTERN "*.hpp"
 )
 
 file(
