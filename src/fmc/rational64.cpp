@@ -24,9 +24,12 @@
 
 #include "fmc/rational64.h"
 #include "fmc/rprice.h"
+#include "fmc/math.h"
 
 #include <fenv.h>
 #include <numeric>
+#include <iostream>
+#include <algorithm>
 
 void fmc_rational64_zero(fmc_rational64_t *dest) {
   dest->num = 0;
@@ -58,6 +61,8 @@ void fmc_rational64_new(fmc_rational64_t *dest, int32_t num, int32_t den) {
 }
 
 void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
+  std::cout<<"num "<<std::hex<<num<<std::endl;
+  std::cout<<"den "<<std::dec<<den<<std::endl;
   auto mult = -2 * (den < 0) + 1;
   den *= mult;
   num *= mult;
@@ -82,22 +87,56 @@ void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
   dest->den = int32_t(den_n);
 }
 
-void fmc_rational64_from_double(fmc_rational64_t *dest, double value,
-                                int32_t base) {
-  if (std::isnan(value)) {
+void fmc_rational64_new3(fmc_rational64_t *dest, __int128_t num, __int128_t den) {
+  auto mult = -2 * (den < 0) + 1;
+  den *= mult;
+  num *= mult;
+  auto div = std::gcd(num, den);
+
+  if (!div) {
     dest->num = 0;
     dest->den = 0;
-  } else if (std::isinf(value)) {
-    dest->num = 1 - 2 * (value < 0);
-    dest->den = 0;
+    return;
+  }
+
+  auto num_n = num / div;
+  auto den_n = den / div;
+  if (num_n > std::numeric_limits<int32_t>::max() ||
+      num_n < std::numeric_limits<int32_t>::lowest() ||
+      den_n > std::numeric_limits<int32_t>::max()) {
+    num_n = 0;
+    den_n = 0;
+    feraiseexcept(FE_OVERFLOW);
+  }
+  dest->num = int32_t(num_n);
+  dest->den = int32_t(den_n);
+}
+
+void fmc_rational64_from_double(fmc_rational64_t *res, double n) {
+  if (std::isnan(n)) {
+    fmc_rational64_nan(res);
+    return;
+  }
+
+  int64_t mantissa = fmc_double_mantissa(n) + (1ll << 52ll);
+  int64_t exp = fmc_double_exp(n) - 1023ll;
+  uint64_t is_negative = fmc_double_sign(n);
+  int64_t x = std::min(62LL, 62LL + exp);
+  int16_t p = x - 52;
+  bool f = p < 0;
+  uint64_t tmp = f * (mantissa >> -p) + !f * (mantissa << p);
+
+  if (x < 0) {
+    fmc_rational64_zero(res);
+  } else if (x < exp) {
+    fmc_rational64_inf(res);
   } else {
-    dest->num = (int32_t)lround(floor(value * double(base)));
-    dest->den = base;
+    fmc_rational64_new2(res, (is_negative << 63) | tmp, 1ll << (x - exp));
   }
 }
 
 void fmc_rational64_from_rprice(fmc_rational64_t *dest, fmc_rprice_t *src) {
-  return fmc_rational64_new2(dest, src->value, FMC_RPRICE_FRACTION);
+  fmc_rational64_new2(dest, src->value, FMC_RPRICE_FRACTION);
 }
 
 void fmc_rational64_from_int(fmc_rational64_t *dest, int value) {
@@ -198,7 +237,7 @@ bool fmc_rational64_is_inf(const fmc_rational64_t *src) {
 }
 
 bool fmc_rational64_is_finite(const fmc_rational64_t *src) {
-  return (src->num != 1 && src->num != -1) && src->den != 0;
+  return !fmc_rational64_is_inf(src) && !fmc_rational64_is_nan(src);
 }
 
 void fmc_rational64_abs(fmc_rational64_t *dest, const fmc_rational64_t *src) {
