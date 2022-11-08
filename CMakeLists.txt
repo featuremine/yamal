@@ -350,6 +350,15 @@ file(
 )
 
 file(
+    COPY ${PROJECT_SOURCE_DIR}/python/tests
+    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    FILES_MATCHING
+        PATTERN "*.py"
+        PATTERN "fmc++" EXCLUDE
+        PATTERN "yamal" EXCLUDE
+)
+
+file(
     COPY ${PROJECT_SOURCE_DIR}/scripts
     DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
 )

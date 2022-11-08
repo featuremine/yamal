@@ -86,7 +86,7 @@ target_link_libraries(
 set_target_properties(
     yamal-python_module
     PROPERTIES
-    OUTPUT_NAME "yamal"
+    OUTPUT_NAME "ytp"
     PREFIX ""
     SUFFIX ".so"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python_dist/yamal"
@@ -114,22 +114,21 @@ else()
 endif()
 
 if(BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(test)
+    add_subdirectory(tests)
     find_program(PYTHON3_BIN "python3" REQUIRED)
-    # add_test(
-    #     NAME extractor_py COMMAND
+    add_test(
+        NAME yamal_py COMMAND
 
-    #     "/bin/sh"
-    #     "-c"
-    #     "test-extractor-python"
+        "/bin/sh"
+        "-c"
+        "test-yamal-python"
 
-    #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python
-    # )
-    # set_tests_properties(
-    #     extractor_py
-    #     PROPERTIES
-    #     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build/lib:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_CURRENT_BINARY_DIR}/python_dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH}"
-    #     TIMEOUT 100
-    # )
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(
+        yamal_py
+        PROPERTIES
+        ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/python_dist:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_BINARY_DIR}/python_dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH}"
+        TIMEOUT 100
+    )
 endif()
