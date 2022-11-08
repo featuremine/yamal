@@ -149,14 +149,6 @@ target_include_directories(
     "${YAMAL_INC_DIR}"
 )
 
-file(
-    COPY ${PROJECT_SOURCE_DIR}/python/include
-    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
-    FILES_MATCHING
-        PATTERN .h
-        PATTERN .hpp
-)
-
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_link_options(yamal-python_module PRIVATE -Wl,-rpath,@loader_path)
     target_link_options(yamal-python_module PRIVATE -undefined dynamic_lookup)
