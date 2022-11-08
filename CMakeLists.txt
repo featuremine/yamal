@@ -361,6 +361,7 @@ file(
 file(
     GLOB PYI_FILES
     "${PROJECT_SOURCE_DIR}/python/src/*.pyi"
+    "${PROJECT_SOURCE_DIR}/python/src/*.py"
 )
 file(
     COPY ${PYI_FILES}
