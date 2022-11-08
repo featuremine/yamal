@@ -62,8 +62,6 @@ void fmc_rational64_new(fmc_rational64_t *dest, int32_t num, int32_t den) {
 
 // TODO: needs to find closest representable rational number
 void fmc_rational64_new2(fmc_rational64_t *dest, int64_t num, int64_t den) {
-  std::cout<<"num "<<std::hex<<num<<std::endl;
-  std::cout<<"den "<<std::dec<<den<<std::endl;
   auto mult = -2 * (den < 0) + 1;
   den *= mult;
   num *= mult;
@@ -103,10 +101,6 @@ void fmc_rational64_from_double(fmc_rational64_t *res, double n) {
   exp -= p;
   int32_t num = sgn * tmp;
   int32_t den = (1ll << exp) * (exp >= 0);
-
-  printf("=================================\n");
-  printf("n: %f\nmantissa: 0x%x\nexp: %i\nsgn: %i\np: %i\ntmp: 0x%x\nnum: 0x%x\nden: 0x%x\n",
-          n,     mantissa,       exp,     sgn,     p,     tmp,       num,       den);
 
   fmc_rational64_new(res, num, den);
 }
