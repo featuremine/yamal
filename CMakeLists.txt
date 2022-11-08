@@ -95,6 +95,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/fmc/memory.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/rational64.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/rprice.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
@@ -336,6 +337,7 @@ set(CPACK_PACKAGE_VENDOR "Featuremine")
 set(CPACK_PACKAGE_CONTACT "support@featuremine.com")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 
 include(CPack)
 

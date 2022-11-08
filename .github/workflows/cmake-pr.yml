@@ -61,3 +61,4 @@ jobs:
         docs: false
         wheel: true
         upload: ${{ needs.utility.outputs.release-check == 'release' }}
+        cpack: TGZ
