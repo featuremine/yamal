@@ -256,6 +256,8 @@ if(BUILD_WHEEL)
 
         DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
     )
+    set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/dist")
+    set(WHEEL_yamal_SCRIPTS_DIR "${PYTHON3_SCRIPTS_DIR}")
 endif()
 
 if(BUILD_TESTING)
@@ -263,21 +265,13 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
     if(TEST_EXTENSIONS)
         if(BUILD_WHEEL)
-            find_program(PYTHON3_BIN "python3" REQUIRED)
-            add_test(
-                NAME yamal_py COMMAND
-
-                "/bin/sh"
-                "-c"
-                "test-yamal-python"
-
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            )
-            set_tests_properties(
-                yamal_py
-                PROPERTIES
-                ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/dist:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_CURRENT_BINARY_DIR}/dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH};YAMALCOMPPATH=$<TARGET_FILE_DIR:yamal-python_testmodule>"
+            set(WheelPackage_DIR "${PROJECT_SOURCE_DIR}/cmake")
+            find_package(WheelPackage REQUIRED)
+            test_python_package(
+                NAME yamal_py
+                PACKAGE yamal
                 TIMEOUT 100
+                TEST "test-yamal-python"
             )
         endif()
     endif()
