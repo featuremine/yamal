@@ -499,12 +499,10 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
   decQuadSetExponent((decQuad *)res, get_context(), exp);
 }
 
-int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
+int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   const decQuad *df = (const decQuad *)val;
   uInt msd;       /* coefficient MSD */
-  Int exp;        /* exponent top two bits or full */
   uInt comb;      /* combination field */
-  const uByte *u; /* .. */
 
   /* Source words; macro handles endianness */
   uInt sourhi = DFWORD(df, 0); /* word with sign */
@@ -518,17 +516,11 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
 
   comb = sourhi >> 26;    /* sign+combination field */
   msd = DECCOMBMSD[comb]; /* decode the combination field */
-  exp = DECCOMBEXP[comb]; /* .. */
-
-  if (!EXPISSPECIAL(exp)) { /* finite */
-    /* complete exponent; top two bits are in place */
-    exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
-  } else {                        /* IS special */
-    return INT32_MIN;
-  }
 
   bool stop = msd != 0;
   int left_zeros = !stop;
+
+  const uByte *u; /* .. */
 
 #define dpd2deccount(dpdin)                                                    \
   u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
@@ -538,7 +530,6 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
 #if DECPMAX == 7
   dpd2deccount(sourhi >> 10); /* declet 1 */
   dpd2deccount(sourhi);       /* declet 2 */
-  const int max_digits = 2 * 3 + 1;
 
 #elif DECPMAX == 16
   dpd2deccount(sourhi >> 8);                    /* declet 1 */
@@ -546,7 +537,6 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
   dpd2deccount(sourlo >> 20);                   /* declet 3 */
   dpd2deccount(sourlo >> 10);                   /* declet 4 */
   dpd2deccount(sourlo);                         /* declet 5 */
-  const int max_digits = 5 * 3 + 1;
 
 #elif DECPMAX == 34
   dpd2deccount(sourhi >> 4);                    /* declet 1 */
@@ -560,6 +550,36 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
   dpd2deccount(sourlo >> 20);                   /* declet 9 */
   dpd2deccount(sourlo >> 10);                   /* declet 10 */
   dpd2deccount(sourlo);                         /* declet 11 */
+#endif
+
+  return left_zeros;
+}
+
+int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
+  const decQuad *df = (const decQuad *)val;
+  Int exp;        /* exponent top two bits or full */
+  uInt comb;      /* combination field */
+
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD(df, 0); /* word with sign */
+
+  comb = sourhi >> 26;    /* sign+combination field */
+  exp = DECCOMBEXP[comb]; /* .. */
+
+  if (!EXPISSPECIAL(exp)) { /* finite */
+    /* complete exponent; top two bits are in place */
+    exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
+  } else {                        /* IS special */
+    return INT32_MIN;
+  }
+
+  int left_zeros = fmc_decimal128_lead_zeros(val);
+
+#if DECPMAX == 7
+  const int max_digits = 2 * 3 + 1;
+#elif DECPMAX == 16
+  const int max_digits = 5 * 3 + 1;
+#elif DECPMAX == 34
   const int max_digits = 11 * 3 + 1;
 #endif
 
