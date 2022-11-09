@@ -171,7 +171,7 @@ FMMODFUNC double fmc_remainder(double x);
   ({                                                                           \
     double _val = (value);                                                     \
     *(uint64_t *)&_val = (*(uint64_t *)&_val & ~(1ull << 63ull)) |             \
-        ((uint64_t)((!!(sign))) << 63ull);                                     \
+                         ((uint64_t)((!!(sign))) << 63ull);                    \
     _val;                                                                      \
   })
 
