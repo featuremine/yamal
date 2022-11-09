@@ -85,7 +85,7 @@ FMMODFUNC void fmc_decimal128_mul(fmc_decimal128_t *res,
                                   const fmc_decimal128_t *rhs);
 
 FMMODFUNC void fmc_decimal128_round(fmc_decimal128_t *dest,
-                                    const fmc_decimal128_t *src);
+                                    const fmc_decimal128_t *src, int digits);
 
 FMMODFUNC bool fmc_decimal128_is_nan(const fmc_decimal128_t *val);
 FMMODFUNC bool fmc_decimal128_is_qnan(const fmc_decimal128_t *val);
@@ -105,7 +105,7 @@ FMMODFUNC void fmc_decimal128_abs(fmc_decimal128_t *res,
 FMMODFUNC void fmc_decimal128_negate(fmc_decimal128_t *res,
                                      const fmc_decimal128_t *val);
 FMMODFUNC void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow);
-FMMODFUNC int fmc_decimal128_flog10(const fmc_decimal128_t *res);
+FMMODFUNC int fmc_decimal128_flog10abs(const fmc_decimal128_t *res);
 
 #ifdef __cplusplus
 }
