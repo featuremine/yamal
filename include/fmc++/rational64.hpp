@@ -153,59 +153,59 @@ template <> struct conversion<double, fmc_rational64_t> {
 
 } // namespace fmc
 
-inline fmc::rational64 operator/(const fmc::rational64 a,
-                                 const fmc::rational64 b) noexcept {
+inline fmc::rational64 operator/(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_div(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator==(const fmc::rational64 a,
-                       const fmc::rational64 b) noexcept {
+inline bool operator==(const fmc::rational64 &a,
+                       const fmc::rational64 &b) noexcept {
   return fmc_rational64_equal(&a, &b);
 }
 
-inline bool operator!=(const fmc::rational64 a,
-                       const fmc::rational64 b) noexcept {
+inline bool operator!=(const fmc::rational64 &a,
+                       const fmc::rational64 &b) noexcept {
   return fmc_rational64_notequal(&a, &b);
 }
 
-inline fmc::rational64 operator+(const fmc::rational64 a,
-                                 const fmc::rational64 b) noexcept {
+inline fmc::rational64 operator+(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_add(&ret, &a, &b);
   return ret;
 }
 
-inline fmc::rational64 operator-(const fmc::rational64 a,
-                                 const fmc::rational64 b) noexcept {
+inline fmc::rational64 operator-(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_sub(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator<(const fmc::rational64 a,
-                      const fmc::rational64 b) noexcept {
+inline bool operator<(const fmc::rational64 &a,
+                      const fmc::rational64 &b) noexcept {
   return fmc_rational64_less(&a, &b);
 }
 
-inline bool operator>(const fmc::rational64 a,
-                      const fmc::rational64 b) noexcept {
+inline bool operator>(const fmc::rational64 &a,
+                      const fmc::rational64 &b) noexcept {
   return fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator<=(const fmc::rational64 a,
-                       const fmc::rational64 b) noexcept {
+inline bool operator<=(const fmc::rational64 &a,
+                       const fmc::rational64 &b) noexcept {
   return !fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator>=(const fmc::rational64 a,
-                       const fmc::rational64 b) noexcept {
+inline bool operator>=(const fmc::rational64 &a,
+                       const fmc::rational64 &b) noexcept {
   return !fmc_rational64_less(&a, &b);
 }
 
-inline fmc::rational64 operator*(const fmc::rational64 a,
-                                 const fmc::rational64 b) noexcept {
+inline fmc::rational64 operator*(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_mul(&ret, &a, &b);
   return ret;
