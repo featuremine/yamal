@@ -4045,17 +4045,17 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
 
   /* Here when the argument is finite */
   if (GETEXPUN(df) == 0)
-    result = *df;                              /* already a true integer */
-  else {                                       /* need to round to integer */
-    enum rounding saveround;                   /* saver */
-    saveround = set->round;                    /* save rounding mode .. */
-    set->round = rmode;                        /* set mode */
-    decFloatZero(&zero);                       /* make 0E+0 */
+    result = *df;            /* already a true integer */
+  else {                     /* need to round to integer */
+    enum rounding saveround; /* saver */
+    saveround = set->round;  /* save rounding mode .. */
+    set->round = rmode;      /* set mode */
+    decFloatZero(&zero);     /* make 0E+0 */
     fexcept_t excepts;
-    fegetexceptflag(&excepts,FE_ALL_EXCEPT);
+    fegetexceptflag(&excepts, FE_ALL_EXCEPT);
     decFloatQuantize(&result, df, &zero, set); /* [this may fail] */
-    fesetexceptflag(&excepts,FE_ALL_EXCEPT);
-    set->round = saveround;                    /* restore rounding mode .. */
+    fesetexceptflag(&excepts, FE_ALL_EXCEPT);
+    set->round = saveround; /* restore rounding mode .. */
   }
 
 /* only the last four declets of the coefficient can contain */
