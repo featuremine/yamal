@@ -21,8 +21,8 @@
 
 #include "fmc++/convert.hpp"
 #include "fmc++/mpl.hpp"
-#include "fmc++/rprice.hpp"
 #include "fmc++/rational64.hpp"
+#include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
 
 #include "fmc/alignment.h"
