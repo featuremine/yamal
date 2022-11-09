@@ -6,61 +6,98 @@ on:
 permissions: write-all
 
 jobs:
-  utility:
-    runs-on: ubuntu-20.04
-    outputs:
-      release-check: ${{ steps.release-check.outputs.release-check }}
+  # utility:
+  #   runs-on: ubuntu-20.04
+  #   outputs:
+  #     release-check: ${{ steps.release-check.outputs.release-check }}
     
-    steps:
-    - name: Utility tasks
-      id: release-check
-      uses: featuremine/actions/utility@main
-      with:
-        gh_token: ${{ secrets.GITHUB_TOKEN }}
-        utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
-        mypy: true
+  #   steps:
+  #   - name: Utility tasks
+  #     id: release-check
+  #     uses: featuremine/actions/utility@main
+  #     with:
+  #       gh_token: ${{ secrets.GITHUB_TOKEN }}
+  #       utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
+  #       mypy: true
 
-  build-manylinux:
-    needs: utility
+  # build-manylinux:
+  #   needs: utility
+  #   runs-on: ubuntu-20.04
+  #   container:
+  #     image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-gcc10.2.0
+    
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #     with:
+  #       submodules: recursive
+
+  #   - name: Build ${{ github.event.repository.name }} with fm gcc
+  #     uses: featuremine/actions/package/build@main
+  #     with:
+  #       gh_token: ${{ secrets.GITHUB_TOKEN }}
+  #       cpack: TGZ
+  #       docs: true
+  #       wheel: true
+  #       upload: ${{ needs.utility.outputs.release-check == 'release' }}
+  #       test_pypi_token: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
+  # build-macos:
+  #   needs: utility
+  #   runs-on: macos-11
+
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #     with:
+  #       submodules: recursive
+
+  #   - name: Install dependencies
+  #     run: brew install pkg-config cmake googletest python doxygen
+
+  #   - name: Install sphinx
+  #     run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
+
+  #   - name: Build ${{ github.event.repository.name }} with fm gcc
+  #     uses: featuremine/actions/package/build@main
+  #     with:
+  #       gh_token: ${{ secrets.GITHUB_TOKEN }}
+  #       docs: false
+  #       wheel: true
+  #       upload: ${{ needs.utility.outputs.release-check == 'release' }}
+  #       cpack: TGZ
+
+  test-centos:
+    #needs: [utility, build-manylinux]
+    #if: needs.utility.outputs.release-check == 'release'
     runs-on: ubuntu-20.04
     container:
       image: public.ecr.aws/p0w8t0l8/ci-hosted-gh-centos7-gcc10.2.0
     
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-    - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+    - name: Test ${{ github.event.repository.name }} release
+      uses: featuremine/actions/package/test@main
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
-        cpack: TGZ
-        docs: true
-        wheel: true
-        upload: ${{ needs.utility.outputs.release-check == 'release' }}
-        test_pypi_token: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
-  build-macos:
-    needs: utility
-    runs-on: macos-11
-
+  test-pythons:
+    #needs: [utility, build-manylinux, build-macos]
+    #if: needs.utility.outputs.release-check == 'release'
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-12]
+        python_version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        exclude:
+          - os: macos-12
+            python_version: '3.6'
+          - os: macos-12
+            python_version: '3.7'
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
 
-    - name: Install dependencies
-      run: brew install pkg-config cmake googletest python doxygen
-
-    - name: Install sphinx
-      run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
-
-    - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
-      with:
-        gh_token: ${{ secrets.GITHUB_TOKEN }}
-        docs: false
-        wheel: true
-        upload: ${{ needs.utility.outputs.release-check == 'release' }}
-        cpack: TGZ
+      - name: Test ${{ github.event.repository.name }} release for python version ${{ matrix.python_version }}
+        uses: featuremine/actions/package/test@main
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          sudo: true
