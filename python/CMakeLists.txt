@@ -1,3 +1,9 @@
+find_package(Doxygen)
+if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
+    # Add subdir "docs" for Doxygen + Sphinx to use.
+    add_subdirectory ("docs")
+endif ()
+
 find_package(PkgConfig)
 pkg_check_modules(PYTHON IMPORTED_TARGET python3-embed)
 if (NOT PYTHON_FOUND)
