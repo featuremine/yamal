@@ -1484,11 +1484,13 @@ TEST(decimal128, identity_extreme) {
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
   EXPECT_TRUE(std::isinf(converted));
+  EXPECT_EQ(converted, std::numeric_limits<double>::infinity());
 
   to_str(-std::numeric_limits<double>::infinity());
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
   EXPECT_TRUE(std::isinf(converted));
+  EXPECT_EQ(converted, -std::numeric_limits<double>::infinity());
 
   to_str(std::numeric_limits<double>::denorm_min(), FE_INEXACT);
   EXPECT_STREQ(dec_fromstr, number_str);
@@ -1526,6 +1528,17 @@ TEST(decimal128, identity_extreme) {
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
   EXPECT_EQ(converted, -0.0);
+
+  to_str(5.0);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, 5.0);
+
+  to_str(-5.0);
+  EXPECT_STREQ(dec_fromstr, number_str);
+  EXPECT_STREQ(dec_fromdouble, number_str);
+  EXPECT_EQ(converted, -5.0);
+
 }
 
 TEST(decimal128, exp63_check) {

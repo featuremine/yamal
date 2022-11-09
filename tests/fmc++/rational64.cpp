@@ -128,9 +128,9 @@ TEST(rational, api) {
 
 TEST(rational, decimal_conversions) {
   double val = -9.0 - (31.0 / 32.0);
-  fmc_rprice_t d, tmpd;
+  fmc::rprice d, tmpd;
   fmc_rprice_from_double(&d, val);
-  fmc_rational64_t r, tmpr;
+  fmc::rational64 r, tmpr;
   fmc_rational64_from_double(&r, val);
   fmc_rational64_from_rprice(&tmpr, &d);
   ASSERT_EQ(r, tmpr);
