@@ -1538,7 +1538,6 @@ TEST(decimal128, identity_extreme) {
   EXPECT_STREQ(dec_fromstr, number_str);
   EXPECT_STREQ(dec_fromdouble, number_str);
   EXPECT_EQ(converted, -5.0);
-
 }
 
 TEST(decimal128, exp63_check) {
