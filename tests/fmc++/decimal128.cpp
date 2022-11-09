@@ -602,18 +602,18 @@ TEST(decimal128, round) {
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   fmc_decimal128_t ar, br, cr, dr;
-  fmc_decimal128_round(&ar, &a);
+  fmc_decimal128_round(&ar, &a, 0);
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
-  fmc_decimal128_round(&br, &b);
+  fmc_decimal128_round(&br, &b, 0);
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fetestexcept(FE_INEXACT));
   feclearexcept(FE_ALL_EXCEPT);
-  fmc_decimal128_round(&cr, &c);
+  fmc_decimal128_round(&cr, &c, 0);
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fetestexcept(FE_INEXACT));
   feclearexcept(FE_ALL_EXCEPT);
-  fmc_decimal128_round(&dr, &d);
+  fmc_decimal128_round(&dr, &d, 0);
   ASSERT_EQ(err, nullptr);
   ASSERT_TRUE(fetestexcept(FE_INEXACT));
   feclearexcept(FE_ALL_EXCEPT);
@@ -629,6 +629,64 @@ TEST(decimal128, round) {
   ASSERT_TRUE(fmc_decimal128_equal(&e, &dr));
   ASSERT_EQ(err, nullptr);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+}
+
+TEST(decimal128, round_double) {
+  char number_str[FMC_DECIMAL128_STR_SIZE];
+  auto roundit = [&](double n) {
+    fmc_decimal128_t a;
+    fmc_decimal128_from_double(&a, n);
+    fmc_decimal128_to_str(number_str, &a);
+    int digits10 = fmc_decimal128_flog10abs(&a);
+    fmc_decimal128_round(&a, &a, digits10 != INT32_MIN ? 14 - digits10 : 0);
+    fmc_decimal128_to_str(number_str, &a);
+    return std::string_view(number_str);
+  };
+
+  EXPECT_EQ(roundit(0.0), "0");
+  EXPECT_EQ(roundit(0.000001), "0.000001");
+  EXPECT_EQ(roundit(0.0000000008), "8E-10");
+  EXPECT_EQ(roundit(0.17), "0.17");
+  EXPECT_EQ(roundit(63.33), "63.33");
+  EXPECT_EQ(roundit(50.55), "50.55");
+  EXPECT_EQ(roundit(99.999), "99.999");
+  EXPECT_EQ(roundit(123.0), "123");
+  EXPECT_EQ(roundit(677.25), "677.25");
+  EXPECT_EQ(roundit(45678.1), "45678.1");
+  EXPECT_EQ(roundit(99999.999), "99999.999");
+  EXPECT_EQ(roundit(40000.0001), "40000.0001");
+  EXPECT_EQ(roundit(-645.43), "-645.43");
+  EXPECT_EQ(roundit(-156.99), "-156.99");
+  EXPECT_EQ(roundit(-0.0000000000123456789012345), "-1.23456789012345E-11");
+  EXPECT_EQ(roundit(0.000000000123456789012345), "1.23456789012345E-10");
+  EXPECT_EQ(roundit(-0.00000000123456789012345), "-1.23456789012345E-9");
+  EXPECT_EQ(roundit(0.0000000123456789012345), "1.23456789012345E-8");
+  EXPECT_EQ(roundit(0.000000123456789012345), "1.23456789012345E-7");
+  EXPECT_EQ(roundit(-0.00000123456789012345), "-0.00000123456789012345");
+  EXPECT_EQ(roundit(0.0000123456789012345), "0.0000123456789012345");
+  EXPECT_EQ(roundit(0.000123456789012345), "0.000123456789012345");
+  EXPECT_EQ(roundit(-0.00123456789012345), "-0.00123456789012345");
+  EXPECT_EQ(roundit(0.0123456789012345), "0.0123456789012345");
+  EXPECT_EQ(roundit(0.123456789012345), "0.123456789012345");
+  EXPECT_EQ(roundit(-1.23456789012345), "-1.23456789012345");
+  EXPECT_EQ(roundit(12.3456789012345), "12.3456789012345");
+  EXPECT_EQ(roundit(-123.456789012345), "-123.456789012345");
+  EXPECT_EQ(roundit(1234.56789012345), "1234.56789012345");
+  EXPECT_EQ(roundit(-12345.6789012345), "-12345.6789012345");
+  EXPECT_EQ(roundit(123456.789012345), "123456.789012345");
+  EXPECT_EQ(roundit(-1234567.89012345), "-1234567.89012345");
+  EXPECT_EQ(roundit(12345678.9012345), "12345678.9012345");
+  EXPECT_EQ(roundit(-123456789.012345), "-123456789.012345");
+  EXPECT_EQ(roundit(1234567890.12345), "1234567890.12345");
+  EXPECT_EQ(roundit(-12345678901.2345), "-12345678901.2345");
+  EXPECT_EQ(roundit(123456789012.345), "123456789012.345");
+  EXPECT_EQ(roundit(-1234567890123.45), "-1234567890123.45");
+  EXPECT_EQ(roundit(123456789012345.0), "123456789012345");
+  EXPECT_EQ(roundit(1234567890123456789.0), "1.23456789012346E+18");
+  EXPECT_EQ(roundit(std::numeric_limits<double>::infinity()), "inf");
+  EXPECT_EQ(roundit(-std::numeric_limits<double>::infinity()), "-inf");
+  EXPECT_EQ(roundit(std::numeric_limits<double>::quiet_NaN()), "nan");
+  EXPECT_EQ(roundit(-std::numeric_limits<double>::quiet_NaN()), "-nan");
 }
 
 TEST(decimal128, increment) {
@@ -1644,8 +1702,8 @@ TEST(decimal128, log10) {
   auto t = [&](double n) {
     fmc_decimal128_t a;
     fmc_decimal128_from_double(&a, n);
-    actual = (std::isfinite(n) && n > 0.0) ? floor(log10(n)) : INT32_MIN;
-    result = fmc_decimal128_flog10(&a);
+    actual = (std::isfinite(n) && n != 0.0) ? floor(log10(abs(n))) : INT32_MIN;
+    result = fmc_decimal128_flog10abs(&a);
   };
 
   t(-2.0);
