@@ -4051,7 +4051,10 @@ static uInt decToInt32(const decFloat *df, decContext *set, enum rounding rmode,
     saveround = set->round;                    /* save rounding mode .. */
     set->round = rmode;                        /* set mode */
     decFloatZero(&zero);                       /* make 0E+0 */
+    fexcept_t excepts;
+    fegetexceptflag(&excepts,FE_ALL_EXCEPT);
     decFloatQuantize(&result, df, &zero, set); /* [this may fail] */
+    fesetexceptflag(&excepts,FE_ALL_EXCEPT);
     set->round = saveround;                    /* restore rounding mode .. */
   }
 

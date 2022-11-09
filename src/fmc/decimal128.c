@@ -174,7 +174,10 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
     saveround = set->round;                   /* save rounding mode .. */
     set->round = rmode;                       /* set mode */
     decQuadZero(&zero);                       /* make 0E+0 */
+    fexcept_t excepts;
+    fegetexceptflag(&excepts,FE_ALL_EXCEPT);
     decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
+    fesetexceptflag(&excepts,FE_ALL_EXCEPT);
     set->round = saveround;                   /* restore rounding mode .. */
   }
 
