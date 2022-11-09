@@ -140,7 +140,7 @@ template <> struct conversion<double, fmc_rprice_t> {
 
 } // namespace fmc
 
-inline fmc::rprice operator/(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline fmc::rprice operator/(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   fmc::rprice ret;
   fmc_rprice_div(&ret, &a, &b);
   return ret;
@@ -152,43 +152,43 @@ inline fmc::rprice operator/(const fmc::rprice a, const int b) noexcept {
   return ret;
 }
 
-inline bool operator==(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline bool operator==(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   return fmc_rprice_equal(&a, &b);
 }
 
-inline bool operator!=(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline bool operator!=(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   return !fmc_rprice_equal(&a, &b);
 }
 
-inline fmc::rprice operator+(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline fmc::rprice operator+(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   fmc::rprice ret;
   fmc_rprice_add(&ret, &a, &b);
   return ret;
 }
 
-inline fmc::rprice operator-(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline fmc::rprice operator-(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   fmc::rprice ret;
   fmc_rprice_sub(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator<(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline bool operator<(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   return fmc_rprice_less(&a, &b);
 }
 
-inline bool operator>(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline bool operator>(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   return fmc_rprice_greater(&a, &b);
 }
 
-inline bool operator<=(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline bool operator<=(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   return fmc_rprice_less_or_equal(&a, &b);
 }
 
-inline bool operator>=(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline bool operator>=(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   return fmc_rprice_greater_or_equal(&a, &b);
 }
 
-inline fmc::rprice operator*(const fmc::rprice a, const fmc::rprice b) noexcept {
+inline fmc::rprice operator*(const fmc::rprice &a, const fmc::rprice &b) noexcept {
   fmc::rprice ret;
   fmc_rprice_mul(&ret, &a, &b);
   return ret;
