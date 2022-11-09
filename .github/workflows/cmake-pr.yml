@@ -32,7 +32,7 @@ jobs:
         submodules: recursive
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+      uses: featuremine/actions/package/build@fix-python-reqs
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         cpack: TGZ
@@ -57,7 +57,7 @@ jobs:
       run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+      uses: featuremine/actions/package/build@fix-python-reqs
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         docs: false
