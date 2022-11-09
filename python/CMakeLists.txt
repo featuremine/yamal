@@ -95,7 +95,7 @@ set_target_properties(
     OUTPUT_NAME "ytp"
     PREFIX ""
     SUFFIX ".so"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
 )
 target_include_directories(
     yamal-python_module
@@ -121,7 +121,7 @@ set_target_properties(
     OUTPUT_NAME "sys_base"
     PREFIX ""
     SUFFIX ".so"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
 )
 target_include_directories(
     yamal-sys_base_module
@@ -146,8 +146,7 @@ set_target_properties(
     PROPERTIES
     OUTPUT_NAME "testmodule"
     PREFIX ""
-    SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
 )
 target_include_directories(
     yamal-python_testmodule
@@ -167,7 +166,7 @@ endif()
 
 file(
     COPY ${PROJECT_SOURCE_DIR}/python/include
-    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
     FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"
@@ -175,7 +174,7 @@ file(
 
 file(
     COPY ${PROJECT_SOURCE_DIR}/python/tests
-    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
     FILES_MATCHING
         PATTERN "*.py"
         PATTERN "fmc++" EXCLUDE
@@ -188,17 +187,17 @@ file(
 )
 file(
     COPY ${PYI_FILES}
-    DESTINATION "${CMAKE_BINARY_DIR}/python_dist/yamal"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
 )
 
 file(
     COPY ${PROJECT_SOURCE_DIR}/python/scripts
-    DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/dist"
 )
 
 file(
     COPY "${PROJECT_SOURCE_DIR}/LICENSE"
-    DESTINATION "${CMAKE_BINARY_DIR}/python_dist"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/dist"
 )
 
 if(CMAKE_BUILD_TYPE MATCHES DEBUG)
@@ -228,14 +227,15 @@ if(BUILD_WHEEL)
         "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
 
         "build"
-        "--build-base=${CMAKE_BINARY_DIR}/python_dist/build"
+        "--build-base=${CMAKE_CURRENT_BINARY_DIR}/dist/build"
+        "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/dist/build/lib"
         ${DEBUG_FLAG}
 
         "egg_info"
-        "--egg-base" "${CMAKE_BINARY_DIR}/python_dist"
+        "--egg-base" "${CMAKE_CURRENT_BINARY_DIR}/dist"
 
         "bdist_wheel"
-        "--bdist-dir=${CMAKE_BINARY_DIR}/python_dist/bdist"
+        "--bdist-dir=${CMAKE_CURRENT_BINARY_DIR}/dist/bdist"
         "--dist-dir=${CMAKE_BINARY_DIR}/output"
 
         "--plat-name=${PYTHON_PLATFORM}"
@@ -244,15 +244,15 @@ if(BUILD_WHEEL)
         "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
 
         "build"
-        "--build-base=${CMAKE_BINARY_DIR}/python_dist/build"
-        "--build-lib=${CMAKE_BINARY_DIR}/python_dist/build/lib"
+        "--build-base=${CMAKE_CURRENT_BINARY_DIR}/dist/build"
+        "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/dist/build/lib"
         ${DEBUG_FLAG}
 
         "build_scripts"
         "--executable=${PYTHON3_BIN}"
         "-f"
 
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python_dist
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist
 
         DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
     )
@@ -276,7 +276,7 @@ if(BUILD_TESTING)
             set_tests_properties(
                 yamal_py
                 PROPERTIES
-                ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/python_dist:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_BINARY_DIR}/python_dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH};YAMALCOMPPATH=$<TARGET_FILE_DIR:yamal-python_testmodule>"
+                ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/dist:$ENV{PYTHONPATH};PYTHONUNBUFFERED=1;PATH=${CMAKE_CURRENT_BINARY_DIR}/dist/build/${PYTHON3_SCRIPTS_DIR}:$ENV{PATH};YAMALCOMPPATH=$<TARGET_FILE_DIR:yamal-python_testmodule>"
                 TIMEOUT 100
             )
         endif()

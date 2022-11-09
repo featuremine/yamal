@@ -16,7 +16,6 @@ option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
 option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
-option (BUILD_PACKAGE "Enable build of the self-extracting package." ON)
 option (BUILD_WHEEL "Enable build of the python package." ON)
 option (TEST_EXTENSIONS "Enable testing the extensions." ON)
 
