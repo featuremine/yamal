@@ -22,6 +22,7 @@
 #include "fmc++/convert.hpp"
 #include "fmc++/mpl.hpp"
 #include "fmc++/rprice.hpp"
+#include "fmc++/rational64.hpp"
 #include "fmc++/side.hpp"
 
 #include "fmc/alignment.h"
@@ -49,6 +50,12 @@ public:
     decimal128 dd;
     fmc_decimal128_from_int(&dd, d.value);
     fmc_decimal128_div(this, &dd, &dec64div);
+  }
+  decimal128(fmc_rational64_t d) noexcept {
+    decimal128 dd;
+    fmc_decimal128_from_int(&dd, d.num);
+    decimal128 div(d.den);
+    fmc_decimal128_div(this, &dd, &div);
   }
   decimal128(double d) noexcept { fmc_decimal128_from_double(this, d); }
   constexpr decimal128() noexcept : fmc_decimal128_t{{0, 0}} {}
@@ -131,6 +138,13 @@ public:
     fmc_decimal128_to_int(&num, &tmp, &err);
     rprice ret;
     fmc_rprice_from_raw(&ret, num);
+    return ret;
+  }
+  explicit operator rational64() const noexcept {
+    double d;
+    fmc_decimal128_to_double(&d, this);
+    rational64 ret;
+    fmc_rational64_from_double(&ret, d);
     return ret;
   }
 };
