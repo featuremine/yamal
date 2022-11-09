@@ -152,11 +152,11 @@ inline fmc::rprice operator/(const fmc::rprice a, const int b) noexcept {
   return ret;
 }
 
-inline bool operator==(const fmc::rprice &a, const fmc::rprice &b) noexcept {
+inline bool operator==(const fmc_rprice_t &a, const fmc_rprice_t &b) noexcept {
   return fmc_rprice_equal(&a, &b);
 }
 
-inline bool operator!=(const fmc::rprice &a, const fmc::rprice &b) noexcept {
+inline bool operator!=(const fmc_rprice_t &a, const fmc_rprice_t &b) noexcept {
   return !fmc_rprice_equal(&a, &b);
 }
 
@@ -172,19 +172,19 @@ inline fmc::rprice operator-(const fmc::rprice &a, const fmc::rprice &b) noexcep
   return ret;
 }
 
-inline bool operator<(const fmc::rprice &a, const fmc::rprice &b) noexcept {
+inline bool operator<(const fmc_rprice_t &a, const fmc_rprice_t &b) noexcept {
   return fmc_rprice_less(&a, &b);
 }
 
-inline bool operator>(const fmc::rprice &a, const fmc::rprice &b) noexcept {
+inline bool operator>(const fmc_rprice_t &a, const fmc_rprice_t &b) noexcept {
   return fmc_rprice_greater(&a, &b);
 }
 
-inline bool operator<=(const fmc::rprice &a, const fmc::rprice &b) noexcept {
+inline bool operator<=(const fmc_rprice_t &a, const fmc_rprice_t &b) noexcept {
   return fmc_rprice_less_or_equal(&a, &b);
 }
 
-inline bool operator>=(const fmc::rprice &a, const fmc::rprice &b) noexcept {
+inline bool operator>=(const fmc_rprice_t &a, const fmc_rprice_t &b) noexcept {
   return fmc_rprice_greater_or_equal(&a, &b);
 }
 
@@ -210,12 +210,12 @@ inline fmc::rprice operator*(const int64_t a, const fmc::rprice b) noexcept {
 
 namespace std {
 
-inline ostream &operator<<(ostream &s, const fmc::rprice &x) {
+inline ostream &operator<<(ostream &s, const fmc_rprice_t &x) {
   using namespace std;
   return s << setprecision(15) << fmc::to<double>(x);
 }
 
-inline istream &operator>>(istream &s, fmc::rprice &x) {
+inline istream &operator>>(istream &s, fmc_rprice_t &x) {
   using namespace std;
   double d;
   s >> d;

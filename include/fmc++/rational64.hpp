@@ -160,13 +160,13 @@ inline fmc::rational64 operator/(const fmc::rational64 &a,
   return ret;
 }
 
-inline bool operator==(const fmc::rational64 &a,
-                       const fmc::rational64 &b) noexcept {
+inline bool operator==(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return fmc_rational64_equal(&a, &b);
 }
 
-inline bool operator!=(const fmc::rational64 &a,
-                       const fmc::rational64 &b) noexcept {
+inline bool operator!=(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return fmc_rational64_notequal(&a, &b);
 }
 
@@ -184,23 +184,23 @@ inline fmc::rational64 operator-(const fmc::rational64 &a,
   return ret;
 }
 
-inline bool operator<(const fmc::rational64 &a,
-                      const fmc::rational64 &b) noexcept {
+inline bool operator<(const fmc_rational64_t &a,
+                      const fmc_rational64_t &b) noexcept {
   return fmc_rational64_less(&a, &b);
 }
 
-inline bool operator>(const fmc::rational64 &a,
-                      const fmc::rational64 &b) noexcept {
+inline bool operator>(const fmc_rational64_t &a,
+                      const fmc_rational64_t &b) noexcept {
   return fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator<=(const fmc::rational64 &a,
-                       const fmc::rational64 &b) noexcept {
+inline bool operator<=(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return !fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator>=(const fmc::rational64 &a,
-                       const fmc::rational64 &b) noexcept {
+inline bool operator>=(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return !fmc_rational64_less(&a, &b);
 }
 
@@ -257,10 +257,10 @@ public:
   }
 };
 
-inline ostream &operator<<(ostream &s, const fmc::rational64 &x) {
+inline ostream &operator<<(ostream &s, const fmc_rational64_t &x) {
   return s << x.num << "/" << x.den;
 }
-inline istream &operator>>(istream &s, fmc::rational64 &x) {
+inline istream &operator>>(istream &s, fmc_rational64_t &x) {
   string str;
   s >> str;
   size_t div_pos = str.find("/");
