@@ -47,13 +47,11 @@ public:
   decimal128(fmc_rprice_t d) noexcept {
     static decimal128 dec64div((int64_t)FMC_RPRICE_FRACTION);
 
-    decimal128 dd;
-    fmc_decimal128_from_int(&dd, d.value);
+    decimal128 dd(d.value);
     fmc_decimal128_div(this, &dd, &dec64div);
   }
   decimal128(fmc_rational64_t d) noexcept {
-    decimal128 dd;
-    fmc_decimal128_from_int(&dd, d.num);
+    decimal128 dd(d.num);
     decimal128 div(d.den);
     fmc_decimal128_div(this, &dd, &div);
   }
