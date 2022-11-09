@@ -168,17 +168,17 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
 
   /* Here when the argument is finite */
   if (GETEXPUN(df) == 0)
-    result = *df;                             /* already a true integer */
-  else {                                      /* need to round to integer */
-    enum rounding saveround;                  /* saver */
-    saveround = set->round;                   /* save rounding mode .. */
-    set->round = rmode;                       /* set mode */
-    decQuadZero(&zero);                       /* make 0E+0 */
+    result = *df;            /* already a true integer */
+  else {                     /* need to round to integer */
+    enum rounding saveround; /* saver */
+    saveround = set->round;  /* save rounding mode .. */
+    set->round = rmode;      /* set mode */
+    decQuadZero(&zero);      /* make 0E+0 */
     fexcept_t excepts;
-    fegetexceptflag(&excepts,FE_ALL_EXCEPT);
+    fegetexceptflag(&excepts, FE_ALL_EXCEPT);
     decQuadQuantize(&result, df, &zero, set); /* [this may fail] */
-    fesetexceptflag(&excepts,FE_ALL_EXCEPT);
-    set->round = saveround;                   /* restore rounding mode .. */
+    fesetexceptflag(&excepts, FE_ALL_EXCEPT);
+    set->round = saveround; /* restore rounding mode .. */
   }
 
   /* only the last seven declets of the coefficient can contain */
