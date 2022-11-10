@@ -597,13 +597,14 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   int zeros = fmc_decimal128_lead_zeros(src);
 
   if (!zeros) {
+    dest->longs[0] = src->longs[0];
+    dest->longs[1] = src->longs[1];
     return;
   }
 
 #define shiftdec(source, destination, offset)                                          \
   ({                                                                                   \
     uint64_t decoffset = (offset) * 10;                                                \
-    printf("DECOFFSET IS %llu\n", decoffset);\
     uint64_t sourhi = DFLONG((decQuad *)(source), 0);                                  \
     uint64_t sourlo = DFLONG((decQuad *)(source), 1);                                  \
     uint64_t mask = (sourhi >> 44) << 44;                                              \
@@ -617,7 +618,14 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   // move everything to the first declet onwards
   shiftdec(src, dest, (zeros - 1) / 3);
 
-  uInt sourhi = DFWORD((decQuad *)(dest), 0);
+  uInt sourhi = DFWORD((decQuad*)dest, 0);
+#if DECPMAX == 16
+  uInt sourlo = DFWORD((decQuad*)dest, 1);
+#elif DECPMAX == 34
+  uInt sourmh = DFWORD((decQuad*)dest, 1);
+  uInt sourml = DFWORD((decQuad*)dest, 2);
+  uInt sourlo = DFWORD((decQuad*)dest, 3);
+#endif
 
 #if DECPMAX == 7
   uint64_t firstdec = sourhi >> 10;
@@ -626,7 +634,6 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   uint64_t firstdec = sourhi >> 8;
 
 #elif DECPMAX == 34
-  printf("DECPMAX == 34\n");
   uint64_t firstdec = sourhi >> 4;
 #endif
 
@@ -643,7 +650,8 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
 
   switch (len) {
   case 1:
-    // move first digit into the separate digit
+    printf("CASE 1, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
+    // move third digit into the separate digit
     DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] |
                                   (sourhi & ECONMASK);
 
@@ -651,10 +659,48 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     shiftdec(dest, dest, 1);
     break;
   case 2:
-    printf("CASE 2\n");
+    printf("CASE 2, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
+
+    #define shiftdeclet2(leftover, dec) \
+    ({\
+      uByte old = leftover;\
+      uByte f = *(dpd2bcd8addr(dec) + 0);\
+      uByte s = *(dpd2bcd8addr(dec) + 1);\
+      uByte t = *(dpd2bcd8addr(dec) + 2);\
+      leftover = t; \
+      BIN2DPD[(old * 100) + (f * 10) + s];\
+    })
+      //printf("shiftdeclet2, leftover was %hhu, first %hhu, second %hhu, third %hhu\n", leftover, f, s, t);
+
+    uint64_t binval = DPD2BIN[((sourhi & ~ECONMASK) >> 10) & 0x3ff];
+
+    // move second digit into the separate digit
+    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + second] |
+                                  (sourhi & ECONMASK);
+
+    DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(third * 100) + (binval / 10)] << 36) | 
+                                    (shiftdeclet2(third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
+                                    (shiftdeclet2(third, (sourmh >> 16)) << 16) | 
+                                    (shiftdeclet2(third, (sourmh >> 6)) << 6);
+    
+    uint64_t tmp = shiftdeclet2(third, (sourmh << 4) | (sourml >> 28));
+    DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
+    DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
+                                   shiftdeclet2(third, sourml >> 18) |
+                                   shiftdeclet2(third, sourml >> 8) |
+                                   shiftdeclet2(third, (sourml << 2) | (sourlo >> 30)) |
+                                   shiftdeclet2(third, sourlo >> 20) |
+                                   shiftdeclet2(third, sourlo >> 10) |
+                                   shiftdeclet2(third, sourlo);
+
     break;
   case 3:
-    printf("CASE 3\n");
+    printf("CASE 3, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
+
+    // move first digit into the separate digit
+    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + first] |
+                                  (sourhi & ECONMASK);
+
     break;
   default:
     break;
