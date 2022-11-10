@@ -641,12 +641,12 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   comb = sourhi >> 26;    /* sign+combination field */
   exp = DECCOMBEXP[comb]; /* .. */
 
-  // move first digit into the separate digit
-  DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] |
-                                (sourhi & ECONMASK);
-
   switch (len) {
   case 1:
+    // move first digit into the separate digit
+    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] |
+                                  (sourhi & ECONMASK);
+
     // move everything up one declet
     shiftdec(dest, dest, 1);
     break;
