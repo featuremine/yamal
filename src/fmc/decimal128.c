@@ -649,7 +649,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   exp = DECCOMBEXP[comb]; /* .. */
 
   switch (len) {
-  case 1:
+  case 1: {
     printf("CASE 1, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
     // move third digit into the separate digit
     DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] |
@@ -657,8 +657,8 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
 
     // move everything up one declet
     shiftdec(dest, dest, 1);
-    break;
-  case 2:
+  } break;
+  case 2: {
     printf("CASE 2, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
 
     #define shiftdeclet2(leftover, dec) \
@@ -670,7 +670,6 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
       leftover = t; \
       BIN2DPD[(old * 100) + (f * 10) + s];\
     })
-      //printf("shiftdeclet2, leftover was %hhu, first %hhu, second %hhu, third %hhu\n", leftover, f, s, t);
 
     uint64_t binval = DPD2BIN[((sourhi & ~ECONMASK) >> 10) & 0x3ff];
 
@@ -678,6 +677,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + second] |
                                   (sourhi & ECONMASK);
 
+    // shift declets taking into account leftover digit
     DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(third * 100) + (binval / 10)] << 36) | 
                                     (shiftdeclet2(third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
                                     (shiftdeclet2(third, (sourmh >> 16)) << 16) | 
@@ -693,15 +693,45 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
                                    shiftdeclet2(third, sourlo >> 10) |
                                    shiftdeclet2(third, sourlo);
 
-    break;
-  case 3:
+  } break;
+  case 3: {
     printf("CASE 3, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
+
+    #define shiftdeclet3(leftover1, leftover2, dec) \
+    ({\
+      uByte old1 = leftover1;\
+      uByte old2 = leftover2;\
+      uByte f = *(dpd2bcd8addr(dec) + 0);\
+      uByte s = *(dpd2bcd8addr(dec) + 1);\
+      uByte t = *(dpd2bcd8addr(dec) + 2);\
+      leftover1 = s; \
+      leftover2 = t; \
+      BIN2DPD[(old1 * 100) + (old2 * 10) + f];\
+    })
+
+    uint64_t binval = DPD2BIN[((sourhi & ~ECONMASK) >> 10) & 0x3ff];
 
     // move first digit into the separate digit
     DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + first] |
                                   (sourhi & ECONMASK);
 
-    break;
+    // // shift declets taking into account leftover digits
+    // DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(second * 100) + (third * 10) + (binval / 100)] << 36) | 
+    //                                 (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
+    //                                 (shiftdeclet3(second, third, (sourmh >> 16)) << 16) | 
+    //                                 (shiftdeclet3(second, third, (sourmh >> 6)) << 6);
+    
+    // uint64_t tmp = shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28));
+    // DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
+    // DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
+    //                                shiftdeclet3(second, third, sourml >> 18) |
+    //                                shiftdeclet3(second, third, sourml >> 8) |
+    //                                shiftdeclet3(second, third, (sourml << 2) | (sourlo >> 30)) |
+    //                                shiftdeclet3(second, third, sourlo >> 20) |
+    //                                shiftdeclet3(second, third, sourlo >> 10) |
+    //                                shiftdeclet3(second, third, sourlo);
+
+  } break;
   default:
     break;
   }

@@ -1831,6 +1831,28 @@ TEST(decimal128, cannonicalize) {
   std::cout<<"cannon: "<< cannon<<std::endl;
   EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
   EXPECT_EQ(a, cannon);
+
+  a = 222;
+  std::cout<<"a: "<< a<<std::endl;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  std::cout<<"cannon: "<< cannon<<std::endl;
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+
+  fmc_decimal128_from_str(&a, "999999999999999999999999999999999", &err);
+  std::cout<<"a: "<< a<<std::endl;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  std::cout<<"cannon: "<< cannon<<std::endl;
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+
+  fmc_decimal128_from_str(&a, "999999999999999999999999999999999E55", &err);
+  std::cout<<"a: "<< a<<std::endl;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  std::cout<<"cannon: "<< cannon<<std::endl;
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+
 }
 
 GTEST_API_ int main(int argc, char **argv) {
