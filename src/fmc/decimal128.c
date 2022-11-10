@@ -499,6 +499,8 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
   decQuadSetExponent((decQuad *)res, get_context(), exp);
 }
 
+#define dpd2bcd8addr(dpdin) &DPD2BCD8[((dpdin)&0x3ff) * 4]
+
 int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   const decQuad *df = (const decQuad *)val;
   uInt msd;       /* coefficient MSD */
@@ -523,7 +525,7 @@ int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   const uByte *u; /* .. */
 
 #define dpd2deccount(dpdin)                                                    \
-  u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
+  u = dpd2bcd8addr(dpdin);                                                     \
   left_zeros += (!stop) * (3 - *(u + 3));                                      \
   stop |= *(u + 3);
 
@@ -592,63 +594,76 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
 
 void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t *src) {
 
-  // u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
-  // left_zeros += (!stop) * (3 - *(u + 3));                                      \
-
   int zeros = fmc_decimal128_lead_zeros(src);
 
   if (!zeros) {
     return;
   }
 
-  printf("Found %d zeros\n", zeros);
-
-  int shift = ((zeros - 1) / 3) * 10;
-
-  printf("Will shift by %d\n", shift);
-
-  uint64_t sourhi, sourlo;
-
-  sourhi = DFLONG((decQuad *)src, 0);
-  sourlo = DFLONG((decQuad *)src, 1);
-
-  uint64_t mask = (sourhi >> 44) << 44;
-  DFLONG((decQuad *)dest, 0) = mask |
-                               ((sourhi & ~mask) << shift) |
-                               (sourlo << (shift - 64));
-  DFLONG((decQuad *)dest, 1) = (shift < 64) * (sourlo << shift);
-
-  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-  printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
-
-  int32_t exp = decQuadGetExponent((decQuad *)dest);
-  printf("exp is %d and zeros is %d\n", exp, zeros);
-  exp -= zeros - 3;
-  printf("exp is %d and zeros is %d\n", exp, zeros);
-  decQuadSetExponent((decQuad *)dest, get_context(), exp);
-
-  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-  printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+#define shiftdec(source, destination, offset)                                          \
+  ({                                                                                   \
+    uint64_t decoffset = (offset) * 10;                                                \
+    printf("DECOFFSET IS %llu\n", decoffset);\
+    uint64_t sourhi = DFLONG((decQuad *)(source), 0);                                  \
+    uint64_t sourlo = DFLONG((decQuad *)(source), 1);                                  \
+    uint64_t mask = (sourhi >> 44) << 44;                                              \
+    DFLONG((decQuad *)(destination), 0) = mask |                                       \
+                                ((sourhi & ~mask) << decoffset) |                      \
+                                ((decoffset <= 64) * (sourlo >> (64 - decoffset))) |   \
+                                ((decoffset > 64) * (sourlo << (decoffset - 64)));     \
+    DFLONG((decQuad *)(destination), 1) = (decoffset < 64) * (sourlo << decoffset);    \
+  })
 
   // move everything to the first declet onwards
+  shiftdec(src, dest, (zeros - 1) / 3);
 
-  // move first digit into the special place
+  uInt sourhi = DFWORD((decQuad *)(dest), 0);
 
-  // handle special shift depending on how many digits are on the first declet
+#if DECPMAX == 7
+  uint64_t firstdec = sourhi >> 10;
 
-  // 1 digit in declet
+#elif DECPMAX == 16
+  uint64_t firstdec = sourhi >> 8;
 
-  // 
+#elif DECPMAX == 34
+  printf("DECPMAX == 34\n");
+  uint64_t firstdec = sourhi >> 4;
+#endif
 
-  //special cases:
-  // 1
-  // move to special digit, move everything 
-  // 2
-  // 3
-  // off by 3, it means we miss 1st special and 2 more, one digit in the first declet to move to the front
-  // take that digit, move it to the front and shift everything
+  uByte len = *(dpd2bcd8addr(firstdec) + 3);
+  uByte first = *(dpd2bcd8addr(firstdec) + 0);
+  uByte second = *(dpd2bcd8addr(firstdec) + 1);
+  uByte third = *(dpd2bcd8addr(firstdec) + 2);
 
-  // one is missing, one zero in the front
+  Int exp;        /* exponent top two bits or full */
+  uInt comb;      /* combination field */
 
-  // two zeros in the front
+  comb = sourhi >> 26;    /* sign+combination field */
+  exp = DECCOMBEXP[comb]; /* .. */
+
+  // move first digit into the separate digit
+  DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] |
+                                (sourhi & ECONMASK);
+
+  switch (len) {
+  case 1:
+    // move everything up one declet
+    shiftdec(dest, dest, 1);
+    break;
+  case 2:
+    printf("CASE 2\n");
+    break;
+  case 3:
+    printf("CASE 3\n");
+    break;
+  default:
+    break;
+  }
+
+  int32_t qexp = decQuadGetExponent((decQuad *)dest);
+  qexp -= zeros;
+  decQuadSetExponent((decQuad *)dest, get_context(), qexp);
+
+  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+  printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 }
