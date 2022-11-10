@@ -716,21 +716,22 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
                                   (sourhi & ECONMASK);
 
     // shift declets taking into account leftover digits
-    printf("BINARY NUMBER THAT WILL BE ADDED SHOULD BE DPD OF 22 BUT IS INSTEAD DPD OF %llu\n", (second * 100) + (third * 10) + (binval / 100));
-    DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(second * 100) + (third * 10) + (binval / 100)] << 36) | 
-                                    (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
+    DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(second * 100) + (third * 10) + (binval / 100)] << 36);
+    second = (binval % 100) / 10;
+    third = binval % 10;
+    DFLONG((decQuad *)(dest), 0) |= (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
                                     (shiftdeclet3(second, third, (sourmh >> 16)) << 16) | 
                                     (shiftdeclet3(second, third, (sourmh >> 6)) << 6);
     
-    // uint64_t tmp = shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28));
-    // DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
-    // DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
-    //                                shiftdeclet3(second, third, sourml >> 18) |
-    //                                shiftdeclet3(second, third, sourml >> 8) |
-    //                                shiftdeclet3(second, third, (sourml << 2) | (sourlo >> 30)) |
-    //                                shiftdeclet3(second, third, sourlo >> 20) |
-    //                                shiftdeclet3(second, third, sourlo >> 10) |
-    //                                shiftdeclet3(second, third, sourlo);
+    uint64_t tmp = shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28));
+    DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
+    DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
+                                   shiftdeclet3(second, third, sourml >> 18) |
+                                   shiftdeclet3(second, third, sourml >> 8) |
+                                   shiftdeclet3(second, third, (sourml << 2) | (sourlo >> 30)) |
+                                   shiftdeclet3(second, third, sourlo >> 20) |
+                                   shiftdeclet3(second, third, sourlo >> 10) |
+                                   shiftdeclet3(second, third, sourlo);
 
   } break;
   default:
