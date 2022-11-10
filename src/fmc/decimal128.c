@@ -644,8 +644,8 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   uByte second = *(dpd2bcd8addr(firstdec) + 1);
   uByte third = *(dpd2bcd8addr(firstdec) + 2);
 
-  /* get exponent high bits (in place) + continuation */
-  Int exp = GETEXPUN((decQuad *)dest);
+  uInt exp = DECCOMBEXP[sourhi >> 26] + GETECON((decQuad*)dest) + zeros;
+  printf("exponent actually looks like this!!! %x\n", exp);
 
   switch (len) {
   case 1: {
@@ -711,36 +711,23 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     })
 
     // move first digit into the separate digit
-    printf("value of shifted exp should be 0-2 and is now: %d\n", ((exp + zeros) >> DECECONL));
-    DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[(((exp + zeros) >> DECECONL) << 4) + first]) << 32; // | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
-
-    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-    printf("dest after setting up 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
+    DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + first]) << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+                                   ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
+    printf("dest after setting up continuation of exponent 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     // shift declets taking into account leftover digits
     uint64_t binval = DPD2BIN[(sourhi >> 4) & 0x3ff];
-    printf("BINVAL IS %llu\n", binval);
-    printf("after successfully setting up, attempting to add binary %d which is as dpd %d\n", (second * 100) + (third * 10) + (binval / 100), BIN2DPD[(second * 100) + (third * 10) + (binval / 100)]);
     DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(second * 100) + (third * 10) + (binval / 100)] << 36);
     second = (binval % 100) / 10;
     third = binval % 10;
 
-    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
-
-    printf("after successfully adding the first declet, attempting to add the rest with second %d and third %d\n", second, third);
     DFLONG((decQuad *)(dest), 0) |= (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
                                     (shiftdeclet3(second, third, (sourmh >> 16)) << 16) | 
                                     (shiftdeclet3(second, third, (sourmh >> 6)) << 6);
-    
-    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     uint64_t tmp = shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28));
     DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
-
-    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
                                    shiftdeclet3(second, third, sourml >> 18) |
@@ -759,13 +746,6 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   uByte sign = (uByte)(DFBYTE((decQuad *)src, 0) & 0x80); /* save sign bit */
   DFBYTE((decQuad *)dest, 0) &= ~0x80;                            /* clear sign .. */
   DFBYTE((decQuad *)dest, 0) = (uByte)(DFBYTE((decQuad *)dest, 0) | sign); /* .. and set saved */
-
-  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-  printf("before shifting exponent dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
-
-  // int32_t qexp = decQuadGetExponent((decQuad *)src);
-  // qexp -= zeros;
-  // decQuadSetExponent((decQuad *)dest, get_context(), qexp);
 
   printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
   printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
