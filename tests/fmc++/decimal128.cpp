@@ -1787,6 +1787,16 @@ TEST(decimal128, move) {
   ASSERT_EQ(b, c);
 }
 
+TEST(decimal128, cannonicalize) {
+  fmc::decimal128 a(5);
+  std::cout<<"a: "<< a<<std::endl;
+  fmc::decimal128 cannon;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  std::cout<<"cannon: "<< cannon<<std::endl;
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

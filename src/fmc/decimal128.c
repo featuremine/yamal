@@ -589,3 +589,66 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
 
   return max_digits - left_zeros + exp - 1;
 }
+
+void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t *src) {
+
+  // u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
+  // left_zeros += (!stop) * (3 - *(u + 3));                                      \
+
+  int zeros = fmc_decimal128_lead_zeros(src);
+
+  if (!zeros) {
+    return;
+  }
+
+  printf("Found %d zeros\n", zeros);
+
+  int shift = ((zeros - 1) / 3) * 10;
+
+  printf("Will shift by %d\n", shift);
+
+  uint64_t sourhi, sourlo;
+
+  sourhi = DFLONG((decQuad *)src, 0);
+  sourlo = DFLONG((decQuad *)src, 1);
+
+  uint64_t mask = (sourhi >> 44) << 44;
+  DFLONG((decQuad *)dest, 0) = mask |
+                               ((sourhi & ~mask) << shift) |
+                               (sourlo << (shift - 64));
+  DFLONG((decQuad *)dest, 1) = (shift < 64) * (sourlo << shift);
+
+  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+  printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+
+  int32_t exp = decQuadGetExponent((decQuad *)dest);
+  printf("exp is %d and zeros is %d\n", exp, zeros);
+  exp -= zeros - 3;
+  printf("exp is %d and zeros is %d\n", exp, zeros);
+  decQuadSetExponent((decQuad *)dest, get_context(), exp);
+
+  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+  printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+
+  // move everything to the first declet onwards
+
+  // move first digit into the special place
+
+  // handle special shift depending on how many digits are on the first declet
+
+  // 1 digit in declet
+
+  // 
+
+  //special cases:
+  // 1
+  // move to special digit, move everything 
+  // 2
+  // 3
+  // off by 3, it means we miss 1st special and 2 more, one digit in the first declet to move to the front
+  // take that digit, move it to the front and shift everything
+
+  // one is missing, one zero in the front
+
+  // two zeros in the front
+}
