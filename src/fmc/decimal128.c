@@ -642,17 +642,15 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   uByte second = *(dpd2bcd8addr(firstdec) + 1);
   uByte third = *(dpd2bcd8addr(firstdec) + 2);
 
-  Int exp;        /* exponent top two bits or full */
-  uInt comb;      /* combination field */
-
-  comb = sourhi >> 26;    /* sign+combination field */
-  exp = DECCOMBEXP[comb]; /* .. */
+  /* get exponent high bits (in place) + continuation */
+  Int exp = DECCOMBEXP[sourhi >> 26] + GETECON((decQuad *)dest);
 
   switch (len) {
   case 1: {
     printf("CASE 1, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
     // move third digit into the separate digit
-    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] |
+    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
+    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + third] | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
                                   (sourhi & ECONMASK);
 
     // move everything up one declet
@@ -674,7 +672,8 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     uint64_t binval = DPD2BIN[((sourhi & ~ECONMASK) >> 10) & 0x3ff];
 
     // move second digit into the separate digit
-    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + second] |
+    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
+    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + second] | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
                                   (sourhi & ECONMASK);
 
     // shift declets taking into account leftover digit
@@ -695,7 +694,10 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
 
   } break;
   case 3: {
-    printf("CASE 3, len %hhu, first %hhu, second %hhu, third %hhu\n", len, first, second, third);
+    printf("CASE 3, zeros, %d, len %hhu, first %hhu, second %hhu, third %hhu\n", zeros, len, first, second, third);
+
+    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+    printf("dest after main shift 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     #define shiftdeclet3(leftover1, leftover2, dec) \
     ({\
@@ -712,19 +714,34 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     uint64_t binval = DPD2BIN[((sourhi & ~ECONMASK) >> 10) & 0x3ff];
 
     // move first digit into the separate digit
-    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + first] |
+    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
+    DFWORD((decQuad *)(dest), 0) = DECCOMBFROM[((exp >> DECECONL) << 4) + first] | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
                                   (sourhi & ECONMASK);
+
+    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     // shift declets taking into account leftover digits
     DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(second * 100) + (third * 10) + (binval / 100)] << 36);
     second = (binval % 100) / 10;
     third = binval % 10;
+
+    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+
     DFLONG((decQuad *)(dest), 0) |= (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
                                     (shiftdeclet3(second, third, (sourmh >> 16)) << 16) | 
                                     (shiftdeclet3(second, third, (sourmh >> 6)) << 6);
     
+    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+
     uint64_t tmp = shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28));
     DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
+
+    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
+    printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
+
     DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
                                    shiftdeclet3(second, third, sourml >> 18) |
                                    shiftdeclet3(second, third, sourml >> 8) |
@@ -737,6 +754,11 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   default:
     break;
   }
+
+  // copy sign
+  uByte sign = (uByte)(DFBYTE((decQuad *)src, 0) & 0x80); /* save sign bit */
+  DFBYTE((decQuad *)dest, 0) &= ~0x80;                            /* clear sign .. */
+  DFBYTE((decQuad *)dest, 0) = (uByte)(DFBYTE((decQuad *)dest, 0) | sign); /* .. and set saved */
 
   int32_t qexp = decQuadGetExponent((decQuad *)dest);
   qexp -= zeros;
