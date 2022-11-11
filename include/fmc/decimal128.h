@@ -43,6 +43,10 @@ FMMODFUNC extern const fmc_decimal128_t fmc_decimal128_exp63[18];
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src,
                                        fmc_error_t **err);
 FMMODFUNC void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src);
+FMMODFUNC void fmc_decimal128_to_std_str(char *dest,
+                                         const fmc_decimal128_t *src,
+                                         size_t intdigits, size_t decdigits,
+                                         fmc_error_t **error);
 FMMODFUNC void fmc_decimal128_from_uint(fmc_decimal128_t *dest, uint64_t src);
 FMMODFUNC void fmc_decimal128_to_uint(uint64_t *dest,
                                       const fmc_decimal128_t *src,
