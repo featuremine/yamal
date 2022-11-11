@@ -586,7 +586,7 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
 
 void fmc_uint64_bebits(uint64_t u, char bits[64]) {
   char *p = bits;
-  for (size_t x = 64; x; ) {
+  for (size_t x = 64; x;) {
     --x;
     *(p++) = '0' + ((u & (1ULL << x)) >> x);
   }
@@ -600,8 +600,11 @@ void fmc_decimal128_bebits(const fmc_decimal128_t *dest, char bits[128]) {
 void fmc_decimal128_pretty(const fmc_decimal128_t *src) {
   char bits[129] = {0};
   fmc_decimal128_bebits(src, bits);
-  printf("%.1s %.5s %.12s %.10s %.10s %.10s %.10s %.10s %.10s %.10s %.10s %.10s %.10s %.10s\n", bits, bits+1, bits+6,
-         bits+18, bits+28, bits+38, bits+48, bits+58, bits+68, bits+78, bits+88, bits+98, bits+108, bits+118);
+  printf("%.1s %.5s %.12s %.10s %.10s %.10s %.10s %.10s %.10s %.10s %.10s "
+         "%.10s %.10s %.10s\n",
+         bits, bits + 1, bits + 6, bits + 18, bits + 28, bits + 38, bits + 48,
+         bits + 58, bits + 68, bits + 78, bits + 88, bits + 98, bits + 108,
+         bits + 118);
 }
 
 void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
@@ -610,12 +613,12 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
   char buf[43] = {0};
   fmc_decimal128_to_str(buf, src);
-  
+
   printf("%s -> ", buf);
   fmc_decimal128_pretty(src);
 
   int zeros = fmc_decimal128_lead_zeros(src);
-printf("zeros is %u\n", zeros);
+  printf("zeros is %u\n", zeros);
   if (!zeros) {
     dest->longs[0] = src->longs[0];
     dest->longs[1] = src->longs[1];
@@ -631,10 +634,9 @@ printf("zeros is %u\n", zeros);
     bool ss = decoffset < 64;                                                  \
     DFLONG((decQuad *)(destination), 0) =                                      \
         mask | ((sourhi & ~mask) << decoffset) |                               \
-        ( ((decoffset > 0) & ss) * (sourlo >> (64 - decoffset))) |             \
+        (((decoffset > 0) & ss) * (sourlo >> (64 - decoffset))) |              \
         (!ss * (sourlo << (decoffset - 64)));                                  \
-    DFLONG((decQuad *)(destination), 1) =                                      \
-        ss * (sourlo << decoffset);                                            \
+    DFLONG((decQuad *)(destination), 1) = ss * (sourlo << decoffset);          \
   })
 
   // move everything to the first declet onwards
@@ -646,7 +648,8 @@ printf("zeros is %u\n", zeros);
   const uint8_t *u = dpd2bcd8addr(DFWORD((decQuad *)dest, 0) >> 4);
   uInt sigdig = *(u + 3 - *(u + 3));
   exp *= !!sigdig;
-  uInt top18 = DECCOMBFROM[((exp >> DECECONL) << 4) + sigdig] | ((exp & 0xfff) << 14);
+  uInt top18 =
+      DECCOMBFROM[((exp >> DECECONL) << 4) + sigdig] | ((exp & 0xfff) << 14);
   DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
   DFWORD((decQuad *)(dest), 0) |= top18;
 
@@ -670,10 +673,10 @@ printf("zeros is %u\n", zeros);
   uint64_t dpdout = 0;
   uint32_t n = 0;
 
-#define dpd2sft(dpdin)                                               \
-  n = DPD2BIN[(dpdin)&0x3ff];                                        \
-  dpdout |= (uint64_t)(BIN2DPD[((n % rmd) * sft + carry)]) << mult;    \
-  carry = n / rmd;                                                   \
+#define dpd2sft(dpdin)                                                         \
+  n = DPD2BIN[(dpdin)&0x3ff];                                                  \
+  dpdout |= (uint64_t)(BIN2DPD[((n % rmd) * sft + carry)]) << mult;            \
+  carry = n / rmd;                                                             \
   mult += 10;
 
   /* Source words; macro handles endianness */
