@@ -635,10 +635,10 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
   switch (len) {
   case 1: {
     // move third digit into the separate digit
-    DFLONG((decQuad *)(dest), 0) =
-        ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + third])
-            << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
-        ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
+    DFWORD((decQuad *)(dest), 0) =
+        DECCOMBFROM[((exp >> DECECONL) << 4) +
+                    third] | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+        ((exp & 0xfff) << 14); /* exponent continuation */
     // move everything up one declet
     shiftdec(dest, dest, 1);
   } break;
@@ -651,31 +651,56 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
     uByte s = *(dpd2bcd8addr(dec) + 1);                                        \
     uByte t = *(dpd2bcd8addr(dec) + 2);                                        \
     leftover = t;                                                              \
-    (int64_t) BIN2DPD[(old * 100) + (f * 10) + s];                             \
+    BIN2DPD[(old * 100) + (f * 10) + s];                             \
   })
 
-    // move first digit into the separate digit
-    DFLONG((decQuad *)(dest), 0) =
-        ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + second])
-            << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
-        ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
+    // move second digit into the separate digit
+    DFWORD((decQuad *)(dest), 0) =
+        DECCOMBFROM[((exp >> DECECONL) << 4) +
+                    second] | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+        ((exp & 0xfff) << 14); /* exponent continuation */
 
-    // shift declets taking into account leftover digit
-    DFLONG((decQuad *)(dest), 0) |=
-        (shiftdeclet2(third, (sourhi << 6) | (sourmh >> 26)) << 36) |
-        (shiftdeclet2(third, (sourmh >> 16)) << 26) |
-        (shiftdeclet2(third, (sourmh >> 6)) << 16) |
+// shift declets taking into account leftover digits
+#if DECPMAX == 7
+
+    DFWORD((decQuad *)(dest), 0) |= shiftdeclet2(third, sourhi) << 10;
+
+#elif DECPMAX == 16
+
+    DFWORD((decQuad *)(dest), 0) |=
+        shiftdeclet2(third, (sourhi << 2) | (sourlo >> 30)) << 8;
+    Int declet = shiftdeclet2(third, (sourlo >> 20));
+    DFWORD((decQuad *)(dest), 0) |= (declet >> 2);
+
+    DFWORD((decQuad *)(dest), 1) =
+        (declet << 30) | (shiftdeclet2(third, (sourlo >> 10)) << 20) |
+        (shiftdeclet2(third, sourlo) << 10);
+
+#elif DECPMAX == 34
+
+    DFWORD((decQuad *)(dest), 0) |=
+        shiftdeclet2(third, (sourhi << 6) | (sourmh >> 26)) << 4;
+    Int declet = shiftdeclet2(third, (sourmh >> 16));
+    DFWORD((decQuad *)(dest), 0) |= (declet >> 6);
+
+    DFWORD((decQuad *)(dest), 1) =
+        (declet << 26) | (shiftdeclet2(third, (sourmh >> 6)) << 16) |
         (shiftdeclet2(third, (sourmh << 4) | (sourml >> 28)) << 6);
 
-    uint64_t tmp = shiftdeclet2(third, sourml >> 18);
-    DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
+    declet = shiftdeclet2(third, sourml >> 18);
+    DFWORD((decQuad *)(dest), 1) |= (declet >> 4);
 
-    DFLONG((decQuad *)(dest), 1) =
-        (tmp << 60) | (shiftdeclet2(third, sourml >> 8) << 50) |
-        (shiftdeclet2(third, (sourml << 2) | (sourlo >> 30)) << 40) |
-        (shiftdeclet2(third, sourlo >> 20) << 30) |
-        (shiftdeclet2(third, sourlo >> 10) << 20) |
-        (shiftdeclet2(third, sourlo) << 10) | BIN2DPD[(third * 100)];
+    DFWORD((decQuad *)(dest), 2) =
+        (declet << 28) | (shiftdeclet2(third, sourml >> 8) << 18) |
+        (shiftdeclet2(third, (sourml << 2) | (sourlo >> 30)) << 8);
+    declet = shiftdeclet2(third, sourlo >> 20);
+    DFWORD((decQuad *)(dest), 2) |= (declet >> 2);
+
+    DFWORD((decQuad *)(dest), 3) =
+        (declet << 30) | (shiftdeclet2(third, sourlo >> 10) << 20) |
+        (shiftdeclet2(third, sourlo) << 10) |
+        BIN2DPD[(third * 100)];
+#endif
 
   } break;
   case 3: {
@@ -689,7 +714,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
     uByte t = *(dpd2bcd8addr(dec) + 2);                                        \
     leftover1 = s;                                                             \
     leftover2 = t;                                                             \
-    (int64_t) BIN2DPD[(old1 * 100) + (old2 * 10) + f];                         \
+    BIN2DPD[(old1 * 100) + (old2 * 10) + f];                         \
   })
 
     // move first digit into the separate digit
