@@ -651,13 +651,14 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
     uByte s = *(dpd2bcd8addr(dec) + 1);                                        \
     uByte t = *(dpd2bcd8addr(dec) + 2);                                        \
     leftover = t;                                                              \
-    BIN2DPD[(old * 100) + (f * 10) + s];                             \
+    BIN2DPD[(old * 100) + (f * 10) + s];                                       \
   })
 
     // move second digit into the separate digit
     DFWORD((decQuad *)(dest), 0) =
         DECCOMBFROM[((exp >> DECECONL) << 4) +
-                    second] | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+                    second] |  // DECCOMBFROM is indexed by expTopTwoBits*16 +
+                               // msd
         ((exp & 0xfff) << 14); /* exponent continuation */
 
 // shift declets taking into account leftover digits
@@ -672,9 +673,9 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
     Int declet = shiftdeclet2(third, (sourlo >> 20));
     DFWORD((decQuad *)(dest), 0) |= (declet >> 2);
 
-    DFWORD((decQuad *)(dest), 1) =
-        (declet << 30) | (shiftdeclet2(third, (sourlo >> 10)) << 20) |
-        (shiftdeclet2(third, sourlo) << 10);
+    DFWORD((decQuad *)(dest), 1) = (declet << 30) |
+                                   (shiftdeclet2(third, (sourlo >> 10)) << 20) |
+                                   (shiftdeclet2(third, sourlo) << 10);
 
 #elif DECPMAX == 34
 
@@ -698,8 +699,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
 
     DFWORD((decQuad *)(dest), 3) =
         (declet << 30) | (shiftdeclet2(third, sourlo >> 10) << 20) |
-        (shiftdeclet2(third, sourlo) << 10) |
-        BIN2DPD[(third * 100)];
+        (shiftdeclet2(third, sourlo) << 10) | BIN2DPD[(third * 100)];
 #endif
 
   } break;
@@ -714,7 +714,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
     uByte t = *(dpd2bcd8addr(dec) + 2);                                        \
     leftover1 = s;                                                             \
     leftover2 = t;                                                             \
-    BIN2DPD[(old1 * 100) + (old2 * 10) + f];                         \
+    BIN2DPD[(old1 * 100) + (old2 * 10) + f];                                   \
   })
 
     // move first digit into the separate digit
