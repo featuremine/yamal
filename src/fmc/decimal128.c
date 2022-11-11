@@ -617,7 +617,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   printf("%s -> ", buf);
   fmc_decimal128_pretty(src);
 
-  int zeros = fmc_decimal128_lead_zeros(src);
+  uint32_t zeros = fmc_decimal128_lead_zeros(src);
   printf("zeros is %u\n", zeros);
   if (!zeros) {
     dest->longs[0] = src->longs[0];
@@ -644,11 +644,11 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   fmc_decimal128_pretty(src);
   fmc_decimal128_pretty(dest);
 
-  uInt exp = GETEXP((decQuad *)src) - zeros;
+  uint32_t exp = GETEXP((decQuad *)src) - zeros;
   const uint8_t *u = dpd2bcd8addr(DFWORD((decQuad *)dest, 0) >> 4);
-  uInt sigdig = *(u + 3 - *(u + 3));
+  uint32_t sigdig = *(u + 3 - *(u + 3));
   exp *= !!sigdig;
-  uInt top18 =
+  uint32_t top18 =
       DECCOMBFROM[((exp >> DECECONL) << 4) + sigdig] | ((exp & 0xfff) << 14);
   DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
   DFWORD((decQuad *)(dest), 0) |= top18;
@@ -675,7 +675,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
 #define dpd2sft(dpdin)                                                         \
   n = DPD2BIN[(dpdin)&0x3ff];                                                  \
-  dpdout |= (uint64_t)(BIN2DPD[((n % rmd) * sft + carry)]) << mult;            \
+  dpdout |= ((uint64_t)BIN2DPD[((n % rmd) * sft + carry)]) << mult;            \
   carry = n / rmd;                                                             \
   mult += 10;
 
@@ -704,7 +704,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourhi >> 4);                    /* declet 1 */
 
   DFLONG((decQuad *)(dest), 1) |= dpdout << 60;
-  DFLONG((decQuad *)(dest), 0) &= ~0x3FFFFFFFFFFFULL;
+  DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 
   fmc_decimal128_pretty(dest);
