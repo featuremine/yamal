@@ -644,8 +644,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   uByte second = *(dpd2bcd8addr(firstdec) + 1);
   uByte third = *(dpd2bcd8addr(firstdec) + 2);
 
-  uInt exp = DECCOMBEXP[sourhi >> 26] + GETECON((decQuad*)dest) + zeros;
-  printf("exponent actually looks like this!!! %x\n", exp);
+  uInt exp = DECCOMBEXP[sourhi >> 26] + GETECON((decQuad*)dest) - zeros;
 
   switch (len) {
   case 1: {
@@ -693,10 +692,6 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
 
   } break;
   case 3: {
-    printf("CASE 3, zeros, %d, len %hhu, first %hhu, second %hhu, third %hhu\n", zeros, len, first, second, third);
-
-    printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-    printf("dest after main shift 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     #define shiftdeclet3(leftover1, leftover2, dec) \
     ({\
@@ -711,31 +706,25 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     })
 
     // move first digit into the separate digit
-    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
     DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + first]) << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
                                    ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
-    printf("dest after setting up continuation of exponent 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 
     // shift declets taking into account leftover digits
-    uint64_t binval = DPD2BIN[(sourhi >> 4) & 0x3ff];
-    DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(second * 100) + (third * 10) + (binval / 100)] << 36);
-    second = (binval % 100) / 10;
-    third = binval % 10;
+    DFLONG((decQuad *)(dest), 0) |= (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 36) | 
+                                    (shiftdeclet3(second, third, (sourmh >> 16)) << 26) | 
+                                    (shiftdeclet3(second, third, (sourmh >> 6)) << 16) | 
+                                    (shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28)) << 6);
 
-    DFLONG((decQuad *)(dest), 0) |= (shiftdeclet3(second, third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
-                                    (shiftdeclet3(second, third, (sourmh >> 16)) << 16) | 
-                                    (shiftdeclet3(second, third, (sourmh >> 6)) << 6);
-
-    uint64_t tmp = shiftdeclet3(second, third, (sourmh << 4) | (sourml >> 28));
+    uint64_t tmp = shiftdeclet3(second, third, sourml >> 18);
     DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
 
     DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
-                                   shiftdeclet3(second, third, sourml >> 18) |
-                                   shiftdeclet3(second, third, sourml >> 8) |
-                                   shiftdeclet3(second, third, (sourml << 2) | (sourlo >> 30)) |
-                                   shiftdeclet3(second, third, sourlo >> 20) |
-                                   shiftdeclet3(second, third, sourlo >> 10) |
-                                   shiftdeclet3(second, third, sourlo);
+                                   (shiftdeclet3(second, third, sourml >> 8) << 50) |
+                                   (shiftdeclet3(second, third, (sourml << 2) | (sourlo >> 30)) << 40) |
+                                   (shiftdeclet3(second, third, sourlo >> 20) << 30) |
+                                   (shiftdeclet3(second, third, sourlo >> 10) << 20) |
+                                   (shiftdeclet3(second, third, sourlo) << 10) |
+                                   BIN2DPD[(second * 100) + (third * 10)];
 
   } break;
   default:
