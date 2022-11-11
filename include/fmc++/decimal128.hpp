@@ -321,8 +321,10 @@ isnan(T x) {
 template <> struct hash<fmc_decimal128_t> {
   size_t operator()(const fmc_decimal128_t &k) const noexcept {
     static_assert(sizeof(k.longs) / sizeof(int64_t) == 2);
-    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t *)&k.longs[0]),
-                            std::hash<int64_t>{}(*(int64_t *)&k.longs[1]));
+    fmc_decimal128_t res;
+    fmc_decimal128_cannonicalize(&res, &k);
+    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t *)&res.longs[0]),
+                            std::hash<int64_t>{}(*(int64_t *)&res.longs[1]));
   }
 };
 

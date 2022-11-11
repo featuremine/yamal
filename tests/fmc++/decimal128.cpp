@@ -1789,119 +1789,87 @@ static_assert(alignof(decQuad) == alignof(fmc_decimal128_t),
 
 TEST(decimal128, cannonicalize) {
   fmc::decimal128 a(5);
-  // std::cout<<"a: "<< a<<std::endl;
   fmc::decimal128 cannon;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
   fmc_error_t *err;
-  // fmc_decimal128_from_str(&a, "9999999999999999999999999999999999", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "9999999999999999999999999999999999", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "-9999999999999999999999999999999999", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "-9999999999999999999999999999999999", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "9999999999999999999999999999999999E32", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "9999999999999999999999999999999999E32", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "-9999999999999999999999999999999999E32", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "-9999999999999999999999999999999999E32", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // a = 0;
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 34); // should it return zero?
-  // EXPECT_EQ(a, cannon);
+  a = 0;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 34); // should it return zero?
+  ASSERT_EQ(a, cannon);
 
-  // a = 22;
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  a = 22;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // a = -22;
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  a = -22;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "9099999999999999999999999999999999", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "9099999999999999999999999999999999", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "-9099999999999999999999999999999999", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "-9099999999999999999999999999999999", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "9099999999999999999999999999999999E55", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "9099999999999999999999999999999999E55", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "-9099999999999999999999999999999999E55", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  fmc_decimal128_from_str(&a, "-9099999999999999999999999999999999E55", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // a = 222;
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  a = 222;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // a = -222;
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
+  a = -222;
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
   fmc_decimal128_from_str(&a, "999999999999999999999999999999999", &err);
-  std::cout<<"a: "<< a<<std::endl;
   fmc_decimal128_cannonicalize(&cannon, &a);
-  std::cout<<"cannon: "<< cannon<<std::endl;
-  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  EXPECT_EQ(a, cannon);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
 
-  // fmc_decimal128_from_str(&a, "999999999999999999999999999999999E55", &err);
-  // std::cout<<"a: "<< a<<std::endl;
-  // fmc_decimal128_cannonicalize(&cannon, &a);
-  // std::cout<<"cannon: "<< cannon<<std::endl;
-  // EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
-  // EXPECT_EQ(a, cannon);
-
+  fmc_decimal128_from_str(&a, "999999999999999999999999999999999E55", &err);
+  fmc_decimal128_cannonicalize(&cannon, &a);
+  ASSERT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  ASSERT_EQ(a, cannon);
+  ASSERT_EQ(std::hash<fmc_decimal128_t>{}(a), std::hash<fmc_decimal128_t>{}(cannon));
 }
 
 GTEST_API_ int main(int argc, char **argv) {

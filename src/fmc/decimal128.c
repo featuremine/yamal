@@ -651,7 +651,8 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     printf("CASE 1, zeros, %d, len %hhu, first %hhu, second %hhu, third %hhu\n", zeros, len, first, second, third);
     // move third digit into the separate digit
     printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
-    DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + third]) << 32; // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+    DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + third]) << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+                                   ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
     // move everything up one declet
     shiftdec(dest, dest, 1);
   } break;
@@ -665,30 +666,29 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
       uByte s = *(dpd2bcd8addr(dec) + 1);\
       uByte t = *(dpd2bcd8addr(dec) + 2);\
       leftover = t; \
-      BIN2DPD[(old * 100) + (f * 10) + s];\
+      (int64_t)BIN2DPD[(old * 100) + (f * 10) + s];\
     })
 
-    uint64_t binval = DPD2BIN[((sourhi & ~ECONMASK) >> 10) & 0x3ff];
-
-    // move second digit into the separate digit
-    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
-    DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + second]) << 32; // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+    // move first digit into the separate digit
+    DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + second]) << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
+                                   ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
 
     // shift declets taking into account leftover digit
-    DFLONG((decQuad *)(dest), 0) |= ((uint64_t)BIN2DPD[(third * 100) + (binval / 10)] << 36) | 
-                                    (shiftdeclet2(third, (sourhi << 6) | (sourmh >> 26)) << 26) | 
-                                    (shiftdeclet2(third, (sourmh >> 16)) << 16) | 
-                                    (shiftdeclet2(third, (sourmh >> 6)) << 6);
-    
-    uint64_t tmp = shiftdeclet2(third, (sourmh << 4) | (sourml >> 28));
+    DFLONG((decQuad *)(dest), 0) |= (shiftdeclet2(third, (sourhi << 6) | (sourmh >> 26)) << 36) | 
+                                    (shiftdeclet2(third, (sourmh >> 16)) << 26) | 
+                                    (shiftdeclet2(third, (sourmh >> 6)) << 16) | 
+                                    (shiftdeclet2(third, (sourmh << 4) | (sourml >> 28)) << 6);
+
+    uint64_t tmp = shiftdeclet2(third, sourml >> 18);
     DFLONG((decQuad *)(dest), 0) |= (tmp >> 4);
+
     DFLONG((decQuad *)(dest), 1) = (tmp << 60) |
-                                   shiftdeclet2(third, sourml >> 18) |
-                                   shiftdeclet2(third, sourml >> 8) |
-                                   shiftdeclet2(third, (sourml << 2) | (sourlo >> 30)) |
-                                   shiftdeclet2(third, sourlo >> 20) |
-                                   shiftdeclet2(third, sourlo >> 10) |
-                                   shiftdeclet2(third, sourlo);
+                                   (shiftdeclet2(third, sourml >> 8) << 50) |
+                                   (shiftdeclet2(third, (sourml << 2) | (sourlo >> 30)) << 40) |
+                                   (shiftdeclet2(third, sourlo >> 20) << 30) |
+                                   (shiftdeclet2(third, sourlo >> 10) << 20) |
+                                   (shiftdeclet2(third, sourlo) << 10) |
+                                   BIN2DPD[(third * 100)];
 
   } break;
   case 3: {
@@ -735,7 +735,4 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   uByte sign = (uByte)(DFBYTE((decQuad *)src, 0) & 0x80); /* save sign bit */
   DFBYTE((decQuad *)dest, 0) &= ~0x80;                            /* clear sign .. */
   DFBYTE((decQuad *)dest, 0) = (uByte)(DFBYTE((decQuad *)dest, 0) | sign); /* .. and set saved */
-
-  printf("source 0x%llx 0x%llx\n", DFLONG((decQuad *)src, 0), DFLONG((decQuad *)src, 1));
-  printf("dest 0x%llx 0x%llx\n", DFLONG((decQuad *)dest, 0), DFLONG((decQuad *)dest, 1));
 }
