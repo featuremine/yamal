@@ -704,7 +704,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourhi >> 4);                    /* declet 1 */
 
   DFLONG((decQuad *)(dest), 1) |= dpdout << 60;
-  DFLONG((decQuad *)(dest), 0) &= ~0x3FFFFFFFFFFF;
+  DFLONG((decQuad *)(dest), 0) &= ~0x3FFFFFFFFFFFULL;
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 
   fmc_decimal128_pretty(dest);
