@@ -619,23 +619,11 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   shiftdec(src, dest, (zeros - 1) / 3);
 
   uInt sourhi = DFWORD((decQuad*)dest, 0);
-#if DECPMAX == 16
-  uInt sourlo = DFWORD((decQuad*)dest, 1);
-#elif DECPMAX == 34
   uInt sourmh = DFWORD((decQuad*)dest, 1);
   uInt sourml = DFWORD((decQuad*)dest, 2);
   uInt sourlo = DFWORD((decQuad*)dest, 3);
-#endif
 
-#if DECPMAX == 7
-  uint64_t firstdec = sourhi >> 10;
-
-#elif DECPMAX == 16
-  uint64_t firstdec = sourhi >> 8;
-
-#elif DECPMAX == 34
   uint64_t firstdec = sourhi >> 4;
-#endif
 
   uByte len = *(dpd2bcd8addr(firstdec) + 3);
   uByte first = *(dpd2bcd8addr(firstdec) + 0);
