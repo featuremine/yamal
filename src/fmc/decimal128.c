@@ -617,7 +617,6 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
   })
 
   // move everything to the first declet onwards
-  printf("TRYING TO SHIFT BY %d\n", (zeros - 1) / 3);
   shiftdec(src, dest, (zeros - 1) / 3);
 
   uInt sourhi = DFWORD((decQuad*)dest, 0);
