@@ -667,7 +667,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   }
 
   uint32_t carry = 0;
-  uint32_t sft = 100 * (sigdig == 2) + 10 * (sigdig == 3);
+  uint32_t sft = 100 * (sigdig == 2) + 10 * (sigdig == 3) + (sigdig == 1 | sigdig == 0);
   uint32_t rmd = 1000 / sft;
   uint32_t mult = 0;
   uint64_t dpdout = 0;
