@@ -612,10 +612,15 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
   // move everything to the first declet onwards
   shiftdec(src, dest, (zeros - 1) / 3);
 
-  uInt sourhi = DFWORD((decQuad *)dest, 0);
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD((decQuad *)dest, 0); /* word with sign */
+#if DECPMAX == 16
+  uInt sourlo = DFWORD((decQuad *)dest, 1);
+#elif DECPMAX == 34
   uInt sourmh = DFWORD((decQuad *)dest, 1);
   uInt sourml = DFWORD((decQuad *)dest, 2);
   uInt sourlo = DFWORD((decQuad *)dest, 3);
+#endif
 
 #if DECPMAX == 7
   uint64_t firstdec = sourhi >> 10;
