@@ -503,25 +503,9 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
 
 int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   const decQuad *df = (const decQuad *)val;
-  uInt msd;  /* coefficient MSD */
-  uInt comb; /* combination field */
-
-  /* Source words; macro handles endianness */
-  uInt sourhi = DFWORD(df, 0); /* word with sign */
-#if DECPMAX == 16
-  uInt sourlo = DFWORD(df, 1);
-#elif DECPMAX == 34
-  uInt sourmh = DFWORD(df, 1);
-  uInt sourml = DFWORD(df, 2);
-  uInt sourlo = DFWORD(df, 3);
-#endif
-
-  comb = sourhi >> 26;    /* sign+combination field */
-  msd = DECCOMBMSD[comb]; /* decode the combination field */
-
+  uInt msd = GETMSD(df);  /* coefficient MSD */
   bool stop = msd != 0;
   int left_zeros = !stop;
-
   const uByte *u; /* .. */
 
 #define dpd2deccount(dpdin)                                                    \
@@ -529,11 +513,15 @@ int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   left_zeros += (!stop) * (3 - *(u + 3));                                      \
   stop |= *(u + 3);
 
+/* Source words; macro handles endianness */
+uInt sourhi = DFWORD(df, 0); /* word with sign */
 #if DECPMAX == 7
   dpd2deccount(sourhi >> 10); /* declet 1 */
   dpd2deccount(sourhi);       /* declet 2 */
 
 #elif DECPMAX == 16
+  uInt sourlo = DFWORD(df, 1);
+
   dpd2deccount(sourhi >> 8);                    /* declet 1 */
   dpd2deccount((sourhi << 2) | (sourlo >> 30)); /* declet 2 */
   dpd2deccount(sourlo >> 20);                   /* declet 3 */
@@ -541,6 +529,10 @@ int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   dpd2deccount(sourlo);                         /* declet 5 */
 
 #elif DECPMAX == 34
+  uInt sourmh = DFWORD(df, 1);
+  uInt sourml = DFWORD(df, 2);
+  uInt sourlo = DFWORD(df, 3);
+
   dpd2deccount(sourhi >> 4);                    /* declet 1 */
   dpd2deccount((sourhi << 6) | (sourmh >> 26)); /* declet 2 */
   dpd2deccount(sourmh >> 16);                   /* declet 3 */
@@ -638,7 +630,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
   uByte second = *(dpd2bcd8addr(firstdec) + 1);
   uByte third = *(dpd2bcd8addr(firstdec) + 2);
 
-  uInt exp = DECCOMBEXP[sourhi >> 26] + GETECON((decQuad *)dest) - zeros;
+  uInt exp = GETEXP((decQuad *)dest) - zeros;
 
   switch (len) {
   case 1: {
