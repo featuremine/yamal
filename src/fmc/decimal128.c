@@ -610,7 +610,6 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
     uint64_t mask = (sourhi >> 44) << 44;                                              \
     DFLONG((decQuad *)(destination), 0) = mask |                                       \
                                 ((sourhi & ~mask) << decoffset) |                      \
-                                ((decoffset == 0) * sourhi) | \
                                 ((decoffset > 0 && decoffset <= 64) * (sourlo >> (64 - decoffset))) |   \
                                 ((decoffset > 64) * (sourlo << (decoffset - 64)));     \
     DFLONG((decQuad *)(destination), 1) = (decoffset < 64) * (sourlo << decoffset);    \
@@ -647,16 +646,13 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest, const fmc_decimal128_t
 
   switch (len) {
   case 1: {
-    printf("CASE 1, zeros, %d, len %hhu, first %hhu, second %hhu, third %hhu\n", zeros, len, first, second, third);
     // move third digit into the separate digit
-    printf("value of shifted exp should be 0-2 and is now: %d\n", (exp >> DECECONL));
     DFLONG((decQuad *)(dest), 0) = ((uint64_t)DECCOMBFROM[((exp >> DECECONL) << 4) + third]) << 32 | // DECCOMBFROM is indexed by expTopTwoBits*16 + msd
                                    ((uint64_t)exp & 0xfff) << 46; /* exponent continuation */
     // move everything up one declet
     shiftdec(dest, dest, 1);
   } break;
   case 2: {
-    printf("CASE 2, zeros, %d, len %hhu, first %hhu, second %hhu, third %hhu\n", zeros, len, first, second, third);
 
     #define shiftdeclet2(leftover, dec) \
     ({\
