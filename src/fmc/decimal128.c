@@ -503,7 +503,7 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
 
 int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   const decQuad *df = (const decQuad *)val;
-  uInt msd = GETMSD(df);  /* coefficient MSD */
+  uInt msd = GETMSD(df); /* coefficient MSD */
   bool stop = msd != 0;
   int left_zeros = !stop;
   const uByte *u; /* .. */
@@ -513,8 +513,8 @@ int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   left_zeros += (!stop) * (3 - *(u + 3));                                      \
   stop |= *(u + 3);
 
-/* Source words; macro handles endianness */
-uInt sourhi = DFWORD(df, 0); /* word with sign */
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD(df, 0); /* word with sign */
 #if DECPMAX == 7
   dpd2deccount(sourhi >> 10); /* declet 1 */
   dpd2deccount(sourhi);       /* declet 2 */
