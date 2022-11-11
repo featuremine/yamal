@@ -600,7 +600,7 @@ void fmc_decimal128_cannonicalize(fmc_decimal128_t *dest,
     uint64_t decoffset = (offset)*10;                                          \
     uint64_t sourhi = DFLONG((decQuad *)(source), 0);                          \
     uint64_t sourlo = DFLONG((decQuad *)(source), 1);                          \
-    uint64_t mask = (sourhi >> 44) << 44;                                      \
+    uint64_t mask = (sourhi >> 46) << 46;                                      \
     DFLONG((decQuad *)(destination), 0) =                                      \
         mask | ((sourhi & ~mask) << decoffset) |                               \
         ((decoffset > 0 && decoffset <= 64) * (sourlo >> (64 - decoffset))) |  \
