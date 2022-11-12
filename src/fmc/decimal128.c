@@ -679,7 +679,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   printf("n -> %u\n", n);                                                      \
   printf("shifted -> %u\n", (n % rmd) * sft + carry);                          \
   dpdout |= ((uint64_t)BIN2DPD[(n % rmd) * sft + carry]) << mult;              \
-  printf("dpdout -> %lu\n", dpdout);                                           \
+  printf("dpdout -> %llu\n", dpdout);                                           \
   carry = n / rmd;                                                             \
   printf("carry -> %u\n", carry);                                              \
   mult += 10;
