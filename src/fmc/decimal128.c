@@ -646,7 +646,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
   uint32_t exp = GETEXP((decQuad *)src) - zeros;
   const uint8_t *u = dpd2bcd8addr(DFWORD((decQuad *)dest, 0) >> 4);
-  uint32_t sigdig = *(u + 3 - *(u + 3));
+  uint16_t sigdig = *(u + 3 - *(u + 3));
   exp *= !!sigdig;
   uint32_t top18 =
       DECCOMBFROM[((exp >> DECECONL) << 4) + sigdig] | ((exp & 0xfff) << 14);
@@ -666,18 +666,22 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
     return;
   }
 
-  uint32_t carry = 0;
-  uint32_t sft =
-      100 * (sigdig == 2) + 10 * (sigdig == 3) + (sigdig == 1 | sigdig == 0);
-  uint32_t rmd = 1000 / sft;
-  uint32_t mult = 0;
+  uint16_t carry = 0;
+  uint16_t sft =
+      100 * (sigdig == 2) + 10 * (sigdig == 3) + ((sigdig == 1) | (sigdig == 0));
+  uint16_t rmd = 1000 / sft;
+  uint16_t mult = 0;
   uint64_t dpdout = 0;
-  uint32_t n = 0;
+  uint16_t n = 0;
 
-#define dpd2sft(dpdin)                                                         \
-  n = DPD2BIN[(dpdin)&0x3ff];                                                  \
-  dpdout |= ((uint64_t)BIN2DPD[((n % rmd) * sft + carry)]) << mult;            \
-  carry = n / rmd;                                                             \
+#define dpd2sft(dpdin)                                            \
+  n = DPD2BIN[(dpdin)&0x3ff];                                     \
+  printf("n -> %u\n", n);                                         \
+  printf("shifted -> %u\n", (n % rmd) * sft + carry);             \
+  dpdout |= ((uint64_t)BIN2DPD[(n % rmd) * sft + carry]) << mult; \
+  printf("dpdout -> %lu\n", dpdout);                              \
+  carry = n / rmd;                                                \
+  printf("carry -> %u\n", carry);                                 \
   mult += 10;
 
   /* Source words; macro handles endianness */
@@ -705,8 +709,11 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourhi >> 4);                    /* declet 1 */
 
   DFLONG((decQuad *)(dest), 1) |= dpdout << 60;
-  DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
-  DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
+  fmc_decimal128_pretty(dest);
 
+  DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
+  fmc_decimal128_pretty(dest);
+
+  DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
   fmc_decimal128_pretty(dest);
 }
