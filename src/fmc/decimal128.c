@@ -641,7 +641,8 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
   // move everything to the first declet onwards
   shiftdec(src, dest, (zeros - 1) / 3);
-  printf("1: "); fmc_decimal128_pretty(src);
+  printf("1: ");
+  fmc_decimal128_pretty(src);
   printf("2: ");
   fmc_decimal128_pretty(dest);
 
