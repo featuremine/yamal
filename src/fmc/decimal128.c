@@ -667,21 +667,21 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   }
 
   uint16_t carry = 0;
-  uint16_t sft =
-      100 * (sigdig == 2) + 10 * (sigdig == 3) + ((sigdig == 1) | (sigdig == 0));
+  uint16_t sft = 100 * (sigdig == 2) + 10 * (sigdig == 3) +
+                 ((sigdig == 1) | (sigdig == 0));
   uint16_t rmd = 1000 / sft;
   uint16_t mult = 0;
   uint64_t dpdout = 0;
   uint16_t n = 0;
 
-#define dpd2sft(dpdin)                                            \
-  n = DPD2BIN[(dpdin)&0x3ff];                                     \
-  printf("n -> %u\n", n);                                         \
-  printf("shifted -> %u\n", (n % rmd) * sft + carry);             \
-  dpdout |= ((uint64_t)BIN2DPD[(n % rmd) * sft + carry]) << mult; \
-  printf("dpdout -> %lu\n", dpdout);                              \
-  carry = n / rmd;                                                \
-  printf("carry -> %u\n", carry);                                 \
+#define dpd2sft(dpdin)                                                         \
+  n = DPD2BIN[(dpdin)&0x3ff];                                                  \
+  printf("n -> %u\n", n);                                                      \
+  printf("shifted -> %u\n", (n % rmd) * sft + carry);                          \
+  dpdout |= ((uint64_t)BIN2DPD[(n % rmd) * sft + carry]) << mult;              \
+  printf("dpdout -> %lu\n", dpdout);                                           \
+  carry = n / rmd;                                                             \
+  printf("carry -> %u\n", carry);                                              \
   mult += 10;
 
   /* Source words; macro handles endianness */
