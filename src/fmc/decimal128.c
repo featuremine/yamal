@@ -641,7 +641,8 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
   // move everything to the first declet onwards
   shiftdec(src, dest, (zeros - 1) / 3);
-  fmc_decimal128_pretty(src);
+  printf("1: "); fmc_decimal128_pretty(src);
+  printf("2: ");
   fmc_decimal128_pretty(dest);
 
   uint32_t exp = GETEXP((decQuad *)src) - zeros;
@@ -653,15 +654,18 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
   DFWORD((decQuad *)(dest), 0) |= top18;
 
+  printf("3: ");
   fmc_decimal128_pretty(dest);
 
   DFBYTE((decQuad *)dest, 0) |= DFBYTE((decQuad *)src, 0) & 0x80;
 
+  printf("4: ");
   fmc_decimal128_pretty(dest);
 
   sigdig = *(u + 3);
   if (sigdig == 1) {
     shiftdec(dest, dest, 1);
+    printf("5: ");
     fmc_decimal128_pretty(dest);
     return;
   }
@@ -698,6 +702,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourml >> 18);                   /* declet 6 */
 
   DFLONG((decQuad *)(dest), 1) = dpdout;
+  printf("6: ");
   fmc_decimal128_pretty(dest);
 
   mult = 0;
@@ -709,11 +714,14 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourhi >> 4);                    /* declet 1 */
 
   DFLONG((decQuad *)(dest), 1) |= dpdout << 60;
+  printf("7: ");
   fmc_decimal128_pretty(dest);
 
   DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
+  printf("8: ");
   fmc_decimal128_pretty(dest);
 
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
+  printf("9: ");
   fmc_decimal128_pretty(dest);
 }
