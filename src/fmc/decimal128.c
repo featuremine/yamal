@@ -634,13 +634,10 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
     uint64_t sourlo = DFLONG((decQuad *)(source), 1);                           \
     uint64_t mask = (sourhi >> 46) << 46;                                       \
     DFLONG((decQuad *)(destination), 0) = mask | (sourhi & ~mask) << decoffset; \
-    if (decoffset < 64)                                                         \
-    {                                                                           \
+    if (decoffset < 64) {                                                       \
       DFLONG((decQuad *)(destination), 0) |= sourlo >> (64 - decoffset);        \
       DFLONG((decQuad *)(destination), 1) = sourlo << decoffset;                \
-    }                                                                           \
-    else                                                                        \
-    {                                                                           \
+    } else {                                                                    \
       DFLONG((decQuad *)(destination), 0) |= sourlo << (decoffset - 64);        \
       DFLONG((decQuad *)(destination), 1) = 0ULL;                               \
     }                                                                           \
