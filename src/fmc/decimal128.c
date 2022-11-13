@@ -609,26 +609,27 @@ void fmc_decimal128_pretty(const fmc_decimal128_t *src) {
 
 void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
                            const fmc_decimal128_t *src) {
-  /* TODO check for NaN +/- inf */
+    uint32_t exp = DECCOMBEXP[(DFWORD((const decQuad *)src, 0)) >> 26];
+    if (EXPISSPECIAL(exp))
+    {
+      // if INF we need to clear 6th bit from the front
+      uint16_t sft = 58 + EXPISINF(exp);
+      DFLONG((decQuad *)(dest), 0) = (DFLONG((decQuad *)(src), 0) >> sft) << sft;
+      DFLONG((decQuad *)(dest), 1) = 0;
+      return;
+    }
 
-  char buf[43] = {0};
-  fmc_decimal128_to_str(buf, src);
-
-  printf("%s -> ", buf);
-  fmc_decimal128_pretty(src);
-
-  uint32_t zeros = fmc_decimal128_lead_zeros(src);
-  printf("zeros is %u\n", zeros);
-  if (!zeros) {
-    dest->longs[0] = src->longs[0];
-    dest->longs[1] = src->longs[1];
-    return;
-  }
+    uint32_t zeros = fmc_decimal128_lead_zeros(src);
+    if (!zeros)
+    {
+      dest->longs[0] = src->longs[0];
+      dest->longs[1] = src->longs[1];
+      return;
+    }
 
 #define shiftdec(source, destination, offset)                                   \
   ({                                                                            \
     uint16_t decoffset = (offset)*10;                                           \
-    printf("decoffset -> %u\n", decoffset);                                     \
     uint64_t sourhi = DFLONG((decQuad *)(source), 0);                           \
     uint64_t sourlo = DFLONG((decQuad *)(source), 1);                           \
     uint64_t mask = (sourhi >> 46) << 46;                                       \
@@ -654,12 +655,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
     dest->longs[1] = src->longs[1];
   }
 
-  printf("1: ");
-  fmc_decimal128_pretty(src);
-  printf("2: ");
-  fmc_decimal128_pretty(dest);
-
-  uint32_t exp = GETEXP((decQuad *)src) - zeros;
+  exp = GETEXP((decQuad *)src) - zeros;
   const uint8_t *u = dpd2bcd8addr(DFWORD((decQuad *)dest, 0) >> 4);
   uint16_t sigdig = *(u + 3 - *(u + 3));
   exp *= !!sigdig;
@@ -668,19 +664,11 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
   DFWORD((decQuad *)(dest), 0) |= top18;
 
-  printf("3: ");
-  fmc_decimal128_pretty(dest);
-
   DFBYTE((decQuad *)dest, 0) |= DFBYTE((decQuad *)src, 0) & 0x80;
-
-  printf("4: ");
-  fmc_decimal128_pretty(dest);
 
   sigdig = *(u + 3);
   if (sigdig == 1) {
     shiftdec(dest, dest, 1);
-    printf("5: ");
-    fmc_decimal128_pretty(dest);
     return;
   }
 
@@ -694,12 +682,8 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
 #define dpd2sft(dpdin)                                                         \
   n = DPD2BIN[(dpdin)&0x3ff];                                                  \
-  printf("n -> %u\n", n);                                                      \
-  printf("shifted -> %u\n", (n % rmd) * sft + carry);                          \
   dpdout |= ((uint64_t)BIN2DPD[(n % rmd) * sft + carry]) << mult;              \
-  printf("dpdout -> %llu\n", dpdout);                                          \
   carry = n / rmd;                                                             \
-  printf("carry -> %u\n", carry);                                              \
   mult += 10;
 
   /* Source words; macro handles endianness */
@@ -716,8 +700,6 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourml >> 18);                   /* declet 6 */
 
   DFLONG((decQuad *)(dest), 1) = dpdout;
-  printf("6: ");
-  fmc_decimal128_pretty(dest);
 
   mult = 0;
   dpdout = 0;
@@ -728,14 +710,6 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   dpd2sft(sourhi >> 4);                    /* declet 1 */
 
   DFLONG((decQuad *)(dest), 1) |= dpdout << 60;
-  printf("7: ");
-  fmc_decimal128_pretty(dest);
-
   DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
-  printf("8: ");
-  fmc_decimal128_pretty(dest);
-
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
-  printf("9: ");
-  fmc_decimal128_pretty(dest);
-}
+  }

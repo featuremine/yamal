@@ -1901,6 +1901,23 @@ TEST(decimal128, cannonicalize) {
   EXPECT_EQ(a, cannon);
   EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
             std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "inf", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-inf", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "NaN", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
 }
 
 GTEST_API_ int main(int argc, char **argv) {
