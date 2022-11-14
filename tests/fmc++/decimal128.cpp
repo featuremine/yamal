@@ -49,6 +49,46 @@ TEST(decimal128, from_to_flt_str) {
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
 }
 
+TEST(decimal128, to_std_str) {
+  char str[256];
+  auto convert = [&](double n) -> std::string_view {
+    fmc_error_t *err;
+    fmc_decimal128_t a;
+    fmc_decimal128_from_double(&a, n);
+    int digits10 = fmc_decimal128_flog10abs(&a);
+    fmc_decimal128_round(&a, &a, digits10 != INT32_MIN ? 14 - digits10 : 0);
+    fmc_decimal128_to_std_str(str, &a, 9, 4, &err);
+    if (err) {
+      strcpy(str, fmc_error_msg(err));
+    }
+    return str;
+  };
+  EXPECT_EQ(convert(-123.45), "-123.45");
+  EXPECT_EQ(convert(100.0), "100");
+  EXPECT_EQ(convert(-55.1), "-55.1");
+  EXPECT_EQ(convert(6843.01), "6843.01");
+  EXPECT_EQ(convert(65483.1611), "65483.1611");
+  EXPECT_EQ(convert(-48943.6458), "-48943.6458");
+  EXPECT_EQ(convert(779896.0), "779896");
+  EXPECT_EQ(convert(-16647.9861), "-16647.9861");
+  EXPECT_EQ(convert(123456789.0), "123456789");
+  EXPECT_EQ(convert(1234567890.0), "digits limit reached");
+  EXPECT_EQ(convert(-123456789.0), "-123456789");
+  EXPECT_EQ(convert(-1234567890.0), "digits limit reached");
+  EXPECT_EQ(convert(0.1234), "0.1234");
+  EXPECT_EQ(convert(0.12345), "digits limit reached");
+  EXPECT_EQ(convert(-0.1234), "-0.1234");
+  EXPECT_EQ(convert(-0.12345), "digits limit reached");
+  EXPECT_EQ(convert(123456789.1234), "123456789.1234");
+  EXPECT_EQ(convert(123456789.12345), "digits limit reached");
+  EXPECT_EQ(convert(1234567890.1234), "digits limit reached");
+  EXPECT_EQ(convert(-123456789.1234), "-123456789.1234");
+  EXPECT_EQ(convert(-123456789.12345), "digits limit reached");
+  EXPECT_EQ(convert(-1234567890.1234), "digits limit reached");
+  EXPECT_EQ(convert(std::numeric_limits<double>::quiet_NaN()),
+            "not a finite number");
+}
+
 TEST(decimal128, bad_str) {
   feclearexcept(FE_ALL_EXCEPT);
   fmc_decimal128_t a;
