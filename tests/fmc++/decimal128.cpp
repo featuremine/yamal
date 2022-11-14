@@ -1827,7 +1827,12 @@ TEST(decimal128, cannonicalize) {
 
   a = 0;
   fmc_decimal128_stdrep(&cannon, &a);
-  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 34); // should it return zero?
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 34);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-0.0", &err);
   EXPECT_EQ(a, cannon);
   EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
             std::hash<fmc_decimal128_t>{}(cannon));

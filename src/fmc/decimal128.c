@@ -623,6 +623,10 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
     dest->longs[0] = src->longs[0];
     dest->longs[1] = src->longs[1];
     return;
+  } else if (zeros == 34) {
+    dest->longs[0] = 0ULL;
+    dest->longs[1] = 0ULL;
+    return;
   }
 
 #define shiftdec(source, destination, offset)                                  \
