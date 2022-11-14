@@ -21,11 +21,12 @@
 
 #include "fmc++/convert.hpp"
 #include "fmc++/mpl.hpp"
+#include "fmc++/rational64.hpp"
+#include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
 
 #include "fmc/alignment.h"
 #include "fmc/decimal128.h"
-#include "fmc/rprice.h"
 
 #include <cmath>
 #include <cstring>
@@ -46,9 +47,13 @@ public:
   decimal128(fmc_rprice_t d) noexcept {
     static decimal128 dec64div((int64_t)FMC_RPRICE_FRACTION);
 
-    decimal128 dd;
-    fmc_decimal128_from_int(&dd, d.value);
+    decimal128 dd(d.value);
     fmc_decimal128_div(this, &dd, &dec64div);
+  }
+  decimal128(fmc_rational64_t d) noexcept {
+    decimal128 dd(d.num);
+    decimal128 div(d.den);
+    fmc_decimal128_div(this, &dd, &div);
   }
   decimal128(double d) noexcept { fmc_decimal128_from_double(this, d); }
   constexpr decimal128() noexcept : fmc_decimal128_t{{0, 0}} {}
@@ -121,6 +126,24 @@ public:
     double value;
     fmc_decimal128_to_double(&value, this);
     return value;
+  }
+  explicit operator rprice() const noexcept {
+    static decimal128 dec64mul((int64_t)FMC_RPRICE_FRACTION);
+    decimal128 tmp;
+    fmc_decimal128_mul(&tmp, this, &dec64mul);
+    int64_t num;
+    fmc_error_t *err;
+    fmc_decimal128_to_int(&num, &tmp, &err);
+    rprice ret;
+    fmc_rprice_from_raw(&ret, num);
+    return ret;
+  }
+  explicit operator rational64() const noexcept {
+    double d;
+    fmc_decimal128_to_double(&d, this);
+    rational64 ret;
+    fmc_rational64_from_double(&ret, d);
+    return ret;
   }
 };
 
@@ -298,8 +321,10 @@ isnan(T x) {
 template <> struct hash<fmc_decimal128_t> {
   size_t operator()(const fmc_decimal128_t &k) const noexcept {
     static_assert(sizeof(k.longs) / sizeof(int64_t) == 2);
-    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t *)&k.longs[0]),
-                            std::hash<int64_t>{}(*(int64_t *)&k.longs[1]));
+    fmc_decimal128_t res;
+    fmc_decimal128_stdrep(&res, &k);
+    return fmc_hash_combine(std::hash<int64_t>{}(*(int64_t *)&res.longs[0]),
+                            std::hash<int64_t>{}(*(int64_t *)&res.longs[1]));
   }
 };
 
