@@ -26,43 +26,16 @@ target_include_directories(
 )
 
 add_library(
-    py_yamal
-    STATIC
-    "src/ytp.cpp"
-)
-target_link_libraries(
-    py_yamal
-    PRIVATE
-    ytp
-    py_yamal_dep
-)
-target_include_directories(
-    py_yamal
-    PRIVATE
-    "${PYTHON_INCLUDE_DIRS}"
-)
-
-set_target_properties(
-    py_yamal
-    PROPERTIES
-    OUTPUT_NAME "py_yamal"
-    LIBRARY_OUTPUT_DIRECTORY "${YAMAL_LIB_DIR}"
-)
-install(
-    TARGETS
-    py_yamal
-)
-
-add_library(
     yamal-python_module
     SHARED
     "src/main.c"
+    "src/ytp.cpp"
 )
 target_link_libraries(
     yamal-python_module
     PRIVATE
     ytp
-    py_yamal
+    py_yamal_dep
 )
 set_target_properties(
     yamal-python_module
