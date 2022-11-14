@@ -99,7 +99,6 @@ target_link_libraries(
     yamal-python_testmodule
     PRIVATE
     ytp
-    py_yamal_dep
 )
 set_target_properties(
     yamal-python_testmodule
