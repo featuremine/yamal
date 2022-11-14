@@ -24,11 +24,6 @@ target_include_directories(
     INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
-target_compile_definitions(
-    py_yamal_include
-    INTERFACE
-    ASIO_DISABLE_VISIBILITY
-)
 
 add_library(
     py_yamal_obj
