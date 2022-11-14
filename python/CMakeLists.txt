@@ -68,6 +68,11 @@ target_link_libraries(
     ytp
     py_yamal_dep
 )
+target_compile_definitions(
+    yamal-sys_base_module
+    PRIVATE
+    NO_DLL_DECORATOR
+)
 set_target_properties(
     yamal-sys_base_module
     PROPERTIES
