@@ -1787,6 +1787,139 @@ TEST(decimal128, move) {
   ASSERT_EQ(b, c);
 }
 
+TEST(decimal128, cannonicalize) {
+  fmc::decimal128 a(5);
+  fmc::decimal128 cannon;
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_error_t *err;
+  fmc_decimal128_from_str(&a, "9999999999999999999999999999999999", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-9999999999999999999999999999999999", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "9999999999999999999999999999999999E32", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-9999999999999999999999999999999999E32", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  a = 0;
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 34); // should it return zero?
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  a = 22;
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  a = -22;
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "9099999999999999999999999999999999", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-9099999999999999999999999999999999", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "9099999999999999999999999999999999E55", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-9099999999999999999999999999999999E55", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  a = 222;
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  a = -222;
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "999999999999999999999999999999999", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "999999999999999999999999999999999E55", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(fmc_decimal128_lead_zeros(&cannon), 0);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "inf", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "-inf", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(a, cannon);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+
+  fmc_decimal128_from_str(&a, "NaN", &err);
+  fmc_decimal128_stdrep(&cannon, &a);
+  EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
+            std::hash<fmc_decimal128_t>{}(cannon));
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

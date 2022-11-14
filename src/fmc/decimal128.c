@@ -499,56 +499,40 @@ void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {
   decQuadSetExponent((decQuad *)res, get_context(), exp);
 }
 
-int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
+#define dpd2bcd8addr(dpdin) &DPD2BCD8[((dpdin)&0x3ff) * 4]
+
+int fmc_decimal128_lead_zeros(const fmc_decimal128_t *val) {
   const decQuad *df = (const decQuad *)val;
-  uInt msd;       /* coefficient MSD */
-  Int exp;        /* exponent top two bits or full */
-  uInt comb;      /* combination field */
-  const uByte *u; /* .. */
-
-  /* Source words; macro handles endianness */
-  uInt sourhi = DFWORD(df, 0); /* word with sign */
-#if DECPMAX == 16
-  uInt sourlo = DFWORD(df, 1);
-#elif DECPMAX == 34
-  uInt sourmh = DFWORD(df, 1);
-  uInt sourml = DFWORD(df, 2);
-  uInt sourlo = DFWORD(df, 3);
-#endif
-
-  comb = sourhi >> 26;    /* sign+combination field */
-  msd = DECCOMBMSD[comb]; /* decode the combination field */
-  exp = DECCOMBEXP[comb]; /* .. */
-
-  if (!EXPISSPECIAL(exp)) { /* finite */
-    /* complete exponent; top two bits are in place */
-    exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
-  } else {                        /* IS special */
-    return INT32_MIN;
-  }
-
+  uInt msd = GETMSD(df); /* coefficient MSD */
   bool stop = msd != 0;
   int left_zeros = !stop;
+  const uByte *u; /* .. */
 
 #define dpd2deccount(dpdin)                                                    \
-  u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
+  u = dpd2bcd8addr(dpdin);                                                     \
   left_zeros += (!stop) * (3 - *(u + 3));                                      \
   stop |= *(u + 3);
 
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD(df, 0); /* word with sign */
 #if DECPMAX == 7
   dpd2deccount(sourhi >> 10); /* declet 1 */
   dpd2deccount(sourhi);       /* declet 2 */
-  const int max_digits = 2 * 3 + 1;
 
 #elif DECPMAX == 16
+  uInt sourlo = DFWORD(df, 1);
+
   dpd2deccount(sourhi >> 8);                    /* declet 1 */
   dpd2deccount((sourhi << 2) | (sourlo >> 30)); /* declet 2 */
   dpd2deccount(sourlo >> 20);                   /* declet 3 */
   dpd2deccount(sourlo >> 10);                   /* declet 4 */
   dpd2deccount(sourlo);                         /* declet 5 */
-  const int max_digits = 5 * 3 + 1;
 
 #elif DECPMAX == 34
+  uInt sourmh = DFWORD(df, 1);
+  uInt sourml = DFWORD(df, 2);
+  uInt sourlo = DFWORD(df, 3);
+
   dpd2deccount(sourhi >> 4);                    /* declet 1 */
   dpd2deccount((sourhi << 6) | (sourmh >> 26)); /* declet 2 */
   dpd2deccount(sourmh >> 16);                   /* declet 3 */
@@ -560,6 +544,36 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
   dpd2deccount(sourlo >> 20);                   /* declet 9 */
   dpd2deccount(sourlo >> 10);                   /* declet 10 */
   dpd2deccount(sourlo);                         /* declet 11 */
+#endif
+
+  return left_zeros;
+}
+
+int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
+  const decQuad *df = (const decQuad *)val;
+  Int exp;   /* exponent top two bits or full */
+  uInt comb; /* combination field */
+
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD(df, 0); /* word with sign */
+
+  comb = sourhi >> 26;    /* sign+combination field */
+  exp = DECCOMBEXP[comb]; /* .. */
+
+  if (!EXPISSPECIAL(exp)) { /* finite */
+    /* complete exponent; top two bits are in place */
+    exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
+  } else {                        /* IS special */
+    return INT32_MIN;
+  }
+
+  int left_zeros = fmc_decimal128_lead_zeros(val);
+
+#if DECPMAX == 7
+  const int max_digits = 2 * 3 + 1;
+#elif DECPMAX == 16
+  const int max_digits = 5 * 3 + 1;
+#elif DECPMAX == 34
   const int max_digits = 11 * 3 + 1;
 #endif
 
@@ -568,4 +582,130 @@ int fmc_decimal128_flog10abs(const fmc_decimal128_t *val) {
   }
 
   return max_digits - left_zeros + exp - 1;
+}
+
+void fmc_uint64_bebits(uint64_t u, char bits[64]) {
+  char *p = bits;
+  for (size_t x = 64; x;) {
+    --x;
+    *(p++) = '0' + ((u & (1ULL << x)) >> x);
+  }
+}
+
+void fmc_decimal128_bebits(const fmc_decimal128_t *dest, char bits[128]) {
+  fmc_uint64_bebits(DFLONG((decQuad *)(dest), 1), bits + 64);
+  fmc_uint64_bebits(DFLONG((decQuad *)(dest), 0), bits);
+}
+
+void fmc_decimal128_pretty(const fmc_decimal128_t *src) {
+  char bits[129] = {0};
+  fmc_decimal128_bebits(src, bits);
+  printf("%.1s %.5s %.12s %.10s %.10s %.10s %.10s %.10s %.10s %.10s %.10s "
+         "%.10s %.10s %.10s\n",
+         bits, bits + 1, bits + 6, bits + 18, bits + 28, bits + 38, bits + 48,
+         bits + 58, bits + 68, bits + 78, bits + 88, bits + 98, bits + 108,
+         bits + 118);
+}
+
+void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
+                           const fmc_decimal128_t *src) {
+  uint32_t exp = DECCOMBEXP[(DFWORD((const decQuad *)src, 0)) >> 26];
+  if (EXPISSPECIAL(exp)) {
+    // if INF we need to clear 6th bit from the front
+    uint16_t sft = 58 + EXPISINF(exp);
+    DFLONG((decQuad *)(dest), 0) = (DFLONG((decQuad *)(src), 0) >> sft) << sft;
+    DFLONG((decQuad *)(dest), 1) = 0;
+    return;
+  }
+
+  uint32_t zeros = fmc_decimal128_lead_zeros(src);
+  if (!zeros) {
+    dest->longs[0] = src->longs[0];
+    dest->longs[1] = src->longs[1];
+    return;
+  }
+
+#define shiftdec(source, destination, offset)                                  \
+  ({                                                                           \
+    uint16_t decoffset = (offset)*10;                                          \
+    uint64_t sourhi = DFLONG((decQuad *)(source), 0);                          \
+    uint64_t sourlo = DFLONG((decQuad *)(source), 1);                          \
+    uint64_t mask = (sourhi >> 46) << 46;                                      \
+    DFLONG((decQuad *)(destination), 0) = mask | (sourhi & ~mask)              \
+                                                     << decoffset;             \
+    if (decoffset < 64) {                                                      \
+      DFLONG((decQuad *)(destination), 0) |= sourlo >> (64 - decoffset);       \
+      DFLONG((decQuad *)(destination), 1) = sourlo << decoffset;               \
+    } else {                                                                   \
+      DFLONG((decQuad *)(destination), 0) |= sourlo << (decoffset - 64);       \
+      DFLONG((decQuad *)(destination), 1) = 0ULL;                              \
+    }                                                                          \
+  })
+
+  // move everything to the first declet onwards
+  uint32_t decsft = (zeros - 1) / 3;
+  if (decsft) {
+    shiftdec(src, dest, decsft);
+  } else {
+    dest->longs[0] = src->longs[0];
+    dest->longs[1] = src->longs[1];
+  }
+
+  exp = GETEXP((decQuad *)src) - zeros;
+  const uint8_t *u = dpd2bcd8addr(DFWORD((decQuad *)dest, 0) >> 4);
+  uint16_t sigdig = *(u + 3 - *(u + 3));
+  exp *= !!sigdig;
+  uint32_t top18 =
+      DECCOMBFROM[((exp >> DECECONL) << 4) + sigdig] | ((exp & 0xfff) << 14);
+  DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
+  DFWORD((decQuad *)(dest), 0) |= top18;
+
+  DFBYTE((decQuad *)dest, 0) |= DFBYTE((decQuad *)src, 0) & 0x80;
+
+  sigdig = *(u + 3);
+  if (sigdig == 1) {
+    shiftdec(dest, dest, 1);
+    return;
+  }
+
+  uint16_t carry = 0;
+  uint16_t sft = 100 * (sigdig == 2) + 10 * (sigdig == 3) +
+                 ((sigdig == 1) | (sigdig == 0));
+  uint16_t rmd = 1000 / sft;
+  uint16_t mult = 0;
+  uint64_t dpdout = 0;
+  uint16_t n = 0;
+
+#define dpd2sft(dpdin)                                                         \
+  n = DPD2BIN[(dpdin)&0x3ff];                                                  \
+  dpdout |= ((uint64_t)BIN2DPD[(n % rmd) * sft + carry]) << mult;              \
+  carry = n / rmd;                                                             \
+  mult += 10;
+
+  /* Source words; macro handles endianness */
+  uint32_t sourhi = DFWORD((decQuad *)dest, 0); /* word with sign */
+  uint32_t sourmh = DFWORD((decQuad *)dest, 1);
+  uint32_t sourml = DFWORD((decQuad *)dest, 2);
+  uint32_t sourlo = DFWORD((decQuad *)dest, 3);
+
+  dpd2sft(sourlo);                         /* declet 11 */
+  dpd2sft(sourlo >> 10);                   /* declet 10 */
+  dpd2sft(sourlo >> 20);                   /* declet 9 */
+  dpd2sft((sourml << 2) | (sourlo >> 30)); /* declet 8 */
+  dpd2sft(sourml >> 8);                    /* declet 7 */
+  dpd2sft(sourml >> 18);                   /* declet 6 */
+
+  DFLONG((decQuad *)(dest), 1) = dpdout;
+
+  mult = 0;
+  dpdout = 0;
+  dpd2sft((sourmh << 4) | (sourml >> 28)); /* declet 5 */
+  dpd2sft(sourmh >> 6);                    /* declet 4 */
+  dpd2sft(sourmh >> 16);                   /* declet 3 */
+  dpd2sft((sourhi << 6) | (sourmh >> 26)); /* declet 2 */
+  dpd2sft(sourhi >> 4);                    /* declet 1 */
+
+  DFLONG((decQuad *)(dest), 1) |= dpdout << 60;
+  DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
+  DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 }
