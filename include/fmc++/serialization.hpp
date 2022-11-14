@@ -28,6 +28,7 @@ extern "C" {
 }
 
 #include <fmc++/strings.hpp>
+#include <fmc/decimal128.h>
 #include <fmc/files.h>
 #include <stdio.h>
 #include <string.h>
