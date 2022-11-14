@@ -23,7 +23,6 @@ macro(yamal_unit_test)
         ${ARG_NAME}
         PUBLIC
         "${YAMAL_INC_DIR}"
-        "${YAMAL_PYTHON_INC_DIR}"
         "${YAMAL_SRC_DIR}"
     )
     target_link_libraries(
@@ -31,6 +30,7 @@ macro(yamal_unit_test)
         PUBLIC
         fmc++
         ytp
+        py_yamal_dep
         PkgConfig::GTEST
         PkgConfig::PYTHON
     )
