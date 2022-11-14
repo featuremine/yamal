@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 file (STRINGS "VERSION" YAMAL_VERSION)
 
 project(
@@ -17,32 +14,23 @@ option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
 option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
+option (BUILD_WHEEL "Enable build of the python package." ON)
+option (TEST_EXTENSIONS "Enable testing the extensions." ON)
+
+set(YAMAL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(YAMAL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(YAMAL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/bin")
+set(YAMAL_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/lib")
+
+set(FmConfig_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(FmConfig REQUIRED)
+fm_config()
 
 find_package(Doxygen)
 if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
     # Add subdir "docs" for Doxygen + Sphinx to use.
     add_subdirectory ("docs")
 endif ()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    string(APPEND CMAKE_CXX_FLAGS " -fconcepts -fpermissive")
-    string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libgcc -static-libstdc++")
-    string(APPEND CMAKE_SHARED_LINKER_FLAGS " -static-libgcc -static-libstdc++")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    string(APPEND CMAKE_C_FLAGS " -w -Qunused-arguments -Wpedantic")
-    string(APPEND CMAKE_CXX_FLAGS " -Wpedantic -Wno-c++20-designator")
-endif ()
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    string(APPEND CMAKE_SHARED_LINKER_FLAGS " -Wl,--exclude-libs,ALL")
-endif()
-
-string(APPEND CMAKE_C_FLAGS " -Wduplicate-decl-specifier -Waddress -Warray-bounds -Wchar-subscripts -Winit-self -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wunused-function -Wunused-label -Wunused-variable -Winvalid-pch -Wall")
-string(APPEND CMAKE_CXX_FLAGS " -Waddress -Warray-bounds -Wchar-subscripts -Winit-self -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wunused-function -Wunused-label -Wunused-variable -Winvalid-pch -Wall -Wnon-virtual-dtor")
-add_definitions(-D_FILE_OFFSET_BITS=64)
-
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
@@ -74,7 +62,9 @@ set(
     "${PROJECT_SOURCE_DIR}/src/fmc/memory.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/prio_queue.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/process.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc/rational64.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/reactor.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/rprice.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/signals.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/sockets.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/string.c"
@@ -314,5 +304,8 @@ set(CPACK_PACKAGE_VENDOR "Featuremine")
 set(CPACK_PACKAGE_CONTACT "support@featuremine.com")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 
 include(CPack)
+
+add_subdirectory(python)
