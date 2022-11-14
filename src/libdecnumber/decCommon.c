@@ -1845,8 +1845,10 @@ char *decFloatToString(const decFloat *df, char *string) {
   dpd2char(sourlo);                         /* declet 11 */
 #endif
 
-  if (c == cstart)
-    *c++ = '0'; /* all zeros, empty -- make "0" */
+  if (c == cstart) {
+    memcpy(c, "0", 2);
+    return string;
+  }
 
   /*[This fast path is valid but adds 3-5 cycles to worst case length] */
   /*if (exp==0) {		   // integer or NaN case -- easy */
@@ -1886,7 +1888,7 @@ char *decFloatToString(const decFloat *df, char *string) {
 
     /* finally add the E-part, if needed; it will never be 0, and has */
     /* a maximum length of 3 or 4 digits (asserted above) */
-    if (e != 0 && !(cstart + 1 == c && cstart[0] == '0')) {
+    if (e != 0) {
       memcpy(c, "E+", 2); /* starts with E, assume + */
       c++;
       if (e < 0) {

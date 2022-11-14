@@ -77,6 +77,190 @@ void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src) {
   decQuadToString((const decQuad *)src, dest);
 }
 
+static const char longzero_str[] = "0."
+                                   "0000000000000000000000000000000000000000000"
+                                   "00000000000000000000000000000000000000000";
+static const char *zeros_str = longzero_str + 2;
+
+void fmc_decimal128_to_std_str(char *dest, const fmc_decimal128_t *src,
+                               size_t intdigits, size_t decdigits,
+                               fmc_error_t **error) {
+  fmc_error_clear(error);
+  const decQuad *df = (const decQuad *)src;
+
+  uInt msd;       /* coefficient MSD */
+  Int exp;        /* exponent top two bits or full */
+  uInt comb;      /* combination field */
+  char *cstart;   /* coefficient start */
+  char *c;        /* output pointer in dest */
+  char *s, *t;    /* .. (source, target) */
+  Int pre;        /* work */
+  const uByte *u; /* .. */
+  uInt uiwork;    /* for macros [one compiler needs */
+  /* volatile here to avoid bug, but */
+  /* that doubles execution time] */
+
+  /* Source words; macro handles endianness */
+  uInt sourhi = DFWORD(df, 0); /* word with sign */
+#if DECPMAX == 16
+  uInt sourlo = DFWORD(df, 1);
+#elif DECPMAX == 34
+  uInt sourmh = DFWORD(df, 1);
+  uInt sourml = DFWORD(df, 2);
+  uInt sourlo = DFWORD(df, 3);
+#endif
+
+  c = dest; /* where result will go */
+  if (((Int)sourhi) < 0)
+    *c++ = '-';           /* handle sign */
+  comb = sourhi >> 26;    /* sign+combination field */
+  msd = DECCOMBMSD[comb]; /* decode the combination field */
+  exp = DECCOMBEXP[comb]; /* .. */
+
+  if (!EXPISSPECIAL(exp)) { /* finite */
+    /* complete exponent; top two bits are in place */
+    exp += GETECON(df) - DECBIAS; /* .. + continuation and unbias */
+  } else {                        /* IS special */
+    fmc_error_set(error, "not a finite number");
+    return;
+  }
+
+  /* convert the digits of the significand to characters */
+  cstart = c; /* save start of coefficient */
+  if (msd)
+    *c++ = (char)('0' + (char)msd); /* non-zero most significant digit */
+
+/* Decode the declets.  After extracting each declet, it is */
+/* decoded to a 4-uByte sequence by table lookup; the four uBytes */
+/* are the three encoded BCD8 digits followed by a 1-byte length */
+/* (significant digits, except that 000 has length 0).  This allows */
+/* us to left-align the first declet with non-zero content, then */
+/* the remaining ones are full 3-char length.  Fixed-length copies */
+/* are used because variable-length memcpy causes a subroutine call */
+/* in at least two compilers.  (The copies are length 4 for speed */
+/* and are safe because the last item in the array is of length */
+/* three and has the length byte following.) */
+#define dpd2char(dpdin)                                                        \
+  u = &DPD2BCD8[((dpdin)&0x3ff) * 4];                                          \
+  if (c != cstart) {                                                           \
+    UBFROMUI(c, UBTOUI(u) | CHARMASK);                                         \
+    c += 3;                                                                    \
+  } else if (*(u + 3)) {                                                       \
+    UBFROMUI(c, UBTOUI(u + 3 - *(u + 3)) | CHARMASK);                          \
+    c += *(u + 3);                                                             \
+  }
+
+#if DECPMAX == 7
+  dpd2char(sourhi >> 10); /* declet 1 */
+  dpd2char(sourhi);       /* declet 2 */
+
+#elif DECPMAX == 16
+  dpd2char(sourhi >> 8);                    /* declet 1 */
+  dpd2char((sourhi << 2) | (sourlo >> 30)); /* declet 2 */
+  dpd2char(sourlo >> 20);                   /* declet 3 */
+  dpd2char(sourlo >> 10);                   /* declet 4 */
+  dpd2char(sourlo);                         /* declet 5 */
+
+#elif DECPMAX == 34
+  dpd2char(sourhi >> 4);                    /* declet 1 */
+  dpd2char((sourhi << 6) | (sourmh >> 26)); /* declet 2 */
+  dpd2char(sourmh >> 16);                   /* declet 3 */
+  dpd2char(sourmh >> 6);                    /* declet 4 */
+  dpd2char((sourmh << 4) | (sourml >> 28)); /* declet 5 */
+  dpd2char(sourml >> 18);                   /* declet 6 */
+  dpd2char(sourml >> 8);                    /* declet 7 */
+  dpd2char((sourml << 2) | (sourlo >> 30)); /* declet 8 */
+  dpd2char(sourlo >> 20);                   /* declet 9 */
+  dpd2char(sourlo >> 10);                   /* declet 10 */
+  dpd2char(sourlo);                         /* declet 11 */
+#endif
+
+  if (c == cstart) {
+    memcpy(c, "0", 2);
+    return;
+  }
+
+  Int right_zeros = 1;
+  while (*(c - right_zeros) == '0') {
+    ++right_zeros;
+  }
+  --right_zeros;
+  c -= right_zeros;
+  exp += right_zeros;
+
+  /*[This fast path is valid but adds 3-5 cycles to worst case length] */
+  /*if (exp==0) {		   // integer or NaN case -- easy */
+  /*  *c='\0';			   // terminate */
+  /*  return string; */
+  /*  } */
+
+  Int length = (Int)(c - cstart);
+
+  pre = length + exp; /* length+exp  [c->LSD+1] */
+  /* [here, pre-exp is the digits count (==1 for zero)] */
+
+  if (pre > (Int)intdigits || exp < -(Int)decdigits) {
+    fmc_error_set(error, "digits limit reached");
+    return;
+  }
+  if (exp > 0) {
+    memcpy(c, zeros_str, exp);
+    c += exp;
+    pre += exp;
+  }
+
+  /* modify the coefficient, adding 0s, '.' */
+  if (pre > 0) { /* ddd.ddd (plain) */
+    char *dotat = cstart + pre;
+    if (dotat < c) { /* if embedded dot needed... */
+      /* [memmove is a disaster, here] */
+      /* move by fours; there must be space for junk at the end */
+      /* because exponent is still possible */
+      s = dotat + ROUNDDOWN4(c - dotat); /* source */
+      t = s + 1;                         /* target */
+      /* open the gap [cannot use memcpy] */
+      for (; s >= dotat; s -= 4, t -= 4)
+        UBFROMUI(t, UBTOUI(s));
+      *dotat = '.';
+      while (*c == '0') {
+        --c;
+      }
+      if (*c != '.') {
+        c++; /* length increased by one */
+      }
+    }          /* need dot? */
+    *c = '\0'; /* add terminator */
+    return;
+  } /* pre>0 */
+
+  /* here for plain 0.ddd or 0.000ddd forms (can never have E) */
+  /* Surprisingly, this is close to being the worst-case path, so the */
+  /* shift is done by fours; this is a little tricky because the */
+  /* rightmost character to be written must not be beyond where the */
+  /* rightmost terminator could be -- so backoff to not touch */
+  /* terminator position if need be (this can make exact alignments */
+  /* for full Doubles, but in some cases needs care not to access too */
+  /* far to the left) */
+
+  pre = -pre + 2;                            /* gap width, including "0." */
+  t = cstart + ROUNDDOWN4(c - cstart) + pre; /* preferred first target point */
+  /* backoff if too far to the right */
+  if (t > dest + DECSTRING - 5)
+    t = dest + DECSTRING - 5; /* adjust to fit */
+  /* now shift the entire coefficient to the right, being careful not */
+  /* to access to the left of string [cannot use memcpy] */
+  for (s = t - pre; s >= dest; s -= 4, t -= 4)
+    UBFROMUI(t, UBTOUI(s));
+  /* for Quads and Singles there may be a character or two left... */
+  s += 3; /* where next would come from */
+  for (; s >= cstart; s--, t--)
+    *(t + 3) = *(s);
+  /* now have fill 0. */
+  memcpy(cstart, longzero_str, pre);
+  c += pre;
+  *c = '\0'; /* terminate */
+}
+
 bool fmc_decimal128_less(const fmc_decimal128_t *lhs,
                          const fmc_decimal128_t *rhs) {
   decQuad res;
