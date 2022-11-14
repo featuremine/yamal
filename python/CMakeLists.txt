@@ -23,7 +23,6 @@ target_include_directories(
     py_yamal_dep
     INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${PYTHON_INCLUDE_DIRS}"
 )
 
 add_library(
@@ -37,6 +36,12 @@ target_link_libraries(
     ytp
     py_yamal_dep
 )
+target_include_directories(
+    py_yamal
+    PRIVATE
+    "${PYTHON_INCLUDE_DIRS}"
+)
+
 set_target_properties(
     py_yamal
     PROPERTIES
