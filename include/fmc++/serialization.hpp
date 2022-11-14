@@ -28,6 +28,7 @@ extern "C" {
 }
 
 #include <fmc++/strings.hpp>
+#include <fmc/decimal128.h>
 #include <fmc/files.h>
 #include <stdio.h>
 #include <string.h>
@@ -216,26 +217,31 @@ inline bool cmp_read_item(cmp_ctx_t *ctx, fmc_decimal128_t *arg) {
     if (!cmp_object_as_str(&obj, &sz) || sz >= FMC_DECIMAL128_STR_SIZE) {
       return false;
     }
-    if (!cmp_object_to_str(ctx, &obj, buf, sz)) {
+    if (!cmp_object_to_str(ctx, &obj, buf, FMC_DECIMAL128_STR_SIZE)) {
       return false;
     }
-    fmc_decimal128_from_str(arg, buf);
+    fmc_error_t *err;
+    fmc_decimal128_from_str(arg, buf, &err);
+    if (err) {
+      return false;
+    }
   } else if (cmp_object_is_sinteger(&obj)) {
     int64_t num = 0;
     if (!cmp_object_as_sinteger(&obj, &num)) {
       return false;
     }
     fmc_decimal128_from_int(arg, num);
-  } else if (cmp_object_is_uinteger(&obj)) {
+    return true;
+  }
+  if (cmp_object_is_uinteger(&obj)) {
     uint64_t num = 0;
     if (!cmp_object_as_uinteger(&obj, &num)) {
       return false;
     }
     fmc_decimal128_from_uint(arg, num);
-  } else {
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }
 
 template <class... Args>
