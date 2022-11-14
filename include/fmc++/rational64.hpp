@@ -28,6 +28,7 @@ extern "C" {
 #include "fmc/rational64.h"
 }
 
+#include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
 
 #include <cstdlib>
@@ -46,6 +47,9 @@ public:
   rational64(uint i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(uint64_t i) noexcept { fmc_rational64_from_int(this, i); }
   rational64(double d) noexcept { fmc_rational64_from_double(this, d); }
+  rational64(fmc_rprice_t r) noexcept {
+    fmc_rational64_new2(this, r.value, FMC_RPRICE_FRACTION);
+  }
   constexpr rational64() noexcept : fmc_rational64_t{0, 1} {}
   constexpr rational64(int32_t num, int32_t den) noexcept
       : fmc_rational64_t{num, den} {}
@@ -118,6 +122,11 @@ public:
     fmc_rational64_to_double(&res, this);
     return res;
   }
+  explicit operator rprice() const noexcept {
+    rprice res;
+    res.value = int64_t(num) * FMC_RPRICE_FRACTION / int64_t(den);
+    return res;
+  }
 };
 
 template <> struct sided_initializer<fmc::rational64> {
@@ -144,49 +153,59 @@ template <> struct conversion<double, fmc_rational64_t> {
 
 } // namespace fmc
 
-inline fmc::rational64 operator/(fmc::rational64 a, fmc::rational64 b) {
+inline fmc::rational64 operator/(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_div(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator==(fmc::rational64 a, fmc::rational64 b) {
+inline bool operator==(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return fmc_rational64_equal(&a, &b);
 }
 
-inline bool operator!=(fmc::rational64 a, fmc::rational64 b) {
+inline bool operator!=(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return fmc_rational64_notequal(&a, &b);
 }
 
-inline fmc::rational64 operator+(fmc::rational64 a, fmc::rational64 b) {
+inline fmc::rational64 operator+(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_add(&ret, &a, &b);
   return ret;
 }
 
-inline fmc::rational64 operator-(fmc::rational64 a, fmc::rational64 b) {
+inline fmc::rational64 operator-(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_sub(&ret, &a, &b);
   return ret;
 }
 
-inline bool operator<(fmc::rational64 a, fmc::rational64 b) {
+inline bool operator<(const fmc_rational64_t &a,
+                      const fmc_rational64_t &b) noexcept {
   return fmc_rational64_less(&a, &b);
 }
 
-inline bool operator>(fmc::rational64 a, fmc::rational64 b) {
+inline bool operator>(const fmc_rational64_t &a,
+                      const fmc_rational64_t &b) noexcept {
   return fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator<=(fmc::rational64 a, fmc::rational64 b) {
+inline bool operator<=(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return !fmc_rational64_greater(&a, &b);
 }
 
-inline bool operator>=(fmc::rational64 a, fmc::rational64 b) {
+inline bool operator>=(const fmc_rational64_t &a,
+                       const fmc_rational64_t &b) noexcept {
   return !fmc_rational64_less(&a, &b);
 }
 
-inline fmc::rational64 operator*(fmc::rational64 a, fmc::rational64 b) {
+inline fmc::rational64 operator*(const fmc::rational64 &a,
+                                 const fmc::rational64 &b) noexcept {
   fmc::rational64 ret;
   fmc_rational64_mul(&ret, &a, &b);
   return ret;
@@ -238,10 +257,10 @@ public:
   }
 };
 
-inline ostream &operator<<(ostream &s, const fmc::rational64 &x) {
+inline ostream &operator<<(ostream &s, const fmc_rational64_t &x) {
   return s << x.num << "/" << x.den;
 }
-inline istream &operator>>(istream &s, fmc::rational64 &x) {
+inline istream &operator>>(istream &s, fmc_rational64_t &x) {
   string str;
   s >> str;
   size_t div_pos = str.find("/");
