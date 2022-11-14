@@ -37,11 +37,9 @@ target_link_libraries(
     ytp
     py_yamal_dep
 )
-#TODO: Should use version.h
 target_compile_definitions(
     yamal-python_module
     PRIVATE
-    YTP_VERSION="${PROJECT_VERSION}"
     NO_DLL_DECORATOR
 )
 set_target_properties(
@@ -69,12 +67,6 @@ target_link_libraries(
     PRIVATE
     ytp
     py_yamal_dep
-)
-target_compile_definitions(
-    yamal-sys_base_module
-    PRIVATE
-    YTP_VERSION="${PROJECT_VERSION}"
-    NO_DLL_DECORATOR
 )
 set_target_properties(
     yamal-sys_base_module
