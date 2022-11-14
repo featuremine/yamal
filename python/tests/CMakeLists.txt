@@ -30,7 +30,7 @@ macro(yamal_unit_test)
         PUBLIC
         fmc++
         ytp
-        py_yamal_include
+        py_yamal_dep
         PkgConfig::GTEST
         PkgConfig::PYTHON
     )

@@ -16,64 +16,25 @@ execute_process(COMMAND ${PYTHON3_BIN} -c "import sys;sys.stdout.write('scripts-
 set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 add_library(
-    py_yamal_include
+    py_yamal_dep
     INTERFACE IMPORTED GLOBAL
 )
 target_include_directories(
-    py_yamal_include
+    py_yamal_dep
     INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${PYTHON_INCLUDE_DIRS}"
 )
 
 add_library(
-    py_yamal_obj
+    py_yamal
     STATIC
     "src/ytp.cpp"
 )
 target_link_libraries(
-    py_yamal_obj
-    PUBLIC
-    ytp
-    py_yamal_include
-)
-target_include_directories(
-    py_yamal_obj
-    PUBLIC
-    "${YAMAL_INC_DIR}"
-    "${PYTHON_INCLUDE_DIRS}"
-)
-target_compile_definitions(
-    py_yamal_obj
-    PRIVATE
-    YTP_VERSION="${PROJECT_VERSION}"
-    NO_DLL_DECORATOR
-)
-
-add_library(
-    py_yamal_dep
-    INTERFACE
-)
-target_link_libraries(
-    py_yamal_dep
-    INTERFACE
-    ytp
-    py_yamal_include
-)
-target_include_directories(
-    py_yamal_dep
-    INTERFACE
-    "${YAMAL_INC_DIR}"
-    "${PYTHON_INCLUDE_DIRS}"
-)
-
-add_library(
-    py_yamal
-    STATIC
-    $<TARGET_OBJECTS:py_yamal_obj>
-)
-target_link_libraries(
     py_yamal
     PRIVATE
+    ytp
     py_yamal_dep
 )
 set_target_properties(
@@ -122,7 +83,7 @@ target_link_libraries(
     yamal-sys_base_module
     PRIVATE
     ytp
-    py_yamal_include
+    py_yamal_dep
 )
 set_target_properties(
     yamal-sys_base_module
@@ -148,7 +109,7 @@ target_link_libraries(
     yamal-python_testmodule
     PRIVATE
     ytp
-    py_yamal_include
+    py_yamal_dep
 )
 set_target_properties(
     yamal-python_testmodule
