@@ -13,8 +13,22 @@ endif (NOT PYTHON_FOUND)
 find_program(PYTHON3_BIN "python3" REQUIRED)
 execute_process(COMMAND ${PYTHON3_BIN} -c "import sys;sys.stdout.write('scripts-%d.%d' % sys.version_info[:2])" OUTPUT_VARIABLE PYTHON3_SCRIPTS_DIR)
 
-set(YAMAL_PYTHON_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+add_library(
+    py_yamal_include
+    INTERFACE IMPORTED GLOBAL
+)
+target_include_directories(
+    py_yamal_include
+    INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+target_compile_definitions(
+    py_yamal_include
+    INTERFACE
+    ASIO_DISABLE_VISIBILITY
+)
 
 add_library(
     py_yamal_obj
@@ -25,12 +39,12 @@ target_link_libraries(
     py_yamal_obj
     PUBLIC
     ytp
+    py_yamal_include
 )
 target_include_directories(
     py_yamal_obj
     PUBLIC
     "${YAMAL_INC_DIR}"
-    "${YAMAL_PYTHON_INC_DIR}"
     "${PYTHON_INCLUDE_DIRS}"
 )
 target_compile_definitions(
@@ -48,12 +62,12 @@ target_link_libraries(
     py_yamal_dep
     INTERFACE
     ytp
+    py_yamal_include
 )
 target_include_directories(
     py_yamal_dep
     INTERFACE
     "${YAMAL_INC_DIR}"
-    "${YAMAL_PYTHON_INC_DIR}"
     "${PYTHON_INCLUDE_DIRS}"
 )
 
@@ -101,7 +115,6 @@ target_include_directories(
     yamal-python_module
     PRIVATE
     "${YAMAL_INC_DIR}"
-    "${YAMAL_PYTHON_INC_DIR}"
     "${PYTHON_INCLUDE_DIRS}"
 )
 
@@ -114,6 +127,7 @@ target_link_libraries(
     yamal-sys_base_module
     PRIVATE
     ytp
+    py_yamal_include
 )
 set_target_properties(
     yamal-sys_base_module
@@ -127,7 +141,6 @@ target_include_directories(
     yamal-sys_base_module
     PRIVATE
     "${YAMAL_INC_DIR}"
-    "${YAMAL_PYTHON_INC_DIR}"
     "${PYTHON_INCLUDE_DIRS}"
 )
 
@@ -140,6 +153,7 @@ target_link_libraries(
     yamal-python_testmodule
     PRIVATE
     ytp
+    py_yamal_include
 )
 set_target_properties(
     yamal-python_testmodule
