@@ -162,17 +162,17 @@ void fmc_decimal128_to_std_str(char *dest, const fmc_decimal128_t *src,
   dpd2char(sourlo);                         /* declet 5 */
 
 #elif DECPMAX == 34
-  dpd2char(sourhi >> 4);                        /* declet 1 */
-  dpd2char((sourhi << 6) | (sourmh >> 26));     /* declet 2 */
-  dpd2char(sourmh >> 16);                       /* declet 3 */
-  dpd2char(sourmh >> 6);                        /* declet 4 */
-  dpd2char((sourmh << 4) | (sourml >> 28));     /* declet 5 */
-  dpd2char(sourml >> 18);                       /* declet 6 */
-  dpd2char(sourml >> 8);                        /* declet 7 */
-  dpd2char((sourml << 2) | (sourlo >> 30));     /* declet 8 */
-  dpd2char(sourlo >> 20);                       /* declet 9 */
-  dpd2char(sourlo >> 10);                       /* declet 10 */
-  dpd2char(sourlo);                             /* declet 11 */
+  dpd2char(sourhi >> 4);                    /* declet 1 */
+  dpd2char((sourhi << 6) | (sourmh >> 26)); /* declet 2 */
+  dpd2char(sourmh >> 16);                   /* declet 3 */
+  dpd2char(sourmh >> 6);                    /* declet 4 */
+  dpd2char((sourmh << 4) | (sourml >> 28)); /* declet 5 */
+  dpd2char(sourml >> 18);                   /* declet 6 */
+  dpd2char(sourml >> 8);                    /* declet 7 */
+  dpd2char((sourml << 2) | (sourlo >> 30)); /* declet 8 */
+  dpd2char(sourlo >> 20);                   /* declet 9 */
+  dpd2char(sourlo >> 10);                   /* declet 10 */
+  dpd2char(sourlo);                         /* declet 11 */
 #endif
 
   if (c == cstart) {
