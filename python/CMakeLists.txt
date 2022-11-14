@@ -37,6 +37,7 @@ target_link_libraries(
     ytp
     py_yamal_dep
 )
+#TODO: Should use version.h
 target_compile_definitions(
     yamal-python_module
     PRIVATE
