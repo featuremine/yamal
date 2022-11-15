@@ -122,6 +122,7 @@ FMMODFUNC void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 FMMODFUNC void fmc_decimal128_pretty(const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t hi, uint64_t lo, int64_t exp, FMC_FLAG flag, fmc_error_t **err);
 FMMODFUNC void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *flag, const fmc_decimal128_t *src);
+FMMODFUNC uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src);
 
 #ifdef __cplusplus
 }

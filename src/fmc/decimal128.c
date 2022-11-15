@@ -932,6 +932,7 @@ void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *f
   *exp = GETEXPUN((decQuad *)src);
 
   *hi = 0;
+  *lo = 0;
 
   int64_t mult = 1;
 
@@ -951,12 +952,19 @@ void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *f
   dec2wword((sourml << 2) | (sourlo >> 30), *lo); /* declet 8 */
   dec2wword(sourml >> 8, *lo);                    /* declet 7 */
   dec2wword(sourml >> 18, *lo);                   /* declet 6 */
+  dec2wword((sourmh << 4) | (sourml >> 28), *lo); /* declet 5 */
+
+  // Ensure with tests that all values are handled properly and no
+  // special logic needs to be enforced to split up declet 5
 
   mult = 1;
-  dec2wword((sourmh << 4) | (sourml >> 28), *hi); /* declet 5 */
   dec2wword(sourmh >> 6, *hi);                    /* declet 4 */
   dec2wword(sourmh >> 16, *hi);                   /* declet 3 */
   dec2wword((sourhi << 6) | (sourmh >> 26), *hi); /* declet 2 */
   dec2wword(sourhi >> 4, *hi);                    /* declet 1 */
 
+}
+
+uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src) {
+  return decQuadDigits((decQuad *)src);
 }
