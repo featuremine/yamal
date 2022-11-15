@@ -113,6 +113,7 @@ FMMODFUNC int fmc_decimal128_lead_zeros(const fmc_decimal128_t *res);
 FMMODFUNC int fmc_decimal128_flog10abs(const fmc_decimal128_t *res);
 FMMODFUNC void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
                                      const fmc_decimal128_t *src);
+FMMODFUNC void fmc_decimal128_pretty(const fmc_decimal128_t *src);
 
 #ifdef __cplusplus
 }
