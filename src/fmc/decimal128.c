@@ -925,4 +925,38 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t hi, uint64_t lo,
   DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DEC_NEG) == FMC_DEC_NEG) * DECFLOAT_Sign);  
 }
 void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *flag, const fmc_decimal128_t *src) {
+  *flag = fmc_decimal128_is_nan(src) * FMC_DEC_NAN |
+          fmc_decimal128_is_inf(src) * FMC_DEC_INF |
+          decQuadIsSigned((decQuad *)src) * FMC_DEC_NEG;
+
+  *exp = GETEXPUN((decQuad *)src);
+
+  *hi = 0;
+
+  int64_t mult = 1;
+
+#define dec2wword(dpdin, dpdout)                           \
+  (dpdout) += DPD2BIN[(dpdin)&0x3ff] * mult;             \
+  mult *= 1000;
+
+  /* Source words; macro handles endianness */
+  uint32_t sourhi = DFWORD((decQuad *)src, 0); /* word with sign */
+  uint32_t sourmh = DFWORD((decQuad *)src, 1);
+  uint32_t sourml = DFWORD((decQuad *)src, 2);
+  uint32_t sourlo = DFWORD((decQuad *)src, 3);
+
+  dec2wword(sourlo, *lo);                         /* declet 11 */
+  dec2wword(sourlo >> 10, *lo);                   /* declet 10 */
+  dec2wword(sourlo >> 20, *lo);                   /* declet 9 */
+  dec2wword((sourml << 2) | (sourlo >> 30), *lo); /* declet 8 */
+  dec2wword(sourml >> 8, *lo);                    /* declet 7 */
+  dec2wword(sourml >> 18, *lo);                   /* declet 6 */
+
+  mult = 1;
+  dec2wword((sourmh << 4) | (sourml >> 28), *hi); /* declet 5 */
+  dec2wword(sourmh >> 6, *hi);                    /* declet 4 */
+  dec2wword(sourmh >> 16, *hi);                   /* declet 3 */
+  dec2wword((sourhi << 6) | (sourmh >> 26), *hi); /* declet 2 */
+  dec2wword(sourhi >> 4, *hi);                    /* declet 1 */
+
 }
