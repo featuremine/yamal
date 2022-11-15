@@ -897,3 +897,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   DFLONG((decQuad *)(dest), 0) &= 0xFFFFC00000000000ULL;
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 }
+
+void fmc_decimal128_set_triple(fmc_decimal128_t *dest, int64_t hi, int64_t lo, int16_t exp, fmc_error_t **err) {
+
+}
