@@ -305,9 +305,26 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
                        get_context());
 }
 
+#define gen_declets(val) \
+({\
+  uint64_t _val = (val);\
+  uint64_t encode = ((uint64_t)BIN2DPD[_val % 1000]);\
+  _val /= 1000;\
+  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 10;\
+  _val /= 1000;\
+  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 20;\
+  _val /= 1000;\
+  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 30;\
+  _val /= 1000;\
+  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 40;\
+  _val /= 1000;\
+  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 50;\
+  _val /= 1000; /* now 0, or 1 */\
+  encode | _val << 60;\
+})
+
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   uint64_t u = (uint64_t)n;               /* copy as bits */
-  uint64_t encode;                        /* work */
   DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
@@ -318,20 +335,7 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   }
   /* Since the maximum value of u now is 2**63, only the low word of */
   /* result is affected */
-  encode = ((uint64_t)BIN2DPD[u % 1000]);
-  u /= 1000;
-  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 10;
-  u /= 1000;
-  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 20;
-  u /= 1000;
-  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 30;
-  u /= 1000;
-  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 40;
-  u /= 1000;
-  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 50;
-  u /= 1000; /* now 0, or 1 */
-  encode |= u << 60;
-  DFLONG((decQuad *)res, 1) = encode;
+  DFLONG((decQuad *)res, 1) = gen_declets(u);
 }
 
 static uint64_t decToInt64(const decQuad *df, decContext *set,
@@ -791,6 +795,23 @@ void fmc_decimal128_pretty(const fmc_decimal128_t *src) {
          bits + 118);
 }
 
+#define shiftdec(source, destination, offset)                                  \
+  ({                                                                           \
+    uint16_t decoffset = (offset)*10;                                          \
+    uint64_t sourhi = DFLONG((decQuad *)(source), 0);                          \
+    uint64_t sourlo = DFLONG((decQuad *)(source), 1);                          \
+    uint64_t mask = (sourhi >> 46) << 46;                                      \
+    DFLONG((decQuad *)(destination), 0) = mask | (sourhi & ~mask)              \
+                                                     << decoffset;             \
+    if (decoffset < 64) {                                                      \
+      DFLONG((decQuad *)(destination), 0) |= sourlo >> (64 - decoffset);       \
+      DFLONG((decQuad *)(destination), 1) = sourlo << decoffset;               \
+    } else {                                                                   \
+      DFLONG((decQuad *)(destination), 0) |= sourlo << (decoffset - 64);       \
+      DFLONG((decQuad *)(destination), 1) = 0ULL;                              \
+    }                                                                          \
+  })
+
 void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
                            const fmc_decimal128_t *src) {
   uint32_t exp = DECCOMBEXP[(DFWORD((const decQuad *)src, 0)) >> 26];
@@ -812,23 +833,6 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
     dest->longs[1] = 0ULL;
     return;
   }
-
-#define shiftdec(source, destination, offset)                                  \
-  ({                                                                           \
-    uint16_t decoffset = (offset)*10;                                          \
-    uint64_t sourhi = DFLONG((decQuad *)(source), 0);                          \
-    uint64_t sourlo = DFLONG((decQuad *)(source), 1);                          \
-    uint64_t mask = (sourhi >> 46) << 46;                                      \
-    DFLONG((decQuad *)(destination), 0) = mask | (sourhi & ~mask)              \
-                                                     << decoffset;             \
-    if (decoffset < 64) {                                                      \
-      DFLONG((decQuad *)(destination), 0) |= sourlo >> (64 - decoffset);       \
-      DFLONG((decQuad *)(destination), 1) = sourlo << decoffset;               \
-    } else {                                                                   \
-      DFLONG((decQuad *)(destination), 0) |= sourlo << (decoffset - 64);       \
-      DFLONG((decQuad *)(destination), 1) = 0ULL;                              \
-    }                                                                          \
-  })
 
   // move everything to the first declet onwards
   uint32_t decsft = (zeros - 1) / 3;
@@ -898,17 +902,27 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 }
 
-void fmc_decimal128_set_triple(fmc_decimal128_t *dest, int64_t hi, int64_t lo, int16_t exp, fmc_error_t **err) {
+void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t hi, uint64_t lo, int64_t exp, FMC_FLAG flag, fmc_error_t **err) {
+  fmc_error_clear(err);
+  if (((flag & FMC_DEC_INF) == FMC_DEC_INF)) {
+    fmc_decimal128_inf(dest);
+  } else if (((flag & FMC_DEC_NAN) == FMC_DEC_NAN)) {
+    fmc_decimal128_qnan(dest);
+  } else {
+    DFLONG((decQuad *)dest, 1) = gen_declets(lo);
+    // TODO: validate decimal overflow
+    shiftdec((decQuad *)dest, (decQuad *)dest, 6);
+    DFLONG((decQuad *)dest, 1) = gen_declets(hi);
+
+    // TODO: validate exponent overflow
+    exp += DECQUAD_Bias;
+
+    uint32_t top18 =
+        DECCOMBFROM[(exp >> DECECONL) << 4] | ((exp & 0xfff) << 14);
+    DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
+    DFWORD((decQuad *)(dest), 0) |= top18;
+  }
+  DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DEC_NEG) == FMC_DEC_NEG) * DECFLOAT_Sign);  
 }
-int fmc_decimal128_exp(const fmc_decimal128_t *val) {
-  return 0;
-}
-int64_t fmc_decimal128_hiwword(const fmc_decimal128_t *val) {
-  return 0;
-}
-int64_t fmc_decimal128_lowword(const fmc_decimal128_t *val) {
-  return 0;
-}
-int fmc_decimal128_sign(const fmc_decimal128_t *val) {
-  return 0;
+void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *flag, const fmc_decimal128_t *src) {
 }

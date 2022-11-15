@@ -34,6 +34,12 @@ extern "C" {
 #define FMC_DECIMAL128_SIZE 16
 #define FMC_DECIMAL128_STR_SIZE 43
 
+typedef enum {
+  FMC_DEC_NEG = 2,
+  FMC_DEC_INF = 4,
+  FMC_DEC_NAN = 8
+} FMC_FLAG;
+
 typedef struct {
   uint64_t longs[2];
 } fmc_decimal128_t;
@@ -114,11 +120,8 @@ FMMODFUNC int fmc_decimal128_flog10abs(const fmc_decimal128_t *res);
 FMMODFUNC void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
                                      const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_pretty(const fmc_decimal128_t *src);
-FMMODFUNC void fmc_decimal128_set_triple(fmc_decimal128_t *dest, int64_t hi, int64_t lo, int16_t exp, fmc_error_t **err);
-FMMODFUNC int fmc_decimal128_exp(const fmc_decimal128_t *val);
-FMMODFUNC int64_t fmc_decimal128_hiwword(const fmc_decimal128_t *val);
-FMMODFUNC int64_t fmc_decimal128_lowword(const fmc_decimal128_t *val);
-FMMODFUNC int fmc_decimal128_sign(const fmc_decimal128_t *val);
+FMMODFUNC void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t hi, uint64_t lo, int64_t exp, FMC_FLAG flag, fmc_error_t **err);
+FMMODFUNC void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *flag, const fmc_decimal128_t *src);
 
 #ifdef __cplusplus
 }
