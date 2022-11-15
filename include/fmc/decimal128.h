@@ -115,6 +115,10 @@ FMMODFUNC void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
                                      const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_pretty(const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_set_triple(fmc_decimal128_t *dest, int64_t hi, int64_t lo, int16_t exp, fmc_error_t **err);
+FMMODFUNC int fmc_decimal128_exp(const fmc_decimal128_t *val);
+FMMODFUNC int64_t fmc_decimal128_hiwword(const fmc_decimal128_t *val);
+FMMODFUNC int64_t fmc_decimal128_lowword(const fmc_decimal128_t *val);
+FMMODFUNC int fmc_decimal128_sign(const fmc_decimal128_t *val);
 
 #ifdef __cplusplus
 }
