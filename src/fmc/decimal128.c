@@ -325,7 +325,7 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
 
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   uint64_t u = (uint64_t)n;               /* copy as bits */
-  DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
+  DFWORD((decQuad *)res, 0) = QUADZERO; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
   if (n < 0) { /* handle -n with care */
@@ -425,7 +425,7 @@ void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src,
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   uint64_t encode;                        /* work */
-  DFWORD((decQuad *)res, 0) = 0x22080000; /* always */
+  DFWORD((decQuad *)res, 0) = QUADZERO; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
   encode = ((uint64_t)BIN2DPD[u % 1000]);
@@ -911,36 +911,36 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t 
   fmc_uint64_bebits(*(data + len - 2), lobits);
   printf("setting triple hi %s lo %s\n", hibits, lobits);
 
-  DFWORD((decQuad *)dest, 0) = ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
-                               ((flag & FMC_DECIMAL128_SNAN) == FMC_DECIMAL128_SNAN) * DECFLOAT_sNaN | 
-                               ((flag & FMC_DECIMAL128_NAN) == FMC_DECIMAL128_NAN) * DECFLOAT_qNaN |
-                               ((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign;
-
-  if (!len) {
+  if (flag && (flag != FMC_DECIMAL128_NEG)) {
+    DFWORD((decQuad *)dest, 0) = ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
+                                ((flag & FMC_DECIMAL128_SNAN) == FMC_DECIMAL128_SNAN) * DECFLOAT_sNaN | 
+                                ((flag & FMC_DECIMAL128_NAN) == FMC_DECIMAL128_NAN) * DECFLOAT_qNaN;
     DFWORD((decQuad *)dest, 1) = 0;
     DFWORD((decQuad *)dest, 2) = 0;
     DFWORD((decQuad *)dest, 3) = 0;
-    return;
+  } else {
+    fmc_decimal128_from_uint(dest, *(data + len - 1));
+    if (len == 2) {
+      fmc_decimal128_t digits19;
+      fmc_decimal128_from_uint(&digits19, 10000000000000000000ULL);
+      fmc_decimal128_mul(dest, dest, &digits19);
+      fmc_decimal128_t declow;
+      fmc_decimal128_from_uint(&declow, *(data + len - 2));
+      fmc_decimal128_add(dest, dest, &declow);
+    } else if (len > 3) {
+      feraiseexcept(FE_OVERFLOW);
+    }
+
+    exp += GETEXP((decQuad *)dest);
+    uint32_t top18 =
+        DECCOMBFROM[((exp >> DECECONL) << 4) + GETMSD((decQuad *)dest)] | ((exp & 0xfff) << 14);
+    DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
+    DFWORD((decQuad *)(dest), 0) |= top18;
   }
 
-  fmc_decimal128_from_uint(dest, *(data + len - 1));
-  if (len > 1) {
-    fmc_decimal128_t digits19;
-    fmc_decimal128_from_uint(&digits19, 10000000000000000000ULL);
-    fmc_decimal128_mul(dest, dest, &digits19);
-    fmc_decimal128_t declow;
-    fmc_decimal128_from_uint(&declow, *(data + len - 2));
-    fmc_decimal128_add(dest, dest, &declow);
-  }
-
-  exp += GETEXP((decQuad *)dest);
-  uint32_t top18 =
-      DECCOMBFROM[((exp >> DECECONL) << 4) + GETMSD((decQuad *)dest)] | ((exp & 0xfff) << 14);
-  DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
-  DFWORD((decQuad *)(dest), 0) |= top18;
-
-  // TODO: Improve logic to avoid having to set sign again
   DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
+
+  // Call decFinalize?
 
   printf("triple value set:\n");
   fmc_decimal128_pretty(dest);
@@ -977,9 +977,9 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp, uint16_t 
   dec2wword(sourml >> 8, lo);                    /* declet 7 */
   dec2wword(sourml >> 18, lo);                   /* declet 6 */
 
-  lo += (DPD2BIN[((sourmh << 4) | (sourml >> 28))&0x3ff] % 10) * mult;
-
-  hi += (DPD2BIN[((sourmh << 4) | (sourml >> 28))&0x3ff] / 10);
+  uint64_t declet5 = DPD2BIN[((sourmh << 4) | (sourml >> 28))&0x3ff];
+  lo += (declet5 % 10) * mult;
+  hi += declet5 / 10;
 
   mult = 100;
   dec2wword(sourmh >> 6, hi);                    /* declet 4 */
