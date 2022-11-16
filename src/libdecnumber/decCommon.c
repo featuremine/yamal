@@ -309,6 +309,32 @@ static Flag decBiStr(const char *targ, const char *str1, const char *str2) {
   return 1;
 } /* decBiStr */
 
+/* TODO move to fmc */
+/* ----------------------------------------------------------------- */
+/* decBiParse -- check string starts with pairwise options		     */
+/*								     */
+/*   targ is the string to compare				     */
+/*   str1 is one of the strings to compare against (length may be 0) */
+/*   str2 is the other; it must be the same length as str1	     */
+/*								     */
+/*   returns 1 if has correct prefix, (that is, targ is the same  */
+/*   length as str1 and str2, and each character of targ is in one   */
+/*   of str1 or str2 in the corresponding position), or 0 otherwise  */
+/*								     */
+/* This is used for generic caseless compare, including the awkward  */
+/* case of the Turkish dotted and dotless Is.  Use as (for example): */
+/*   if (decBiParse(test, "mike", "MIKE")) ...			     */
+/* ----------------------------------------------------------------- */
+static Flag decBiParse(const char *targ, const char *str1, const char *str2) {
+  size_t s = 0;
+  for (;*str1 != '\0'; s++, targ++, str1++, str2++) {
+    if (*targ != *str1 && *targ != *str2)
+      return 0;
+    /* *targ has a match in one (or both, if terminator) */
+  } /* forever */
+  return s;
+} /* decBiParse */
+
 /* ------------------------------------------------------------------ */
 /* decFinalize -- adjust and store a final result		      */
 /*								      */

@@ -40,8 +40,11 @@ typedef struct {
 
 FMMODFUNC extern const fmc_decimal128_t fmc_decimal128_exp63[18];
 
+FMMODFUNC const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *src);
+
 FMMODFUNC void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src,
                                        fmc_error_t **err);
+
 FMMODFUNC void fmc_decimal128_to_str(char *dest, const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_to_std_str(char *dest,
                                          const fmc_decimal128_t *src,
