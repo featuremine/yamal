@@ -933,23 +933,24 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t 
   DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
   DFWORD((decQuad *)(dest), 0) |= top18;
 
+  // TODO: Improve logic to avoid having to set sign again
   DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
 }
 
 void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, uint16_t *flag, const fmc_decimal128_t *src) {
   *flag = fmc_decimal128_is_nan(src) * FMC_DECIMAL128_NAN |
           fmc_decimal128_is_inf(src) * FMC_DECIMAL128_INF |
-          decQuadIsSigned((decQuad *)src) * FMC_DECIMAL128_NEG;
+          (decQuadIsSigned((decQuad *)src)!=0) * FMC_DECIMAL128_NEG;
 
   *exp = GETEXPUN((decQuad *)src);
 
   *hi = 0;
   *lo = 0;
 
-  int64_t mult = 1;
+  uint64_t mult = 1;
 
 #define dec2wword(dpdin, dpdout)                           \
-  (dpdout) += DPD2BIN[(dpdin)&0x3ff] * mult;             \
+  (dpdout) += ((uint64_t)DPD2BIN[(dpdin)&0x3ff]) * mult;             \
   mult *= 1000;
 
   /* Source words; macro handles endianness */
@@ -974,13 +975,6 @@ void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, uint16_t *f
   dec2wword(sourmh >> 16, *hi);                   /* declet 3 */
   dec2wword((sourhi << 6) | (sourmh >> 26), *hi); /* declet 2 */
   dec2wword(sourhi >> 4, *hi);                    /* declet 1 */
-
-  char hibits[65] = {0};
-  char lobits[65] = {0};
-
-  fmc_uint64_bebits(*hi, hibits);
-  fmc_uint64_bebits(*lo, lobits);
-  printf("getting triple hi %s lo %s\n", hibits, lobits);
 }
 
 uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src) {
