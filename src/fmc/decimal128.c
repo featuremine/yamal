@@ -440,9 +440,10 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   u /= 1000;
   encode |= ((uint64_t)BIN2DPD[u % 1000]) << 50;
   u /= 1000;
-  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 60;
+  uint64_t declet = ((uint64_t)BIN2DPD[u % 1000]);
+  encode |= declet << 60;
   DFLONG((decQuad *)res, 1) = encode;
-  DFLONG((decQuad *)res, 0) |= u >> 4;
+  DFLONG((decQuad *)res, 0) |= declet >> 4;
 }
 
 void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src,
@@ -902,32 +903,43 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 }
 
-void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t hi, uint64_t lo, int64_t exp, FMC_FLAG flag, fmc_error_t **err) {
-  fmc_error_clear(err);
-  if (((flag & FMC_DEC_INF) == FMC_DEC_INF)) {
-    fmc_decimal128_inf(dest);
-  } else if (((flag & FMC_DEC_NAN) == FMC_DEC_NAN)) {
-    fmc_decimal128_qnan(dest);
-  } else {
-    DFLONG((decQuad *)dest, 1) = gen_declets(lo);
-    // TODO: validate decimal overflow
-    shiftdec((decQuad *)dest, (decQuad *)dest, 6);
-    DFLONG((decQuad *)dest, 1) = gen_declets(hi);
+void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t len, int64_t exp, uint16_t flag) {
 
-    // TODO: validate exponent overflow
-    exp += DECQUAD_Bias;
+  DFWORD((decQuad *)dest, 0) = ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
+                               ((flag & FMC_DECIMAL128_SNAN) == FMC_DECIMAL128_SNAN) * DECFLOAT_sNaN | 
+                               ((flag & FMC_DECIMAL128_NAN) == FMC_DECIMAL128_NAN) * DECFLOAT_qNaN |
+                               ((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign;
 
-    uint32_t top18 =
-        DECCOMBFROM[(exp >> DECECONL) << 4] | ((exp & 0xfff) << 14);
-    DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
-    DFWORD((decQuad *)(dest), 0) |= top18;
+  if (!len) {
+    DFWORD((decQuad *)dest, 1) = 0;
+    DFWORD((decQuad *)dest, 2) = 0;
+    DFWORD((decQuad *)dest, 3) = 0;
+    return;
   }
-  DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DEC_NEG) == FMC_DEC_NEG) * DECFLOAT_Sign);  
+
+  fmc_decimal128_from_uint(dest, *(data + len - 1));
+  if (len > 1) {
+    fmc_decimal128_t digits19;
+    fmc_decimal128_from_uint(&digits19, 10000000000000000000ULL);
+    fmc_decimal128_mul(dest, dest, &digits19);
+    fmc_decimal128_t declow;
+    fmc_decimal128_from_uint(&declow, *(data + len - 2));
+    fmc_decimal128_add(dest, dest, &declow);
+  }
+
+  exp += GETEXP((decQuad *)dest);
+  uint32_t top18 =
+      DECCOMBFROM[((exp >> DECECONL) << 4) + GETMSD((decQuad *)dest)] | ((exp & 0xfff) << 14);
+  DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
+  DFWORD((decQuad *)(dest), 0) |= top18;
+
+  DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
 }
-void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *flag, const fmc_decimal128_t *src) {
-  *flag = fmc_decimal128_is_nan(src) * FMC_DEC_NAN |
-          fmc_decimal128_is_inf(src) * FMC_DEC_INF |
-          decQuadIsSigned((decQuad *)src) * FMC_DEC_NEG;
+
+void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, uint16_t *flag, const fmc_decimal128_t *src) {
+  *flag = fmc_decimal128_is_nan(src) * FMC_DECIMAL128_NAN |
+          fmc_decimal128_is_inf(src) * FMC_DECIMAL128_INF |
+          decQuadIsSigned((decQuad *)src) * FMC_DECIMAL128_NEG;
 
   *exp = GETEXPUN((decQuad *)src);
 
@@ -952,17 +964,23 @@ void fmc_decimal128_triple(uint64_t *hi, uint64_t *lo, int64_t *exp, FMC_FLAG *f
   dec2wword((sourml << 2) | (sourlo >> 30), *lo); /* declet 8 */
   dec2wword(sourml >> 8, *lo);                    /* declet 7 */
   dec2wword(sourml >> 18, *lo);                   /* declet 6 */
-  dec2wword((sourmh << 4) | (sourml >> 28), *lo); /* declet 5 */
 
-  // Ensure with tests that all values are handled properly and no
-  // special logic needs to be enforced to split up declet 5
+  *lo += (DPD2BIN[((sourmh << 4) | (sourml >> 28))&0x3ff] % 10) * mult;
 
-  mult = 1;
+  *hi += (DPD2BIN[((sourmh << 4) | (sourml >> 28))&0x3ff] / 10);
+
+  mult = 100;
   dec2wword(sourmh >> 6, *hi);                    /* declet 4 */
   dec2wword(sourmh >> 16, *hi);                   /* declet 3 */
   dec2wword((sourhi << 6) | (sourmh >> 26), *hi); /* declet 2 */
   dec2wword(sourhi >> 4, *hi);                    /* declet 1 */
 
+  char hibits[65] = {0};
+  char lobits[65] = {0};
+
+  fmc_uint64_bebits(*hi, hibits);
+  fmc_uint64_bebits(*lo, lobits);
+  printf("getting triple hi %s lo %s\n", hibits, lobits);
 }
 
 uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src) {
