@@ -305,26 +305,26 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
                        get_context());
 }
 
-#define gen_declets(val) \
-({\
-  uint64_t _val = (val);\
-  uint64_t encode = ((uint64_t)BIN2DPD[_val % 1000]);\
-  _val /= 1000;\
-  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 10;\
-  _val /= 1000;\
-  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 20;\
-  _val /= 1000;\
-  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 30;\
-  _val /= 1000;\
-  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 40;\
-  _val /= 1000;\
-  encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 50;\
-  _val /= 1000; /* now 0, or 1 */\
-  encode | _val << 60;\
-})
+#define gen_declets(val)                                                       \
+  ({                                                                           \
+    uint64_t _val = (val);                                                     \
+    uint64_t encode = ((uint64_t)BIN2DPD[_val % 1000]);                        \
+    _val /= 1000;                                                              \
+    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 10;                          \
+    _val /= 1000;                                                              \
+    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 20;                          \
+    _val /= 1000;                                                              \
+    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 30;                          \
+    _val /= 1000;                                                              \
+    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 40;                          \
+    _val /= 1000;                                                              \
+    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 50;                          \
+    _val /= 1000; /* now 0, or 1 */                                            \
+    encode | _val << 60;                                                       \
+  })
 
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
-  uint64_t u = (uint64_t)n;               /* copy as bits */
+  uint64_t u = (uint64_t)n;             /* copy as bits */
   DFWORD((decQuad *)res, 0) = QUADZERO; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
@@ -424,7 +424,7 @@ void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src,
 }
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
-  uint64_t encode;                        /* work */
+  uint64_t encode;                      /* work */
   DFWORD((decQuad *)res, 0) = QUADZERO; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
@@ -903,7 +903,8 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
   DFLONG((decQuad *)(dest), 0) |= dpdout >> 4;
 }
 
-void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t len, int64_t exp, uint16_t flag) {
+void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
+                               int64_t len, int64_t exp, uint16_t flag) {
   char hibits[65] = {0};
   char lobits[65] = {0};
 
@@ -912,9 +913,10 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t 
   printf("setting triple hi %s lo %s\n", hibits, lobits);
 
   if (flag && (flag != FMC_DECIMAL128_NEG)) {
-    DFWORD((decQuad *)dest, 0) = ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
-                                ((flag & FMC_DECIMAL128_SNAN) == FMC_DECIMAL128_SNAN) * DECFLOAT_sNaN | 
-                                ((flag & FMC_DECIMAL128_NAN) == FMC_DECIMAL128_NAN) * DECFLOAT_qNaN;
+    DFWORD((decQuad *)dest, 0) =
+        ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
+        ((flag & FMC_DECIMAL128_SNAN) == FMC_DECIMAL128_SNAN) * DECFLOAT_sNaN |
+        ((flag & FMC_DECIMAL128_NAN) == FMC_DECIMAL128_NAN) * DECFLOAT_qNaN;
     DFWORD((decQuad *)dest, 1) = 0;
     DFWORD((decQuad *)dest, 2) = 0;
     DFWORD((decQuad *)dest, 3) = 0;
@@ -933,12 +935,14 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t 
 
     exp += GETEXP((decQuad *)dest);
     uint32_t top18 =
-        DECCOMBFROM[((exp >> DECECONL) << 4) + GETMSD((decQuad *)dest)] | ((exp & 0xfff) << 14);
+        DECCOMBFROM[((exp >> DECECONL) << 4) + GETMSD((decQuad *)dest)] |
+        ((exp & 0xfff) << 14);
     DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
     DFWORD((decQuad *)(dest), 0) |= top18;
   }
 
-  DFWORD((decQuad *)(dest), 0) |= (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
+  DFWORD((decQuad *)(dest), 0) |=
+      (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
 
   // Call decFinalize?
 
@@ -946,12 +950,13 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data, uint64_t 
   fmc_decimal128_pretty(dest);
 }
 
-void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp, uint16_t *flag, const fmc_decimal128_t *src) {
+void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
+                           uint16_t *flag, const fmc_decimal128_t *src) {
   printf("getting triple for value :\n");
   fmc_decimal128_pretty(src);
   *flag = fmc_decimal128_is_nan(src) * FMC_DECIMAL128_NAN |
           fmc_decimal128_is_inf(src) * FMC_DECIMAL128_INF |
-          (decQuadIsSigned((decQuad *)src)!=0) * FMC_DECIMAL128_NEG;
+          (decQuadIsSigned((decQuad *)src) != 0) * FMC_DECIMAL128_NEG;
 
   *exp = GETEXPUN((decQuad *)src);
 
@@ -960,8 +965,8 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp, uint16_t 
 
   uint64_t mult = 1;
 
-#define dec2wword(dpdin, dpdout)                           \
-  (dpdout) += ((uint64_t)DPD2BIN[(dpdin)&0x3ff]) * mult;             \
+#define dec2wword(dpdin, dpdout)                                               \
+  (dpdout) += ((uint64_t)DPD2BIN[(dpdin)&0x3ff]) * mult;                       \
   mult *= 1000;
 
   /* Source words; macro handles endianness */
@@ -977,7 +982,7 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp, uint16_t 
   dec2wword(sourml >> 8, lo);                    /* declet 7 */
   dec2wword(sourml >> 18, lo);                   /* declet 6 */
 
-  uint64_t declet5 = DPD2BIN[((sourmh << 4) | (sourml >> 28))&0x3ff];
+  uint64_t declet5 = DPD2BIN[((sourmh << 4) | (sourml >> 28)) & 0x3ff];
   lo += (declet5 % 10) * mult;
   hi += declet5 / 10;
 
