@@ -999,3 +999,7 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp, uint16_t 
   *data = lo;
   *(data + 1) = hi;
 }
+
+uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src) {
+  return decQuadDigits((decQuad *)src);
+}
