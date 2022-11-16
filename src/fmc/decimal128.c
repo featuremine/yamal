@@ -987,6 +987,8 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp, uint16_t 
   dec2wword((sourhi << 6) | (sourmh >> 26), hi); /* declet 2 */
   dec2wword(sourhi >> 4, hi);                    /* declet 1 */
 
+  hi += GETMSD((decQuad *)src) * mult;
+
   char hibits[65] = {0};
   char lobits[65] = {0};
 
