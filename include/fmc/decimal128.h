@@ -51,12 +51,9 @@ FMMODFUNC void fmc_decimal128_to_std_str(char *dest,
                                          size_t intdigits, size_t decdigits,
                                          fmc_error_t **error);
 FMMODFUNC void fmc_decimal128_from_uint(fmc_decimal128_t *dest, uint64_t src);
-FMMODFUNC void fmc_decimal128_to_uint(uint64_t *dest,
-                                      const fmc_decimal128_t *src,
-                                      fmc_error_t **err);
+FMMODFUNC void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_from_int(fmc_decimal128_t *dest, int64_t src);
-FMMODFUNC void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src,
-                                     fmc_error_t **err);
+FMMODFUNC void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src);
 FMMODFUNC void fmc_decimal128_from_double(fmc_decimal128_t *res, double n);
 FMMODFUNC void fmc_decimal128_to_double(double *dest,
                                         const fmc_decimal128_t *res);

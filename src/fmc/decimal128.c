@@ -117,55 +117,36 @@ const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
     const char *clast = c - 1; /* note last coefficient char position */
     const char *parsed = c;
     Int exp = 0;               /* exponent accumulator */
-    while (*c == 'E' || *c == 'e') {          /* something follows the coefficient */
+    if (*c == 'E' || *c == 'e') {          /* something follows the coefficient */
       uInt edig;               /* unsigned work */
       /* had some digits and more to come; expect E[+|-]nnn now */
       const char *firstexp; /* exponent first non-zero */
-      c++; /* to (optional) sign */
-      bool is_negative = false;
-      if (*c == '-') {
-        is_negative = true;
-        c++; /* step over sign (c=clast+2) */
-      }
-      else if(*c == '+') {
-        c++; /* step over sign (c=clast+2) */
-      }
-      if (*c == '0') {
-        do {
-          c++;        /* skip leading zeros [even last] */
-        } while (*c == '0');
-        parsed = c;
-      }
+      ++c; /* to (optional) sign */
+      if (*c == '-' || *c == '+')
+        ++c; /* step over sign (c=clast+2) */
+      for(;*c == '0'; ++c, parsed = c);
       firstexp = c; /* remember start [maybe not digit] */
       /* gather exponent digits */
-      edig = (uInt)*c - (uInt)'0';
-      if (edig <= 9) { /* [check not bad or terminator] */
-        exp += edig;   /* avoid initial X10 */
-        c++;
-        for (;; c++) {
-          edig = (uInt)*c - (uInt)'0';
-          if (edig > 9)
-            break;
-          exp = exp * 10 + edig;
-        }
-        parsed = c;
-      }
-
+      do {
+        edig = (uInt)*c - (uInt)'0';
+        if (edig > 9) break;
+        exp = exp * 10 + edig;
+        parsed = ++c;
+      } while(1);
       /* (this next test must be after the syntax checks) */
       /* if definitely more than the possible digits for format then */
       /* the exponent may have wrapped, so simply set it to a certain */
       /* over/underflow value */
       if (c > firstexp + DECEMAXD)
         exp = DECEMAX * 2;
-      if (is_negative)
+      if (*(clast + 2) == '-')
         exp = -exp; /* was negative */
-      break;
     }               /* digits>0 */
 
     if (dotchar != NULL) { /* had a '.' */
       digits--;            /* remove from digits count */
       if (digits == 0)
-        return string;                       /* was dot alone: bad syntax */
+        return string;     /* was dot alone: bad syntax */
       exp -= (Int)(clast - dotchar); /* adjust exponent */
       /* [the '.' can now be ignored] */
     }
@@ -261,24 +242,23 @@ const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
     return parsed;
   }   /* digits or dot */
 
-  else { /* no digits or dot were found */
-    /* only Infinities and NaNs are allowed, here */
-    size_t len = 0;
-    if ( (len = fmc_cstr_biparse(c, "infinity", "INFINITY")) || (len = fmc_cstr_biparse(c, "inf", "INF")) ) {
-      fmc_decimal128_inf(dest);
-      fmc_decimal128_sign_set(dest, num.sign);
-      return cfirst + len;
-    } else if ((len = fmc_cstr_biparse(c, "nan", "NAN"))) {
-      fmc_decimal128_qnan(dest);
-      fmc_decimal128_sign_set(dest, num.sign);
-      return cfirst + len;
-    } else if ((len = fmc_cstr_biparse(c, "snan", "SNAN"))) {
-      fmc_decimal128_snan(dest);
-      fmc_decimal128_sign_set(dest, num.sign);
-      return cfirst + len;
-    }          /* NaN or sNaN */
-    return string;
-  }            /* digits=0 (special expected) */
+  /* no digits or dot were found */
+  /* only Infinities and NaNs are allowed, here */
+  size_t len = 0;
+  if ( (len = fmc_cstr_biparse(c, "infinity", "INFINITY")) || (len = fmc_cstr_biparse(c, "inf", "INF")) ) {
+    fmc_decimal128_inf(dest);
+    fmc_decimal128_sign_set(dest, num.sign);
+    return cfirst + len;
+  } else if ((len = fmc_cstr_biparse(c, "nan", "NAN"))) {
+    fmc_decimal128_qnan(dest);
+    fmc_decimal128_sign_set(dest, num.sign);
+    return cfirst + len;
+  } else if ((len = fmc_cstr_biparse(c, "snan", "SNAN"))) {
+    fmc_decimal128_snan(dest);
+    fmc_decimal128_sign_set(dest, num.sign);
+    return cfirst + len;
+  }          /* NaN or sNaN */
+  return string;
 }
 
 void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src, fmc_error_t **err) {
@@ -632,13 +612,8 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
   return (uint64_t)i;
 }
 
-void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src,
-                           fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src) {
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 0);
-  if (fetestexcept(FE_ALL_EXCEPT)) {
-    fmc_error_set(err, "unable to convert to int");
-  }
 }
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
@@ -663,13 +638,8 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   DFLONG((decQuad *)res, 0) |= u >> 4;
 }
 
-void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src,
-                            fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src) {
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
-  if (fetestexcept(FE_ALL_EXCEPT)) {
-    fmc_error_set(err, "unable to convert to uint");
-  }
 }
 
 void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
@@ -746,9 +716,8 @@ void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
     }
   }
 
-  fmc_error_t *error;
   int64_t mantissa;
-  fmc_decimal128_to_int(&mantissa, &d, &error);
+  fmc_decimal128_to_int(&mantissa, &d);
   mantissa = labs(mantissa);
 
   uint64_t actual_digit2 = FMC_FLOORLOG2(mantissa);
