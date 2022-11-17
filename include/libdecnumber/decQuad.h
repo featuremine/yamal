@@ -108,8 +108,10 @@ typedef union {
 /* ---------------------------------------------------------------- */
 
 #include "decQuadSymbols.h"
+#include "decNumberLocal.h"
 
 /* Utilities and conversions, extractors, etc.) */
+extern decQuad *decQuadFinalize(decQuad *df, bcdnum *num, decContext *set);
 extern decQuad *decQuadFromBCD(decQuad *, int32_t, const uint8_t *, int32_t);
 extern decQuad *decQuadFromInt32(decQuad *, int32_t);
 extern decQuad *decQuadFromPacked(decQuad *, int32_t, const uint8_t *);

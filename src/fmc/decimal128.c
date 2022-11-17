@@ -23,11 +23,10 @@
 #include "fmc/decimal128.h"
 #include "fmc/alignment.h"
 #include "fmc/math.h"
+#include "fmc/string.h"
 
 #include "decContext.h"
 #include "decQuad.h"
-
-#include "decNumberLocal.h"
 
 #include <fenv.h>
 #include <math.h>
@@ -64,12 +63,215 @@ const fmc_decimal128_t fmc_decimal128_exp63[18] = {
     {{0xaea60626d3de3a66ull, 0x2a506b00a0e6705aull}},
 };
 
-void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src,
-                             fmc_error_t **err) {
+const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
+  Int digits;                         /* count of digits in coefficient */
+  const char *dotchar = NULL;         /* where dot was found [NULL if none] */
+  const char *cfirst = string;        /* -> first character of decimal part */
+  const char *c;                      /* work */
+  uByte *ub;                          /* .. */
+  uInt uiwork;                        /* for macros */
+  bcdnum num;                         /* collects data for finishing */
+  uByte buffer[ROUNDUP(DECSTRING + 11, 8)]; /* room for most coefficents, */
+  /* some common rounding, +3, & pad */
+#if DECTRACE
+/* printf("FromString %s ...\n", string); */
+#endif
+
+  num.sign = 0;     /* assume non-negative */
+  num.msd = buffer; /* MSD is here always */
+
+  /* detect and validate the coefficient, including any leading, */
+  /* trailing, or embedded '.' */
+  /* [could test four-at-a-time here (saving 10% for decQuads), */
+  /* but that risks storage violation because the position of the */
+  /* terminator is unknown] */
+  for (c = string;; c++) { /* -> input character */
+    if (((unsigned)(*c - '0')) <= 9)
+      continue; /* '0' through '9' is good */
+    if (*c == '\0')
+      break; /* most common non-digit */
+    if (*c == '.') {
+      if (dotchar != NULL)
+        break;     /* not first '.' */
+      dotchar = c; /* record offset into decimal part */
+      continue;
+    }
+    if (c == string) { /* first in string... */
+      if (*c == '-') { /* valid - sign */
+        cfirst++;
+        num.sign = DECFLOAT_Sign;
+        continue;
+      }
+      if (*c == '+') { /* valid + sign */
+        cfirst++;
+        continue;
+      }
+    }
+    /* *c is not a digit, terminator, or a valid +, -, or '.' */
+    break;
+  } /* c loop */
+
+  digits = (uInt)(c - cfirst); /* digits (+1 if a dot) */
+
+  if (digits > 0) {            /* had digits and/or dot */
+    const char *clast = c - 1; /* note last coefficient char position */
+    const char *parsed = c;
+    Int exp = 0;               /* exponent accumulator */
+    if (*c == 'E' || *c == 'e') {          /* something follows the coefficient */
+      uInt edig;               /* unsigned work */
+      /* had some digits and more to come; expect E[+|-]nnn now */
+      const char *firstexp; /* exponent first non-zero */
+      ++c; /* to (optional) sign */
+      if (*c == '-' || *c == '+')
+        ++c; /* step over sign (c=clast+2) */
+      for(;*c == '0'; ++c, parsed = c);
+      firstexp = c; /* remember start [maybe not digit] */
+      /* gather exponent digits */
+      do {
+        edig = (uInt)*c - (uInt)'0';
+        if (edig > 9) break;
+        exp = exp * 10 + edig;
+        parsed = ++c;
+      } while(1);
+      /* (this next test must be after the syntax checks) */
+      /* if definitely more than the possible digits for format then */
+      /* the exponent may have wrapped, so simply set it to a certain */
+      /* over/underflow value */
+      if (c > firstexp + DECEMAXD)
+        exp = DECEMAX * 2;
+      if (*(clast + 2) == '-')
+        exp = -exp; /* was negative */
+    }               /* digits>0 */
+
+    if (dotchar != NULL) { /* had a '.' */
+      digits--;            /* remove from digits count */
+      if (digits == 0)
+        return string;     /* was dot alone: bad syntax */
+      exp -= (Int)(clast - dotchar); /* adjust exponent */
+      /* [the '.' can now be ignored] */
+    }
+    num.exponent = exp; /* exponent is good; store it */
+
+    /* Here when whole string has been inspected and syntax is good */
+    /* cfirst->first digit or dot, clast->last digit or dot */
+
+    /* if the number of digits in the coefficient will fit in buffer */
+    /* then it can simply be converted to bcd8 and copied -- decFinalize */
+    /* will take care of leading zeros and rounding; the buffer is big */
+    /* enough for all canonical coefficients, including 0.00000nn... */
+    ub = buffer;
+    if (digits <= (Int)(sizeof(buffer) - 3)) { /* [-3 allows by-4s copy] */
+      c = cfirst;
+      if (dotchar != NULL) {         /* a dot to worry about */
+        if (*(c + 1) == '.') {       /* common canonical case */
+          *ub++ = (uByte)(*c - '0'); /* copy leading digit */
+          c += 2;                    /* prepare to handle rest */
+        } else
+          for (; c <= clast;) { /* '.' could be anywhere */
+            /* as usual, go by fours when safe; NB it has been asserted */
+            /* that a '.' does not have the same mask as a digit */
+            if (c <= clast - 3                             /* safe for four */
+                && (UBTOUI(c) & 0xf0f0f0f0) == CHARMASK) { /* test four */
+              UBFROMUI(ub, UBTOUI(c) & 0x0f0f0f0f);        /* to BCD8 */
+              ub += 4;
+              c += 4;
+              continue;
+            }
+            if (*c == '.') { /* found the dot */
+              c++;           /* step over it .. */
+              break;         /* .. and handle the rest */
+            }
+            *ub++ = (uByte)(*c++ - '0');
+          }
+      } /* had dot */
+      /* Now no dot; do this by fours (where safe) */
+      for (; c <= clast - 3; c += 4, ub += 4)
+        UBFROMUI(ub, UBTOUI(c) & 0x0f0f0f0f);
+      for (; c <= clast; c++, ub++)
+        *ub = (uByte)(*c - '0');
+      num.lsd = buffer + digits - 1; /* record new LSD */
+    }                                /* fits */
+
+    else { /* too long for buffer */
+      /* [This is a rare and unusual case; arbitrary-length input] */
+      /* strip leading zeros [but leave final 0 if all 0's] */
+      if (*cfirst == '.')
+        cfirst++;           /* step past dot at start */
+      if (*cfirst == '0') { /* [cfirst always -> digit] */
+        for (; cfirst < clast; cfirst++) {
+          if (*cfirst != '0') { /* non-zero found */
+            if (*cfirst == '.')
+              continue; /* [ignore] */
+            break;      /* done */
+          }
+          digits--; /* 0 stripped */
+        }           /* cfirst */
+      }             /* at least one leading 0 */
+
+      /* the coefficient is now as short as possible, but may still */
+      /* be too long; copy up to Pmax+1 digits to the buffer, then */
+      /* just record any non-zeros (set round-for-reround digit) */
+      for (c = cfirst; c <= clast && ub <= buffer + DECPMAX; c++) {
+        /* (see commentary just above) */
+        if (c <= clast - 3                             /* safe for four */
+            && (UBTOUI(c) & 0xf0f0f0f0) == CHARMASK) { /* four digits */
+          UBFROMUI(ub, UBTOUI(c) & 0x0f0f0f0f);        /* to BCD8 */
+          ub += 4;
+          c += 3; /* [will become 4] */
+          continue;
+        }
+        if (*c == '.')
+          continue; /* [ignore] */
+        *ub++ = (uByte)(*c - '0');
+      }
+      ub--;                     /* -> LSD */
+      for (; c <= clast; c++) { /* inspect remaining chars */
+        if (*c != '0') {        /* sticky bit needed */
+          if (*c == '.')
+            continue;              /* [ignore] */
+          *ub = DECSTICKYTAB[*ub]; /* update round-for-reround */
+          break;                   /* no need to look at more */
+        }
+      }
+      num.lsd = ub; /* record LSD */
+      /* adjust exponent for dropped digits */
+      num.exponent += digits - (Int)(ub - buffer + 1);
+    } /* too long for buffer */
+
+    decQuadFinalize((decQuad *) dest, &num, get_context()); /* round, check, and lay out */
+    return parsed;
+  }   /* digits or dot */
+
+  /* no digits or dot were found */
+  /* only Infinities and NaNs are allowed, here */
+  size_t len = 0;
+  if ( (len = fmc_cstr_biparse(c, "infinity", "INFINITY")) || (len = fmc_cstr_biparse(c, "inf", "INF")) ) {
+    fmc_decimal128_inf(dest);
+    fmc_decimal128_sign_set(dest, num.sign);
+    return cfirst + len;
+  } else if ((len = fmc_cstr_biparse(c, "nan", "NAN"))) {
+    fmc_decimal128_qnan(dest);
+    fmc_decimal128_sign_set(dest, num.sign);
+    return cfirst + len;
+  } else if ((len = fmc_cstr_biparse(c, "snan", "SNAN"))) {
+    fmc_decimal128_snan(dest);
+    fmc_decimal128_sign_set(dest, num.sign);
+    return cfirst + len;
+  }          /* NaN or sNaN */
+  return string;
+}
+
+void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src, fmc_error_t **err) {
   fmc_error_clear(err);
-  decQuadFromString((decQuad *)dest, src, get_context());
-  if (fetestexcept(FE_ALL_EXCEPT)) {
-    fmc_error_set(err, "unable to process string");
+
+  if (*src == '\0') {
+    fmc_error_set(err, "empty string in conversion");
+    return;
+  }
+
+  const char *res = fmc_decimal128_parse(dest, src);
+  if (*res != '\0') {
+    fmc_error_set(err, "only %llu characters parsed", res - src);
   }
 }
 
@@ -410,13 +612,8 @@ static uint64_t decToInt64(const decQuad *df, decContext *set,
   return (uint64_t)i;
 }
 
-void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src,
-                           fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_to_int(int64_t *dest, const fmc_decimal128_t *src) {
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 0);
-  if (fetestexcept(FE_ALL_EXCEPT)) {
-    fmc_error_set(err, "unable to convert to int");
-  }
 }
 
 void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
@@ -442,13 +639,8 @@ void fmc_decimal128_from_uint(fmc_decimal128_t *res, uint64_t u) {
   DFLONG((decQuad *)res, 0) |= declet >> 4;
 }
 
-void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src,
-                            fmc_error_t **err) {
-  fmc_error_clear(err);
+void fmc_decimal128_to_uint(uint64_t *dest, const fmc_decimal128_t *src) {
   *dest = decToInt64((decQuad *)src, get_context(), DEC_ROUND_HALF_UP, 1, 1);
-  if (fetestexcept(FE_ALL_EXCEPT)) {
-    fmc_error_set(err, "unable to convert to uint");
-  }
 }
 
 void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
@@ -458,9 +650,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
   if (exp == 0x000ll) {
     if (mantissa == 0) {
       fmc_decimal128_from_uint(res, 0);
-      if (is_negative) {
-        fmc_decimal128_negate(res, res);
-      }
+      fmc_decimal128_sign_set(res, is_negative);
       return;
     } else {
       exp = 1ll - 1023ll - 52ll;
@@ -471,9 +661,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
     } else {
       fmc_decimal128_qnan(res);
     }
-    if (is_negative) {
-      fmc_decimal128_negate(res, res);
-    }
+    fmc_decimal128_sign_set(res, is_negative);
     return;
   } else {
     mantissa += (1ll << 52ll);
@@ -496,9 +684,7 @@ void fmc_decimal128_from_double(fmc_decimal128_t *res, double n) {
       fmc_decimal128_div(res, res, &fmc_decimal128_exp63[absexp / 63ll]);
     }
   }
-  if (is_negative) {
-    fmc_decimal128_negate(res, res);
-  }
+  fmc_decimal128_sign_set(res, is_negative);
 }
 
 void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
@@ -531,9 +717,8 @@ void fmc_decimal128_to_double(double *res, const fmc_decimal128_t *src) {
     }
   }
 
-  fmc_error_t *error;
   int64_t mantissa;
-  fmc_decimal128_to_int(&mantissa, &d, &error);
+  fmc_decimal128_to_int(&mantissa, &d);
   mantissa = labs(mantissa);
 
   uint64_t actual_digit2 = FMC_FLOORLOG2(mantissa);
@@ -676,6 +861,11 @@ void fmc_decimal128_abs(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
 
 void fmc_decimal128_negate(fmc_decimal128_t *res, const fmc_decimal128_t *val) {
   decQuadCopyNegate((decQuad *)res, (const decQuad *)val);
+}
+
+void fmc_decimal128_sign_set(fmc_decimal128_t *res, bool sign) {
+  DFBYTE((decQuad *)res, 0) &= ~(1 << 7);
+  DFBYTE((decQuad *)res, 0) |= ((!!sign) << 7);
 }
 
 void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow) {

@@ -38,3 +38,13 @@ char *fmc_cstr_new2(const char *str, size_t sz, fmc_error_t **error) {
 char *fmc_cstr_new(const char *str, fmc_error_t **error) {
   return fmc_cstr_new2(str, strlen(str), error);
 }
+
+size_t fmc_cstr_biparse(const char *targ, const char *str1, const char *str2) {
+  size_t s = 0;
+  for (;*str1 != '\0'; s++, targ++, str1++, str2++) {
+    if (*targ != *str1 && *targ != *str2) {
+      return 0;
+    }
+  }
+  return s;
+}

@@ -58,6 +58,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define decFloatToUInt32Exact decQuadToUInt32Exact
 #define decFloatToWider decQuadToWider
 #define decFloatZero decQuadZero
+#define decFinalize decQuadFinalize
 
 /* Computational (result is a decFloat) */
 #define decFloatAbs decQuadAbs
