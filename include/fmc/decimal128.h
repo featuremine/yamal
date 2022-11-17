@@ -111,6 +111,7 @@ FMMODFUNC void fmc_decimal128_abs(fmc_decimal128_t *res,
                                   const fmc_decimal128_t *val);
 FMMODFUNC void fmc_decimal128_negate(fmc_decimal128_t *res,
                                      const fmc_decimal128_t *val);
+FMMODFUNC void fmc_decimal128_sign_set(fmc_decimal128_t *res, bool sign);
 FMMODFUNC void fmc_decimal128_pow10(fmc_decimal128_t *res, int pow);
 FMMODFUNC int fmc_decimal128_lead_zeros(const fmc_decimal128_t *res);
 FMMODFUNC int fmc_decimal128_flog10abs(const fmc_decimal128_t *res);

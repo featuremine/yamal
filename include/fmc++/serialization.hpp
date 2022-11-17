@@ -225,6 +225,7 @@ inline bool cmp_read_item(cmp_ctx_t *ctx, fmc_decimal128_t *arg) {
     if (err) {
       return false;
     }
+    return true;
   } else if (cmp_object_is_sinteger(&obj)) {
     int64_t num = 0;
     if (!cmp_object_as_sinteger(&obj, &num)) {
