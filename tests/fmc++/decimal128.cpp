@@ -278,6 +278,24 @@ TEST(decimal128, from_uint_extreme) {
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
 }
 
+TEST(decimal128, from_uint_19digits) {
+  feclearexcept(FE_ALL_EXCEPT);
+  uint64_t max = 10000000000000000000ULL;
+  fmc_decimal128_t a;
+  fmc_error_t *err;
+  fmc_decimal128_from_uint(&a, max);
+  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  char str[256];
+  fmc_decimal128_to_str(str, &a);
+  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  ASSERT_STREQ(str, "10000000000000000000");
+  uint64_t res;
+  fmc_decimal128_to_uint(&res, &a, &err);
+  ASSERT_EQ(err, nullptr);
+  ASSERT_EQ(res, max);
+  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+}
+
 TEST(decimal128, from_int_zero) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = 0;
@@ -1963,6 +1981,107 @@ TEST(decimal128, cannonicalize) {
   fmc_decimal128_stdrep(&cannon, &a);
   EXPECT_EQ(std::hash<fmc_decimal128_t>{}(a),
             std::hash<fmc_decimal128_t>{}(cannon));
+}
+
+TEST(decimal128, triple_identity) {
+
+  auto identity_test = [](uint64_t *data, int64_t len, int64_t exp,
+                          uint16_t flag) {
+    fmc_decimal128_t a;
+    fmc_decimal128_set_triple(&a, data, len, exp, flag);
+
+    uint64_t outdata[4] = {0ULL};
+    int64_t outlen;
+    int64_t outexp;
+    uint16_t outflag;
+
+    fmc_decimal128_triple(outdata, &outlen, &outexp, &outflag, &a);
+    ASSERT_EQ(memcmp(data, outdata, sizeof(outdata)), 0);
+    ASSERT_EQ(len, outlen);
+    ASSERT_EQ(exp, outexp);
+    ASSERT_EQ(flag, outflag);
+  };
+
+  uint64_t data[4] = {0ULL};
+
+  // zero
+  identity_test(data, 1, 1, 0);
+
+  // -zero
+  identity_test(data, 1, 1, FMC_DECIMAL128_NEG);
+
+  // qnan
+  identity_test(data, 0, 2080368608, FMC_DECIMAL128_NAN);
+
+  // -qnan
+  identity_test(data, 0, 2080368608, FMC_DECIMAL128_NAN | FMC_DECIMAL128_NEG);
+
+  // snan
+  identity_test(data, 0, 2080370656, FMC_DECIMAL128_SNAN);
+
+  // -snan
+  identity_test(data, 0, 2080370656, FMC_DECIMAL128_SNAN | FMC_DECIMAL128_NEG);
+
+  // inf
+  identity_test(data, 0, 2013259744, FMC_DECIMAL128_INF | FMC_DECIMAL128_NEG);
+
+  // -inf
+  identity_test(data, 0, 2013259744, FMC_DECIMAL128_INF | FMC_DECIMAL128_NEG);
+
+  data[0] = 22ULL;
+
+  // 22
+  identity_test(data, 1, 1, 0);
+
+  // -22
+  identity_test(data, 1, 1, FMC_DECIMAL128_NEG);
+
+  data[1] = 22ULL;
+
+  // 2200000000000000022
+  identity_test(data, 2, 1, 0);
+
+  // -2200000000000000022
+  identity_test(data, 2, 1, FMC_DECIMAL128_NEG);
+
+  auto precision_loss_identity_test =
+      [](uint64_t *data, int64_t len, int64_t exp, uint16_t flag,
+         uint64_t *expected, int64_t expectedlen, int64_t expectedexp) {
+        fmc_decimal128_t a;
+        fmc_decimal128_set_triple(&a, data, len, exp, flag);
+
+        uint64_t outdata[4] = {0ULL};
+        int64_t outlen;
+        int64_t outexp;
+        uint16_t outflag;
+
+        fmc_decimal128_triple(outdata, &outlen, &outexp, &outflag, &a);
+        ASSERT_EQ(memcmp(expected, outdata, sizeof(outdata)), 0);
+        ASSERT_EQ(expectedlen, outlen);
+        ASSERT_EQ(expectedexp, outexp);
+        ASSERT_EQ(flag, outflag);
+      };
+
+  uint64_t expected[4] = {0ULL};
+
+  data[2] = 22ULL;
+
+  expected[0] = 220000000000000ULL;
+  expected[1] = 220000000000000ULL;
+
+  // 2200000000000000000220000000000000000022
+  precision_loss_identity_test(data, 3, 1, 0, expected, 2, 7);
+
+  // -2200000000000000000220000000000000000022
+  precision_loss_identity_test(data, 3, 1, FMC_DECIMAL128_NEG, expected, 2, 7);
+
+  data[3] = 22ULL;
+
+  // 22000000000000000002200000000000000000220000000000000000022
+  precision_loss_identity_test(data, 4, 1, 0, expected, 2, 26);
+
+  // -22000000000000000002200000000000000000220000000000000000022
+  precision_loss_identity_test(data, 4, 1, FMC_DECIMAL128_NEG, expected, 2, 26);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
