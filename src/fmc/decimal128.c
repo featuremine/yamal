@@ -792,23 +792,6 @@ void fmc_decimal128_pretty(const fmc_decimal128_t *src) {
          bits + 118);
 }
 
-#define shiftdec(source, destination, offset)                                  \
-  ({                                                                           \
-    uint16_t decoffset = (offset)*10;                                          \
-    uint64_t sourhi = DFLONG((decQuad *)(source), 0);                          \
-    uint64_t sourlo = DFLONG((decQuad *)(source), 1);                          \
-    uint64_t mask = (sourhi >> 46) << 46;                                      \
-    DFLONG((decQuad *)(destination), 0) = mask | (sourhi & ~mask)              \
-                                                     << decoffset;             \
-    if (decoffset < 64) {                                                      \
-      DFLONG((decQuad *)(destination), 0) |= sourlo >> (64 - decoffset);       \
-      DFLONG((decQuad *)(destination), 1) = sourlo << decoffset;               \
-    } else {                                                                   \
-      DFLONG((decQuad *)(destination), 0) |= sourlo << (decoffset - 64);       \
-      DFLONG((decQuad *)(destination), 1) = 0ULL;                              \
-    }                                                                          \
-  })
-
 void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
                            const fmc_decimal128_t *src) {
   uint32_t exp = DECCOMBEXP[(DFWORD((const decQuad *)src, 0)) >> 26];
@@ -830,6 +813,23 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
     dest->longs[1] = 0ULL;
     return;
   }
+
+#define shiftdec(source, destination, offset)                                  \
+  ({                                                                           \
+    uint16_t decoffset = (offset)*10;                                          \
+    uint64_t sourhi = DFLONG((decQuad *)(source), 0);                          \
+    uint64_t sourlo = DFLONG((decQuad *)(source), 1);                          \
+    uint64_t mask = (sourhi >> 46) << 46;                                      \
+    DFLONG((decQuad *)(destination), 0) = mask | (sourhi & ~mask)              \
+                                                     << decoffset;             \
+    if (decoffset < 64) {                                                      \
+      DFLONG((decQuad *)(destination), 0) |= sourlo >> (64 - decoffset);       \
+      DFLONG((decQuad *)(destination), 1) = sourlo << decoffset;               \
+    } else {                                                                   \
+      DFLONG((decQuad *)(destination), 0) |= sourlo << (decoffset - 64);       \
+      DFLONG((decQuad *)(destination), 1) = 0ULL;                              \
+    }                                                                          \
+  })
 
   // move everything to the first declet onwards
   uint32_t decsft = (zeros - 1) / 3;
