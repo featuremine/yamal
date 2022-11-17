@@ -1777,9 +1777,13 @@ char *decFloatToString(const decFloat *df, char *string) {
     if (exp == DECFLOAT_Inf) {    /* infinity */
       strcpy(c, "inf");
       return string; /* easy */
+    } else if (exp == DECFLOAT_sNaN) {
+      strcpy(c, "snan"); /* complete word */
+      c += 4;           /* step past */
+    } else {
+      strcpy(c, "nan"); /* complete word */
+      c += 3;           /* step past */
     }
-    strcpy(c, "nan"); /* complete word */
-    c += 3;           /* step past */
 /* quick exit if the payload is zero */
 #if DECPMAX == 7
     if ((sourhi & 0x000fffff) == 0)
