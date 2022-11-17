@@ -935,7 +935,8 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
 
 void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
                            uint16_t *flag, const fmc_decimal128_t *src) {
-  *flag = fmc_decimal128_is_nan(src) * FMC_DECIMAL128_NAN |
+  *flag = fmc_decimal128_is_qnan(src) * FMC_DECIMAL128_NAN |
+          fmc_decimal128_is_snan(src) * FMC_DECIMAL128_SNAN |
           fmc_decimal128_is_inf(src) * FMC_DECIMAL128_INF |
           (decQuadIsSigned((decQuad *)src) != 0) * FMC_DECIMAL128_NEG;
 
@@ -973,7 +974,7 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
   dec2wword(sourhi >> 4, hi);                    /* declet 1 */
 
   hi += GETMSD((decQuad *)src) * mult;
-  *len = 1 + (hi != 0);
+  *len = (!*flag || (*flag == FMC_DECIMAL128_NEG)) * (1 + (hi != 0));
   *data = lo;
   *(data + 1) = hi;
 }
