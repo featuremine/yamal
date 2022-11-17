@@ -271,7 +271,6 @@ TEST(decimal128, from_uint_19digits) {
   feclearexcept(FE_ALL_EXCEPT);
   uint64_t max = 10000000000000000000ULL;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_uint(&a, max);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   char str[256];
@@ -279,8 +278,7 @@ TEST(decimal128, from_uint_19digits) {
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   ASSERT_STREQ(str, "10000000000000000000");
   uint64_t res;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_uint(&res, &a);
   ASSERT_EQ(res, max);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
 }
