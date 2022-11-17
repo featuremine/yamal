@@ -879,6 +879,4 @@ extern void decShowNum(const bcdnum *, const char *);
 /* [end of format-dependent macros and constants]		      */
 #endif
 
-#else
-#error decNumberLocal included more than once
 #endif
