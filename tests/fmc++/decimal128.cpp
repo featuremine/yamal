@@ -1985,7 +1985,8 @@ TEST(decimal128, cannonicalize) {
 
 TEST(decimal128, triple_identity) {
 
-  auto identity_test = [](uint64_t *data, int64_t len, int64_t exp, uint16_t flag) {
+  auto identity_test = [](uint64_t *data, int64_t len, int64_t exp,
+                          uint16_t flag) {
     fmc_decimal128_t a;
     fmc_decimal128_set_triple(&a, data, len, exp, flag);
 
@@ -2043,21 +2044,23 @@ TEST(decimal128, triple_identity) {
   // -2200000000000000022
   identity_test(data, 2, 1, FMC_DECIMAL128_NEG);
 
-  auto precision_loss_identity_test = [](uint64_t *data, int64_t len, int64_t exp, uint16_t flag, uint64_t *expected, int64_t expectedlen, int64_t expectedexp) {
-    fmc_decimal128_t a;
-    fmc_decimal128_set_triple(&a, data, len, exp, flag);
+  auto precision_loss_identity_test =
+      [](uint64_t *data, int64_t len, int64_t exp, uint16_t flag,
+         uint64_t *expected, int64_t expectedlen, int64_t expectedexp) {
+        fmc_decimal128_t a;
+        fmc_decimal128_set_triple(&a, data, len, exp, flag);
 
-    uint64_t outdata[4] = {0ULL};
-    int64_t outlen;
-    int64_t outexp;
-    uint16_t outflag;
+        uint64_t outdata[4] = {0ULL};
+        int64_t outlen;
+        int64_t outexp;
+        uint16_t outflag;
 
-    fmc_decimal128_triple(outdata, &outlen, &outexp, &outflag, &a);
-    ASSERT_EQ(memcmp(expected, outdata, sizeof(outdata)), 0);
-    ASSERT_EQ(expectedlen, outlen);
-    ASSERT_EQ(expectedexp, outexp);
-    ASSERT_EQ(flag, outflag);
-  };
+        fmc_decimal128_triple(outdata, &outlen, &outexp, &outflag, &a);
+        ASSERT_EQ(memcmp(expected, outdata, sizeof(outdata)), 0);
+        ASSERT_EQ(expectedlen, outlen);
+        ASSERT_EQ(expectedexp, outexp);
+        ASSERT_EQ(flag, outflag);
+      };
 
   uint64_t expected[4] = {0ULL};
 
@@ -2079,7 +2082,6 @@ TEST(decimal128, triple_identity) {
 
   // -22000000000000000002200000000000000000220000000000000000022
   precision_loss_identity_test(data, 4, 1, FMC_DECIMAL128_NEG, expected, 2, 26);
-
 }
 
 GTEST_API_ int main(int argc, char **argv) {
