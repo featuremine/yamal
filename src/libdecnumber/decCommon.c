@@ -97,7 +97,6 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #endif
 
 /* Private functions used here and possibly in decBasic.c, etc. */
-static decFloat *decFinalize(decFloat *, bcdnum *, decContext *);
 static Flag decBiStr(const char *, const char *, const char *);
 
 /* Macros and private tables; those which are not format-dependent    */
@@ -340,7 +339,7 @@ static uByte allnines[DECPMAX] =
      9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
 #endif
 
-static decFloat *decFinalize(decFloat *df, bcdnum *num, decContext *set) {
+decFloat *decFinalize(decFloat *df, bcdnum *num, decContext *set) {
   uByte *ub;              /* work */
   uInt dpd;               /* .. */
   uInt uiwork;            /* for macros */

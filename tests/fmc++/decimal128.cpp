@@ -42,11 +42,11 @@ TEST(decimal128, from_to_flt_str) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, strval.c_str());
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, to_std_str) {
@@ -97,35 +97,34 @@ TEST(decimal128, bad_str) {
   std::string strval = "thisisnotanumber";
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_NE(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
-  feclearexcept(FE_ALL_EXCEPT);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   // Invalid numerical string
   strval = "1.2.3";
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_NE(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   feclearexcept(FE_ALL_EXCEPT);
   strval = "-1.2.3";
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_NE(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   feclearexcept(FE_ALL_EXCEPT);
   strval = "1.2E3E4";
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_NE(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   feclearexcept(FE_ALL_EXCEPT);
   strval = "1.2E-3E-4";
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_NE(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   feclearexcept(FE_ALL_EXCEPT);
 
   // Numerical string length
@@ -135,94 +134,90 @@ TEST(decimal128, bad_str) {
   strval = std::string("-") + std::string(34, '1');
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   strval = std::string("1.") + std::string(33, '1') + std::string("E+6144");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   strval = std::string("1.") + std::string(33, '1') + std::string("E-6143");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   strval = std::string("-1.") + std::string(33, '1') + std::string("E+6144");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   strval = std::string("-1.") + std::string(33, '1') + std::string("E-6143");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   strval = std::string(35, '1'); // supports up to 34 decimal digits
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("-") + std::string(35, '1');
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("1.") + std::string(33, '1') + std::string("E+6145");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("1.") + std::string(33, '1') + std::string("E-6144");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_UNDERFLOW);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("-1.") + std::string(33, '1') + std::string("E+6145");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("-1.") + std::string(33, '1') + std::string("E-6144");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_NE(err, nullptr);
+  EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_UNDERFLOW);
 }
 
 TEST(decimal128, from_uint_zero) {
   feclearexcept(FE_ALL_EXCEPT);
   uint64_t max = 0;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_uint(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, "0");
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   uint64_t res;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_uint(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, to_uint_neg) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = -4;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "-4");
   uint64_t res;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_NE(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_INVALID));
+  fmc_decimal128_to_uint(&res, &a);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INVALID);
 }
 
 TEST(decimal128, to_uint_out_of_range) {
@@ -230,59 +225,52 @@ TEST(decimal128, to_uint_out_of_range) {
   uint64_t max = std::numeric_limits<uint64_t>::max();
   fmc_decimal128_t a;
   fmc_decimal128_from_uint(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_pow10(&a, 1);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   uint64_t res;
-  fmc_error_t *err;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_NE(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_INVALID));
+  fmc_decimal128_to_uint(&res, &a);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INVALID);
 }
 
 TEST(decimal128, from_uint_low) {
   feclearexcept(FE_ALL_EXCEPT);
   uint64_t max = 15;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_uint(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "15");
   uint64_t res;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_uint(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, from_uint_extreme) {
   feclearexcept(FE_ALL_EXCEPT);
   uint64_t max = std::numeric_limits<uint64_t>::max();
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_uint(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "18446744073709551615");
   uint64_t res;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_uint(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, from_uint_19digits) {
   feclearexcept(FE_ALL_EXCEPT);
   uint64_t max = 10000000000000000000ULL;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_uint(&a, max);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   char str[256];
@@ -290,8 +278,7 @@ TEST(decimal128, from_uint_19digits) {
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
   ASSERT_STREQ(str, "10000000000000000000");
   uint64_t res;
-  fmc_decimal128_to_uint(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_uint(&res, &a);
   ASSERT_EQ(res, max);
   ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
 }
@@ -300,90 +287,80 @@ TEST(decimal128, from_int_zero) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = 0;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "0");
   int64_t res;
-  fmc_decimal128_to_int(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_int(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, from_int_low) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = 15;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "15");
   int64_t res;
-  fmc_decimal128_to_int(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_int(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, from_int_extreme) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = std::numeric_limits<int64_t>::max();
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "9223372036854775807");
   int64_t res;
-  fmc_decimal128_to_int(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_int(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, from_int_neg_low) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = -15;
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "-15");
   int64_t res;
-  fmc_decimal128_to_int(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_int(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, from_int_neg_extreme) {
   feclearexcept(FE_ALL_EXCEPT);
   int64_t max = std::numeric_limits<int64_t>::min();
   fmc_decimal128_t a;
-  fmc_error_t *err;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   char str[256];
   fmc_decimal128_to_str(str, &a);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_STREQ(str, "-9223372036854775808");
   int64_t res;
-  fmc_decimal128_to_int(&res, &a, &err);
-  ASSERT_EQ(err, nullptr);
+  fmc_decimal128_to_int(&res, &a);
   ASSERT_EQ(res, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, to_int_out_of_range) {
@@ -391,16 +368,14 @@ TEST(decimal128, to_int_out_of_range) {
   int64_t max = std::numeric_limits<int64_t>::max();
   fmc_decimal128_t a;
   fmc_decimal128_from_int(&a, max);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_pow10(&a, 1);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   int64_t res;
-  fmc_error_t *err;
-  fmc_decimal128_to_int(&res, &a, &err);
-  ASSERT_TRUE(fetestexcept(FE_INVALID));
-  ASSERT_NE(err, nullptr);
+  fmc_decimal128_to_int(&res, &a);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INVALID);
 }
 
 TEST(decimal128, from_to_int_str) {
@@ -409,12 +384,12 @@ TEST(decimal128, from_to_int_str) {
   std::string strval = "5";
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_EQ(err, nullptr);
   char str[256];
   fmc_decimal128_to_str(str, &a);
   ASSERT_STREQ(str, strval.c_str());
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, divide) {
@@ -424,13 +399,13 @@ TEST(decimal128, divide) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "66666666666.66666666666666666", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "2.2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_div(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_to_str(str, &c);
   ASSERT_STREQ(str, "30303030303.0303030303030303");
 }
@@ -441,13 +416,13 @@ TEST(decimal128, divide_by_zero) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "66666666666.66666666666666666", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "0", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_div(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_DIVBYZERO));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_DIVBYZERO);
 }
 
 TEST(decimal128, int_divide_by_zero) {
@@ -456,10 +431,10 @@ TEST(decimal128, int_divide_by_zero) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "66666666666.66666666666666666", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_int_div(&c, &a, 0);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_DIVBYZERO));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_DIVBYZERO);
 }
 
 TEST(decimal128, intdivide) {
@@ -479,13 +454,13 @@ TEST(decimal128, add) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "11111111111.11111111111111111", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "22222222222.22222222222222222", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_add(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_to_str(str, &c);
   ASSERT_STREQ(str, "33333333333.33333333333333333");
 }
@@ -497,14 +472,14 @@ TEST(decimal128, add_out_of_range) {
   fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144",
                           &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144",
                           &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_add(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_OVERFLOW));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
 }
 
 TEST(decimal128, sub) {
@@ -514,13 +489,13 @@ TEST(decimal128, sub) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "11111111111.11111111111111111", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "22222222222.22222222222222222", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_sub(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_to_str(str, &c);
   ASSERT_STREQ(str, "-11111111111.11111111111111111");
 }
@@ -532,14 +507,14 @@ TEST(decimal128, sub_out_of_range) {
   fmc_decimal128_from_str(&a, "-9.999999999999999999999999999999999E+6144",
                           &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144",
                           &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_sub(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_OVERFLOW));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
 }
 
 TEST(decimal128, mul) {
@@ -549,13 +524,13 @@ TEST(decimal128, mul) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "11111111111.11111111111111111", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "2.2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_mul(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_to_str(str, &c);
   ASSERT_STREQ(str, "24444444444.444444444444444442");
 }
@@ -567,14 +542,14 @@ TEST(decimal128, mul_out_of_range) {
   fmc_decimal128_from_str(&a, "9.999999999999999999999999999999999E+6144",
                           &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "9.999999999999999999999999999999999E+6144",
                           &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_mul(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_OVERFLOW));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
 }
 
 TEST(decimal128, comparison) {
@@ -583,61 +558,61 @@ TEST(decimal128, comparison) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "2.5", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&c, "3", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   ASSERT_FALSE(fmc_decimal128_less(&b, &a));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_less(&b, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_less(&b, &c));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   ASSERT_FALSE(fmc_decimal128_less_or_equal(&b, &a));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_less_or_equal(&b, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_less_or_equal(&b, &c));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   ASSERT_TRUE(fmc_decimal128_greater(&b, &a));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_greater(&b, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_greater(&b, &c));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   ASSERT_TRUE(fmc_decimal128_greater_or_equal(&b, &a));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_greater_or_equal(&b, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_greater_or_equal(&b, &c));
 
   ASSERT_FALSE(fmc_decimal128_equal(&b, &a));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&b, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_equal(&b, &c));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, round) {
@@ -646,47 +621,47 @@ TEST(decimal128, round) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "2.2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&c, "2.5", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&d, "2.7", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&e, "3", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_t ar, br, cr, dr;
   fmc_decimal128_round(&ar, &a, 0);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_round(&br, &b, 0);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT);
   feclearexcept(FE_ALL_EXCEPT);
   fmc_decimal128_round(&cr, &c, 0);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT);
   feclearexcept(FE_ALL_EXCEPT);
   fmc_decimal128_round(&dr, &d, 0);
   ASSERT_EQ(err, nullptr);
-  ASSERT_TRUE(fetestexcept(FE_INEXACT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT);
   feclearexcept(FE_ALL_EXCEPT);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ar));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &br));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&e, &cr));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&e, &dr));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, round_double) {
@@ -753,16 +728,16 @@ TEST(decimal128, increment) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "4", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_inc(&a, &a);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, decrement) {
@@ -771,16 +746,16 @@ TEST(decimal128, decrement) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "4", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_from_str(&b, "2", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_dec(&a, &b);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, negate) {
@@ -789,7 +764,7 @@ TEST(decimal128, negate) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "4", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_t b;
   fmc_decimal128_negate(&b, &a);
@@ -799,7 +774,7 @@ TEST(decimal128, negate) {
   fmc_decimal128_negate(&c, &b);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, pow10) {
@@ -808,42 +783,42 @@ TEST(decimal128, pow10) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "4", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_pow10(&a, 3);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_t b;
   fmc_decimal128_from_str(&b, "4000", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   ASSERT_TRUE(fmc_decimal128_equal(&a, &b));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_t c;
   fmc_decimal128_from_str(&c, "40", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_pow10(&a, -2);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &c));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc_decimal128_t d;
   fmc_decimal128_from_str(&d, "0.04", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_pow10(&a, -3);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &d));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, infinity) {
@@ -852,7 +827,7 @@ TEST(decimal128, infinity) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "4", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_is_inf(&a));
 
   fmc_decimal128_t inf;
@@ -866,7 +841,7 @@ TEST(decimal128, nan) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "4", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_FALSE(fmc_decimal128_is_nan(&a));
   ASSERT_FALSE(fmc_decimal128_is_qnan(&a));
   ASSERT_FALSE(fmc_decimal128_is_snan(&a));
@@ -911,22 +886,22 @@ TEST(decimal128, cppconstructor) {
   fmc_error_t *err;
   fmc_decimal128_from_str(&a, "5", &err);
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc::decimal128 ppa(5);
   fmc::decimal128 ppb(a);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ppa));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   ASSERT_TRUE(fmc_decimal128_equal(&a, &ppb));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
   fmc::decimal128 ppc;
   ppa = ppa - ppa;
   ASSERT_TRUE(fmc_decimal128_equal(&ppa, &ppc));
   ASSERT_EQ(err, nullptr);
-  ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 }
 
 TEST(decimal128, cppdivide) {
@@ -1352,17 +1327,17 @@ TEST(decimal128, identity_double_1) {
           fmc_decimal128_t a;
           fmc_decimal128_from_str(&a, float_str, &err);
           ASSERT_EQ(err, nullptr);
-          ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+          EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
           fmc_decimal128_to_str(dec128_str, &a);
           canonicalize(float_str, 0);
           EXPECT_STREQ(dec128_str, float_str);
-          ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+          EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
 
           fmc_decimal128_t b;
           fmc_decimal128_from_double(&b, number);
-          ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+          EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
           fmc_decimal128_to_str(dec128_str, &b);
-          ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+          EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
           EXPECT_STREQ(dec128_str, float_str);
 
           double converted;
@@ -1502,16 +1477,16 @@ TEST(decimal128, identity_extreme) {
     feclearexcept(FE_ALL_EXCEPT); // Clear everything including sprintf
 
     fmc_error_t *err;
-    ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+    EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
     fmc_decimal128_from_str(&a, number_str, &err);
     ASSERT_EQ(err, nullptr);
-    ASSERT_FALSE(fetestexcept(FE_ALL_EXCEPT));
+    EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
     fmc_decimal128_from_double(&b, number);
-    ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
+    EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
     fmc_decimal128_to_str(dec_fromstr, &a);
-    ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
+    EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
     fmc_decimal128_to_str(dec_fromdouble, &b);
-    ASSERT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
+    EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), expected_signal);
 
     canonicalize(number_str, 0);
 
