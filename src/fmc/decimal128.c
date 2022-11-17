@@ -911,13 +911,13 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
     DFWORD((decQuad *)dest, 3) = 0;
   } else {
     fmc_decimal128_from_uint(dest, *(data + --len));
-    for (;len;) {
+    for (; len;) {
       fmc_decimal128_t digits19;
       fmc_decimal128_from_uint(&digits19, 10000000000000000000ULL);
       fmc_decimal128_mul(dest, dest, &digits19);
       fmc_decimal128_t declow;
       fmc_decimal128_from_uint(&declow, *(data + --len));
-      fmc_decimal128_add(dest, dest, &declow);    
+      fmc_decimal128_add(dest, dest, &declow);
     }
 
     exp += GETEXP((decQuad *)dest);
