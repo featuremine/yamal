@@ -305,26 +305,9 @@ void fmc_decimal128_int_div(fmc_decimal128_t *res, const fmc_decimal128_t *lhs,
                        get_context());
 }
 
-#define gen_declets(val)                                                       \
-  ({                                                                           \
-    uint64_t _val = (val);                                                     \
-    uint64_t encode = ((uint64_t)BIN2DPD[_val % 1000]);                        \
-    _val /= 1000;                                                              \
-    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 10;                          \
-    _val /= 1000;                                                              \
-    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 20;                          \
-    _val /= 1000;                                                              \
-    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 30;                          \
-    _val /= 1000;                                                              \
-    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 40;                          \
-    _val /= 1000;                                                              \
-    encode |= ((uint64_t)BIN2DPD[_val % 1000]) << 50;                          \
-    _val /= 1000; /* now 0, or 1 */                                            \
-    encode | _val << 60;                                                       \
-  })
-
 void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   uint64_t u = (uint64_t)n;             /* copy as bits */
+  uint64_t encode;                      /* work */
   DFWORD((decQuad *)res, 0) = QUADZERO; /* always */
   DFWORD((decQuad *)res, 1) = 0;
   DFWORD((decQuad *)res, 2) = 0;
@@ -335,7 +318,20 @@ void fmc_decimal128_from_int(fmc_decimal128_t *res, int64_t n) {
   }
   /* Since the maximum value of u now is 2**63, only the low word of */
   /* result is affected */
-  DFLONG((decQuad *)res, 1) = gen_declets(u);
+  encode = ((uint64_t)BIN2DPD[u % 1000]);
+  u /= 1000;
+  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 10;
+  u /= 1000;
+  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 20;
+  u /= 1000;
+  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 30;
+  u /= 1000;
+  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 40;
+  u /= 1000;
+  encode |= ((uint64_t)BIN2DPD[u % 1000]) << 50;
+  u /= 1000; /* now 0, or 1 */
+  encode |= u << 60;
+  DFLONG((decQuad *)res, 1) = encode;
 }
 
 static uint64_t decToInt64(const decQuad *df, decContext *set,
