@@ -1779,7 +1779,7 @@ char *decFloatToString(const decFloat *df, char *string) {
       return string; /* easy */
     } else if (exp == DECFLOAT_sNaN) {
       strcpy(c, "snan"); /* complete word */
-      c += 4;           /* step past */
+      c += 4;            /* step past */
     } else {
       strcpy(c, "nan"); /* complete word */
       c += 3;           /* step past */
