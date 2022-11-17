@@ -905,13 +905,6 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
 void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
                                int64_t len, int64_t exp, uint16_t flag) {
-  char hibits[65] = {0};
-  char lobits[65] = {0};
-
-  fmc_uint64_bebits(*(data + len - 1), hibits);
-  fmc_uint64_bebits(*(data + len - 2), lobits);
-  printf("setting triple hi %s lo %s\n", hibits, lobits);
-
   if (flag && (flag != FMC_DECIMAL128_NEG)) {
     DFWORD((decQuad *)dest, 0) =
         ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
@@ -940,20 +933,12 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
     DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
     DFWORD((decQuad *)(dest), 0) |= top18;
   }
-
   DFWORD((decQuad *)(dest), 0) |=
       (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
-
-  // Call decFinalize?
-
-  printf("triple value set:\n");
-  fmc_decimal128_pretty(dest);
 }
 
 void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
                            uint16_t *flag, const fmc_decimal128_t *src) {
-  printf("getting triple for value :\n");
-  fmc_decimal128_pretty(src);
   *flag = fmc_decimal128_is_nan(src) * FMC_DECIMAL128_NAN |
           fmc_decimal128_is_inf(src) * FMC_DECIMAL128_INF |
           (decQuadIsSigned((decQuad *)src) != 0) * FMC_DECIMAL128_NEG;
@@ -962,7 +947,6 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
 
   uint64_t hi = 0;
   uint64_t lo = 0;
-
   uint64_t mult = 1;
 
 #define dec2wword(dpdin, dpdout)                                               \
@@ -993,13 +977,6 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
   dec2wword(sourhi >> 4, hi);                    /* declet 1 */
 
   hi += GETMSD((decQuad *)src) * mult;
-
-  char hibits[65] = {0};
-  char lobits[65] = {0};
-
-  fmc_uint64_bebits(hi, hibits);
-  fmc_uint64_bebits(lo, lobits);
-  printf("got triple hi %llu %s lo %llu %s\n", hi, hibits, lo, lobits);
   *len = 1 + (hi != 0);
   *data = lo;
   *(data + 1) = hi;
