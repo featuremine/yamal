@@ -55,9 +55,12 @@ FMMODFUNC char *fmc_cstr_new2(const char *str, size_t sz, fmc_error_t **error);
  * @param targ is the string to compare
  * @param str1 is one of the strings to compare against (length may be 0)
  * @param str2 str2 is the other; it must be the same length as str1
- * @return length of str1 if has correct prefix, (that is, targ is the same length as str1 and str2, and each character of targ is in one of str1 or str2 in the corresponding position), or 0 otherwise
+ * @return length of str1 if has correct prefix, (that is, targ is the same
+ * length as str1 and str2, and each character of targ is in one of str1 or str2
+ * in the corresponding position), or 0 otherwise
  */
-FMMODFUNC size_t fmc_cstr_biparse(const char *targ, const char *str1, const char *str2);
+FMMODFUNC size_t fmc_cstr_biparse(const char *targ, const char *str1,
+                                  const char *str2);
 
 #ifdef __cplusplus
 }

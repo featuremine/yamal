@@ -64,13 +64,13 @@ const fmc_decimal128_t fmc_decimal128_exp63[18] = {
 };
 
 const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
-  Int digits;                         /* count of digits in coefficient */
-  const char *dotchar = NULL;         /* where dot was found [NULL if none] */
-  const char *cfirst = string;        /* -> first character of decimal part */
-  const char *c;                      /* work */
-  uByte *ub;                          /* .. */
-  uInt uiwork;                        /* for macros */
-  bcdnum num;                         /* collects data for finishing */
+  Int digits;                  /* count of digits in coefficient */
+  const char *dotchar = NULL;  /* where dot was found [NULL if none] */
+  const char *cfirst = string; /* -> first character of decimal part */
+  const char *c;               /* work */
+  uByte *ub;                   /* .. */
+  uInt uiwork;                 /* for macros */
+  bcdnum num;                  /* collects data for finishing */
   uByte buffer[ROUNDUP(DECSTRING + 11, 8)]; /* room for most coefficents, */
   /* some common rounding, +3, & pad */
 #if DECTRACE
@@ -116,23 +116,25 @@ const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
   if (digits > 0) {            /* had digits and/or dot */
     const char *clast = c - 1; /* note last coefficient char position */
     const char *parsed = c;
-    Int exp = 0;               /* exponent accumulator */
-    if (*c == 'E' || *c == 'e') {          /* something follows the coefficient */
-      uInt edig;               /* unsigned work */
+    Int exp = 0;                  /* exponent accumulator */
+    if (*c == 'E' || *c == 'e') { /* something follows the coefficient */
+      uInt edig;                  /* unsigned work */
       /* had some digits and more to come; expect E[+|-]nnn now */
       const char *firstexp; /* exponent first non-zero */
-      ++c; /* to (optional) sign */
+      ++c;                  /* to (optional) sign */
       if (*c == '-' || *c == '+')
         ++c; /* step over sign (c=clast+2) */
-      for(;*c == '0'; ++c, parsed = c);
+      for (; *c == '0'; ++c, parsed = c)
+        ;
       firstexp = c; /* remember start [maybe not digit] */
       /* gather exponent digits */
       do {
         edig = (uInt)*c - (uInt)'0';
-        if (edig > 9) break;
+        if (edig > 9)
+          break;
         exp = exp * 10 + edig;
         parsed = ++c;
-      } while(1);
+      } while (1);
       /* (this next test must be after the syntax checks) */
       /* if definitely more than the possible digits for format then */
       /* the exponent may have wrapped, so simply set it to a certain */
@@ -146,7 +148,7 @@ const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
     if (dotchar != NULL) { /* had a '.' */
       digits--;            /* remove from digits count */
       if (digits == 0)
-        return string;     /* was dot alone: bad syntax */
+        return string;               /* was dot alone: bad syntax */
       exp -= (Int)(clast - dotchar); /* adjust exponent */
       /* [the '.' can now be ignored] */
     }
@@ -238,14 +240,16 @@ const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
       num.exponent += digits - (Int)(ub - buffer + 1);
     } /* too long for buffer */
 
-    decQuadFinalize((decQuad *) dest, &num, get_context()); /* round, check, and lay out */
+    decQuadFinalize((decQuad *)dest, &num,
+                    get_context()); /* round, check, and lay out */
     return parsed;
-  }   /* digits or dot */
+  } /* digits or dot */
 
   /* no digits or dot were found */
   /* only Infinities and NaNs are allowed, here */
   size_t len = 0;
-  if ( (len = fmc_cstr_biparse(c, "infinity", "INFINITY")) || (len = fmc_cstr_biparse(c, "inf", "INF")) ) {
+  if ((len = fmc_cstr_biparse(c, "infinity", "INFINITY")) ||
+      (len = fmc_cstr_biparse(c, "inf", "INF"))) {
     fmc_decimal128_inf(dest);
     fmc_decimal128_sign_set(dest, num.sign);
     return cfirst + len;
@@ -257,11 +261,12 @@ const char *fmc_decimal128_parse(fmc_decimal128_t *dest, const char *string) {
     fmc_decimal128_snan(dest);
     fmc_decimal128_sign_set(dest, num.sign);
     return cfirst + len;
-  }          /* NaN or sNaN */
+  } /* NaN or sNaN */
   return string;
 }
 
-void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src, fmc_error_t **err) {
+void fmc_decimal128_from_str(fmc_decimal128_t *dest, const char *src,
+                             fmc_error_t **err) {
   fmc_error_clear(err);
 
   if (*src == '\0') {

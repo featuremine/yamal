@@ -41,7 +41,7 @@ char *fmc_cstr_new(const char *str, fmc_error_t **error) {
 
 size_t fmc_cstr_biparse(const char *targ, const char *str1, const char *str2) {
   size_t s = 0;
-  for (;*str1 != '\0'; s++, targ++, str1++, str2++) {
+  for (; *str1 != '\0'; s++, targ++, str1++, str2++) {
     if (*targ != *str1 && *targ != *str2) {
       return 0;
     }

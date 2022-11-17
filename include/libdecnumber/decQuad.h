@@ -107,8 +107,8 @@ typedef union {
 /* Routines -- implemented as decFloat routines in common files     */
 /* ---------------------------------------------------------------- */
 
-#include "decQuadSymbols.h"
 #include "decNumberLocal.h"
+#include "decQuadSymbols.h"
 
 /* Utilities and conversions, extractors, etc.) */
 extern decQuad *decQuadFinalize(decQuad *df, bcdnum *num, decContext *set);

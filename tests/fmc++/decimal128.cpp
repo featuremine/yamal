@@ -168,25 +168,25 @@ TEST(decimal128, bad_str) {
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_OVERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("1.") + std::string(33, '1') + std::string("E-6144");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_UNDERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_UNDERFLOW);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("-1.") + std::string(33, '1') + std::string("E+6145");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_OVERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
   feclearexcept(FE_ALL_EXCEPT);
   strval = std::string("-1.") + std::string(33, '1') + std::string("E-6144");
   fmc_decimal128_from_str(&a, strval.c_str(), &err);
   EXPECT_EQ(err, nullptr);
   fmc_error_clear(&err);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_UNDERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_UNDERFLOW);
 }
 
 TEST(decimal128, from_uint_zero) {
@@ -481,7 +481,7 @@ TEST(decimal128, add_out_of_range) {
   EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_add(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_OVERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
 }
 
 TEST(decimal128, sub) {
@@ -516,7 +516,7 @@ TEST(decimal128, sub_out_of_range) {
   EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_sub(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_OVERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
 }
 
 TEST(decimal128, mul) {
@@ -551,7 +551,7 @@ TEST(decimal128, mul_out_of_range) {
   EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), 0);
   fmc_decimal128_mul(&c, &a, &b);
   ASSERT_EQ(err, nullptr);
-  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT|FE_OVERFLOW);
+  EXPECT_EQ(fetestexcept(FE_ALL_EXCEPT), FE_INEXACT | FE_OVERFLOW);
 }
 
 TEST(decimal128, comparison) {
