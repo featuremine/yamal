@@ -901,7 +901,7 @@ void fmc_decimal128_stdrep(fmc_decimal128_t *dest,
 
 void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
                                int64_t len, int64_t exp, uint16_t flag) {
-  if (flag && (flag != FMC_DECIMAL128_NEG)) {
+  if (flag & ~FMC_DECIMAL128_NEG) {
     DFWORD((decQuad *)dest, 0) =
         ((flag & FMC_DECIMAL128_INF) == FMC_DECIMAL128_INF) * DECFLOAT_Inf |
         ((flag & FMC_DECIMAL128_SNAN) == FMC_DECIMAL128_SNAN) * DECFLOAT_sNaN |
@@ -910,16 +910,14 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
     DFWORD((decQuad *)dest, 2) = 0;
     DFWORD((decQuad *)dest, 3) = 0;
   } else {
-    fmc_decimal128_from_uint(dest, *(data + len - 1));
-    if (len == 2) {
+    fmc_decimal128_from_uint(dest, *(data + --len));
+    for (;len;) {
       fmc_decimal128_t digits19;
       fmc_decimal128_from_uint(&digits19, 10000000000000000000ULL);
       fmc_decimal128_mul(dest, dest, &digits19);
       fmc_decimal128_t declow;
-      fmc_decimal128_from_uint(&declow, *(data + len - 2));
-      fmc_decimal128_add(dest, dest, &declow);
-    } else if (len > 3) {
-      feraiseexcept(FE_OVERFLOW);
+      fmc_decimal128_from_uint(&declow, *(data + --len));
+      fmc_decimal128_add(dest, dest, &declow);    
     }
 
     exp += GETEXP((decQuad *)dest);
@@ -929,8 +927,7 @@ void fmc_decimal128_set_triple(fmc_decimal128_t *dest, uint64_t *data,
     DFWORD((decQuad *)(dest), 0) &= 0x3FFF;
     DFWORD((decQuad *)(dest), 0) |= top18;
   }
-  DFWORD((decQuad *)(dest), 0) |=
-      (((flag & FMC_DECIMAL128_NEG) == FMC_DECIMAL128_NEG) * DECFLOAT_Sign);
+  DFWORD((decQuad *)(dest), 0) |= !!(flag & FMC_DECIMAL128_NEG) * DECFLOAT_Sign;
 }
 
 void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
@@ -974,7 +971,7 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
   dec2wword(sourhi >> 4, hi);                    /* declet 1 */
 
   hi += GETMSD((decQuad *)src) * mult;
-  *len = (!*flag || (*flag == FMC_DECIMAL128_NEG)) * (1 + (hi != 0));
+  *len = !(*flag & ~FMC_DECIMAL128_NEG) * (1 + (hi != 0));
   *data = lo;
   *(data + 1) = hi;
 }
