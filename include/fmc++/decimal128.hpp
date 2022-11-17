@@ -107,14 +107,12 @@ public:
   }
   explicit operator int() const noexcept {
     int64_t ret;
-    fmc_error_t *err;
-    fmc_decimal128_to_int(&ret, this, &err);
+    fmc_decimal128_to_int(&ret, this);
     return ret;
   }
   explicit operator int64_t() const noexcept {
     int64_t ret;
-    fmc_error_t *err;
-    fmc_decimal128_to_int(&ret, this, &err);
+    fmc_decimal128_to_int(&ret, this);
     return ret;
   }
   explicit operator double() const noexcept {
@@ -132,8 +130,7 @@ public:
     decimal128 tmp;
     fmc_decimal128_mul(&tmp, this, &dec64mul);
     int64_t num;
-    fmc_error_t *err;
-    fmc_decimal128_to_int(&num, &tmp, &err);
+    fmc_decimal128_to_int(&num, &tmp);
     rprice ret;
     fmc_rprice_from_raw(&ret, num);
     return ret;
