@@ -1455,6 +1455,129 @@ TEST(sequence, data_iter_set_1) {
   ASSERT_EQ(error, nullptr);
 }
 
+TEST(sequence, data_iter_set_2) {
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *seq = ytp_sequence_new(fd, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto first_off = ytp_sequence_tell(seq, ytp_sequence_get_it(seq), &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto consumer1 = ytp_sequence_peer_decl(seq, 9, "consumer1", &error);
+  ASSERT_EQ(error, nullptr);
+  auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
+  ASSERT_EQ(error, nullptr);
+  auto channel1 =
+      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(consumer1, 0);
+  ASSERT_NE(producer1, 0);
+  ASSERT_NE(channel1, 0);
+
+  char *dst = ytp_sequence_reserve(seq, 4, &error);
+  ASSERT_EQ(error, nullptr);
+  memcpy(dst, "ABCD", 4);
+  ytp_sequence_commit(seq, producer1, channel1, 1000, dst, &error);
+  ASSERT_EQ(error, nullptr);
+
+  std::vector<std::tuple<std::string_view, ytp_peer_t, ytp_channel_t, uint64_t>>
+      output;
+
+  auto cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
+               uint64_t time, size_t sz, const char *data) {
+    auto *output = (std::vector<std::tuple<std::string_view, ytp_peer_t,
+                                           ytp_channel_t, uint64_t>> *)closure;
+    output->emplace_back(
+        std::tuple<std::string_view, ytp_peer_t, ytp_channel_t, uint64_t>(
+            std::string_view(data, sz), peer, channel, time));
+  };
+
+  ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
+  ASSERT_EQ(error, nullptr);
+
+  while (ytp_sequence_poll(seq, &error))
+    ;
+
+  ASSERT_EQ(output.size(), 1);
+  ASSERT_EQ(std::get<0>(output[0]), "ABCD");
+  ASSERT_EQ(std::get<1>(output[0]), producer1);
+  ASSERT_EQ(std::get<2>(output[0]), channel1);
+  ASSERT_EQ(std::get<3>(output[0]), 1000);
+  output.clear();
+
+  ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel2", &error);
+
+  ytp_sequence_seek(seq, first_off, &error);
+  ASSERT_EQ(error, nullptr);
+
+  while (ytp_sequence_poll(seq, &error))
+    ;
+
+  ASSERT_EQ(output.size(), 1);
+  ASSERT_EQ(std::get<0>(output[0]), "ABCD");
+  ASSERT_EQ(std::get<1>(output[0]), producer1);
+  ASSERT_EQ(std::get<2>(output[0]), channel1);
+  ASSERT_EQ(std::get<3>(output[0]), 1000);
+  output.clear();
+
+  ytp_sequence_del(seq, &error);
+  ASSERT_EQ(error, nullptr);
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(sequence, data_iter_set_3) {
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *seq = ytp_sequence_new(fd, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto first_off = ytp_sequence_tell(seq, ytp_sequence_get_it(seq), &error);
+  ASSERT_EQ(error, nullptr);
+
+  ytp_sequence_seek(seq, first_off, &error);
+  ASSERT_EQ(error, nullptr);
+
+  while (ytp_sequence_poll(seq, &error))
+    ;
+
+  ytp_sequence_del(seq, &error);
+  ASSERT_EQ(error, nullptr);
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(sequence, data_iter_set_4) {
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *seq = ytp_sequence_new(fd, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto first_off = ytp_sequence_tell(seq, ytp_sequence_get_it(seq), &error);
+  ASSERT_EQ(error, nullptr);
+
+  while (ytp_sequence_poll(seq, &error))
+    ;
+
+  ytp_sequence_seek(seq, first_off, &error);
+  ASSERT_EQ(error, nullptr);
+
+  while (ytp_sequence_poll(seq, &error))
+    ;
+
+  ytp_sequence_del(seq, &error);
+  ASSERT_EQ(error, nullptr);
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
