@@ -36,47 +36,6 @@ using namespace std::chrono_literals;
 static std::atomic<bool> run = true;
 static void sig_handler(int s) { run = false; }
 
-class precision_sampler {
-public:
-  using buckets_t = fmc::ordered_multimap<uint64_t, uint64_t>;
-  void sample(uint64_t x) {
-    using namespace std;
-    auto s = double(x);
-    auto c = pow(10.0, max(floor(log10(s)) - 1, 0.0));
-    auto b = uint64_t(round(s / c) * c);
-    if (auto where = buckets_.find(b); where == buckets_.end()) {
-      where = buckets_.emplace(b, 1);
-    } else {
-      where->second++;
-    }
-  }
-  buckets_t::const_iterator sample_index(uint64_t count) const {
-    uint64_t current = 0;
-    for (auto it = buckets_.cbegin(); it != buckets_.end(); ++it) {
-      current += it->second;
-      if (current >= count) {
-        return it;
-      }
-    }
-    return buckets_.end();
-  }
-  double percentile(double p) const {
-    uint64_t total = 0;
-    for (auto &&[b, c] : buckets_) {
-      total += c;
-    }
-
-    uint64_t sample_count = (int64_t(total * p) + 99ull) / 100ull;
-
-    auto it = sample_index(sample_count);
-    return it == buckets_.end() ? NAN : double(it->first);
-  }
-  void clear() { buckets_.clear(); }
-
-private:
-  buckets_t buckets_;
-};
-
 int main(int argc, char **argv) {
   fmc_set_signal_handler(sig_handler);
 
@@ -287,7 +246,7 @@ int main(int argc, char **argv) {
       int64_t total_time_;
       size_t seqnum_;
       int64_t out_of_sequence_count_ = 0;
-      precision_sampler buckets_;
+      fmc::counter::precision_sampler buckets_;
 
       stats_t() { reset(); }
 
