@@ -338,6 +338,9 @@ bool ytp_control_term(ytp_iterator_t iterator) {
 ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t ptr,
                                 fmc_error_t **error) {
   auto it = ytp_yamal_seek(&ctrl->yamal, ptr, error);
+  if (*error) {
+    return nullptr;
+  }
 
   while (ctrl->ctrl != it && !ytp_yamal_term(ctrl->ctrl)) {
     ytp_peer_t peer;
@@ -346,12 +349,14 @@ ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t ptr,
     size_t sz;
     const char *data;
     read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error);
-    if (!*error) {
-      auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
-      if (!*error) {
-        ctrl->ctrl = new_it;
-      }
+    if (*error) {
+      return nullptr;
     }
+    auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
+    if (*error) {
+      return nullptr;
+    }
+    ctrl->ctrl = new_it;
   }
 
   return it;
