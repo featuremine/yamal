@@ -24,6 +24,7 @@
 #include "fmc++/decimal128.hpp"
 #include "fmc/error.h"
 #include <fenv.h>
+#include <fmc++/counters.hpp>
 #include <fmc++/gtestwrap.hpp>
 #include <libdecnumber/decQuad.h>
 #include <random>
@@ -2057,6 +2058,91 @@ TEST(decimal128, triple_identity) {
 
   // -22000000000000000002200000000000000000220000000000000000022
   precision_loss_identity_test(data, 4, 1, FMC_DECIMAL128_NEG, expected, 2, 26);
+}
+
+TEST(decimal128, performance) {
+  using counter_t = fmc::counter::nanoseconds;
+  using sampler_t = fmc::counter::precision_sampler;
+
+  fmc::counter::record<counter_t, sampler_t> record_tostr;
+  fmc::counter::record<counter_t, sampler_t> record_hash;
+  fmc::counter::record<counter_t, sampler_t> record_equal;
+  fmc::counter::record<counter_t, sampler_t> record_greater;
+  fmc::counter::record<counter_t, sampler_t> record_add;
+
+  auto sample = [&](const char *str1, const char *str2) {
+    fmc::decimal128 dec1;
+    fmc::decimal128 dec2;
+    fmc_error_t *err;
+    {
+      fmc::counter::scoped_sampler s(record_tostr);
+      feclearexcept(FE_ALL_EXCEPT);
+      fmc_decimal128_from_str(&dec1, str1, &err);
+    }
+    EXPECT_EQ(err, nullptr);
+    {
+      fmc::counter::scoped_sampler s(record_tostr);
+      feclearexcept(FE_ALL_EXCEPT);
+      fmc_decimal128_from_str(&dec2, str2, &err);
+    }
+    EXPECT_EQ(err, nullptr);
+    {
+      fmc::counter::scoped_sampler s(record_hash);
+      std::hash<fmc_decimal128_t>()(dec1);
+    }
+    {
+      fmc::counter::scoped_sampler s(record_hash);
+      std::hash<fmc_decimal128_t>()(dec2);
+    }
+    {
+      fmc::counter::scoped_sampler s(record_equal);
+      fmc_decimal128_equal(&dec1, &dec2);
+    }
+    {
+      fmc::counter::scoped_sampler s(record_greater);
+      fmc_decimal128_greater(&dec1, &dec2);
+    }
+    {
+      fmc::counter::scoped_sampler s(record_add);
+      fmc_decimal128_add(&dec1, &dec1, &dec2);
+    }
+  };
+
+  std::random_device dev;
+  std::mt19937 rng(dev());
+  std::uniform_int_distribution<std::mt19937::result_type> dist(100000000,
+                                                                999999999);
+  auto gen_digits = [&](int digits) {
+    char buff[64];
+    sprintf(buff, "%lu", dist(rng));
+    return std::string(buff + (9 - digits));
+  };
+
+  for (int i = 0; i < 200000; ++i) {
+    auto num1 = gen_digits(7) + "E" +
+                std::string((dist(rng) & 1) == 1 ? "-" : "") + gen_digits(1);
+    auto num2 = gen_digits(7) + "E" +
+                std::string((dist(rng) & 1) == 1 ? "-" : "") + gen_digits(1);
+    sample(num1.c_str(), num2.c_str());
+  }
+
+  std::vector<double> percentiles{25.0, 50.0, 75.0, 90.0, 95.0, 99.0, 100.0};
+  std::vector<std::pair<const char *, sampler_t &>> buckets{
+      {"fmc_decimal128_from_str", record_tostr},
+      {"std::hash<fmc_decimal128_t>", record_hash},
+      {"fmc_decimal128_equal", record_equal},
+      {"fmc_decimal128_greater", record_greater},
+      {"fmc_decimal128_add", record_add},
+  };
+  for (auto &&[name, bucket] : buckets) {
+    std::cout << name << std::endl;
+    for (double &percentile : percentiles) {
+      std::cout << "  " << percentile
+                << "% percentile: " << bucket.percentile(percentile)
+                << " nanoseconds" << std::endl;
+    }
+    std::cout << std::endl;
+  }
 }
 
 GTEST_API_ int main(int argc, char **argv) {

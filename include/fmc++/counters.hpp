@@ -56,8 +56,12 @@
 #endif
 
 #include <fmc++/mpl.hpp>
+#include <fmc++/ordered_map.hpp>
 #include <fmc/alignment.h>
 #include <fmc/platform.h>
+
+#include <array>
+#include <cmath>
 
 #if defined(FMC_SYS_MACH)
 #include <mach/mach_time.h>
@@ -151,6 +155,47 @@ struct log_bucket : sample {
   std::array<uint64_t, N + 1> buckets_;
 };
 
+class precision_sampler : sample {
+public:
+  using buckets_t = fmc::ordered_multimap<uint64_t, uint64_t>;
+  void sample(uint64_t x) {
+    auto s = double(x);
+    auto c = std::pow(10.0, std::max(std::floor(std::log10(s)) - 1, 0.0));
+    auto b = uint64_t(std::round(s / c) * c);
+    if (auto where = buckets_.find(b); where == buckets_.end()) {
+      where = buckets_.emplace(b, 1);
+    } else {
+      where->second++;
+    }
+  }
+  buckets_t::const_iterator sample_index(uint64_t count) const {
+    uint64_t current = 0;
+    for (auto it = buckets_.cbegin(); it != buckets_.end(); ++it) {
+      current += it->second;
+      if (current >= count) {
+        return it;
+      }
+    }
+    return buckets_.end();
+  }
+  double percentile(double p) const {
+    uint64_t total = 0;
+    for (auto &&[b, c] : buckets_) {
+      total += c;
+    }
+
+    uint64_t sample_count = (int64_t(total * p) + 99ull) / 100ull;
+
+    auto it = sample_index(sample_count);
+    return it == buckets_.end() ? NAN : double(it->first);
+  }
+  double value() override { return percentile(50); }
+  void clear() { buckets_.clear(); }
+
+private:
+  buckets_t buckets_;
+};
+
 class samples {
 private:
   samples(const samples &) = delete;
@@ -216,17 +261,29 @@ struct rdtsc {
   }
 };
 
+#ifdef FMC_SYS_MACH
+struct nanoseconds {
+  nanoseconds() { mach_timebase_info(&clock_timebase_); }
+  int64_t operator()() {
+    return __int128(mach_absolute_time()) * __int128(clock_timebase_.numer) /
+           clock_timebase_.denom;
+  }
+  mach_timebase_info_data_t clock_timebase_;
+};
+#else
 struct nanoseconds {
   int64_t operator()() { return fmc_cur_time_ns(); }
 };
+#endif
 
 template <class Counter, class Sample> struct record : Sample {
   using type = invoke_result_t<Counter>;
   template <typename... Args>
   record(Args &&...args) : Sample(std::forward<Args>(args)...) {}
-  void start() { val_ = Counter()(); }
-  void stop() { Sample::sample(Counter()() - val_); }
+  void start() { val_ = counter_(); }
+  void stop() { Sample::sample(counter_() - val_); }
   type val_;
+  Counter counter_;
 };
 
 template <class Record> struct scoped_sampler {
