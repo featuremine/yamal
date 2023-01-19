@@ -11,7 +11,6 @@ if (NOT PYTHON_FOUND)
 endif (NOT PYTHON_FOUND)
 
 find_program(PYTHON3_BIN "python3" REQUIRED)
-execute_process(COMMAND ${PYTHON3_BIN} -c "import sys;sys.stdout.write('scripts-%d.%d' % sys.version_info[:2])" OUTPUT_VARIABLE PYTHON3_SCRIPTS_DIR)
 
 set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
@@ -177,22 +176,22 @@ else()
 endif()
 
 if(BUILD_WHEEL)
-    add_custom_target(
-        yamal-whl ALL
+    add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
 
         COMMAND
         "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
 
         "build"
-        "--build-base=${CMAKE_CURRENT_BINARY_DIR}/dist/build"
-        "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/dist/build/lib"
+        "--build-base=${CMAKE_CURRENT_BINARY_DIR}/build"
+        "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/build/lib"
         ${DEBUG_FLAG}
 
         "egg_info"
-        "--egg-base" "${CMAKE_CURRENT_BINARY_DIR}/dist"
+        "--egg-base" "${CMAKE_CURRENT_BINARY_DIR}"
 
         "bdist_wheel"
-        "--bdist-dir=${CMAKE_CURRENT_BINARY_DIR}/dist/bdist"
+        "--bdist-dir=${CMAKE_CURRENT_BINARY_DIR}/bdist"
         "--dist-dir=${CMAKE_BINARY_DIR}/output"
 
         "--plat-name=${PYTHON_PLATFORM}"
@@ -200,21 +199,24 @@ if(BUILD_WHEEL)
         COMMAND
         "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
 
-        "build"
-        "--build-base=${CMAKE_CURRENT_BINARY_DIR}/dist/build"
-        "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/dist/build/lib"
-        ${DEBUG_FLAG}
-
         "build_scripts"
         "--executable=${PYTHON3_BIN}"
-        "-f"
+
+        "build"
+        "--build-base=${CMAKE_CURRENT_BINARY_DIR}/build"
+        "--build-lib=${CMAKE_CURRENT_BINARY_DIR}/build/lib"
+        "--build-scripts=${CMAKE_CURRENT_BINARY_DIR}/build/scripts"
+        ${DEBUG_FLAG}
 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist
 
         DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
     )
-    set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/dist")
-    set(WHEEL_yamal_SCRIPTS_DIR "${PYTHON3_SCRIPTS_DIR}")
+    add_custom_target(
+        yamal-whl ALL
+        DEPENDS "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
+    )
+    set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 if(BUILD_TESTING)

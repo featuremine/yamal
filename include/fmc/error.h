@@ -69,6 +69,14 @@ FMMODFUNC void fmc_error_reset(fmc_error_t *err, FMC_ERROR_CODE code,
                                const char *buf);
 
 /**
+ * @brief Movesone error into another
+ *
+ * @param err destination error
+ * @param from source error
+ */
+FMMODFUNC void fmc_error_init_mov(fmc_error_t *err, fmc_error_t *from);
+
+/**
  * @brief Initializes the error struct with error code FMC_ERROR_NONE
  *
  * @param err
@@ -123,7 +131,7 @@ FMMODFUNC void fmc_error_clear(fmc_error_t **err);
  * @param err
  * @return a C-string error message
  */
-FMMODFUNC const char *fmc_error_msg(fmc_error_t *err);
+FMMODFUNC const char *fmc_error_msg(const fmc_error_t *err);
 
 /**
  * @brief Copies one error into another
@@ -131,7 +139,15 @@ FMMODFUNC const char *fmc_error_msg(fmc_error_t *err);
  * @param errdest destination error
  * @param errsrc source error
  */
-FMMODFUNC void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
+FMMODFUNC void fmc_error_cpy(fmc_error_t *errdest, const fmc_error_t *errsrc);
+
+/**
+ * @brief Moves one error into another
+ *
+ * @param err1 destination error
+ * @param err2 source error
+ */
+FMMODFUNC void fmc_error_mov(fmc_error_t *err1, fmc_error_t *err2);
 
 /**
  * @brief Initializes an error by joining 2 existing ones.
@@ -142,8 +158,9 @@ FMMODFUNC void fmc_error_cpy(fmc_error_t *errdest, fmc_error_t *errsrc);
  * @param errsrc2 source error 2: Its error goes last in the final string
  * @param sep separator in between the two error strings
  */
-FMMODFUNC void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
-                                   fmc_error_t *errsrc2, const char *sep);
+FMMODFUNC void fmc_error_init_join(fmc_error_t *errdest,
+                                   const fmc_error_t *errsrc1,
+                                   const fmc_error_t *errsrc2, const char *sep);
 
 /**
  * @brief Concatenates the error string into another.
@@ -153,7 +170,7 @@ FMMODFUNC void fmc_error_init_join(fmc_error_t *errdest, fmc_error_t *errsrc1,
  * @param errsrc source error: Its error goes last in the final string
  * @param sep separator in between the two error strings
  */
-FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc,
+FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, const fmc_error_t *errsrc,
                              const char *sep);
 
 /**
@@ -161,7 +178,7 @@ FMMODFUNC void fmc_error_cat(fmc_error_t *errdest, fmc_error_t *errsrc,
  *
  * @param err
  */
-FMMODFUNC bool fmc_error_has(fmc_error_t *err);
+FMMODFUNC bool fmc_error_has(const fmc_error_t *err);
 
 /**
  * @brief Returns the current thread error object
