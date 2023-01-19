@@ -75,6 +75,19 @@ target_link_libraries(
 add_test(NAME fmc_decimal128 COMMAND tests_fmc_decimal128)
 
 add_executable(
+    tests_fmc_errorpp
+    "error.cpp"
+)
+target_link_libraries(
+    tests_fmc_errorpp
+    PRIVATE
+    ytp
+    fmc++
+    PkgConfig::GTEST
+)
+add_test(NAME fmc_errorpp COMMAND tests_fmc_errorpp)
+
+add_executable(
     tests_fmc_rprice
     "rprice.cpp"
 )

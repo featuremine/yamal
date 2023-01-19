@@ -108,31 +108,34 @@ void fmc_error_destroy(fmc_error_t *err) {
 
 void fmc_error_clear(fmc_error_t **err) { *err = NULL; }
 
-const char *fmc_error_msg(fmc_error_t *err) {
+const char *fmc_error_msg(const fmc_error_t *err) {
   return err->code == FMC_ERROR_CUSTOM ? err->buf : error_msgs[err->code];
 }
 
-void fmc_error_cpy(fmc_error_t *err1, fmc_error_t *err2) {
+void fmc_error_cpy(fmc_error_t *err1, const fmc_error_t *err2) {
   fmc_error_destroy(err1);
   fmc_error_init(err1, err2->code, err2->buf);
 }
 
-void fmc_error_init_join(fmc_error_t *res, fmc_error_t *err1, fmc_error_t *err2,
-                         const char *sep) {
+void fmc_error_init_join(fmc_error_t *res, const fmc_error_t *err1,
+                         const fmc_error_t *err2, const char *sep) {
   fmc_error_init_sprintf(
       res, "%s%s%s", err1->code != FMC_ERROR_NONE ? fmc_error_msg(err1) : "",
       err1->code != FMC_ERROR_NONE && sep ? sep : "",
       err2->code != FMC_ERROR_NONE ? fmc_error_msg(err2) : "");
 }
 
-void fmc_error_cat(fmc_error_t *err1, fmc_error_t *err2, const char *sep) {
+void fmc_error_cat(fmc_error_t *err1, const fmc_error_t *err2,
+                   const char *sep) {
   fmc_error_t res;
   fmc_error_init_join(&res, err1, err2, sep);
   fmc_error_cpy(err1, &res);
   fmc_error_destroy(&res);
 }
 
-bool fmc_error_has(fmc_error_t *err) { return err->code != FMC_ERROR_NONE; }
+bool fmc_error_has(const fmc_error_t *err) {
+  return err->code != FMC_ERROR_NONE;
+}
 
 struct fmc_error_wrap {
   fmc_error_wrap() { fmc_error_init_none(&error); }
