@@ -176,8 +176,8 @@ else()
 endif()
 
 if(BUILD_WHEEL)
-    add_custom_target(
-        yamal-whl ALL
+    add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
 
         COMMAND
         "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
@@ -211,6 +211,10 @@ if(BUILD_WHEEL)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist
 
         DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
+    )
+    add_custom_target(
+        yamal-whl ALL
+        DEPENDS "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
     )
     set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
