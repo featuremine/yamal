@@ -179,10 +179,22 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/cmp"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc"
     DESTINATION "./include"
     FILES_MATCHING
     PATTERN "*.h"
+)
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/fmc++"
+    DESTINATION "./include"
+    FILES_MATCHING
+    PATTERN "*.hpp"
 )
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/ytp"
@@ -195,6 +207,12 @@ install(
     DESTINATION "./include"
     FILES_MATCHING
     PATTERN "*.h"
+)
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/src/fmc++"
+    DESTINATION "./src"
+    FILES_MATCHING
+    PATTERN "*.cpp"
 )
 set(YTP_VERSION "\"${PROJECT_VERSION}\"")
 set(YTP_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
