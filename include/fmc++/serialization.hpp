@@ -23,10 +23,7 @@
 
 #pragma once
 
-extern "C" {
 #include <cmp/cmp.h>
-}
-
 #include <fmc++/strings.hpp>
 #include <fmc/decimal128.h>
 #include <fmc/files.h>
