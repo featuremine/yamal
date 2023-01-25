@@ -22,14 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef CMP_H__
-#define CMP_H__
+#pragma once
 
+#include <fmc/platform.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fmc/platform.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -550,5 +549,3 @@ FMMODFUNC bool cmp_object_to_bin(cmp_ctx_t *ctx, cmp_object_t *obj, void *data,
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CMP_H__ */
