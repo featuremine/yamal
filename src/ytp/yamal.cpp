@@ -227,7 +227,8 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
     fmc_error_t save_error;
     fmc_error_init_mov(&save_error, *error);
     ytp_yamal_destroy(yamal, error);
-    fmc_error_mov(fmc_error_inst(), &save_error);
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &save_error);
     return;
   }
   auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number);
