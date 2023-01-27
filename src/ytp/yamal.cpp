@@ -132,7 +132,7 @@ static void *get_mapped_memory(ytp_yamal_t *yamal, mmnode_offs offs,
   if (!page_ptr) {
     std::lock_guard<std::mutex> lock(yamal->pa_mutex_);
     page_ptr = allocate_page(yamal, page, error);
-    if (!page_ptr) {
+    if (*error) {
       return nullptr;
     }
   }
@@ -223,34 +223,42 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
   yamal->done_ = false;
   yamal->readonly_ = fmc_freadonly(fd);
   auto *hdr = yamal->header(error);
-  if (hdr) {
-    auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number);
-    auto &data_ptr = *(std::atomic<size_t> *)(&hdr->data);
-    if (yamal->readonly_) {
-      if (data_ptr.load() != *(uint64_t *)magic_number) {
-        FMC_ERROR_REPORT(error, "invalid yamal file format");
-        return;
-      }
-    } else {
-      atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
-      if (!atomic_expect_or_init<size_t>(data_ptr, *(uint64_t *)magic_number)) {
-        FMC_ERROR_REPORT(error, "invalid yamal file format");
-        return;
-      }
-      mmlist_pages_allocation1(yamal, error);
-      if (enable_thread) {
-        yamal->thread_ = std::thread([yamal]() {
-          fmc_error_t *err;
-          while (!yamal->done_) {
-            std::unique_lock<std::mutex> sl_(yamal->m_);
-            if (yamal->cv_.wait_for(sl_, 10ms) != std::cv_status::timeout)
-              break;
+  if (*error) {
+    fmc_error_t save_error;
+    fmc_error_init_mov(&save_error, *error);
+    ytp_yamal_destroy(yamal, error);
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &save_error);
+    return;
+  }
+  auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number);
+  auto &data_ptr = *(std::atomic<size_t> *)(&hdr->data);
+  if (yamal->readonly_) {
+    if (data_ptr.load() != *(uint64_t *)magic_number) {
+      ytp_yamal_destroy(yamal, error);
+      FMC_ERROR_REPORT(error, "invalid yamal file format");
+      return;
+    }
+  } else {
+    atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
+    if (!atomic_expect_or_init<size_t>(data_ptr, *(uint64_t *)magic_number)) {
+      ytp_yamal_destroy(yamal, error);
+      FMC_ERROR_REPORT(error, "invalid yamal file format");
+      return;
+    }
+    mmlist_pages_allocation1(yamal, error);
+    if (enable_thread) {
+      yamal->thread_ = std::thread([yamal]() {
+        fmc_error_t *err;
+        while (!yamal->done_) {
+          std::unique_lock<std::mutex> sl_(yamal->m_);
+          if (yamal->cv_.wait_for(sl_, 10ms) != std::cv_status::timeout)
+            break;
 
-            mmlist_pages_allocation1(yamal, &err);
-            mmlist_sync1(yamal, &err);
-          }
-        });
-      }
+          mmlist_pages_allocation1(yamal, &err);
+          mmlist_sync1(yamal, &err);
+        }
+      });
     }
   }
 }
