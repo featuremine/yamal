@@ -20,10 +20,8 @@
 
 #pragma once
 
-#include "asio.hpp"
-#include "asio/ssl.hpp"
-
 #include "fmc/memory.h"
+#include "fmc/time.h"
 #include <string_view>
 
 namespace fmc {
@@ -41,7 +39,7 @@ public:
   frame(struct fmc_shmem data);
   ~frame();
   void set(const std::string_view &payload, int8_t optcode = 1);
-  asio::mutable_buffer buffer() const;
+  std::string_view buffer() const;
   std::string_view payload() const;
   bool fin() const;
   void reserve(size_t);
@@ -56,18 +54,20 @@ private:
   bool fin_;
 }; // class frame
 
+template<typename ErrorCode>
 void async_read_extended(frame f, bool fin, int64_t receive_ns,
-                         size_t payload_sz_sz, read_clbck_t cb) {}
+                         size_t payload_sz_sz, std::function<void(int64_t, frame, ErrorCode)> cb) {}
 
+template<typename ErrorCode>
 void async_read_mask_and_payload(frame f, bool fin, int64_t receive_ns,
                                  size_t offset, size_t payload_sz,
-                                 read_clbck_t cb) {}
+                                 std::function<void(int64_t, frame, ErrorCode)> cb) {}
 
-template<typename Network, typename Buffer, typename Pool>
-void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function<void(int64_t, frame, std::error_code)> cb) {
+template<typename Network, typename Buffer, typename Pool, typename ErrorCode>
+void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function<void(int64_t, frame, ErrorCode)> cb) {
   frame f(pool, 2);
   net.async_read_exactly(f.buffer(), 2,
-    [cb, f](const std::error_code &ec, std::size_t bytes_transferred) mutable {
+    [cb, f](const ErrorCode &ec, std::size_t bytes_transferred) mutable {
         auto receive_ns = fmc_cur_time_ns();
         if (ec) {
           cb(receive_ns, f, ec);
@@ -104,24 +104,24 @@ void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function
         case 6:
         case 7:
           /*reserved non control frames*/
-          cb(receive_ns, f, asio::error::operation_not_supported);
+          cb(receive_ns, f, ErrorCode(EOPNOTSUPP));
           break;
         case 8:
           /*connection close frames*/
-          cb(receive_ns, f, asio::error::shut_down);
+          cb(receive_ns, f, ErrorCode(ESHUTDOWN));
           break;
         case 9:
           /*ping frames*/
           {
             auto send_pong = [&, cb](int64_t r, const websocket::frame &f,
-                                     const asio::error_code &ec) {
+                                     const ErrorCode &ec) {
               if (ec) {
                 cb(r, f, ec);
                 return;
               }
               async_write(
                   f.payload(),
-                  [this, r, f, cb](const asio::error_code &ec) {
+                  [r, f, cb](const ErrorCode &ec) {
                     if (ec) {
                       cb(r, f, ec);
                       return;
@@ -154,21 +154,20 @@ void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function
         case 14:
         case 15:
           /*reserved control frames*/
-          cb(receive_ns, f, asio::error::operation_not_supported);
+          cb(receive_ns, f, ErrorCode(EOPNOTSUPP));
           break;
         default:
-          cb(receive_ns, f, asio::error::operation_not_supported);
+          cb(receive_ns, f, ErrorCode(EOPNOTSUPP));
           break;
         }
       });
 }
 
-template<typename Network, typename Buffer, typename Pool, typename Clbl>
+template<typename Network, typename Buffer, typename Pool, typename Clbl, typename ErrorCode>
 void async_write_ws_frame(Network &net, Buffer &buffer, Pool *pool, Clbl &&cb) {
   frame send(pool, buffer.size());
   send.set(buffer);
-  net.async_write(send.buffer(), asio::transfer_all(),
-    [send, std::forward(cb)] (const asio::error_code &ec, size_t bytes_transferred)
+  net.async_write(send.buffer(), [send, cb = std::forward<Clbl>(cb)] (const ErrorCode &ec, size_t bytes_transferred)
       {
         cb(ec);
       });
