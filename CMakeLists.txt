@@ -40,6 +40,7 @@ add_library(
     fmc++
     STATIC
     "${PROJECT_SOURCE_DIR}/src/fmc++/config.cpp"
+    "${PROJECT_SOURCE_DIR}/src/fmc++/websocket.cpp"
 )
 target_include_directories(
     fmc++
