@@ -24,6 +24,7 @@
 #include "fmc/time.h"
 #include <string_view>
 #include "fmc++/error.hpp"
+#include "fmc/endianness.h"
 
 namespace fmc {
 
@@ -56,12 +57,29 @@ private:
   bool fin_;
 }; // class frame
 
-template<typename Clbl>
-void async_read_extended(frame f, bool fin, int64_t receive_ns,
-                         size_t payload_sz_sz, Clbl &&cb) {}
+template<typename Network, typename Clbl>
+void async_read_extended(Network &net, frame f, bool fin, int64_t receive_ns,
+                         size_t payload_sz_sz, Clbl &&cb) {
+  f.reserve(2 + payload_sz_sz);
+  net.async_read_exactly(std::string_view((char*)&f[2], payload_sz_sz), payload_sz_sz,
+      [&net, fin, receive_ns, payload_sz_sz, cb = std::forward<Clbl>(cb),
+       f](const auto &ec, std::size_t bytes_transferred) mutable {
+        if (ec) {
+          cb(receive_ns, f, ec ? fmc::error(ec.message()) : fmc::error());
+          return;
+        }
+        // Get rid of mask and get payload size
+        size_t payload_sz = payload_sz_sz == 2
+                                ? fmc_be16toh(*(uint16_t *)&f[2])
+                                : fmc_be64toh(*(uint64_t *)&f[2]);
 
-template<typename Clbl>
-void async_read_mask_and_payload(frame f, bool fin, int64_t receive_ns,
+        async_read_mask_and_payload(net, f, fin, receive_ns, payload_sz_sz,
+                                    payload_sz, std::forward<Clbl>(cb));
+      });
+}
+
+template<typename Network, typename Clbl>
+void async_read_mask_and_payload(Network &net, frame f, bool fin, int64_t receive_ns,
                                  size_t offset, size_t payload_sz,
                                  Clbl &&cb) {}
 
@@ -89,14 +107,14 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
               f.set_offset(0);
-              async_read_mask_and_payload(f, fin, receive_ns, 0, payload_sz,
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
                                           cb);
             } else if (payload_sz == 0x7E) {
               f.set_offset(2);
-              async_read_extended(f, fin, receive_ns, 2, cb);
+              async_read_extended(net, f, fin, receive_ns, 2, cb);
             } else if (payload_sz == 0x7F) {
               f.set_offset(8);
-              async_read_extended(f, fin, receive_ns, 8, cb);
+              async_read_extended(net, f, fin, receive_ns, 8, cb);
             }
           }
           break;
@@ -135,14 +153,14 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
               f.set_offset(0);
-              async_read_mask_and_payload(f, fin, receive_ns, 0, payload_sz,
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
                                           send_pong);
             } else if (payload_sz == 0x7E) {
               f.set_offset(2);
-              async_read_extended(f, fin, receive_ns, 2, send_pong);
+              async_read_extended(net, f, fin, receive_ns, 2, send_pong);
             } else if (payload_sz == 0x7F) {
               f.set_offset(8);
-              async_read_extended(f, fin, receive_ns, 8, send_pong);
+              async_read_extended(net, f, fin, receive_ns, 8, send_pong);
             }
           }
           break;
