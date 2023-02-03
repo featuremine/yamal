@@ -207,7 +207,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
 }
 
 template<typename Network, typename Buffer, typename Pool, typename Clbl>
-void async_write_ws_frame(Network &net, Buffer &buffer, Pool *pool, Clbl &&cb) {
+void async_write_ws_frame(Network &net, Buffer &&buffer, Pool *pool, Clbl &&cb) {
   frame send(pool, buffer.size());
   send.set(buffer);
   net.async_write(send.buffer(), [send, cb = std::forward<Clbl>(cb)] (const auto &ec, size_t bytes_transferred) mutable
