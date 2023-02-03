@@ -23,6 +23,7 @@
 #include "fmc/memory.h"
 #include "fmc/time.h"
 #include <string_view>
+#include "fmc++/error.hpp"
 
 namespace fmc {
 
@@ -39,6 +40,7 @@ public:
   frame(struct fmc_shmem data);
   ~frame();
   void set(const std::string_view &payload, int8_t optcode = 1);
+  void set_optcode(int8_t optcode);
   std::string_view buffer() const;
   std::string_view payload() const;
   bool fin() const;
@@ -54,23 +56,23 @@ private:
   bool fin_;
 }; // class frame
 
-template<typename ErrorCode>
+template<typename Clbl>
 void async_read_extended(frame f, bool fin, int64_t receive_ns,
-                         size_t payload_sz_sz, std::function<void(int64_t, frame, ErrorCode)> cb) {}
+                         size_t payload_sz_sz, Clbl &&cb) {}
 
-template<typename ErrorCode>
+template<typename Clbl>
 void async_read_mask_and_payload(frame f, bool fin, int64_t receive_ns,
                                  size_t offset, size_t payload_sz,
-                                 std::function<void(int64_t, frame, ErrorCode)> cb) {}
+                                 Clbl &&cb) {}
 
-template<typename Network, typename Buffer, typename Pool, typename ErrorCode>
-void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function<void(int64_t, frame, ErrorCode)> cb) {
+template<typename Network, typename Pool, typename Clbl>
+void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
   frame f(pool, 2);
   net.async_read_exactly(f.buffer(), 2,
-    [cb, f](const ErrorCode &ec, std::size_t bytes_transferred) mutable {
+    [&net, pool, cb = std::forward<Clbl>(cb), f](const auto &ec, std::size_t bytes_transferred) mutable {
         auto receive_ns = fmc_cur_time_ns();
         if (ec) {
-          cb(receive_ns, f, ec);
+          cb(receive_ns, f, fmc::error(ec.message()));
           return;
         }
 
@@ -104,31 +106,31 @@ void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function
         case 6:
         case 7:
           /*reserved non control frames*/
-          cb(receive_ns, f, ErrorCode(EOPNOTSUPP));
+          cb(receive_ns, f, fmc::error("Operation not supported"));
           break;
         case 8:
           /*connection close frames*/
-          cb(receive_ns, f, ErrorCode(ESHUTDOWN));
+          cb(receive_ns, f, fmc::error("Shut down"));
           break;
         case 9:
           /*ping frames*/
           {
-            auto send_pong = [&, cb](int64_t r, const websocket::frame &f,
-                                     const ErrorCode &ec) {
+            auto send_pong = [f, cb = std::forward<Clbl>(cb), &net, pool](int64_t r, const websocket::frame &newf,
+                                     const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, f, ec);
                 return;
               }
-              async_write(
-                  f.payload(),
-                  [r, f, cb](const ErrorCode &ec) {
+              f.set_optcode(0xA);
+              net.async_write(
+                  f.buffer(),
+                  [&net, r, f, cb = std::forward<Clbl>(cb), pool](const auto &ec, size_t) mutable {
                     if (ec) {
-                      cb(r, f, ec);
+                      cb(r, f, fmc::error(ec.message()));
                       return;
                     }
-                    async_read(cb);
-                  },
-                  0xA);
+                    async_read_ws_frame(net, pool, std::forward<Clbl>(cb));
+                  });
             };
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
@@ -146,7 +148,7 @@ void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function
           break;
         case 10:
           /*pong frames*/
-          async_read(cb);
+          async_read_ws_frame(net, pool, std::forward<Clbl>(cb));
           break;
         case 11:
         case 12:
@@ -154,22 +156,22 @@ void async_read_ws_frame(Network &net, Buffer &buffer, Pool *pool, std::function
         case 14:
         case 15:
           /*reserved control frames*/
-          cb(receive_ns, f, ErrorCode(EOPNOTSUPP));
+          cb(receive_ns, f, fmc::error("Operation not supported"));
           break;
         default:
-          cb(receive_ns, f, ErrorCode(EOPNOTSUPP));
+          cb(receive_ns, f, fmc::error("Operation not supported"));
           break;
         }
       });
 }
 
-template<typename Network, typename Buffer, typename Pool, typename Clbl, typename ErrorCode>
+template<typename Network, typename Buffer, typename Pool, typename Clbl>
 void async_write_ws_frame(Network &net, Buffer &buffer, Pool *pool, Clbl &&cb) {
   frame send(pool, buffer.size());
   send.set(buffer);
-  net.async_write(send.buffer(), [send, cb = std::forward<Clbl>(cb)] (const ErrorCode &ec, size_t bytes_transferred)
+  net.async_write(send.buffer(), [send, cb = std::forward<Clbl>(cb)] (const auto &ec, size_t bytes_transferred) mutable
       {
-        cb(ec);
+        cb(ec ? fmc::error(ec.message()) : fmc::error());
       });
 }
 

@@ -118,6 +118,11 @@ void frame::set(const std::string_view &payload, int8_t optcode) {
   }
 }
 
+void frame::set_optcode(int8_t optcode) {
+  // Set FIN to 1, rsv 0 and opt code to 1
+  (*this)[0] = int8_t(1 << 7) | optcode;
+}
+
 std::string_view frame::buffer() const {
   return std::string_view((char *)&(*this)[0], sz_);
 }
