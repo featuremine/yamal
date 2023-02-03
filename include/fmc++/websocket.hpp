@@ -81,7 +81,30 @@ void async_read_extended(Network &net, frame f, bool fin, int64_t receive_ns,
 template<typename Network, typename Clbl>
 void async_read_mask_and_payload(Network &net, frame f, bool fin, int64_t receive_ns,
                                  size_t offset, size_t payload_sz,
-                                 Clbl &&cb) {}
+                                 Clbl &&cb) {
+  size_t mask_sz = f[1] & 0x80 ? 4 : 0;
+  f.reserve(2 + offset + mask_sz + payload_sz);
+  net.async_read_exactly(std::string_view((char *)&f[2 + offset], mask_sz + payload_sz), mask_sz + payload_sz,
+      [payload_sz, receive_ns, offset, mask_sz, cb,
+       f](const auto &ec, std::size_t bytes_transferred) mutable {
+        if (!ec && mask_sz) {
+          // Find where mask currently is. Data will start there.
+          size_t start = 2 + offset;
+          // Copy mask so we can override data
+          int8_t mask[4];
+          memcpy(&mask, &f[2 + offset], sizeof(mask));
+          // Apply mask and move content
+          for (uint i = 0; i < payload_sz; ++i) {
+            const_cast<int8_t &>(f[start + i]) =
+                f[start + mask_sz + i] ^ mask[i % 4];
+          }
+          // Invert the mask bit to signal no mask
+          const_cast<int8_t &>(f[1]) &= ~(1 << 7);
+          f.reserve(2 + offset + payload_sz);
+        }
+        cb(receive_ns, f, ec ? fmc::error(ec.message()) : fmc::error());
+      });
+}
 
 template<typename Network, typename Pool, typename Clbl>
 void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
