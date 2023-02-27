@@ -67,7 +67,7 @@ void async_read_extended(Network &net, frame f, bool fin, int64_t receive_ns,
           cb(receive_ns, f, ec ? fmc::error(ec.message()) : fmc::error());
           return;
         }
-        // Get rid of mask and get payload size
+
         size_t payload_sz = payload_sz_sz == 2
                                 ? fmc_be16toh(*(uint16_t *)&f[2])
                                 : fmc_be64toh(*(uint64_t *)&f[2]);
