@@ -146,17 +146,17 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 8:
           /*connection close frames*/
           {
-            auto handle_close = [f, cb = std::forward<Clbl>(cb), &net, receive_ns](int64_t r, const websocket::frame &newf,
+            auto handle_close = [cb = std::forward<Clbl>(cb), receive_ns](int64_t r, const websocket::frame &newf,
                                      const fmc::error &ec) mutable {
               if (ec) {
-                cb(r, f, ec);
+                cb(r, newf, ec);
                 return;
               }
               auto payload = newf.payload();
 
               uint16_t status = fmc_htobe16(*(uint16_t *)payload.data());
 
-              cb(receive_ns, f, fmc::error("Shut down"));
+              cb(receive_ns, newf, fmc::error("Shut down"));
             };
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
@@ -175,10 +175,10 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 9:
           /*ping frames*/
           {
-            auto send_pong = [f, cb = std::forward<Clbl>(cb), &net, pool](int64_t r, const websocket::frame &newf,
+            auto send_pong = [cb = std::forward<Clbl>(cb), &net, pool](int64_t r, const websocket::frame &newf,
                                      const fmc::error &ec) mutable {
               if (ec) {
-                cb(r, f, ec);
+                cb(r, newf, ec);
                 return;
               }
               frame fpong(pool, 2);
@@ -187,7 +187,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
               typename Network::error_type wec;
               net.sync_write(fpong.buffer(), wec);
               if (wec) {
-                cb(r, f, fmc::error(wec.message()));
+                cb(r, newf, fmc::error(wec.message()));
               } else {
                 async_read_ws_frame(net, pool, std::forward<Clbl>(cb));
               }
