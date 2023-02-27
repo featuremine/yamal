@@ -20,11 +20,11 @@
 
 #pragma once
 
+#include "fmc++/error.hpp"
+#include "fmc/endianness.h"
 #include "fmc/memory.h"
 #include "fmc/time.h"
 #include <string_view>
-#include "fmc++/error.hpp"
-#include "fmc/endianness.h"
 
 namespace fmc {
 
@@ -56,11 +56,12 @@ private:
   bool fin_;
 }; // class frame
 
-template<typename Network, typename Clbl>
+template <typename Network, typename Clbl>
 void async_read_extended(Network &net, frame f, bool fin, int64_t receive_ns,
                          size_t payload_sz_sz, Clbl &&cb) {
   f.reserve(2 + payload_sz_sz);
-  net.async_read_exactly(std::string_view((char*)&f[2], payload_sz_sz), payload_sz_sz,
+  net.async_read_exactly(
+      std::string_view((char *)&f[2], payload_sz_sz), payload_sz_sz,
       [&net, fin, receive_ns, payload_sz_sz, cb = std::forward<Clbl>(cb),
        f](const auto &ec, std::size_t bytes_transferred) mutable {
         if (ec) {
@@ -77,13 +78,15 @@ void async_read_extended(Network &net, frame f, bool fin, int64_t receive_ns,
       });
 }
 
-template<typename Network, typename Clbl>
-void async_read_mask_and_payload(Network &net, frame f, bool fin, int64_t receive_ns,
-                                 size_t offset, size_t payload_sz,
-                                 Clbl &&cb) {
+template <typename Network, typename Clbl>
+void async_read_mask_and_payload(Network &net, frame f, bool fin,
+                                 int64_t receive_ns, size_t offset,
+                                 size_t payload_sz, Clbl &&cb) {
   size_t mask_sz = f[1] & 0x80 ? 4 : 0;
   f.reserve(2 + offset + mask_sz + payload_sz);
-  net.async_read_exactly(std::string_view((char *)&f[2 + offset], mask_sz + payload_sz), mask_sz + payload_sz,
+  net.async_read_exactly(
+      std::string_view((char *)&f[2 + offset], mask_sz + payload_sz),
+      mask_sz + payload_sz,
       [payload_sz, receive_ns, offset, mask_sz, cb,
        f](const auto &ec, std::size_t bytes_transferred) mutable {
         if (!ec && mask_sz) {
@@ -100,11 +103,13 @@ void async_read_mask_and_payload(Network &net, frame f, bool fin, int64_t receiv
       });
 }
 
-template<typename Network, typename Pool, typename Clbl>
+template <typename Network, typename Pool, typename Clbl>
 void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
   frame f(pool, 2);
-  net.async_read_exactly(f.buffer(), 2,
-    [&net, pool, cb = std::forward<Clbl>(cb), f](const auto &ec, std::size_t bytes_transferred) mutable {
+  net.async_read_exactly(
+      f.buffer(), 2,
+      [&net, pool, cb = std::forward<Clbl>(cb),
+       f](const auto &ec, std::size_t bytes_transferred) mutable {
         auto receive_ns = fmc_cur_time_ns();
         if (ec) {
           cb(receive_ns, f, fmc::error(ec.message()));
@@ -124,8 +129,8 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
               f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
-                                          cb);
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
+                                          payload_sz, cb);
             } else if (payload_sz == 0x7E) {
               f.set_offset(2);
               async_read_extended(net, f, fin, receive_ns, 2, cb);
@@ -146,8 +151,9 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 8:
           /*connection close frames*/
           {
-            auto handle_close = [cb = std::forward<Clbl>(cb), receive_ns](int64_t r, const websocket::frame &newf,
-                                     const fmc::error &ec) mutable {
+            auto handle_close = [cb = std::forward<Clbl>(cb), receive_ns](
+                                    int64_t r, const websocket::frame &newf,
+                                    const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, newf, ec);
                 return;
@@ -161,8 +167,8 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
               f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
-                                          handle_close);
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
+                                          payload_sz, handle_close);
             } else if (payload_sz == 0x7E) {
               f.set_offset(2);
               async_read_extended(net, f, fin, receive_ns, 2, handle_close);
@@ -175,8 +181,9 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 9:
           /*ping frames*/
           {
-            auto send_pong = [cb = std::forward<Clbl>(cb), &net, pool](int64_t r, const websocket::frame &newf,
-                                     const fmc::error &ec) mutable {
+            auto send_pong = [cb = std::forward<Clbl>(cb), &net,
+                              pool](int64_t r, const websocket::frame &newf,
+                                    const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, newf, ec);
                 return;
@@ -195,8 +202,8 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {
               f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
-                                          send_pong);
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
+                                          payload_sz, send_pong);
             } else if (payload_sz == 0x7E) {
               f.set_offset(2);
               async_read_extended(net, f, fin, receive_ns, 2, send_pong);
@@ -225,14 +232,16 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
       });
 }
 
-template<typename Network, typename Buffer, typename Pool, typename Clbl>
-void async_write_ws_frame(Network &net, Buffer &&buffer, Pool *pool, Clbl &&cb) {
+template <typename Network, typename Buffer, typename Pool, typename Clbl>
+void async_write_ws_frame(Network &net, Buffer &&buffer, Pool *pool,
+                          Clbl &&cb) {
   frame send(pool, buffer.size());
   send.set(buffer);
-  net.async_write(send.buffer(), [send, cb = std::forward<Clbl>(cb)] (const auto &ec, size_t bytes_transferred) mutable
-      {
-        cb(ec ? fmc::error(ec.message()) : fmc::error());
-      });
+  net.async_write(send.buffer(),
+                  [send, cb = std::forward<Clbl>(cb)](
+                      const auto &ec, size_t bytes_transferred) mutable {
+                    cb(ec ? fmc::error(ec.message()) : fmc::error());
+                  });
 }
 
 } // namespace websocket

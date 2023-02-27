@@ -124,7 +124,8 @@ std::string_view frame::buffer() const {
 
 std::string_view frame::payload() const {
   // Payload view taking into account header offset and mask size when present
-  return std::string_view((char *)&(*this)[2 + 4 * ((*this)[1] >> 7) + offset_], sz_ - 2 -  4 * ((*this)[1] >> 7) - offset_);
+  return std::string_view((char *)&(*this)[2 + 4 * ((*this)[1] >> 7) + offset_],
+                          sz_ - 2 - 4 * ((*this)[1] >> 7) - offset_);
 }
 
 bool frame::fin() const { return fin_; }
