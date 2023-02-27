@@ -40,13 +40,12 @@ public:
   frame(struct fmc_pool *p, size_t sz = 0);
   frame(struct fmc_shmem data);
   ~frame();
-  void set(const std::string_view &payload, int8_t optcode = 1);
-  void set_optcode(int8_t optcode);
+  void set(std::string_view payload, uint8_t optcode = 1);
   std::string_view buffer() const;
   std::string_view payload() const;
   bool fin() const;
   void reserve(size_t);
-  int8_t &operator[](size_t) const;
+  uint8_t &operator[](size_t) const;
   const struct fmc_shmem &raw() const;
   void set_offset(size_t);
 
@@ -89,18 +88,13 @@ void async_read_mask_and_payload(Network &net, frame f, bool fin, int64_t receiv
        f](const auto &ec, std::size_t bytes_transferred) mutable {
         if (!ec && mask_sz) {
           // Find where mask currently is. Data will start there.
-          size_t start = 2 + offset;
-          // Copy mask so we can override data
-          int8_t mask[4];
-          memcpy(&mask, &f[2 + offset], sizeof(mask));
+          size_t start = 2 + offset + mask_sz;
           // Apply mask and move content
           for (uint i = 0; i < payload_sz; ++i) {
-            const_cast<int8_t &>(f[start + i]) =
-                f[start + mask_sz + i] ^ mask[i % 4];
+            f[start + i] = f[start + i] ^ f[2 + offset + i % 4];
           }
-          // Invert the mask bit to signal no mask
-          const_cast<int8_t &>(f[1]) &= ~(1 << 7);
-          f.reserve(2 + offset + payload_sz);
+          // nullify mask to preserve frame structure
+          memset(&f[2 + offset], 0, sizeof(uint8_t));
         }
         cb(receive_ns, f, ec ? fmc::error(ec.message()) : fmc::error());
       });
@@ -151,7 +145,32 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
           break;
         case 8:
           /*connection close frames*/
-          cb(receive_ns, f, fmc::error("Shut down"));
+          {
+            auto handle_close = [f, cb = std::forward<Clbl>(cb), &net, receive_ns](int64_t r, const websocket::frame &newf,
+                                     const fmc::error &ec) mutable {
+              if (ec) {
+                cb(r, f, ec);
+                return;
+              }
+              auto payload = newf.payload();
+
+              uint16_t status = fmc_htobe16(*(uint16_t *)payload.data());
+
+              cb(receive_ns, f, fmc::error("Shut down"));
+            };
+            size_t payload_sz = f[1] & 0x7F;
+            if (payload_sz < 0x7E) {
+              f.set_offset(0);
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
+                                          handle_close);
+            } else if (payload_sz == 0x7E) {
+              f.set_offset(2);
+              async_read_extended(net, f, fin, receive_ns, 2, handle_close);
+            } else if (payload_sz == 0x7F) {
+              f.set_offset(8);
+              async_read_extended(net, f, fin, receive_ns, 8, handle_close);
+            }
+          }
           break;
         case 9:
           /*ping frames*/
@@ -162,16 +181,16 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
                 cb(r, f, ec);
                 return;
               }
-              f.set_optcode(0xA);
-              net.async_write(
-                  f.buffer(),
-                  [&net, r, f, cb = std::forward<Clbl>(cb), pool](const auto &ec, size_t) mutable {
-                    if (ec) {
-                      cb(r, f, fmc::error(ec.message()));
-                      return;
-                    }
-                    async_read_ws_frame(net, pool, std::forward<Clbl>(cb));
-                  });
+              frame fpong(pool, 2);
+              fpong.set(newf.payload(), 10);
+
+              typename Network::error_type wec;
+              net.sync_write(fpong.buffer(), wec);
+              if (wec) {
+                cb(r, f, fmc::error(wec.message()));
+              } else {
+                async_read_ws_frame(net, pool, std::forward<Clbl>(cb));
+              }
             };
             size_t payload_sz = f[1] & 0x7F;
             if (payload_sz < 0x7E) {

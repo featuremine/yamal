@@ -71,12 +71,12 @@ frame::~frame() {
   fmc_shmem_destroy(&data_, &e);
 }
 
-void frame::set(const std::string_view &payload, int8_t optcode) {
+void frame::set(std::string_view payload, uint8_t optcode) {
   uint64_t payload_sz = payload.size();
   fin_ = true;
 
   // compute base mask, reserve memory and copy payload size
-  int8_t base_mask = int8_t(1 << 7);
+  uint8_t base_mask = uint8_t(1 << 7);
   if (payload_sz <= 125) {
     base_mask |= (uint8_t)payload_sz;
     offset_ = 0;
@@ -95,8 +95,8 @@ void frame::set(const std::string_view &payload, int8_t optcode) {
     memcpy(&(*this)[2], &n_payload_sz, sizeof(uint64_t));
   }
 
-  // Set FIN to 1, rsv 0 and opt code to 1
-  (*this)[0] = int8_t(1 << 7) | optcode;
+  // Set FIN to 1, rsv 0 and opt code to optcode from argument
+  (*this)[0] = uint8_t(1 << 7) | optcode;
   // Set base_mask
   (*this)[1] = base_mask;
 
@@ -118,17 +118,13 @@ void frame::set(const std::string_view &payload, int8_t optcode) {
   }
 }
 
-void frame::set_optcode(int8_t optcode) {
-  // Set FIN to 1, rsv 0 and opt code to 1
-  (*this)[0] = int8_t(1 << 7) | optcode;
-}
-
 std::string_view frame::buffer() const {
   return std::string_view((char *)&(*this)[0], sz_);
 }
 
 std::string_view frame::payload() const {
-  return std::string_view((char *)&(*this)[2 + offset_], sz_ - 2 - offset_);
+  // Payload view taking into account header offset and mask size when present
+  return std::string_view((char *)&(*this)[2 + 4 * ((*this)[1] >> 7) + offset_], sz_ - 2 -  4 * ((*this)[1] >> 7) - offset_);
 }
 
 bool frame::fin() const { return fin_; }
@@ -141,8 +137,8 @@ void frame::reserve(size_t sz) {
   sz_ = sz;
 }
 
-int8_t &frame::operator[](size_t sz) const {
-  return ((int8_t *)*data_.view)[sz];
+uint8_t &frame::operator[](size_t sz) const {
+  return ((uint8_t *)*data_.view)[sz];
 }
 
 const struct fmc_shmem &frame::raw() const { return data_; }
