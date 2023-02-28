@@ -24,8 +24,8 @@
 #include "fmc/endianness.h"
 #include "fmc/memory.h"
 #include "fmc/time.h"
-#include <string_view>
 #include <string.h>
+#include <string_view>
 
 namespace fmc {
 
