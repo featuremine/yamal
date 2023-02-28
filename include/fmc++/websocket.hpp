@@ -25,6 +25,7 @@
 #include "fmc/memory.h"
 #include "fmc/time.h"
 #include <string_view>
+#include <string.h>
 
 namespace fmc {
 
