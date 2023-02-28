@@ -159,9 +159,10 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
                 cb(r, newf, ec);
                 return;
               }
-              auto payload = newf.payload();
-
-              uint16_t status = fmc_htobe16(*(uint16_t *)payload.data());
+              // The status could be used to debug, this information should
+              // not be propagated to the user according to the spec.
+              // auto payload = newf.payload();
+              // uint16_t status = fmc_htobe16(*(uint16_t *)payload.data());
 
               cb(receive_ns, newf, fmc::error("Shut down"));
             };
