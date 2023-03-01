@@ -119,19 +119,22 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
 
         bool fin = f[0] & 0x80;
 
-        auto resume_read = [&](auto &&callback){
-            size_t payload_sz = f[1] & 0x7F;
-            if (payload_sz < 0x7E) {
-              f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
-                                          payload_sz, std::forward<decltype(callback)>(callback));
-            } else if (payload_sz == 0x7E) {
-              f.set_offset(2);
-              async_read_extended(net, f, fin, receive_ns, 2, std::forward<decltype(callback)>(callback));
-            } else if (payload_sz == 0x7F) {
-              f.set_offset(8);
-              async_read_extended(net, f, fin, receive_ns, 8, std::forward<decltype(callback)>(callback));
-            }
+        auto resume_read = [&](auto &&callback) {
+          size_t payload_sz = f[1] & 0x7F;
+          if (payload_sz < 0x7E) {
+            f.set_offset(0);
+            async_read_mask_and_payload(
+                net, f, fin, receive_ns, 0, payload_sz,
+                std::forward<decltype(callback)>(callback));
+          } else if (payload_sz == 0x7E) {
+            f.set_offset(2);
+            async_read_extended(net, f, fin, receive_ns, 2,
+                                std::forward<decltype(callback)>(callback));
+          } else if (payload_sz == 0x7F) {
+            f.set_offset(8);
+            async_read_extended(net, f, fin, receive_ns, 8,
+                                std::forward<decltype(callback)>(callback));
+          }
         };
 
         switch (f[0] & 0x0F) { // optcode
