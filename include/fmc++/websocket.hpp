@@ -141,9 +141,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
           /*text frame*/
         case 2:
           /*binary frame*/
-          {
-            resume_read(std::forward<Clbl>(cb));
-          }
+          { resume_read(std::forward<Clbl>(cb)); }
           break;
         case 3:
         case 4:
@@ -156,9 +154,9 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 8:
           /*connection close frames*/
           {
-            resume_read([cb = std::forward<Clbl>(cb), receive_ns](
-                                    int64_t r, const websocket::frame &newf,
-                                    const fmc::error &ec) mutable {
+            resume_read([cb = std::forward<Clbl>(cb),
+                         receive_ns](int64_t r, const websocket::frame &newf,
+                                     const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, newf, ec);
                 return;
@@ -176,8 +174,8 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
           /*ping frames*/
           {
             resume_read([cb = std::forward<Clbl>(cb), &net,
-                              pool](int64_t r, const websocket::frame &newf,
-                                    const fmc::error &ec) mutable {
+                         pool](int64_t r, const websocket::frame &newf,
+                               const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, newf, ec);
                 return;
