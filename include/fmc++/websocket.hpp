@@ -119,19 +119,19 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
 
         bool fin = f[0] & 0x80;
 
-        auto resume_read = [&](auto &&callback){
-            size_t payload_sz = f[1] & 0x7F;
-            if (payload_sz < 0x7E) {
-              f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
-                                          payload_sz, callback);
-            } else if (payload_sz == 0x7E) {
-              f.set_offset(2);
-              async_read_extended(net, f, fin, receive_ns, 2, callback);
-            } else if (payload_sz == 0x7F) {
-              f.set_offset(8);
-              async_read_extended(net, f, fin, receive_ns, 8, callback);
-            }
+        auto resume_read = [&](auto &&callback) {
+          size_t payload_sz = f[1] & 0x7F;
+          if (payload_sz < 0x7E) {
+            f.set_offset(0);
+            async_read_mask_and_payload(net, f, fin, receive_ns, 0, payload_sz,
+                                        callback);
+          } else if (payload_sz == 0x7E) {
+            f.set_offset(2);
+            async_read_extended(net, f, fin, receive_ns, 2, callback);
+          } else if (payload_sz == 0x7F) {
+            f.set_offset(8);
+            async_read_extended(net, f, fin, receive_ns, 8, callback);
+          }
         };
 
         switch (f[0] & 0x0F) { // optcode
@@ -141,9 +141,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
           /*text frame*/
         case 2:
           /*binary frame*/
-          {
-            resume_read(std::forward<Clbl>(cb));
-          }
+          { resume_read(std::forward<Clbl>(cb)); }
           break;
         case 3:
         case 4:
@@ -156,9 +154,9 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 8:
           /*connection close frames*/
           {
-            resume_read([cb = std::forward<Clbl>(cb), receive_ns](
-                                    int64_t r, const websocket::frame &newf,
-                                    const fmc::error &ec) mutable {
+            resume_read([cb = std::forward<Clbl>(cb),
+                         receive_ns](int64_t r, const websocket::frame &newf,
+                                     const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, newf, ec);
                 return;
@@ -176,8 +174,8 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
           /*ping frames*/
           {
             resume_read([cb = std::forward<Clbl>(cb), &net,
-                              pool](int64_t r, const websocket::frame &newf,
-                                    const fmc::error &ec) mutable {
+                         pool](int64_t r, const websocket::frame &newf,
+                               const fmc::error &ec) mutable {
               if (ec) {
                 cb(r, newf, ec);
                 return;
