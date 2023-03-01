@@ -119,6 +119,21 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
 
         bool fin = f[0] & 0x80;
 
+        auto resume_read = [&](auto &&callback){
+            size_t payload_sz = f[1] & 0x7F;
+            if (payload_sz < 0x7E) {
+              f.set_offset(0);
+              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
+                                          payload_sz, callback);
+            } else if (payload_sz == 0x7E) {
+              f.set_offset(2);
+              async_read_extended(net, f, fin, receive_ns, 2, callback);
+            } else if (payload_sz == 0x7F) {
+              f.set_offset(8);
+              async_read_extended(net, f, fin, receive_ns, 8, callback);
+            }
+        };
+
         switch (f[0] & 0x0F) { // optcode
         case 0:
           /*continuation frame*/
@@ -127,18 +142,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 2:
           /*binary frame*/
           {
-            size_t payload_sz = f[1] & 0x7F;
-            if (payload_sz < 0x7E) {
-              f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
-                                          payload_sz, cb);
-            } else if (payload_sz == 0x7E) {
-              f.set_offset(2);
-              async_read_extended(net, f, fin, receive_ns, 2, cb);
-            } else if (payload_sz == 0x7F) {
-              f.set_offset(8);
-              async_read_extended(net, f, fin, receive_ns, 8, cb);
-            }
+            resume_read(std::forward<Clbl>(cb));
           }
           break;
         case 3:
@@ -152,7 +156,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
         case 8:
           /*connection close frames*/
           {
-            auto handle_close = [cb = std::forward<Clbl>(cb), receive_ns](
+            resume_read([cb = std::forward<Clbl>(cb), receive_ns](
                                     int64_t r, const websocket::frame &newf,
                                     const fmc::error &ec) mutable {
               if (ec) {
@@ -165,25 +169,13 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
               // uint16_t status = fmc_htobe16(*(uint16_t *)payload.data());
 
               cb(receive_ns, newf, fmc::error("Shut down"));
-            };
-            size_t payload_sz = f[1] & 0x7F;
-            if (payload_sz < 0x7E) {
-              f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
-                                          payload_sz, handle_close);
-            } else if (payload_sz == 0x7E) {
-              f.set_offset(2);
-              async_read_extended(net, f, fin, receive_ns, 2, handle_close);
-            } else if (payload_sz == 0x7F) {
-              f.set_offset(8);
-              async_read_extended(net, f, fin, receive_ns, 8, handle_close);
-            }
+            });
           }
           break;
         case 9:
           /*ping frames*/
           {
-            auto send_pong = [cb = std::forward<Clbl>(cb), &net,
+            resume_read([cb = std::forward<Clbl>(cb), &net,
                               pool](int64_t r, const websocket::frame &newf,
                                     const fmc::error &ec) mutable {
               if (ec) {
@@ -200,19 +192,7 @@ void async_read_ws_frame(Network &net, Pool *pool, Clbl &&cb) {
               } else {
                 async_read_ws_frame(net, pool, std::forward<Clbl>(cb));
               }
-            };
-            size_t payload_sz = f[1] & 0x7F;
-            if (payload_sz < 0x7E) {
-              f.set_offset(0);
-              async_read_mask_and_payload(net, f, fin, receive_ns, 0,
-                                          payload_sz, send_pong);
-            } else if (payload_sz == 0x7E) {
-              f.set_offset(2);
-              async_read_extended(net, f, fin, receive_ns, 2, send_pong);
-            } else if (payload_sz == 0x7F) {
-              f.set_offset(8);
-              async_read_extended(net, f, fin, receive_ns, 8, send_pong);
-            }
+            });
           }
           break;
         case 10:
