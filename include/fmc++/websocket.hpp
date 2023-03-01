@@ -88,7 +88,7 @@ void async_read_mask_and_payload(Network &net, frame f, bool fin,
   net.async_read_exactly(
       std::string_view((char *)&f[2 + offset], mask_sz + payload_sz),
       mask_sz + payload_sz,
-      [payload_sz, receive_ns, offset, mask_sz, cb,
+      [payload_sz, receive_ns, offset, mask_sz, cb = std::forward<Clbl>(cb),
        f](const auto &ec, std::size_t bytes_transferred) mutable {
         if (!ec && mask_sz) {
           // Find where mask currently is. Data will start there.
