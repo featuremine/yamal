@@ -196,20 +196,14 @@ struct fmc_component_type {
 struct fmc_component_module {
   struct fmc_component_sys *sys;    // the system that owns the module
   fmc_error_t error;                // reports errors for this module
-  fmc_ext_t handle;                 // module handle. Return of dlopen()
   char *name;                       // module name (e.g. "oms")
-  char *file;                       // file full path of the library
+  struct fmc_ext_mod_t mod;         // module handle and path
   struct fmc_component_type *types; // list of component types
   struct fmc_component_module *next, *prev;
 };
 
-typedef struct fmc_component_path_list {
-  struct fmc_component_path_list *next, *prev;
-  char path[]; // FAM
-} fmc_component_path_list_t;
-
 struct fmc_component_sys {
-  fmc_component_path_list_t *search_paths;
+  struct fmc_ext_searchpath_t *search_paths;
   struct fmc_component_module *modules;
 };
 
@@ -220,7 +214,7 @@ FMMODFUNC void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
 FMMODFUNC void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
                                            const char *path,
                                            fmc_error_t **error);
-FMMODFUNC fmc_component_path_list_t *
+FMMODFUNC struct fmc_ext_searchpath_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys);
 FMMODFUNC void
 fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
