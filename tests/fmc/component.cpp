@@ -34,7 +34,7 @@
 #include "shutdowncomponent.h"
 
 #if defined(FMC_SYS_UNIX)
-#define FMC_MOD_SEARCHPATH_CUR ""
+#define FMC_MOD_SEARCHPATH_CUR "."
 #define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
@@ -71,7 +71,7 @@ TEST(component, sys_paths) {
 
   fmc_component_sys_paths_set_default(&sys, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *pdef = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *pdef = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(pdef, nullptr);
   EXPECT_EQ(std::string(pdef->path), std::string(FMC_MOD_SEARCHPATH_CUR));
@@ -117,7 +117,7 @@ TEST(component, sys_paths) {
   paths[1] = nullptr;
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -127,7 +127,7 @@ TEST(component, sys_paths) {
   const char new_path[] = "new_path";
   fmc_component_sys_paths_add(&sys, new_path, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p2 = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p2 = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p2, nullptr);
   ASSERT_NE(p2, p2->next);
@@ -152,7 +152,7 @@ TEST(component, sys) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -162,7 +162,7 @@ TEST(component, sys) {
   const char new_path[] = "new_path";
   fmc_component_sys_paths_add(&sys, new_path, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p2 = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p2 = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p2, nullptr);
   ASSERT_NE(p2, p2->next);
@@ -187,7 +187,7 @@ TEST(component, module) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -248,7 +248,7 @@ TEST(component, component) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -336,7 +336,7 @@ TEST(reactor, reactorsched) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -419,7 +419,7 @@ TEST(reactor, reactorlive) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -505,7 +505,7 @@ TEST(reactor, io) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -588,7 +588,7 @@ TEST(reactor, io_multiple_inputs) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -706,7 +706,7 @@ TEST(reactor, io_incorrect_number_of_inputs) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -769,7 +769,7 @@ TEST(reactor, io_incorrect_output_index) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -832,7 +832,7 @@ TEST(reactor, shutdown_no_cb) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -894,7 +894,7 @@ TEST(reactor, shutdown_cb) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -966,7 +966,7 @@ TEST(reactor, shutdown_cb_no_queue) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -1035,7 +1035,7 @@ TEST(reactor, immediate_shutdown) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -1104,7 +1104,7 @@ TEST(reactor, multi_shutdown_cb) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));
@@ -1201,7 +1201,7 @@ TEST(reactor, nostop_shutdown) {
 
   fmc_component_sys_paths_set(&sys, paths, &err);
   ASSERT_EQ(err, nullptr);
-  fmc_component_path_list_t *p = fmc_component_sys_paths_get(&sys);
+  fmc_ext_searchpath_t *p = fmc_component_sys_paths_get(&sys);
   ASSERT_EQ(sys.modules, nullptr);
   ASSERT_NE(p, nullptr);
   EXPECT_EQ(std::string(p->path), std::string(paths[0]));

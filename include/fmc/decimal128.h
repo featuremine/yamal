@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+#define FMC_DECIMAL128
 #define FMC_DECIMAL128_SIZE 16
 #define FMC_DECIMAL128_STR_SIZE 43
 

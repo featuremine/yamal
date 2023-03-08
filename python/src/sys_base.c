@@ -289,9 +289,8 @@ static PyObject *Sys_get_paths(struct Sys *self, PyObject *args,
     return NULL;
   }
 
-  struct fmc_component_path_list *list =
-      fmc_component_sys_paths_get(&self->sys);
-  struct fmc_component_path_list *p = NULL;
+  struct fmc_ext_searchpath_t *list = fmc_component_sys_paths_get(&self->sys);
+  struct fmc_ext_searchpath_t *p = NULL;
   size_t count = 0;
 
   p = list;
