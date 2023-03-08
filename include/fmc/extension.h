@@ -36,6 +36,17 @@ typedef void *fmc_ext_t;
 #error "Not defined for this operating system"
 #endif
 
+struct fmc_ext_searchpath_t {
+  struct fmc_ext_searchpath_t *next, *prev;
+  char path[]; // FAM
+};
+
+struct fmc_ext_mod_t {
+  fmc_ext_t handle;
+  void *func;
+  const char *path;
+};
+
 /**
  * @brief opens an extension
  *
@@ -65,6 +76,71 @@ FMMODFUNC void *fmc_ext_sym(fmc_ext_t handle, const char *sym,
  * @param handle Extension handle
  */
 FMMODFUNC void fmc_ext_close(fmc_ext_t handle);
+
+/**
+ * @brief Searches and loads a module
+ *
+ * @param modname Module name
+ * @param initfunc_prefix
+ * @param search_paths a list of search paths
+ * @param error
+ * @return the extension handle and the function pointer
+ */
+FMMODFUNC struct fmc_ext_mod_t
+fmc_ext_mod_load(const char *modname, const char *initfunc_prefix,
+                 struct fmc_ext_searchpath_t *search_paths,
+                 fmc_error_t **error);
+
+/**
+ * @brief Destroy a module
+ *
+ * @param mod Module
+ */
+FMMODFUNC void fmc_ext_mod_destroy(struct fmc_ext_mod_t *mod);
+
+/**
+ * @brief Destroy a search path list
+ *
+ * @param phead Search path list
+ */
+FMMODFUNC void fmc_ext_searchpath_del(struct fmc_ext_searchpath_t **phead);
+
+/**
+ * @brief Add a path to the search path list
+ *
+ * @param phead Search path list
+ * @param path
+ * @param error
+ */
+FMMODFUNC void fmc_ext_searchpath_add(struct fmc_ext_searchpath_t **phead,
+                                      const char *path, fmc_error_t **error);
+
+/**
+ * @brief Set the search path list given an null-terminated array of paths
+ *
+ * @param phead Search path list
+ * @param paths A null-terminated array of paths
+ * @param error
+ */
+FMMODFUNC void fmc_ext_searchpath_set(struct fmc_ext_searchpath_t **head,
+                                      const char **paths, fmc_error_t **error);
+
+/**
+ * @brief Set the search path list as default:
+ * 1. Current working directory
+ * 2. $HOME/.local/{defaultpath}
+ * 3. /usr/local/{defaultpath}
+ * 4. If available: A list of paths from ${pathenvname}
+ *
+ * @param phead Search path list
+ * @param defaultpath
+ * @param pathenvname
+ * @param error
+ */
+FMMODFUNC void
+fmc_ext_searchpath_set_default(struct fmc_ext_searchpath_t **head,
+                               const char *defaultpath, const char *pathenvname,
+                               fmc_error_t **error);
 
 #ifdef __cplusplus
 }

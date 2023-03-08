@@ -28,7 +28,6 @@
 #include <fmc/component.h>
 #include <fmc/error.h>
 #include <fmc/extension.h>
-#include <fmc/files.h>
 #include <fmc/math.h>
 #include <fmc/platform.h>
 #include <fmc/reactor.h>
@@ -40,19 +39,11 @@
 #include <uthash/utheap.h>
 #include <uthash/utlist.h>
 
-#if defined(FMC_SYS_UNIX)
-#define FMC_MOD_SEARCHPATH_CUR ""
-#define FMC_MOD_SEARCHPATH_USRLOCAL ".local/lib/yamal/modules"
-#define FMC_MOD_SEARCHPATH_SYSLOCAL "/usr/local/lib/yamal/modules"
 #define FMC_MOD_SEARCHPATH_ENV "YAMALCOMPPATH"
-#define FMC_MOD_SEARCHPATH_ENV_SEP ":"
-#if defined(FMC_SYS_LINUX)
-#define FMC_LIB_SUFFIX ".so"
-#elif defined(FMC_SYS_MACH)
-#define FMC_LIB_SUFFIX ".dylib"
-#endif
+
+#if defined(FMC_SYS_UNIX)
+#define FMC_MOD_SEARCHPATH_DEFAULTPATH "lib/yamal/modules"
 #else
-#define FMC_MOD_SEARCHPATH_ENV_SEP ";"
 #error "Unsupported operating system"
 #endif
 
@@ -249,150 +240,74 @@ void fmc_component_sys_init(struct fmc_component_sys *sys) {
   sys->modules = NULL;
 }
 
-static void component_path_list_del(fmc_component_path_list_t **phead) {
-  if (!*phead)
-    return;
-  fmc_component_path_list_t *p;
-  fmc_component_path_list_t *ptmp;
-  DL_FOREACH_SAFE(*phead, p, ptmp) {
-    DL_DELETE(*phead, p);
-    free(p);
-  }
-}
-
-static void component_path_list_add(fmc_component_path_list_t **phead,
-                                    const char *path, fmc_error_t **error) {
-  fmc_component_path_list_t *p =
-      (fmc_component_path_list_t *)calloc(1, sizeof(*p) + strlen(path) + 1);
-  if (p) {
-    strcpy(p->path, path);
-    DL_APPEND(*phead, p);
-  } else {
-    fmc_error_set2(error, FMC_ERROR_MEMORY);
-    return;
-  }
-}
-
-static void component_path_list_set(fmc_component_path_list_t **head,
-                                    const char **paths, fmc_error_t **error) {
-  for (unsigned int i = 0; paths && paths[i]; ++i) {
-    component_path_list_add(head, paths[i], error);
-    if (*error) {
-      component_path_list_del(head);
-      return;
-    }
-  }
+void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
+                                         fmc_error_t **error) {
+  fmc_ext_searchpath_set_default(&sys->search_paths,
+                                 FMC_MOD_SEARCHPATH_DEFAULTPATH,
+                                 FMC_MOD_SEARCHPATH_ENV, error);
 }
 
 void fmc_component_sys_paths_set(struct fmc_component_sys *sys,
                                  const char **paths, fmc_error_t **error) {
-  fmc_error_clear(error);
-  fmc_component_path_list_t *tmpls = NULL;
-  component_path_list_set(&tmpls, paths, error);
-  if (!*error) {
-    fmc_component_path_list_t *tmpls2 = sys->search_paths;
-    sys->search_paths = tmpls;
-    tmpls = tmpls2;
-  }
-  component_path_list_del(&tmpls);
-}
-
-void fmc_component_sys_paths_set_default(struct fmc_component_sys *sys,
-                                         fmc_error_t **error) {
-  fmc_error_clear(error);
-  fmc_component_path_list_t *tmpls = NULL;
-
-  char *tmp = getenv("HOME");
-  int psz = fmc_path_join(NULL, 0, tmp, FMC_MOD_SEARCHPATH_USRLOCAL) + 1;
-  char home_path[psz];
-  fmc_path_join(home_path, psz, tmp, FMC_MOD_SEARCHPATH_USRLOCAL);
-
-  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, home_path,
-                            FMC_MOD_SEARCHPATH_SYSLOCAL, NULL};
-
-  component_path_list_set(&tmpls, defaults, error);
-  if (*error)
-    goto cleanup;
-
-  tmp = getenv(FMC_MOD_SEARCHPATH_ENV);
-  if (tmp) {
-    char ycpaths[strlen(tmp) + 1];
-    strcpy(ycpaths, tmp);
-    char *found;
-    tmp = ycpaths;
-    while ((found = strsep(&tmp, FMC_MOD_SEARCHPATH_ENV_SEP))) {
-      component_path_list_add(&tmpls, found, error);
-      if (*error)
-        goto cleanup;
-    }
-  }
-  fmc_component_path_list_t *tmpls2 = sys->search_paths;
-  sys->search_paths = tmpls;
-  tmpls = tmpls2;
-  return;
-cleanup:
-  component_path_list_del(&tmpls);
+  fmc_ext_searchpath_set(&sys->search_paths, paths, error);
 }
 
 void fmc_component_sys_paths_add(struct fmc_component_sys *sys,
                                  const char *path, fmc_error_t **error) {
   fmc_error_clear(error);
   if (path) {
-    component_path_list_add(&sys->search_paths, path, error);
+    fmc_ext_searchpath_add(&sys->search_paths, path, error);
   }
 }
 
-fmc_component_path_list_t *
+struct fmc_ext_searchpath_t *
 fmc_component_sys_paths_get(struct fmc_component_sys *sys) {
   return sys->search_paths;
 }
 
 void fmc_component_module_destroy(struct fmc_component_module *mod) {
-  if (mod->name)
-    free(mod->name);
-  if (mod->file)
-    free(mod->file);
-  if (mod->handle)
-    fmc_ext_close(mod->handle);
+  free(mod->name);
+  fmc_ext_mod_destroy(&mod->mod);
   fmc_error_destroy(&mod->error);
   component_types_del(&mod->types);
 }
 
-static struct fmc_component_module *
-mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
-         const char *mod_lib, const char *mod_func, fmc_error_t **error) {
-  fmc_error_t *err = NULL;
-  int psz = fmc_path_join(NULL, 0, dir, mod_lib) + 1;
-  char lib_path[psz];
-  fmc_path_join(lib_path, psz, dir, mod_lib);
+struct fmc_component_module *
+fmc_component_module_get(struct fmc_component_sys *sys, const char *modname,
+                         fmc_error_t **error) {
+  fmc_error_clear(error);
+
+  // If the module exists, get it
+  struct fmc_component_module *mhead = sys->modules;
+  struct fmc_component_module *mitem;
+  DL_FOREACH(mhead, mitem) {
+    if (!strcmp(mitem->name, modname)) {
+      return mitem;
+    }
+  }
 
   struct fmc_component_module mod;
-  memset(&mod, 0, sizeof(mod));
-
-  mod.handle = fmc_ext_open(lib_path, &err);
-  if (err)
-    goto cleanup;
-
-  // Check if init function is available
-  fmc_component_module_init_func mod_init =
-      (fmc_component_module_init_func)fmc_ext_sym(mod.handle, mod_func, &err);
-  if (err)
-    goto cleanup;
-
-  // append the mod to the system
-  fmc_error_init_none(&mod.error);
   mod.sys = sys;
-  mod.name = fmc_cstr_new(modstr, error);
-  if (*error)
-    goto cleanup;
-  mod.file = fmc_cstr_new(lib_path, error);
-  if (*error)
-    goto cleanup;
+  fmc_error_init_none(&mod.error);
+  mod.name = NULL;
+  mod.types = NULL;
+  mod.prev = NULL;
+  mod.next = NULL;
 
-  fmc_error_reset_none(&mod.error);
-  mod_init(&api, &mod);
+  mod.mod = fmc_ext_mod_load(modname, FMC_COMPONENT_INIT_FUNC_PREFIX,
+                             sys->search_paths, error);
+  if (*error) {
+    goto cleanup;
+  }
+
+  mod.name = fmc_cstr_new(modname, error);
+  if (*error) {
+    goto cleanup;
+  }
+
+  ((fmc_component_module_init_func)mod.mod.func)(&api, &mod);
   if (fmc_error_has(&mod.error)) {
-    fmc_error_set(error, "failed to load components %s with error: %s", modstr,
+    fmc_error_set(error, "failed to load components %s with error: %s", modname,
                   fmc_error_msg(&mod.error));
     goto cleanup;
   }
@@ -405,57 +320,16 @@ mod_load(struct fmc_component_sys *sys, const char *dir, const char *modstr,
   }
   memcpy(m, &mod, sizeof(mod));
   DL_APPEND(sys->modules, m);
-
   return m;
+
 cleanup:
   fmc_component_module_destroy(&mod);
   return NULL;
 }
 
-struct fmc_component_module *
-fmc_component_module_get(struct fmc_component_sys *sys, const char *mod,
-                         fmc_error_t **error) {
-  fmc_error_clear(error);
-
-  // If the module exists, get it
-  struct fmc_component_module *mhead = sys->modules;
-  struct fmc_component_module *mitem;
-  DL_FOREACH(mhead, mitem) {
-    if (!strcmp(mitem->name, mod)) {
-      return mitem;
-    }
-  }
-
-  struct fmc_component_module *ret = NULL;
-  char mod_lib[strlen(mod) + strlen(FMC_LIB_SUFFIX) + 1];
-  sprintf(mod_lib, "%s%s", mod, FMC_LIB_SUFFIX);
-
-  int pathlen = fmc_path_join(NULL, 0, mod, mod_lib) + 1;
-  char mod_lib_2[pathlen];
-  fmc_path_join(mod_lib_2, pathlen, mod, mod_lib);
-
-  char mod_func[strlen(FMC_COMPONENT_INIT_FUNC_PREFIX) + strlen(mod) + 1];
-  sprintf(mod_func, "%s%s", FMC_COMPONENT_INIT_FUNC_PREFIX, mod);
-  fmc_component_path_list_t *head = sys->search_paths;
-  fmc_component_path_list_t *item;
-  DL_FOREACH(head, item) {
-    ret = mod_load(sys, item->path, mod, mod_lib, mod_func, error);
-    if (!ret && !(*error)) {
-      ret = mod_load(sys, item->path, mod, mod_lib_2, mod_func, error);
-    }
-    if (ret || *error) {
-      break;
-    }
-  }
-  if (!ret && !(*error)) {
-    fmc_error_set(error, "component module %s was not found", mod);
-  }
-  return ret;
-}
-
 FMMODFUNC const char *
 fmc_component_module_file(struct fmc_component_module *mod) {
-  return mod->file;
+  return mod->mod.path;
 }
 
 void fmc_component_module_del(struct fmc_component_module *mod) {
@@ -640,14 +514,7 @@ size_t fmc_component_out_sz(struct fmc_component *comp) {
 }
 
 void fmc_component_sys_destroy(struct fmc_component_sys *sys) {
-  fmc_component_path_list_t *phead = sys->search_paths;
-  fmc_component_path_list_t *p;
-  fmc_component_path_list_t *ptmp;
-  DL_FOREACH_SAFE(phead, p, ptmp) {
-    DL_DELETE(phead, p);
-    free(p);
-  }
-  sys->search_paths = NULL;
+  fmc_ext_searchpath_del(&sys->search_paths);
 
   // destroy modules: also destroys components of the module
   struct fmc_component_module *modhead = sys->modules;
