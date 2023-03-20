@@ -251,6 +251,21 @@ if(BUILD_TOOLS)
     )
 
     add_executable(
+       yamal-cp
+       "src/tools/yamal-cp.cpp"
+    )
+    target_link_libraries(
+       yamal-cp
+       PRIVATE
+       ytp
+       fmc++
+    )
+    install(
+       TARGETS
+       yamal-cp
+    )
+
+    add_executable(
         yamal-daemon
         "src/tools/yamal-daemon.cpp"
     )
