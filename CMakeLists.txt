@@ -251,6 +251,21 @@ if(BUILD_TOOLS)
     )
 
     add_executable(
+       yamal-replay
+       "src/tools/yamal-replay.cpp"
+    )
+    target_link_libraries(
+       yamal-replay
+       PRIVATE
+       ytp
+       fmc++
+    )
+    install(
+       TARGETS
+       yamal-replay
+    )
+
+    add_executable(
        yamal-cp
        "src/tools/yamal-cp.cpp"
     )
