@@ -13,7 +13,7 @@
 *****************************************************************************/
 
 #include <tclap/CmdLine.h>
-
+#include <fmc++/counters.hpp>
 #include <fmc++/time.hpp>
 #include <fmc/signals.h>
 #include <ytp/control.h>
@@ -31,21 +31,22 @@ int main(int argc, char **argv) {
   TCLAP::UnlabeledValueArg<std::string> srcArg("src", "source yamal path", true, "src", "string");
   cmd.add(srcArg);
 
-  TCLAP::UnlabeledValueArg<std::string> destArg("dest", "destination yamal path", true, "dest", "string");
-  cmd.add(destArg);
+  TCLAP::ValueArg<size_t> periodArg(
+      "p", "period", "period of diagram publishing", false, 1, "seconds");
 
   cmd.parse(argc, argv);
 
   auto src_name = srcArg.getValue();
-  auto dest_name = destArg.getValue();
+  auto period = 1000000000ULL * periodArg.getValue();
 
   fmc_error_t *error;
   fmc_fd src_fd = -1;
-  fmc_fd dest_fd = -1;
   ytp_yamal_t *src_yml = NULL;
-  ytp_yamal_t *dest_yml = NULL;
   ytp_iterator_t it = NULL;
-  int64_t delta = 0;
+  int64_t last = fmc_cur_time_ns();
+
+  fmc::counter::precision_sampler buckets_;
+  std::vector<double> percentiles{25.0, 50.0, 75.0, 90.0, 95.0, 99.0, 100.0};
 
   src_fd = fmc_fopen(src_name.c_str(), fmc_fmode::READ, &error);
   if (!fmc_fvalid(src_fd)) {
@@ -53,20 +54,24 @@ int main(int argc, char **argv) {
     goto error;
   }
 
-  dest_fd = fmc_fopen(dest_name.c_str(), fmc_fmode::READWRITE, &error);
-  if (!fmc_fvalid(dest_fd)) {
-    std::cerr << "Unable to open file " << dest_name << std::endl;
-    goto error;
-  }
-
   src_yml = ytp_yamal_new(src_fd, &error);
   CHECK(error);
-  dest_yml = ytp_yamal_new(dest_fd, &error);
-  CHECK(error);
 
-  it = ytp_yamal_begin(src_yml, &error);
+  it = ytp_yamal_end(src_yml, &error);
   CHECK(error);
-  for (; !ytp_yamal_term(it); it = ytp_yamal_next(src_yml, it, &error)) {
+  while (true) {
+    if (ytp_yamal_term(it)) {
+      auto now = fmc_cur_time_ns();
+      if (last + period < now) {
+        for (double &percentile : percentiles) {
+          std::cout << percentile
+                    << "% percentile: " << buckets_.percentile(percentile)
+                    << " nanoseconds" << std::endl;
+        }
+        last = now;
+      }
+      continue;
+    }
     CHECK(error);
     size_t sz;
     char *src;
@@ -75,16 +80,8 @@ int main(int argc, char **argv) {
     uint64_t time;
     ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src, &error);
     CHECK(error);
-    if (!delta) {
-      delta = fmc_cur_time_ns() - time;
-    }
-    time += delta;
-    while (time > fmc_cur_time_ns());
-    char *dest = ytp_time_reserve(dest_yml, sz, &error);
-    CHECK(error);
-    memcpy(dest, src, sz);
-    ytp_time_commit(dest_yml, peer, ch, time, dest, &error);
-    CHECK(error);
+    buckets_.sample(fmc_cur_time_ns() - time);
+    it = ytp_yamal_next(src_yml, it, &error);
   }
 
   return 0;
@@ -92,9 +89,7 @@ int main(int argc, char **argv) {
 error:
   std::cerr << fmc_error_msg(error) << std::endl;
   ytp_yamal_del(src_yml, &error);
-  ytp_yamal_del(dest_yml, &error);
   fmc_fclose(src_fd, &error);
-  fmc_fclose(dest_fd, &error);
 
   return -1;
 }

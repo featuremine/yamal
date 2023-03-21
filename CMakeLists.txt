@@ -236,18 +236,33 @@ install(
 
 if(BUILD_TOOLS)
     add_executable(
-       yamal-run
-       "src/tools/yamal-run.cpp"
+        yamal-run
+        "src/tools/yamal-run.cpp"
     )
     target_link_libraries(
-       yamal-run
+        yamal-run
+        PRIVATE
+        ytp
+        fmc++
+    )
+    install(
+        TARGETS
+        yamal-run
+    )
+
+    add_executable(
+       yamal-latency
+       "src/tools/yamal-latency.cpp"
+    )
+    target_link_libraries(
+       yamal-latency
        PRIVATE
        ytp
        fmc++
     )
     install(
        TARGETS
-       yamal-run
+       yamal-latency
     )
 
     add_executable(
