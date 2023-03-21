@@ -34,10 +34,20 @@ int main(int argc, char **argv) {
   TCLAP::UnlabeledValueArg<std::string> destArg("dest", "destination yamal path", true, "dest", "string");
   cmd.add(destArg);
 
+  TCLAP::ValueArg<size_t> countArg("n", "count", "number of messages to copy",
+                                         false, -1, "unsigned");
+  cmd.add(countArg);
+
+  TCLAP::ValueArg<size_t> sizeArg("s", "size", "maximum amount of data to copy",
+                                         false, -1, "megabytes");
+  cmd.add(sizeArg);
+
   cmd.parse(argc, argv);
 
   auto src_name = srcArg.getValue();
   auto dest_name = destArg.getValue();
+  auto max_count = countArg.getValue();
+  auto max_size = 1024 * 1024 * sizeArg.getValue();
 
   fmc_error_t *error;
   fmc_fd src_fd = -1;
@@ -45,6 +55,8 @@ int main(int argc, char **argv) {
   ytp_yamal_t *src_yml = NULL;
   ytp_yamal_t *dest_yml = NULL;
   ytp_iterator_t it = NULL;
+  size_t count = 0;
+  size_t size = YTP_YAMAL_HEADER_SIZE;
 
   src_fd = fmc_fopen(src_name.c_str(), fmc_fmode::READ, &error);
   if (!fmc_fvalid(src_fd)) {
@@ -71,6 +83,9 @@ int main(int argc, char **argv) {
     char *src;
     ytp_yamal_read(src_yml, it, &sz, (const char **)&src, &error);
     CHECK(error);
+    ++count;
+    size += sz + YTP_MMNODE_HEADER_SIZE;
+    if (size > max_size || count > max_count) break;
     char *dest = ytp_yamal_reserve(dest_yml, sz, &error);
     CHECK(error);
     memcpy(dest, src, sz);

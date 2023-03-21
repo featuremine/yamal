@@ -32,6 +32,8 @@
 
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
+#define YTP_MMNODE_HEADER_SIZE 24
+#define YTP_YAMAL_HEADER_SIZE 32
 
 #ifdef __cplusplus
 extern "C" {

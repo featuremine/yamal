@@ -52,9 +52,11 @@ struct mmnode {
   char data[];
 };
 
-static_assert(sizeof(mmnode) == 24);
+static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '0'};
+
+static_assert(sizeof(fm_mmnode_t) + sizeof(magic_number) == YTP_YAMAL_HEADER_SIZE);
 
 static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
 
