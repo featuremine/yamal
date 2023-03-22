@@ -73,7 +73,8 @@ int main(int argc, char **argv) {
   ytp_iterator_t it = NULL;
   int64_t last = fmc_cur_time_ns();
 
-  fmc::counter::precision_sampler buckets_;
+  fmc::counter::log_bucket buckets_;
+  uint64_t count = 0ULL;
   std::vector<double> percentiles{25.0, 50.0, 75.0, 90.0, 95.0, 99.0, 100.0};
 
   src_fd = fmc_fopen(src_name.c_str(), fmc_fmode::READ, &error);
@@ -99,9 +100,11 @@ int main(int argc, char **argv) {
     CHECK(error);
     auto now = fmc_cur_time_ns();
     buckets_.sample(now - time);
+    ++count;
     it = ytp_yamal_next(src_yml, it, &error);
 
     if (last + period < now) {
+      std::cout << "count: " << count << std::endl;
       for (double &percentile : percentiles) {
         std::cout << percentile
                   << "% percentile: " << buckets_.percentile(percentile)
