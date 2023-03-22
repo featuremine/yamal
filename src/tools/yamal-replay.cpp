@@ -107,10 +107,11 @@ int main(int argc, char **argv) {
       delta = fmc_cur_time_ns() - time;
     }
     while (time + delta > fmc_cur_time_ns());
+    time = fmc_cur_time_ns();
     char *dest = ytp_time_reserve(dest_yml, sz, &error);
     CHECK(error);
     memcpy(dest, src, sz);
-    ytp_time_commit(dest_yml, peer, ch, time ? time + delta : 0, dest, &error);
+    ytp_time_commit(dest_yml, peer, ch, time, dest, &error);
     CHECK(error);
   }
 
