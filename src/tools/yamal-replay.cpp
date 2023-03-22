@@ -16,6 +16,7 @@
 
 #include <fmc++/time.hpp>
 #include <fmc/signals.h>
+#include <fmc/process.h>
 #include <ytp/control.h>
 #include <ytp/sequence.h>
 #include <ytp/version.h>
@@ -34,7 +35,34 @@ int main(int argc, char **argv) {
   TCLAP::UnlabeledValueArg<std::string> destArg("dest", "destination yamal path", true, "dest", "string");
   cmd.add(destArg);
 
+  
+  TCLAP::ValueArg<int> affinityArg("a", "affinity", "set the CPU affinity of the main process",
+                                   false, 0, "cpuid");
+  cmd.add(affinityArg);
+
   cmd.parse(argc, argv);
+
+  if (affinityArg.isSet()) {
+    fmc_error_t *error;
+    auto cur_thread = fmc_tid_cur(&error);
+    if (error) {
+      std::string message;
+      message += "Error getting current thread: ";
+      message += fmc_error_msg(error);
+      std::cerr << message << std::endl;
+      return -1;
+    } else {
+      auto cpuid = affinityArg.getValue();
+      fmc_set_affinity(cur_thread, cpuid, &error);
+      if (error) {
+        std::string message;
+        message += "Error set affinity: ";
+        message += fmc_error_msg(error);
+        std::cerr << message << std::endl;
+        return -1;
+      }
+    }
+  }
 
   auto src_name = srcArg.getValue();
   auto dest_name = destArg.getValue();
@@ -78,12 +106,11 @@ int main(int argc, char **argv) {
     if (!delta && time) {
       delta = fmc_cur_time_ns() - time;
     }
-    time += delta;
-    while (time > fmc_cur_time_ns());
+    while (time + delta > fmc_cur_time_ns());
     char *dest = ytp_time_reserve(dest_yml, sz, &error);
     CHECK(error);
     memcpy(dest, src, sz);
-    ytp_time_commit(dest_yml, peer, ch, time, dest, &error);
+    ytp_time_commit(dest_yml, peer, ch, time ? time + delta : 0, dest, &error);
     CHECK(error);
   }
 
@@ -91,10 +118,10 @@ int main(int argc, char **argv) {
 
 error:
   std::cerr << fmc_error_msg(error) << std::endl;
-  ytp_yamal_del(src_yml, &error);
-  ytp_yamal_del(dest_yml, &error);
-  fmc_fclose(src_fd, &error);
-  fmc_fclose(dest_fd, &error);
+  if (src_yml) ytp_yamal_del(src_yml, &error);
+  if (dest_yml) ytp_yamal_del(dest_yml, &error);
+  if (src_fd != -1) fmc_fclose(src_fd, &error);
+  if (dest_fd != -1) fmc_fclose(dest_fd, &error);
 
   return -1;
 }

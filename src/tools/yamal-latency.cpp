@@ -15,6 +15,7 @@
 #include <tclap/CmdLine.h>
 #include <fmc++/counters.hpp>
 #include <fmc++/time.hpp>
+#include <fmc/process.h>
 #include <fmc/signals.h>
 #include <ytp/control.h>
 #include <ytp/sequence.h>
@@ -35,7 +36,33 @@ int main(int argc, char **argv) {
       "p", "period", "period of diagram publishing", false, 1, "seconds");
   cmd.add(periodArg);
 
+  TCLAP::ValueArg<int> affinityArg("a", "affinity", "set the CPU affinity of the main process",
+                                   false, 0, "cpuid");
+  cmd.add(affinityArg);
+
   cmd.parse(argc, argv);
+
+  if (affinityArg.isSet()) {
+    fmc_error_t *error;
+    auto cur_thread = fmc_tid_cur(&error);
+    if (error) {
+      std::string message;
+      message += "Error getting current thread: ";
+      message += fmc_error_msg(error);
+      std::cerr << message << std::endl;
+      return -1;
+    } else {
+      auto cpuid = affinityArg.getValue();
+      fmc_set_affinity(cur_thread, cpuid, &error);
+      if (error) {
+        std::string message;
+        message += "Error set affinity: ";
+        message += fmc_error_msg(error);
+        std::cerr << message << std::endl;
+        return -1;
+      }
+    }
+  }
 
   auto src_name = srcArg.getValue();
   auto period = 1000000000ULL * periodArg.getValue();
@@ -61,18 +88,7 @@ int main(int argc, char **argv) {
   it = ytp_yamal_end(src_yml, &error);
   CHECK(error);
   while (true) {
-    if (ytp_yamal_term(it)) {
-      auto now = fmc_cur_time_ns();
-      if (last + period < now) {
-        for (double &percentile : percentiles) {
-          std::cout << percentile
-                    << "% percentile: " << buckets_.percentile(percentile)
-                    << " nanoseconds" << std::endl;
-        }
-        last = now;
-      }
-      continue;
-    }
+    if (ytp_yamal_term(it)) continue;
     CHECK(error);
     size_t sz;
     char *src;
@@ -81,16 +97,26 @@ int main(int argc, char **argv) {
     uint64_t time;
     ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src, &error);
     CHECK(error);
-    buckets_.sample(fmc_cur_time_ns() - time);
+    auto now = fmc_cur_time_ns();
+    buckets_.sample(now - time);
     it = ytp_yamal_next(src_yml, it, &error);
+
+    if (last + period < now) {
+      for (double &percentile : percentiles) {
+        std::cout << percentile
+                  << "% percentile: " << buckets_.percentile(percentile)
+                  << " nanoseconds" << std::endl;
+      }
+      last = now;
+    }
   }
 
   return 0;
 
 error:
   std::cerr << fmc_error_msg(error) << std::endl;
-  ytp_yamal_del(src_yml, &error);
-  fmc_fclose(src_fd, &error);
+  if (src_yml) ytp_yamal_del(src_yml, &error);
+  if (src_fd != -1) fmc_fclose(src_fd, &error);
 
   return -1;
 }

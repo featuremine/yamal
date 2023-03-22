@@ -97,10 +97,10 @@ int main(int argc, char **argv) {
 
 error:
   std::cerr << fmc_error_msg(error) << std::endl;
-  ytp_yamal_del(src_yml, &error);
-  ytp_yamal_del(dest_yml, &error);
-  fmc_fclose(src_fd, &error);
-  fmc_fclose(dest_fd, &error);
+  if (src_yml) ytp_yamal_del(src_yml, &error);
+  if (dest_yml) ytp_yamal_del(dest_yml, &error);
+  if (src_fd != -1) fmc_fclose(src_fd, &error);
+  if (dest_fd != -1) fmc_fclose(dest_fd, &error);
 
   return -1;
 }
