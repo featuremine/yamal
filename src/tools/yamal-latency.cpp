@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
 
   TCLAP::ValueArg<size_t> periodArg(
       "p", "period", "period of diagram publishing", false, 1, "seconds");
+  cmd.add(periodArg);
 
   cmd.parse(argc, argv);
 

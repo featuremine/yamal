@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     uint64_t time;
     ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src, &error);
     CHECK(error);
-    if (!delta) {
+    if (!delta && time) {
       delta = fmc_cur_time_ns() - time;
     }
     time += delta;
