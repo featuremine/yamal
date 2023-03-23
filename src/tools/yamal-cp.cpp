@@ -23,23 +23,28 @@
 #include <cstring>
 #include <iostream>
 
-#define CHECK(E) if (E) {goto error;}
+#define CHECK(E)                                                               \
+  if (E) {                                                                     \
+    goto error;                                                                \
+  }
 
 int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("yamal copy tool", ' ', YTP_VERSION);
 
-  TCLAP::UnlabeledValueArg<std::string> srcArg("src", "source yamal path", true, "src", "string");
+  TCLAP::UnlabeledValueArg<std::string> srcArg("src", "source yamal path", true,
+                                               "src", "string");
   cmd.add(srcArg);
 
-  TCLAP::UnlabeledValueArg<std::string> destArg("dest", "destination yamal path", true, "dest", "string");
+  TCLAP::UnlabeledValueArg<std::string> destArg(
+      "dest", "destination yamal path", true, "dest", "string");
   cmd.add(destArg);
 
   TCLAP::ValueArg<size_t> countArg("n", "count", "number of messages to copy",
-                                         false, -1, "unsigned");
+                                   false, -1, "unsigned");
   cmd.add(countArg);
 
   TCLAP::ValueArg<size_t> sizeArg("s", "size", "maximum amount of data to copy",
-                                         false, -1, "megabytes");
+                                  false, -1, "megabytes");
   cmd.add(sizeArg);
 
   cmd.parse(argc, argv);
@@ -85,7 +90,8 @@ int main(int argc, char **argv) {
     CHECK(error);
     ++count;
     size += sz + YTP_MMNODE_HEADER_SIZE;
-    if (size > max_size || count > max_count) break;
+    if (size > max_size || count > max_count)
+      break;
     char *dest = ytp_yamal_reserve(dest_yml, sz, &error);
     CHECK(error);
     memcpy(dest, src, sz);
@@ -97,10 +103,14 @@ int main(int argc, char **argv) {
 
 error:
   std::cerr << fmc_error_msg(error) << std::endl;
-  if (src_yml) ytp_yamal_del(src_yml, &error);
-  if (dest_yml) ytp_yamal_del(dest_yml, &error);
-  if (src_fd != -1) fmc_fclose(src_fd, &error);
-  if (dest_fd != -1) fmc_fclose(dest_fd, &error);
+  if (src_yml)
+    ytp_yamal_del(src_yml, &error);
+  if (dest_yml)
+    ytp_yamal_del(dest_yml, &error);
+  if (src_fd != -1)
+    fmc_fclose(src_fd, &error);
+  if (dest_fd != -1)
+    fmc_fclose(dest_fd, &error);
 
   return -1;
 }

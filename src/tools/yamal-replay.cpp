@@ -15,8 +15,8 @@
 #include <tclap/CmdLine.h>
 
 #include <fmc++/time.hpp>
-#include <fmc/signals.h>
 #include <fmc/process.h>
+#include <fmc/signals.h>
 #include <ytp/control.h>
 #include <ytp/sequence.h>
 #include <ytp/version.h>
@@ -24,24 +24,30 @@
 #include <cstring>
 #include <iostream>
 
-#define CHECK(E) if (E) {goto error;}
+#define CHECK(E)                                                               \
+  if (E) {                                                                     \
+    goto error;                                                                \
+  }
 
 int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("yamal copy tool", ' ', YTP_VERSION);
 
-  TCLAP::UnlabeledValueArg<std::string> srcArg("src", "source yamal path", true, "src", "string");
+  TCLAP::UnlabeledValueArg<std::string> srcArg("src", "source yamal path", true,
+                                               "src", "string");
   cmd.add(srcArg);
 
-  TCLAP::UnlabeledValueArg<std::string> destArg("dest", "destination yamal path", true, "dest", "string");
+  TCLAP::UnlabeledValueArg<std::string> destArg(
+      "dest", "destination yamal path", true, "dest", "string");
   cmd.add(destArg);
 
-  
-  TCLAP::ValueArg<int> affinityArg("a", "affinity", "set the CPU affinity of the main process",
+  TCLAP::ValueArg<int> affinityArg("a", "affinity",
+                                   "set the CPU affinity of the main process",
                                    false, 0, "cpuid");
   cmd.add(affinityArg);
 
-  TCLAP::ValueArg<int> auxArg("x", "auxiliary", "set the CPU affinity of the auxiliary process",
-                                   false, 0, "cpuid");
+  TCLAP::ValueArg<int> auxArg("x", "auxiliary",
+                              "set the CPU affinity of the auxiliary process",
+                              false, 0, "cpuid");
   cmd.add(auxArg);
 
   cmd.parse(argc, argv);
@@ -109,12 +115,14 @@ int main(int argc, char **argv) {
     ytp_peer_t peer;
     ytp_channel_t ch;
     uint64_t time;
-    ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src, &error);
+    ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src,
+                  &error);
     CHECK(error);
     if (!delta && time) {
       delta = fmc_cur_time_ns() - time;
     }
-    while (time + delta > fmc_cur_time_ns());
+    while (time + delta > fmc_cur_time_ns())
+      ;
     time = fmc_cur_time_ns();
     char *dest = ytp_time_reserve(dest_yml, sz, &error);
     CHECK(error);
@@ -127,10 +135,14 @@ int main(int argc, char **argv) {
 
 error:
   std::cerr << fmc_error_msg(error) << std::endl;
-  if (src_yml) ytp_yamal_del(src_yml, &error);
-  if (dest_yml) ytp_yamal_del(dest_yml, &error);
-  if (src_fd != -1) fmc_fclose(src_fd, &error);
-  if (dest_fd != -1) fmc_fclose(dest_fd, &error);
+  if (src_yml)
+    ytp_yamal_del(src_yml, &error);
+  if (dest_yml)
+    ytp_yamal_del(dest_yml, &error);
+  if (src_fd != -1)
+    fmc_fclose(src_fd, &error);
+  if (dest_fd != -1)
+    fmc_fclose(dest_fd, &error);
 
   return -1;
 }
