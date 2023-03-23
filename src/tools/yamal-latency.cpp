@@ -40,7 +40,15 @@ int main(int argc, char **argv) {
                                    false, 0, "cpuid");
   cmd.add(affinityArg);
 
+  TCLAP::ValueArg<int> auxArg("x", "auxiliary", "set the CPU affinity of the auxiliary process",
+                                   false, 0, "cpuid");
+  cmd.add(auxArg);
+
   cmd.parse(argc, argv);
+
+  if (auxArg.isSet()) {
+    ytp_yamal_set_aux_thread_affinity(auxArg.getValue());
+  }
 
   if (affinityArg.isSet()) {
     fmc_error_t *error;
@@ -98,7 +106,7 @@ int main(int argc, char **argv) {
     uint64_t time;
     ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src, &error);
     CHECK(error);
-    auto now = nanos();
+    auto now = fmc_cur_time_ns();
     buckets_.sample(now - time);
     ++count;
     it = ytp_yamal_next(src_yml, it, &error);
