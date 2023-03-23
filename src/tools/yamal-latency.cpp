@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
     uint64_t time;
     ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src, &error);
     CHECK(error);
-    auto now = fmc_cur_time_ns();
+    auto now = nanos();
     buckets_.sample(now - time);
     ++count;
     it = ytp_yamal_next(src_yml, it, &error);

@@ -60,6 +60,18 @@ FMMODFUNC void ytp_yamal_init(ytp_yamal_t *yamal, int fd, fmc_error_t **error);
 FMMODFUNC ytp_yamal_t *ytp_yamal_new(int fd, fmc_error_t **error);
 
 /**
+ * @brief Sets CPU affinity for the auxillary yamal thread
+ *
+ * @param[in] cpuid a CPU ID to use for the affinity
+ */
+FMMODFUNC void ytp_yamal_set_aux_thread_affinity(int cpuid);
+
+/**
+ * @brief Clears CPU affinity for the auxillary yamal thread
+ */
+FMMODFUNC void ytp_yamal_clear_aux_thread_affinity();
+
+/**
  * @brief Initializes a ytp_yamal_t object
  *
  * @param[out] yamal

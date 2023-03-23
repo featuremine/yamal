@@ -15,6 +15,7 @@
 #include <fmc/alignment.h>
 #include <fmc/endianness.h>
 #include <fmc/error.h>
+#include <fmc/process.h>
 #include <ytp/yamal.h>
 
 #include <atomic>
@@ -210,6 +211,29 @@ static std::atomic<mmnode_offs> &cast_iterator(ytp_iterator_t iterator) {
   return it;
 }
 
+int *_set_yamal_aux_thread_affinity(int *cpuid, bool toset) {
+  static int _id = 0;
+  static int *_set = NULL;
+  if (toset) {
+    if (cpuid) {
+      _id = *cpuid;
+      _set = &_id;
+    } else {
+      _set = NULL;
+    }
+  } else {
+    return _set;
+  }
+}
+
+void ytp_yamal_clear_aux_thread_affinity() {
+  _set_yamal_aux_thread_affinity(NULL, true);
+}
+
+void ytp_yamal_set_aux_thread_affinity(int cpuid) {
+  _set_yamal_aux_thread_affinity(&cpuid, true);
+}
+
 void ytp_yamal_init(ytp_yamal_t *yamal, int fd, fmc_error_t **error) {
   ytp_yamal_init_2(yamal, fd, true, error);
 }
@@ -252,6 +276,10 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
     if (enable_thread) {
       yamal->thread_ = std::thread([yamal]() {
         fmc_error_t *err;
+        int *cpuid = _set_yamal_aux_thread_affinity(NULL, false);
+        if (cpuid) {
+          fmc_set_cur_affinity(*cpuid, &err);
+        }
         while (!yamal->done_) {
           std::unique_lock<std::mutex> sl_(yamal->m_);
           if (yamal->cv_.wait_for(sl_, 10ms) != std::cv_status::timeout)
