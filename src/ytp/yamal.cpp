@@ -212,7 +212,7 @@ static std::atomic<mmnode_offs> &cast_iterator(ytp_iterator_t iterator) {
   return it;
 }
 
-int *_set_yamal_aux_thread_affinity(int *cpuid, bool toset) {
+static int *_set_yamal_aux_thread_affinity(int *cpuid, bool toset) {
   static int _id = 0;
   static int *_set = NULL;
   if (toset) {
