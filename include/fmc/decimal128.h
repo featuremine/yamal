@@ -134,6 +134,8 @@ FMMODFUNC void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
                                      uint16_t *flag,
                                      const fmc_decimal128_t *src);
 FMMODFUNC uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src);
+FMMODFUNC void fmc_decimal128_powu(fmc_decimal128_t *res,
+                                   const fmc_decimal128_t *src, uint64_t n);
 
 #ifdef __cplusplus
 }
