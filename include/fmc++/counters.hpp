@@ -159,9 +159,8 @@ class precision_sampler : sample {
 public:
   using buckets_t = fmc::ordered_multimap<uint64_t, uint64_t>;
   void sample(uint64_t x) {
-    auto s = double(x);
-    auto c = std::pow(10.0, std::max(std::floor(std::log10(s)) - 1, 0.0));
-    auto b = uint64_t(std::round(s / c) * c);
+    auto c = 1ULL << FMC_FLOORLOG2(x + (x == 0));
+    auto b = uint64_t((x / c) * c);
     if (auto where = buckets_.find(b); where == buckets_.end()) {
       where = buckets_.emplace(b, 1);
     } else {

@@ -32,6 +32,8 @@
 
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
+#define YTP_MMNODE_HEADER_SIZE 24
+#define YTP_YAMAL_HEADER_SIZE 32
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +58,18 @@ FMMODFUNC void ytp_yamal_init(ytp_yamal_t *yamal, int fd, fmc_error_t **error);
  * @return ytp_yamal_t object
  */
 FMMODFUNC ytp_yamal_t *ytp_yamal_new(int fd, fmc_error_t **error);
+
+/**
+ * @brief Sets CPU affinity for the auxillary yamal thread
+ *
+ * @param[in] cpuid a CPU ID to use for the affinity
+ */
+FMMODFUNC void ytp_yamal_set_aux_thread_affinity(int cpuid);
+
+/**
+ * @brief Clears CPU affinity for the auxillary yamal thread
+ */
+FMMODFUNC void ytp_yamal_clear_aux_thread_affinity();
 
 /**
  * @brief Initializes a ytp_yamal_t object
