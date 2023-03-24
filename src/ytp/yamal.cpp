@@ -26,7 +26,6 @@
 
 #include "yamal.hpp"
 
-#include <iostream>
 
 #if !defined(YTP_USE_BIG_ENDIAN)
 #define ye64toh(x) fmc_le64toh(x)
@@ -224,9 +223,8 @@ int *_set_yamal_aux_thread_affinity(int *cpuid, bool toset) {
     } else {
       _set = NULL;
     }
-  } else {
-    return _set;
   }
+  return _set;
 }
 
 void ytp_yamal_clear_aux_thread_affinity() {
@@ -282,7 +280,6 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
         fmc_error_t *err;
         int *cpuid = _set_yamal_aux_thread_affinity(NULL, false);
         if (cpuid) {
-          std::cout << "about to set affinity\n";
           fmc_set_cur_affinity(*cpuid, &err);
         }
         while (!yamal->done_) {
