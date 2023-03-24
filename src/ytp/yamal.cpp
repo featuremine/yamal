@@ -232,7 +232,8 @@ void ytp_yamal_clear_aux_thread_affinity() {
 }
 
 void ytp_yamal_set_aux_thread_affinity(int cpuid) {
-  _set_yamal_aux_thread_affinity(&cpuid, true);
+  int value = cpuid;
+  _set_yamal_aux_thread_affinity(&value, true);
 }
 
 void ytp_yamal_init(ytp_yamal_t *yamal, int fd, fmc_error_t **error) {
