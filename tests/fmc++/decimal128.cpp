@@ -2060,6 +2060,26 @@ TEST(decimal128, triple_identity) {
   precision_loss_identity_test(data, 4, 1, FMC_DECIMAL128_NEG, expected, 2, 26);
 }
 
+TEST(decimal128, pow) {
+  char str[256];
+  auto pow = [&](const char *s1, unsigned n) -> std::string_view {
+    fmc_decimal128_t res, a;
+    fmc_error_t *error;
+    fmc_decimal128_from_str(&a, s1, &error);
+    fmc_decimal128_powu(&res, &a, n);
+    fmc_decimal128_to_str(str, &res);
+    return str;
+  };
+
+  EXPECT_EQ(pow("1.1", 133), "320056.8495929836678645715734694834");
+  EXPECT_EQ(pow("1.01", 999), "20751.63924536005946974380771182666");
+  EXPECT_EQ(pow("1.01", 1000), "20959.15563781366006444124578894493");
+  EXPECT_EQ(pow("1.01", 1001), "21168.74719419179666508565824683437");
+  EXPECT_EQ(pow("-2", 5), "-32");
+  EXPECT_EQ(pow("-2", 6), "64");
+  EXPECT_EQ(pow("13.09", 601), "1.908655626960053514716748141345832E+671");
+}
+
 TEST(decimal128, performance) {
   using counter_t = fmc::counter::nanoseconds;
   using sampler_t = fmc::counter::precision_sampler;

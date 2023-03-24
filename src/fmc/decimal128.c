@@ -1174,3 +1174,15 @@ void fmc_decimal128_triple(uint64_t *data, int64_t *len, int64_t *exp,
 uint32_t fmc_decimal128_digits(const fmc_decimal128_t *src) {
   return decQuadDigits((decQuad *)src);
 }
+
+void fmc_decimal128_powu(fmc_decimal128_t *res, const fmc_decimal128_t *src,
+                         uint64_t n) {
+  fmc_decimal128_from_int(res, 1);
+  fmc_decimal128_t p = *src;
+  for (; n; n /= 2) {
+    if ((n % 2) != 0) {
+      fmc_decimal128_mul(res, res, &p);
+    }
+    fmc_decimal128_mul(&p, &p, &p);
+  }
+}
