@@ -26,7 +26,6 @@
 
 #include "yamal.hpp"
 
-
 #if !defined(YTP_USE_BIG_ENDIAN)
 #define ye64toh(x) fmc_le64toh(x)
 #define htoye64(x) fmc_htole64(x)
