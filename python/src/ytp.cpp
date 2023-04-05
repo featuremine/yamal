@@ -852,7 +852,6 @@ static PyObject *YTPSequence_poll(YTPSequence *self) {
 
 static PyObject *YTPSequence_remove_callbacks(YTPSequence *self) {
   auto *seq = ytp_sequence_shared_get(self->seq->shared_seq);
-  ytp_sequence_cb_rm(seq);
   self->seq->clear();
   Py_RETURN_NONE;
 }
