@@ -45,21 +45,25 @@ struct YTPSequenceBase : std::enable_shared_from_this<YTPSequenceBase> {
 };
 
 struct YTPSequence {
-  PyObject_HEAD std::shared_ptr<YTPSequenceBase> seq;
+  PyObject_HEAD;
+  std::shared_ptr<YTPSequenceBase> seq;
 };
 
 struct YTPPeer {
-  PyObject_HEAD std::shared_ptr<YTPSequenceBase> seq;
+  PyObject_HEAD;
+  std::shared_ptr<YTPSequenceBase> seq;
   ytp_peer_t id;
 };
 
 struct YTPChannel {
-  PyObject_HEAD std::shared_ptr<YTPSequenceBase> seq;
+  PyObject_HEAD;
+  std::shared_ptr<YTPSequenceBase> seq;
   ytp_channel_t id;
 };
 
 struct YTPStream {
-  PyObject_HEAD std::shared_ptr<YTPSequenceBase> seq;
+  PyObject_HEAD;
+  std::shared_ptr<YTPSequenceBase> seq;
   ytp_peer_t peer_id;
   ytp_channel_t channel_id;
 };
@@ -72,7 +76,8 @@ struct YTPTransaction {
 };
 
 struct YTPTransactions {
-  PyObject_HEAD std::shared_ptr<YTPSequenceBase> seq;
+  PyObject_HEAD;
+  std::shared_ptr<YTPSequenceBase> seq;
   std::optional<YTPTransaction> transaction;
 };
 
