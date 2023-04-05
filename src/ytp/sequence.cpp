@@ -197,6 +197,10 @@ void ytp_sequence_set_it(ytp_sequence_t *seq, ytp_iterator_t iterator) {
   ytp_timeline_iter_set(&seq->timeline, iterator);
 }
 
+void ytp_sequence_cb_rm(ytp_sequence_t *seq) {
+  ytp_timeline_cb_rm(&seq->timeline);
+}
+
 ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, size_t off,
                                  fmc_error_t **error) {
   return ytp_timeline_seek(&seq->timeline, off, error);
