@@ -92,6 +92,7 @@ static PyObject *YTPSequence_data_callback(YTPSequence *self, PyObject *args,
 static PyObject *YTPSequence_peer(YTPSequence *self, PyObject *args,
                                   PyObject *kwds);
 static PyObject *YTPSequence_poll(YTPSequence *self);
+static PyObject *YTPSequence_remove_callbacks(YTPSequence *self);
 
 static PyObject *YTPPeer_new(PyTypeObject *subtype, PyObject *args,
                              PyObject *kwds);
@@ -145,6 +146,8 @@ static PyMethodDef YTPSequence_methods[] = {
     {"peer", (PyCFunction)YTPSequence_peer, METH_VARARGS | METH_KEYWORDS,
      "Not implemented."},
     {"poll", (PyCFunction)YTPSequence_poll, METH_NOARGS, "Not implemented."},
+    {"remove_callbacks", (PyCFunction)YTPSequence_remove_callbacks,
+     METH_VARARGS | METH_KEYWORDS, "Not implemented."},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -836,6 +839,12 @@ static PyObject *YTPSequence_poll(YTPSequence *self) {
     return nullptr;
   }
   return PyBool_FromLong(res);
+}
+
+static PyObject *YTPSequence_remove_callbacks(YTPSequence *self) {
+  auto *seq = ytp_sequence_shared_get(self->seq->shared_seq);
+  ytp_sequence_cb_rm(seq);
+  Py_RETURN_NONE;
 }
 
 static PyObject *YTPPeer_new(PyTypeObject *subtype, PyObject *args,
