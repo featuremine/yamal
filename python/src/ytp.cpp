@@ -34,6 +34,8 @@ using namespace std;
 
 struct YTPSequenceBase : std::enable_shared_from_this<YTPSequenceBase> {
   ~YTPSequenceBase();
+  void clear();
+
   ytp_sequence_shared_t *shared_seq = nullptr;
   std::deque<std::pair<YTPSequenceBase *, PyObject *>> peer_cb;
   std::deque<std::pair<YTPSequenceBase *, PyObject *>> channel_cb;
@@ -92,6 +94,7 @@ static PyObject *YTPSequence_data_callback(YTPSequence *self, PyObject *args,
 static PyObject *YTPSequence_peer(YTPSequence *self, PyObject *args,
                                   PyObject *kwds);
 static PyObject *YTPSequence_poll(YTPSequence *self);
+static PyObject *YTPSequence_remove_callbacks(YTPSequence *self);
 
 static PyObject *YTPPeer_new(PyTypeObject *subtype, PyObject *args,
                              PyObject *kwds);
@@ -137,47 +140,51 @@ static void PyAPIWrapper_dealloc(PyAPIWrapper *self);
 
 static PyMethodDef YTPSequence_methods[] = {
     {"peer_callback", (PyCFunction)YTPSequence_peer_callback,
-     METH_VARARGS | METH_KEYWORDS, "Not implemented."},
+     METH_VARARGS | METH_KEYWORDS, "Set callback for peers in YTP file"},
     {"channel_callback", (PyCFunction)YTPSequence_channel_callback,
-     METH_VARARGS | METH_KEYWORDS, "Not implemented."},
+     METH_VARARGS | METH_KEYWORDS, "Set callback for channels in YTP file"},
     {"data_callback", (PyCFunction)YTPSequence_data_callback,
-     METH_VARARGS | METH_KEYWORDS, "Not implemented."},
+     METH_VARARGS | METH_KEYWORDS, "Set callback for data by channel pattern"},
     {"peer", (PyCFunction)YTPSequence_peer, METH_VARARGS | METH_KEYWORDS,
-     "Not implemented."},
-    {"poll", (PyCFunction)YTPSequence_poll, METH_NOARGS, "Not implemented."},
+     "Obtain desired peer by name"},
+    {"poll", (PyCFunction)YTPSequence_poll, METH_NOARGS,
+     "Poll for messages in sequence file"},
+    {"remove_callbacks", (PyCFunction)YTPSequence_remove_callbacks, METH_NOARGS,
+     "Remove all the registered callbacks"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyMethodDef YTPPeer_methods[] = {
-    {"name", (PyCFunction)YTPPeer_name, METH_NOARGS, "Not implemented."},
-    {"id", (PyCFunction)YTPPeer_id, METH_NOARGS, "Not implemented."},
+    {"name", (PyCFunction)YTPPeer_name, METH_NOARGS, "Peer name"},
+    {"id", (PyCFunction)YTPPeer_id, METH_NOARGS, "Peer id"},
     {"stream", (PyCFunction)YTPPeer_stream, METH_VARARGS | METH_KEYWORDS,
-     "Not implemented."},
+     "Obtain stream for desired channel"},
     {"channel", (PyCFunction)YTPPeer_channel, METH_VARARGS | METH_KEYWORDS,
-     "Not implemented."},
+     "Obtain desired channel by name"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyMethodDef YTPChannel_methods[] = {
-    {"name", (PyCFunction)YTPChannel_name, METH_NOARGS, "Not implemented."},
-    {"id", (PyCFunction)YTPChannel_id, METH_NOARGS, "Not implemented."},
+    {"name", (PyCFunction)YTPChannel_name, METH_NOARGS, "Channel name"},
+    {"id", (PyCFunction)YTPChannel_id, METH_NOARGS, "Channel id"},
     {"data_callback", (PyCFunction)YTPChannel_data_callback,
-     METH_VARARGS | METH_KEYWORDS, "Not implemented."},
+     METH_VARARGS | METH_KEYWORDS, "Set callback for data in channel"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyMethodDef YTPStream_methods[] = {
     {"write", (PyCFunction)YTPStream_write, METH_VARARGS | METH_KEYWORDS,
-     "Not implemented."},
+     "Write message to YTP"},
     {"channel", (PyCFunction)YTPStream_channel, METH_NOARGS,
-     "Not implemented."},
-    {"peer", (PyCFunction)YTPStream_peer, METH_NOARGS, "Not implemented."},
+     "Obtain channel related to stream"},
+    {"peer", (PyCFunction)YTPStream_peer, METH_NOARGS,
+     "Obtain peer related to stream"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyMethodDef YTPTransactions_methods[] = {
     {"subscribe", (PyCFunction)YTPTransactions_subscribe,
-     METH_VARARGS | METH_KEYWORDS, "Not implemented."},
+     METH_VARARGS | METH_KEYWORDS, "Subscribe to desired pattern"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -612,40 +619,7 @@ static string gen_error(string prefix, fmc_error_t *error) {
 YTPSequenceBase::~YTPSequenceBase() {
   if (shared_seq) {
     fmc_error_t *error;
-    auto *seq = ytp_sequence_shared_get(shared_seq);
-    for (auto &cl : peer_cb) {
-      auto py_callback = cl.second;
-      ytp_sequence_peer_cb_rm(seq, &ytp_sequence_peer_cb_wrapper, py_callback,
-                              &error);
-      Py_XDECREF(py_callback);
-    }
-    for (auto &cl : channel_cb) {
-      auto py_callback = cl.second;
-      ytp_sequence_ch_cb_rm(seq, &ytp_sequence_channel_cb_wrapper, py_callback,
-                            &error);
-      Py_XDECREF(py_callback);
-    }
-    for (auto &cl : data_cb) {
-      auto py_callback = std::get<PyObject *>(cl);
-      auto channel = std::get<ytp_channel_t>(cl);
-      ytp_sequence_indx_cb_rm(seq, channel, &ytp_sequence_data_cb_wrapper, &cl,
-                              &error);
-      Py_XDECREF(py_callback);
-    }
-    for (auto &cl : prfx_cb) {
-      auto py_callback = std::get<PyObject *>(cl);
-      auto &pattern = std::get<std::string>(cl);
-      ytp_sequence_prfx_cb_rm(seq, pattern.size(), pattern.data(),
-                              &ytp_sequence_prfx_cb_wrapper, &cl, &error);
-      Py_XDECREF(py_callback);
-    }
-    for (auto &cl : transactions_cb) {
-      auto closure = std::get<YTPTransactions *>(cl);
-      auto &pattern = std::get<std::string>(cl);
-      ytp_sequence_prfx_cb_rm(seq, pattern.size(), pattern.data(),
-                              ytp_sequence_data_cb_transactions_wrapper,
-                              closure, &error);
-    }
+    clear();
 
     ytp_sequence_shared_dec(shared_seq, &error);
     if (error) {
@@ -654,6 +628,49 @@ YTPSequenceBase::~YTPSequenceBase() {
           gen_error("unable to delete YTP sequence", error).c_str());
     }
   }
+}
+
+void YTPSequenceBase::clear() {
+  fmc_error_t *error;
+  auto *seq = ytp_sequence_shared_get(shared_seq);
+  for (auto &cl : peer_cb) {
+    auto py_callback = cl.second;
+    ytp_sequence_peer_cb_rm(seq, &ytp_sequence_peer_cb_wrapper, py_callback,
+                            &error);
+    Py_XDECREF(py_callback);
+  }
+  for (auto &cl : channel_cb) {
+    auto py_callback = cl.second;
+    ytp_sequence_ch_cb_rm(seq, &ytp_sequence_channel_cb_wrapper, py_callback,
+                          &error);
+    Py_XDECREF(py_callback);
+  }
+  for (auto &cl : data_cb) {
+    auto py_callback = std::get<PyObject *>(cl);
+    auto channel = std::get<ytp_channel_t>(cl);
+    ytp_sequence_indx_cb_rm(seq, channel, &ytp_sequence_data_cb_wrapper, &cl,
+                            &error);
+    Py_XDECREF(py_callback);
+  }
+  for (auto &cl : prfx_cb) {
+    auto py_callback = std::get<PyObject *>(cl);
+    auto &pattern = std::get<std::string>(cl);
+    ytp_sequence_prfx_cb_rm(seq, pattern.size(), pattern.data(),
+                            &ytp_sequence_prfx_cb_wrapper, &cl, &error);
+    Py_XDECREF(py_callback);
+  }
+  for (auto &cl : transactions_cb) {
+    auto closure = std::get<YTPTransactions *>(cl);
+    auto &pattern = std::get<std::string>(cl);
+    ytp_sequence_prfx_cb_rm(seq, pattern.size(), pattern.data(),
+                            ytp_sequence_data_cb_transactions_wrapper, closure,
+                            &error);
+  }
+  peer_cb.clear();
+  channel_cb.clear();
+  data_cb.clear();
+  prfx_cb.clear();
+  transactions_cb.clear();
 }
 
 static PyObject *PyAPIWrapper_new(PyTypeObject *subtype, PyObject *args,
@@ -836,6 +853,12 @@ static PyObject *YTPSequence_poll(YTPSequence *self) {
     return nullptr;
   }
   return PyBool_FromLong(res);
+}
+
+static PyObject *YTPSequence_remove_callbacks(YTPSequence *self) {
+  auto *seq = ytp_sequence_shared_get(self->seq->shared_seq);
+  self->seq->clear();
+  Py_RETURN_NONE;
 }
 
 static PyObject *YTPPeer_new(PyTypeObject *subtype, PyObject *args,

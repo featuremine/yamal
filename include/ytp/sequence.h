@@ -422,6 +422,13 @@ FMMODFUNC void ytp_sequence_set_it(ytp_sequence_t *seq,
                                    ytp_iterator_t iterator);
 
 /**
+ * @brief Removes all of the callbacks of the sequence
+ *
+ * @param sequence
+ */
+FMMODFUNC void ytp_sequence_cb_rm(ytp_sequence_t *seq);
+
+/**
  * @brief Returns an iterator given a serializable offset
  *
  * @param[in] seq

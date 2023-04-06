@@ -96,6 +96,10 @@ class sequence:
         ''' Poll for messages in sequence file '''
         pass
 
+    def remove_callbacks(self) -> bool:
+        ''' Remove all the registered callbacks '''
+        pass
+
 
 class transactions:
     ''' YTP transactions '''
