@@ -23,6 +23,7 @@
 #include <fmc++/mpl.hpp>
 
 #include <ytp/version.h>
+#include <ytp/yamal.h>
 
 #include <unordered_map>
 #include <vector>
@@ -239,9 +240,14 @@ int main(int argc, char **argv) {
   cmd.add(affinityArg);
 
   TCLAP::ValueArg<int> priorityArg(
-      "x", "priority", "set the priority of the main process (1-99)", false, 1,
+      "p", "priority", "set the priority of the main process (1-99)", false, 1,
       "priority");
   cmd.add(priorityArg);
+
+  TCLAP::ValueArg<int> auxArg("x", "auxiliary",
+                              "set the CPU affinity of the auxiliary process",
+                              false, 0, "cpuid");
+  cmd.add(auxArg);
 
   cmd.parse(argc, argv);
 
@@ -360,6 +366,10 @@ int main(int argc, char **argv) {
                                        type->node.value.str,
                                        config->node.value.str, &inps[0]));
     }
+  }
+
+  if (auxArg.isSet()) {
+    ytp_yamal_set_aux_thread_affinity(auxArg.getValue());
   }
 
   if (affinityArg.isSet()) {
