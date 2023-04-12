@@ -5,12 +5,7 @@ if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
 endif ()
 
 find_package(PkgConfig)
-pkg_check_modules(PYTHON IMPORTED_TARGET python3-embed)
-if (NOT PYTHON_FOUND)
-    pkg_check_modules(PYTHON REQUIRED IMPORTED_TARGET python3)
-endif (NOT PYTHON_FOUND)
-
-find_program(PYTHON3_BIN "python3" REQUIRED)
+pkg_search_module(PYTHON IMPORTED_TARGET python3-embed python3)
 
 set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
@@ -176,6 +171,7 @@ else()
 endif()
 
 if(BUILD_WHEEL)
+    find_program(PYTHON3_BIN "python3")
     add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
 
@@ -216,7 +212,8 @@ if(BUILD_WHEEL)
         yamal-whl ALL
         DEPENDS "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
     )
-    set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+    set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "Wheel path for yamal" FORCE)
+    set(WHEEL_yamal_SCRIPTS "${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "Wheel script path for yamal" FORCE)
 endif()
 
 if(BUILD_TESTING)
