@@ -237,6 +237,10 @@ FMMODFUNC ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
 FMMODFUNC size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                                 fmc_error_t **error);
 
+FMMODFUNC void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error);
+
+FMMODFUNC bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error);
+
 /**
  * @brief Allocates a specific page
  *

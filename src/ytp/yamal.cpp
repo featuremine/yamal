@@ -337,6 +337,13 @@ char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
 
 ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                 fmc_error_t **error) {
+  if (ytp_yamal_closed(yamal, error)) {
+    if (!*error) {
+      fmc_error_set2(error, FMC_ERROR_FILE_END);
+    }
+    return nullptr;
+  }
+
   auto *node = mmnode_node_from_data(data);
   auto offs = node->prev.load();
 
@@ -513,4 +520,18 @@ size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
     return ye64toh(node->prev.load());
   }
   return 0;
+}
+
+void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
+  auto *header = yamal->header(error);
+  if (*error) return;
+  // Is this operation atomic?
+  header->prev.store(header->next);
+}
+
+bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error) {
+  auto *header = yamal->header(error);
+  //What is more appropriate? is the file closed if there is an error?
+  if (*error) return false;
+  return header->prev == header->next;
 }

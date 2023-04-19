@@ -498,3 +498,11 @@ size_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
                         fmc_error_t **error) {
   return ytp_yamal_tell(&ctrl->yamal, iterator, error);
 }
+
+void ytp_control_close(ytp_control_t *ctrl, fmc_error_t **error) {
+  ytp_yamal_close(&ctrl->yamal, error);
+}
+
+bool ytp_control_closed(ytp_control_t *ctrl, fmc_error_t **error) {
+  return ytp_yamal_closed(&ctrl->yamal, error);
+}

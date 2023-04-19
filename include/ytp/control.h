@@ -365,6 +365,10 @@ FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t off,
 FMMODFUNC size_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
                                   fmc_error_t **error);
 
+FMMODFUNC void ytp_control_close(ytp_control_t *ctrl, fmc_error_t **error);
+
+FMMODFUNC bool ytp_control_closed(ytp_control_t *ctrl, fmc_error_t **error);
+
 #ifdef __cplusplus
 }
 #endif

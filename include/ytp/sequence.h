@@ -47,7 +47,6 @@ extern "C" {
  * Guaranties: control iterator is always at or ahead of
  * any ytp_iterator returned by the sequence API.
  */
-struct ytp_sequence;
 typedef struct ytp_sequence ytp_sequence_t;
 
 /**
@@ -435,6 +434,10 @@ FMMODFUNC ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, size_t off,
  */
 FMMODFUNC size_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
                                    fmc_error_t **error);
+
+FMMODFUNC void ytp_sequence_close(ytp_sequence_t *seq, fmc_error_t **error);
+
+FMMODFUNC bool ytp_sequence_closed(ytp_sequence_t *seq, fmc_error_t **error);
 
 /**
  * @brief Allocates and initializes a ytp_sequence_shared object with a
