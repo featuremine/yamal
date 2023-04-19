@@ -91,9 +91,10 @@ typedef struct ytp_control ytp_control_t;
 
 #define YTP_CHANNEL_ANN 0
 #define YTP_CHANNEL_SUB 1
-#define YTP_CHANNEL_DIR 2
 
 #define YTP_CHANNEL_OFF 0x100
+
+#define YTP_CHANNEL_NAME_MAXLEN 65535
 
 /**
  * @brief Allocates and initializes a ytp_control_t object
@@ -188,15 +189,12 @@ FMMODFUNC ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl,
  * Complexity: Constant on average, worst case linear in the size of the list.
  *
  * @param[in] ctrl the ytp_control_t object
- * @param[in] peer the peer that publishes the subscription message
  * @param[in] time the time to publish the subscription message
- * @param[in] sz size of the payload
- * @param[in] payload a prefix or channel name
+ * @param[in] peer the peer of the subscription message
+ * @param[in] channel the channel id
  * @param[out] error out-parameter for error handling
  */
-FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer,
-                               uint64_t time, size_t sz, const char *payload,
-                               fmc_error_t **error);
+FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, uint64_t time, ytp_peer_t peer, ytp_channel_t channel, fmc_error_t **error);
 
 /**
  * @brief Publishes a directory message
@@ -246,6 +244,29 @@ FMMODFUNC ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl,
                                             ytp_peer_t peer, uint64_t time,
                                             size_t sz, const char *name,
                                             fmc_error_t **error);
+
+/**
+ * @brief Declares an existing/new stream
+ *
+ * Complexity: Constant on average, worst case linear in the size of the list.
+ *
+ * @param[in] ctrl the ytp_control_t object
+ * @param[in] time the time to publish the stream announcement
+ * @param[in] peer the publisher peer of the stream
+ * @param[in] chname_sz the channel name size of the stream
+ * @param[in] chname the channel name of the stream
+ * @param[in] encoding_sz the encoding or metadata size of the stream
+ * @param[in] encoding the encoding or metadata of the stream
+ * @param[out] channel the channel id used for the stream
+ * @param[out] error out-parameter for error handling
+ */
+FMMODFUNC ytp_channel_t ytp_control_stream_decl(ytp_control_t *ctrl,
+                                                uint64_t time, ytp_peer_t peer,
+                                                size_t chname_sz,
+                                                const char *chname,
+                                                size_t encoding_sz,
+                                                const char *encoding,
+                                                fmc_error_t **error);
 
 /**
  * @brief Returns the name of the peer, given the peer reference

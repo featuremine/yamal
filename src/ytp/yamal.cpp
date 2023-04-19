@@ -26,20 +26,6 @@
 
 #include "yamal.hpp"
 
-#if !defined(YTP_USE_BIG_ENDIAN)
-#define ye64toh(x) fmc_le64toh(x)
-#define htoye64(x) fmc_htole64(x)
-#if FMC_BYTE_ORDER == FMC_LITTLE_ENDIAN
-#define DIRECT_BYTE_ORDER
-#endif
-#else
-#define ye64toh(x) fmc_be64toh(x)
-#define htoye64(x) fmc_htobe64(x)
-#if FMC_BYTE_ORDER == FMC_BIG_ENDIAN
-#define DIRECT_BYTE_ORDER
-#endif
-#endif
-
 using namespace std::chrono_literals;
 
 typedef size_t mmnode_offs;
@@ -55,7 +41,7 @@ struct mmnode {
 
 static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
-static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '0'};
+static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
 static_assert(sizeof(fm_mmnode_t) + sizeof(magic_number) ==
               YTP_YAMAL_HEADER_SIZE);

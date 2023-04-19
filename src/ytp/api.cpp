@@ -41,12 +41,12 @@ ytp_iterator_t ytp_sequence_shared_commit(shared_sequence *sh_seq,
   return ytp_sequence_commit(seq, peer, channel, time, data, error);
 }
 // Publishes a subscription message
-void ytp_sequence_shared_sub(shared_sequence *sh_seq, ytp_peer_t peer,
-                             uint64_t time, size_t sz, const char *payload,
+void ytp_sequence_shared_sub(shared_sequence *sh_seq, uint64_t time,
+                             ytp_peer_t peer, ytp_channel_t channel,
                              fmc_error_t **error) {
   ytp_sequence_t *seq =
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
-  ytp_sequence_sub(seq, peer, time, sz, payload, error);
+  ytp_sequence_sub(seq, time, peer, channel, error);
 }
 // Publishes a directory message
 void ytp_sequence_shared_dir(shared_sequence *sh_seq, ytp_peer_t peer,

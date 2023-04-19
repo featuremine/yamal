@@ -50,11 +50,17 @@ typedef struct ytp_timeline ytp_timeline_t;
 typedef void (*ytp_timeline_peer_cb_t)(void *closure, ytp_peer_t peer,
                                        size_t sz, const char *name);
 typedef void (*ytp_timeline_ch_cb_t)(void *closure, ytp_peer_t peer,
-                                     ytp_channel_t channel, uint64_t time,
+                                     ytp_channel_t channel, uint64_t msgtime,
                                      size_t sz, const char *name);
+typedef void (*ytp_timeline_stream_cb_t)(void *closure, ytp_peer_t peer,
+                                         ytp_channel_t channel, uint64_t msgtime,
+                                         size_t chname_sz, const char *chname,
+                                         size_t encoding_sz, const char *encoding);
 typedef void (*ytp_timeline_data_cb_t)(void *closure, ytp_peer_t peer,
-                                       ytp_channel_t channel, uint64_t time,
+                                       ytp_channel_t channel, uint64_t msgtime,
                                        size_t sz, const char *data);
+typedef void (*ytp_timeline_sub_cb_t)(void *closure, uint64_t msgtime,
+                                      ytp_peer_t peer, ytp_channel_t channel);
 typedef void (*ytp_timeline_idle_cb_t)(void *closure);
 
 /**
@@ -95,6 +101,30 @@ FMMODFUNC void ytp_timeline_destroy(ytp_timeline_t *timeline,
                                     fmc_error_t **error);
 
 /**
+ * @brief Registers a subscription announcement callback
+ *
+ * @param[in] timeline
+ * @param[in] cb
+ * @param[in] closure
+ * @param[out] error
+ */
+FMMODFUNC void ytp_timeline_sub_cb(ytp_timeline_t *timeline,
+                                   ytp_timeline_sub_cb_t cb, void *closure,
+                                   fmc_error_t **error);
+
+/**
+ * @brief Unregisters a subscription announcement callback
+ *
+ * @param[in] timeline
+ * @param[in] cb
+ * @param[in] closure
+ * @param[out] error
+ */
+FMMODFUNC void ytp_timeline_sub_cb_rm(ytp_timeline_t *timeline,
+                                      ytp_timeline_sub_cb_t cb, void *closure,
+                                      fmc_error_t **error);
+
+/**
  * @brief Registers a channel announcement callback
  *
  * Complexity: Linear with the number of registered callbacks.
@@ -121,6 +151,34 @@ FMMODFUNC void ytp_timeline_ch_cb(ytp_timeline_t *timeline,
 FMMODFUNC void ytp_timeline_ch_cb_rm(ytp_timeline_t *timeline,
                                      ytp_timeline_ch_cb_t cb, void *closure,
                                      fmc_error_t **error);
+
+/**
+ * @brief Registers a stream announcement callback
+ *
+ * Complexity: Linear with the number of registered callbacks.
+ *
+ * @param[in] timeline
+ * @param[in] cb
+ * @param[in] closure
+ * @param[out] error
+ */
+FMMODFUNC void ytp_timeline_stream_cb(ytp_timeline_t *timeline,
+                                      ytp_timeline_stream_cb_t cb,
+                                      void *closure, fmc_error_t **error);
+
+/**
+ * @brief Unregisters a stream announcement callback
+ *
+ * Complexity: Linear with the number of registered callbacks.
+ *
+ * @param[in] timeline
+ * @param[in] cb
+ * @param[in] closure
+ * @param[out] error
+ */
+FMMODFUNC void ytp_timeline_stream_cb_rm(ytp_timeline_t *timeline,
+                                         ytp_timeline_stream_cb_t cb,
+                                         void *closure, fmc_error_t **error);
 
 /**
  * @brief Registers a peer announcement callback
@@ -215,6 +273,41 @@ FMMODFUNC void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline,
                                        ytp_channel_t channel,
                                        ytp_timeline_data_cb_t cb, void *closure,
                                        fmc_error_t **error);
+/**
+ * @brief Registers a stream data callback by peer and channel handler
+ *
+ * Complexity: Linear with the number of callbacks on that stream.
+ *
+ * @param[in] timeline
+ * @param[in] peer
+ * @param[in] channel
+ * @param[in] cb
+ * @param[in] closure
+ * @param[out] error
+ */
+FMMODFUNC void ytp_timeline_data_cb(ytp_timeline_t *timeline,
+                                    uint64_t time, ytp_peer_t peer,
+                                    ytp_channel_t channel,
+                                    ytp_timeline_data_cb_t cb,
+                                    void *closure, fmc_error_t **error);
+
+/**
+ * @brief Unregisters a stream data callback
+ *
+ * Complexity: Linear with the number of callbacks on that stream.
+ *
+ * @param[in] timeline
+ * @param[in] peer
+ * @param[in] channel
+ * @param[in] cb
+ * @param[in] closure
+ * @param[out] error
+ */
+FMMODFUNC void ytp_timeline_data_cb_rm(ytp_timeline_t *timeline,
+                                       ytp_peer_t peer,
+                                       ytp_channel_t channel,
+                                       ytp_timeline_data_cb_t cb,
+                                       void *closure, fmc_error_t **error);
 
 /**
  * @brief Checks if there are not more messages

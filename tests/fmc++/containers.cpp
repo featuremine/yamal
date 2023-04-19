@@ -12,14 +12,15 @@
 
  *****************************************************************************/
 
-#include "../src/ytp/timeline.hpp"
+#include <fmc++/lazy_rem_vector.hpp>
+#include <fmc++/stable_map.hpp>
 
 #include <fmc++/gtestwrap.hpp>
 
 TEST(stable_map, test_1) {
   std::vector<int *> values(8192);
 
-  stable_map<int, int> map;
+  fmc::stable_map<int, int> map;
 
   ASSERT_EQ(map.begin(), map.end());
 
@@ -38,14 +39,14 @@ TEST(stable_map, test_1) {
 }
 
 TEST(lazy_rem_vector, test_1) {
-  lazy_rem_vector<int> vec;
+  fmc::lazy_rem_vector<int> vec;
 
-  vec.push_unique(1);
-  vec.push_unique(2);
-  vec.push_unique(4);
-  vec.push_unique(5);
-  vec.push_unique(1);
-  vec.push_unique(2);
+  fmc::push_unique(vec, 1);
+  fmc::push_unique(vec, 2);
+  fmc::push_unique(vec, 4);
+  fmc::push_unique(vec, 5);
+  fmc::push_unique(vec, 1);
+  fmc::push_unique(vec, 2);
 
   auto it = vec.begin();
   ASSERT_NE(it, vec.end());
@@ -67,7 +68,7 @@ TEST(lazy_rem_vector, test_1) {
   ASSERT_EQ(it, vec.end());
 
   vec.lock();
-  vec.erase_if([&](const int &val) { return val == 4 || val == 2; });
+  std::erase_if(vec, [&](const int &val) { return val == 4 || val == 2; });
 
   it = vec.begin();
   ASSERT_NE(it, vec.end());
@@ -100,8 +101,8 @@ TEST(lazy_rem_vector, test_1) {
   ++it;
   ASSERT_EQ(it, vec.end());
 
-  vec.push_unique(2);
-  vec.push_unique(4);
+  fmc::push_unique(vec, 2);
+  fmc::push_unique(vec, 4);
 
   it = vec.begin();
   ASSERT_NE(it, vec.end());
@@ -123,7 +124,7 @@ TEST(lazy_rem_vector, test_1) {
   ASSERT_EQ(it, vec.end());
 
   vec.lock();
-  vec.erase_if([&](const int &val) { return val == 5; });
+  std::erase_if(vec, [&](const int &val) { return val == 5; });
 
   it = vec.begin();
   ASSERT_NE(it, vec.end());
@@ -144,7 +145,7 @@ TEST(lazy_rem_vector, test_1) {
   ++it;
   ASSERT_EQ(it, vec.end());
 
-  vec.push_unique(5);
+  fmc::push_unique(vec, 5);
 
   it = vec.begin();
   ASSERT_NE(it, vec.end());
@@ -186,6 +187,11 @@ TEST(lazy_rem_vector, test_1) {
   ++it;
   ASSERT_EQ(it, vec.end());
 }
+
+#include "shared_map.cpp"
+#include "static_vector.cpp"
+#include "threaded.cpp"
+#include "variant_map.cpp"
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -153,14 +153,13 @@ FMMODFUNC ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq,
  * Complexity: Constant on average, worst case linear in the size of the list.
  *
  * @param[in] seq
- * @param[in] peer the peer that publishes the subscription
  * @param[in] time
- * @param[in] sz
- * @param[in] payload
+ * @param[in] peer
+ * @param[in] channel
  * @param[out] error
  */
-FMMODFUNC void ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer,
-                                uint64_t time, size_t sz, const char *payload,
+FMMODFUNC void ytp_sequence_sub(ytp_sequence_t *seq, uint64_t time,
+                                ytp_peer_t peer, ytp_channel_t channel,
                                 fmc_error_t **error);
 
 /**

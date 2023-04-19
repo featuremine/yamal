@@ -137,7 +137,7 @@ TEST(time, control_msg) {
     ytp_time_read(yamal, iter, &peer, &channel, &time, &sz, &data, &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_EQ(peer, 100);
-    ASSERT_EQ(channel, YTP_CHANNEL_DIR);
+    ASSERT_EQ(channel, 200);
     ASSERT_EQ(std::string_view(data, sz), "ABCD");
 
     iter = ytp_yamal_next(yamal, iter, &error);

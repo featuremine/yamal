@@ -48,8 +48,8 @@ typedef char *(*sharedseqfunc_reserve)(shared_sequence *, size_t,
 typedef ytp_iterator_t (*sharedseqfunc_commit)(shared_sequence *, ytp_peer_t,
                                                ytp_channel_t, uint64_t, void *,
                                                fmc_error_t **);
-typedef void (*sharedseqfunc_sub)(shared_sequence *, ytp_peer_t, uint64_t,
-                                  size_t, const char *, fmc_error_t **);
+typedef void (*sharedseqfunc_sub)(shared_sequence *, uint64_t, ytp_peer_t,
+                                  ytp_channel_t, fmc_error_t **);
 typedef void (*sharedseqfunc_dir)(shared_sequence *, ytp_peer_t, uint64_t,
                                   size_t, const char *, fmc_error_t **);
 typedef void (*sharedseqfunc_ch_name)(shared_sequence *, ytp_channel_t,

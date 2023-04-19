@@ -83,18 +83,6 @@ target_link_libraries(
 add_test(NAME ytp_sequence COMMAND tests_ytp_sequence)
 
 add_executable(
-    tests_ytp_containers
-    "containers.cpp"
-)
-target_link_libraries(
-    tests_ytp_containers
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_containers COMMAND tests_ytp_containers)
-
-add_executable(
     tests_ytp_compiles_c
     "compiles.c"
 )
