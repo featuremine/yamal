@@ -263,8 +263,9 @@ class data_multiple_producers(unittest.TestCase):
         self.assertTrue(sequence.poll())  # Peer consumer1
         self.assertTrue(sequence.poll())  # Peer producer1
         self.assertTrue(sequence.poll())  # Peer producer2
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
+        self.assertTrue(sequence.poll())  # Stream main/channel1
+        self.assertTrue(sequence.poll())  # Stream secondary/channel2
+        self.assertTrue(sequence.poll())  # Stream main/channel1
         self.assertTrue(sequence.poll())  # ABCD message
         self.assertTrue(sequence.poll())  # EFGH message
         self.assertTrue(sequence.poll())  # IJKL message
@@ -319,8 +320,9 @@ class data_multiple_producers(unittest.TestCase):
         self.assertTrue(sequence.poll())  # Peer consumer1
         self.assertTrue(sequence.poll())  # Peer producer1
         self.assertTrue(sequence.poll())  # Peer producer2
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
+        self.assertTrue(sequence.poll())  # Stream main/channel1
+        self.assertTrue(sequence.poll())  # Stream secondary/channel2
+        self.assertTrue(sequence.poll())  # Stream main/channel1
         self.assertTrue(sequence.poll())  # ABCD message
         self.assertTrue(sequence.poll())  # EFGH message
         self.assertTrue(sequence.poll())  # IJKL message

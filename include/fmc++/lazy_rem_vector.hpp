@@ -17,12 +17,12 @@
 #include <vector>
 
 namespace fmc {
-template <typename T>
-struct lazy_rem_vector;
+template <typename T> struct lazy_rem_vector;
 }
 
 namespace std {
-template <typename T, typename F> void erase_if(fmc::lazy_rem_vector<T> &v, const F &f);
+template <typename T, typename F>
+void erase_if(fmc::lazy_rem_vector<T> &v, const F &f);
 }
 
 namespace fmc {
@@ -101,7 +101,7 @@ protected:
   size_t lock_count = 0;
   size_t removed_count = 0;
 
-  template<typename S, typename F>
+  template <typename S, typename F>
   friend void ::std::erase_if(lazy_rem_vector<S> &v, const F &f);
 
   template <typename S, typename Arg>
@@ -125,17 +125,27 @@ void push_unique(lazy_rem_vector<T> &l, Arg &&new_val) {
   base.emplace_back(T{std::forward<Arg>(new_val)}, false);
 }
 
+template <typename T, typename Arg>
+void push_unique(std::vector<T> &v, Arg &&new_val) {
+  if (std::find(v.begin(), v.end(), new_val) != v.end()) {
+    return;
+  }
+  v.emplace_back(std::forward<Arg>(new_val));
 }
 
+} // namespace fmc
+
 namespace std {
-template <typename T, typename F> void erase_if(fmc::lazy_rem_vector<T> &v, const F &f) {
+template <typename T, typename F>
+void erase_if(fmc::lazy_rem_vector<T> &v, const F &f) {
   using V = typename fmc::lazy_rem_vector<T>::V;
   V &base = v;
   if (v.lock_count == 0) {
     base.erase(remove_if(base.begin(), base.end(),
                          [&](const typename V::value_type &val) {
                            return f(val.first);
-                         }), base.end());
+                         }),
+               base.end());
   } else {
     for (auto &val : base) {
       if (f(val.first)) {
@@ -147,4 +157,4 @@ template <typename T, typename F> void erase_if(fmc::lazy_rem_vector<T> &v, cons
     }
   }
 }
-}
+} // namespace std

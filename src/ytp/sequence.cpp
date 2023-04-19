@@ -122,17 +122,6 @@ void ytp_sequence_ch_cb_rm(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb,
   ytp_timeline_ch_cb_rm(&seq->timeline, cb, closure, error);
 }
 
-void ytp_sequence_sub(ytp_sequence_t *seq, uint64_t time,
-                      ytp_peer_t peer, ytp_channel_t channel,
-                      fmc_error_t **error) {
-  ytp_control_sub(&seq->ctrl, time, peer, channel, error);
-}
-
-void ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
-                      size_t sz, const char *payload, fmc_error_t **error) {
-  ytp_control_dir(&seq->ctrl, peer, time, sz, payload, error);
-}
-
 void ytp_sequence_prfx_cb(ytp_sequence_t *seq, size_t sz, const char *prfx,
                           ytp_sequence_data_cb_t cb, void *closure,
                           fmc_error_t **error) {

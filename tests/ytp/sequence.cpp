@@ -47,7 +47,7 @@ TEST(sequence, data_simple_subscription_1) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -103,7 +103,7 @@ TEST(sequence, data_simple_subscription_2) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -159,7 +159,7 @@ TEST(sequence, data_simple_subscription_rm_1) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -228,7 +228,7 @@ TEST(sequence, data_simple_subscription_rm_2) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -297,10 +297,10 @@ TEST(sequence, data_multiple_channel_1) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -356,10 +356,10 @@ TEST(sequence, data_multiple_channel_2) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -415,10 +415,10 @@ TEST(sequence, data_multiple_channel_3) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -474,10 +474,10 @@ TEST(sequence, data_multiple_channel_4) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -535,10 +535,13 @@ TEST(sequence, data_multiple_producers_1) {
   auto producer2 = ytp_sequence_peer_decl(seq, 9, "producer2", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
+  ASSERT_EQ(error, nullptr);
+  channel1 =
+      ytp_sequence_ch_decl(seq, producer2, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -604,10 +607,14 @@ TEST(sequence, data_multiple_producers_2) {
   auto producer2 = ytp_sequence_peer_decl(seq, 9, "producer2", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
+  ASSERT_EQ(error, nullptr);
+  channel1 =
+      ytp_sequence_ch_decl(seq, producer2, 0, 13, "main/channel1", &error);
+  ASSERT_EQ(error, nullptr);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -689,13 +696,13 @@ TEST(sequence, data_subscription_first_1) {
   ASSERT_EQ(error, nullptr);
 
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
   ASSERT_EQ(error, nullptr);
   auto channel3 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel3", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel3", &error);
   ASSERT_EQ(error, nullptr);
 
   ASSERT_NE(consumer1, 0);
@@ -761,10 +768,10 @@ TEST(sequence, data_subscription_first_2) {
   ASSERT_EQ(error, nullptr);
 
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 18, "secondary/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 18, "secondary/channel2", &error);
   ASSERT_EQ(error, nullptr);
 
   ASSERT_NE(consumer1, 0);
@@ -865,9 +872,9 @@ TEST(sequence, idempotence_simple_1) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   auto producer1_2 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   auto channel1_2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
   ASSERT_NE(channel1, 0);
@@ -916,9 +923,9 @@ TEST(sequence, idempotence_simple_1) {
   // producer2_2
   (void)ytp_sequence_peer_decl(seq, 9, "producer2", &error);
   auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 1000, 13, "main/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer2, 1000, 13, "main/channel2", &error);
   auto channel2_2 =
-      ytp_sequence_ch_decl(seq, consumer1, 1000, 13, "main/channel2", &error);
+      ytp_sequence_ch_decl(seq, producer2, 1000, 13, "main/channel2", &error);
 
   ytp_sequence_indx_cb(seq, channel2, cb, &output, &error);
   ytp_sequence_indx_cb(seq, channel2_2, cb, &output, &error);
@@ -983,7 +990,7 @@ TEST(sequence, idempotence_simple_1) {
   ASSERT_FALSE(ytp_yamal_term(it));
   ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
+  ASSERT_EQ(peer, producer1);
   ASSERT_EQ(channel, YTP_CHANNEL_ANN);
   it = ytp_yamal_next(yamal, it, &error);
   ASSERT_NE(it, nullptr);
@@ -1014,7 +1021,7 @@ TEST(sequence, idempotence_simple_1) {
   ASSERT_FALSE(ytp_yamal_term(it));
   ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
+  ASSERT_EQ(peer, producer2);
   ASSERT_EQ(channel, YTP_CHANNEL_ANN);
   it = ytp_yamal_next(yamal, it, &error);
   ASSERT_NE(it, nullptr);
@@ -1069,110 +1076,6 @@ TEST(sequence, idempotence_simple_2) {
 
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "peer1");
-
-  ytp_sequence_del(seq, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-  ASSERT_EQ(error, nullptr);
-}
-
-TEST(sequence, idempotence_simple_3) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  auto *channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_ANN, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_ANN, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *seq = ytp_sequence_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  std::vector<std::string_view> output;
-
-  auto ch_cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                  uint64_t time, size_t sz, const char *name) {
-    auto *output = (std::vector<std::string_view> *)closure;
-    output->emplace_back(std::string_view(name, sz));
-  };
-
-  ytp_sequence_ch_cb(seq, ch_cb, &output, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 1);
-  ASSERT_EQ(output[0], "channel1");
-
-  ytp_sequence_del(seq, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-  ASSERT_EQ(error, nullptr);
-}
-
-TEST(sequence, idempotence_simple_4) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  auto *channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_SUB, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_SUB, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *seq = ytp_sequence_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  std::vector<std::string_view> output;
-
-  auto sub_cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                   uint64_t time, size_t sz, const char *data) {
-    auto *output = (std::vector<std::string_view> *)closure;
-    output->emplace_back(std::string_view(data, sz));
-  };
-
-  ytp_sequence_indx_cb(seq, YTP_CHANNEL_SUB, sub_cb, &output, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 1);
-  ASSERT_EQ(output[0], "channel1");
 
   ytp_sequence_del(seq, &error);
   ASSERT_EQ(error, nullptr);
@@ -1313,7 +1216,7 @@ TEST(sequence, data_iter_set_1) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -1471,7 +1374,7 @@ TEST(sequence, data_iter_set_2) {
   auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
   ASSERT_EQ(error, nullptr);
   auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
+      ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel1", &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(producer1, 0);
@@ -1508,7 +1411,7 @@ TEST(sequence, data_iter_set_2) {
   ASSERT_EQ(std::get<3>(output[0]), 1000);
   output.clear();
 
-  ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel2", &error);
+  ytp_sequence_ch_decl(seq, producer1, 0, 13, "main/channel2", &error);
 
   ytp_sequence_seek(seq, first_off, &error);
   ASSERT_EQ(error, nullptr);

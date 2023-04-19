@@ -49,12 +49,16 @@ struct ytp_timeline {
   fmc::lazy_rem_vector<ytp_timeline_stream_cb_cl_t> cb_stream;
   fmc::lazy_rem_vector<ytp_timeline_ch_cb_cl_t> cb_ch;
   fmc::lazy_rem_vector<ytp_timeline_sub_cb_cl_t> cb_sub;
-  std::unordered_map<prfx_cb_key, fmc::lazy_rem_vector<ytp_timeline_data_cb_cl_t>>
+  std::unordered_map<prfx_cb_key, std::vector<ytp_timeline_data_cb_cl_t>>
       prfx_cb;
-  fmc::stable_map<stream_key, fmc::lazy_rem_vector<ytp_timeline_data_cb_cl_t>> data_cb;
+  fmc::unordered_map<ytp_channel_t, std::vector<ytp_timeline_data_cb_cl_t>>
+      idx_cb;
+  fmc::stable_map<stream_key, fmc::lazy_rem_vector<ytp_timeline_data_cb_cl_t>>
+      data_cb;
   fmc::lazy_rem_vector<ytp_timeline_idle_cb_cl_t> cb_idle;
+  std::unordered_map<ytp_channel_t, std::vector<ytp_peer_t>>
+      channel_to_streamid;
   std::unordered_set<stream_key> stream_announced;
   std::vector<uint8_t> peer_announced;
-  std::vector<uint8_t> channel_announced;
   std::unordered_set<std::string_view> sub_announced;
 };

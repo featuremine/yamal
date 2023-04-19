@@ -100,10 +100,6 @@ struct ytp_sequence_api_v1 {
   sharedseqfunc_reserve sequence_reserve;
   // Commits the data to the memory mapped list
   sharedseqfunc_commit sequence_commit;
-  // Publishes a subscription message
-  sharedseqfunc_sub sequence_sub;
-  // Publishes a directory message
-  sharedseqfunc_dir sequence_dir;
   // Returns the name of the channel, given the channel reference
   sharedseqfunc_ch_name sequence_ch_name;
   // Declares an existing/new channel

@@ -146,23 +146,6 @@ FMMODFUNC ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq,
                                              fmc_error_t **error);
 
 /**
- * @brief Publishes a subscription message
- *
- * Publishes a subscription message if it is not already published.
- *
- * Complexity: Constant on average, worst case linear in the size of the list.
- *
- * @param[in] seq
- * @param[in] time
- * @param[in] peer
- * @param[in] channel
- * @param[out] error
- */
-FMMODFUNC void ytp_sequence_sub(ytp_sequence_t *seq, uint64_t time,
-                                ytp_peer_t peer, ytp_channel_t channel,
-                                fmc_error_t **error);
-
-/**
  * @brief Publishes a directory message
  *
  * Publishes a directory message if it is not already published.

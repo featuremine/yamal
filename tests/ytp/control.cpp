@@ -34,6 +34,10 @@
 
 using namespace std;
 
+template <std::size_t N> std::string_view tostr(const char (&str)[N]) {
+  return {str, N - 1};
+}
+
 struct test_msg {
   unsigned index = 0;
 };
@@ -109,13 +113,10 @@ TEST(time, control_msg) {
     auto *ctrl = ytp_control_new(fd, &error);
     ASSERT_EQ(error, nullptr);
 
-    ytp_control_dir(ctrl, 100, 300, 4, "ABCD", &error);
+    ytp_control_ch_decl(ctrl, 300, 100, 4, "ABCD", &error);
     ASSERT_EQ(error, nullptr);
 
-    ytp_control_ch_decl(ctrl, 100, 300, 4, "ABCD", &error);
-    ASSERT_EQ(error, nullptr);
-
-    ytp_control_sub(ctrl, 101, 300, 4, "ABCD", &error);
+    ytp_control_sub(ctrl, 101, 300, 500, &error);
     ASSERT_EQ(error, nullptr);
 
     ytp_control_del(ctrl, &error);
@@ -136,18 +137,9 @@ TEST(time, control_msg) {
 
     ytp_time_read(yamal, iter, &peer, &channel, &time, &sz, &data, &error);
     ASSERT_EQ(error, nullptr);
-    ASSERT_EQ(peer, 100);
-    ASSERT_EQ(channel, 200);
-    ASSERT_EQ(std::string_view(data, sz), "ABCD");
-
-    iter = ytp_yamal_next(yamal, iter, &error);
-    ASSERT_NE(iter, nullptr);
-    ASSERT_EQ(error, nullptr);
-
-    ytp_time_read(yamal, iter, &peer, &channel, &time, &sz, &data, &error);
-    ASSERT_EQ(error, nullptr);
     ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-    ASSERT_EQ(std::string_view(data, sz), "ABCD");
+    ASSERT_EQ(std::string_view(data, sz), tostr("\x04\0"
+                                                "ABCD"));
 
     iter = ytp_yamal_next(yamal, iter, &error);
     ASSERT_NE(iter, nullptr);
@@ -155,9 +147,9 @@ TEST(time, control_msg) {
 
     ytp_time_read(yamal, iter, &peer, &channel, &time, &sz, &data, &error);
     ASSERT_EQ(error, nullptr);
-    ASSERT_EQ(peer, 101);
+    ASSERT_EQ(peer, 300);
     ASSERT_EQ(channel, YTP_CHANNEL_SUB);
-    ASSERT_EQ(std::string_view(data, sz), "ABCD");
+    ASSERT_EQ(std::string_view(data, sz), tostr("\xF4\x1\0\0\0\0\0\0"));
 
     iter = ytp_yamal_next(yamal, iter, &error);
     ASSERT_EQ(error, nullptr);

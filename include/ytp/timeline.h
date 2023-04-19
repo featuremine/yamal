@@ -53,9 +53,10 @@ typedef void (*ytp_timeline_ch_cb_t)(void *closure, ytp_peer_t peer,
                                      ytp_channel_t channel, uint64_t msgtime,
                                      size_t sz, const char *name);
 typedef void (*ytp_timeline_stream_cb_t)(void *closure, ytp_peer_t peer,
-                                         ytp_channel_t channel, uint64_t msgtime,
-                                         size_t chname_sz, const char *chname,
-                                         size_t encoding_sz, const char *encoding);
+                                         ytp_channel_t channel,
+                                         uint64_t msgtime, size_t chname_sz,
+                                         const char *chname, size_t encoding_sz,
+                                         const char *encoding);
 typedef void (*ytp_timeline_data_cb_t)(void *closure, ytp_peer_t peer,
                                        ytp_channel_t channel, uint64_t msgtime,
                                        size_t sz, const char *data);
@@ -279,17 +280,17 @@ FMMODFUNC void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline,
  * Complexity: Linear with the number of callbacks on that stream.
  *
  * @param[in] timeline
+ * @param[in] time
  * @param[in] peer
  * @param[in] channel
  * @param[in] cb
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_timeline_data_cb(ytp_timeline_t *timeline,
-                                    uint64_t time, ytp_peer_t peer,
-                                    ytp_channel_t channel,
-                                    ytp_timeline_data_cb_t cb,
-                                    void *closure, fmc_error_t **error);
+FMMODFUNC void ytp_timeline_data_cb(ytp_timeline_t *timeline, uint64_t time,
+                                    ytp_peer_t peer, ytp_channel_t channel,
+                                    ytp_timeline_data_cb_t cb, void *closure,
+                                    fmc_error_t **error);
 
 /**
  * @brief Unregisters a stream data callback
@@ -304,10 +305,9 @@ FMMODFUNC void ytp_timeline_data_cb(ytp_timeline_t *timeline,
  * @param[out] error
  */
 FMMODFUNC void ytp_timeline_data_cb_rm(ytp_timeline_t *timeline,
-                                       ytp_peer_t peer,
-                                       ytp_channel_t channel,
-                                       ytp_timeline_data_cb_t cb,
-                                       void *closure, fmc_error_t **error);
+                                       ytp_peer_t peer, ytp_channel_t channel,
+                                       ytp_timeline_data_cb_t cb, void *closure,
+                                       fmc_error_t **error);
 
 /**
  * @brief Checks if there are not more messages

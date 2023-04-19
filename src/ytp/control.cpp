@@ -27,15 +27,19 @@
 #include "control.hpp"
 #include "yamal.hpp"
 
+static const std::string_view default_encoding = "";
+
 static ytp_peer_t process_peer(ytp_control_t *ctrl, std::string_view name) {
-  auto it = ctrl->name_to_peerid.emplace(name, ctrl->name_to_peerid.size() + YTP_PEER_OFF);
+  auto it = ctrl->name_to_peerid.emplace(name, ctrl->name_to_peerid.size() +
+                                                   YTP_PEER_OFF);
   if (it.second) {
     ctrl->peers.emplace_back().name = name;
   }
   return it.first->second;
 }
 
-static std::size_t process_stream(ytp_control *ctrl, ytp_peer_t peer, std::string_view data, fmc_error_t **error) {
+static std::size_t process_stream(ytp_control *ctrl, ytp_peer_t peer,
+                                  std::string_view data, fmc_error_t **error) {
   if (data.size() < sizeof(stream_announcement_msg_t)) {
     fmc_error_set(error, "invalid stream announcement message");
     return 0;
@@ -49,19 +53,26 @@ static std::size_t process_stream(ytp_control *ctrl, ytp_peer_t peer, std::strin
     return 0;
   }
 
-  const char *encoding_ptr = data.data() + channel_name_sz + sizeof(stream_announcement_msg_t);
-  size_t encoding_sz = data.size() - channel_name_sz - sizeof(stream_announcement_msg_t);
+  const char *encoding_ptr =
+      data.data() + channel_name_sz + sizeof(stream_announcement_msg_t);
+  size_t encoding_sz =
+      data.size() - channel_name_sz - sizeof(stream_announcement_msg_t);
   auto name = std::string_view(hdr.channel_name, channel_name_sz);
   auto encoding = std::string_view(encoding_ptr, encoding_sz);
 
-  auto it_ch = ctrl->name_to_channelid.emplace(name, ctrl->name_to_channelid.size() + YTP_CHANNEL_OFF);
+  auto it_ch = ctrl->name_to_channelid.emplace(
+      name, ctrl->name_to_channelid.size() + YTP_CHANNEL_OFF);
   if (it_ch.second) {
     ctrl->channels.emplace_back().name = name;
   }
 
-  auto it_stream = ctrl->key_to_streamid.emplace(stream_key(peer, it_ch.first->second), ctrl->key_to_streamid.size());
+  auto it_stream = ctrl->key_to_streamid.emplace(
+      stream_key(peer, it_ch.first->second), ctrl->key_to_streamid.size());
   if (it_stream.second) {
-    ctrl->name_to_streamid.emplace(stream_name(peer, ctrl->channels[it_ch.first->second - YTP_CHANNEL_OFF].name), it_stream.first->second);
+    ctrl->name_to_streamid.emplace(
+        stream_name(peer,
+                    ctrl->channels[it_ch.first->second - YTP_CHANNEL_OFF].name),
+        it_stream.first->second);
     auto &stream = ctrl->streams.emplace_back();
     stream.peer = peer;
     stream.channel = it_ch.first->second;
@@ -71,7 +82,8 @@ static std::size_t process_stream(ytp_control *ctrl, ytp_peer_t peer, std::strin
   return it_stream.first->second;
 }
 
-static subs_key process_sub(ytp_control *ctrl, ytp_peer_t peer, std::string_view data, fmc_error_t **error) {
+static subs_key process_sub(ytp_control *ctrl, ytp_peer_t peer,
+                            std::string_view data, fmc_error_t **error) {
   if (data.size() < sizeof(ytp_channel_t)) {
     fmc_error_set(error, "invalid subscribe message");
     return {};
@@ -88,7 +100,7 @@ struct default_read_msg_handler {
   void on_sub(const subs_key &) {}
 };
 
-template<typename Handler = fmc::as_ref<default_read_msg_handler>>
+template <typename Handler = fmc::as_ref<default_read_msg_handler>>
 static void read_msg(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
                      ytp_channel_t *channel, uint64_t *time, size_t *sz,
                      const char **data, fmc_error_t **error,
@@ -120,7 +132,7 @@ static void read_msg(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
   }
 }
 
-template<typename Handler>
+template <typename Handler>
 static void process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
                                  Handler handler) {
   fmc_error_clear(error);
@@ -132,7 +144,8 @@ static void process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
   const char *data;
 
   while (!handler->found() && !*error && !ytp_yamal_term(ctrl->ctrl)) {
-    read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error, handler);
+    read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error,
+             handler);
     if (*error) {
       return;
     }
@@ -223,21 +236,24 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
   return ytp_time_commit(&ctrl->yamal, peer, channel, time, data, error);
 }
 
-void ytp_control_sub(ytp_control_t *ctrl, uint64_t time, ytp_peer_t peer, ytp_channel_t channel, fmc_error_t **error) {
+void ytp_control_sub(ytp_control_t *ctrl, uint64_t time, ytp_peer_t peer,
+                     ytp_channel_t channel, fmc_error_t **error) {
   struct handler_t : default_read_msg_handler {
-    void on_sub(const subs_key &key) {
-      found_ = found_ || key_ == key;
-    }
+    void on_sub(const subs_key &key) { found_ = found_ || key_ == key; }
     void insert() {
 #ifdef DIRECT_BYTE_ORDER
-      auto payload = std::string_view((char *)&key_.second, sizeof(ytp_channel_t));
+      auto payload =
+          std::string_view((char *)&key_.second, sizeof(ytp_channel_t));
 #else
       auto payload_storage = ytp_channel_t(htoye64(channel));
-      auto payload = std::string_view((char *)&payload_storage, sizeof(ytp_channel_t));
+      auto payload =
+          std::string_view((char *)&payload_storage, sizeof(ytp_channel_t));
 #endif
-      if (auto ptr = ytp_control_reserve(ctrl_, payload.size(), error_); !*error_) {
+      if (auto ptr = ytp_control_reserve(ctrl_, payload.size(), error_);
+          !*error_) {
         std::memcpy(ptr, payload.data(), payload.size());
-        ytp_control_commit(ctrl_, key_.first, YTP_CHANNEL_SUB, time_, ptr, error_);
+        ytp_control_commit(ctrl_, key_.first, YTP_CHANNEL_SUB, time_, ptr,
+                           error_);
       }
     }
     bool found() const noexcept { return found_; }
@@ -250,25 +266,24 @@ void ytp_control_sub(ytp_control_t *ctrl, uint64_t time, ytp_peer_t peer, ytp_ch
   };
 
   auto key = subs_key(peer, channel);
-  handler_t handler {
-    .ctrl_ = ctrl,
-    .key_ = key,
-    .time_ = time,
-    .error_ = error,
-    .found_ = ctrl->key_to_subs.find(key) != ctrl->key_to_subs.end(),
+  handler_t handler{
+      .ctrl_ = ctrl,
+      .key_ = key,
+      .time_ = time,
+      .error_ = error,
+      .found_ = ctrl->key_to_subs.find(key) != ctrl->key_to_subs.end(),
   };
 
   lookup_or_insert_ctrl_msg(ctrl, error, &handler);
+  if (*error) {
+    return;
+  }
 }
 
 void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,
                          const char **name, fmc_error_t **error) {
-  if (channel < YTP_PEER_OFF) {
-    fmc_error_set(error, "channel not found");
-    return;
-  }
   auto idx = channel - YTP_CHANNEL_OFF;
-  if (idx >= ctrl->peers.size()) {
+  if (channel < YTP_CHANNEL_OFF || idx >= ctrl->channels.size()) {
     fmc_error_set(error, "channel not found");
     return;
   }
@@ -279,10 +294,11 @@ void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,
   *sz = n.size();
 }
 
-ytp_channel_t ytp_control_stream_decl(ytp_control_t *ctrl,
-                                      uint64_t time, ytp_peer_t peer,
-                                      size_t chname_sz, const char *chname_ptr,
-                                      size_t encoding_sz, const char *encoding_ptr,
+ytp_channel_t ytp_control_stream_decl(ytp_control_t *ctrl, uint64_t time,
+                                      ytp_peer_t peer, size_t chname_sz,
+                                      const char *chname_ptr,
+                                      size_t encoding_sz,
+                                      const char *encoding_ptr,
                                       fmc_error_t **error) {
   if (chname_sz > YTP_CHANNEL_NAME_MAXLEN) {
     fmc_error_set(error, "channel name is too long");
@@ -292,21 +308,26 @@ ytp_channel_t ytp_control_stream_decl(ytp_control_t *ctrl,
   struct handler_t : default_read_msg_handler {
     void on_stream(std::size_t streamid) {
       auto &stream = ctrl_->streams[streamid];
-      if (stream.peer == peer_ && ctrl_->channels[stream.channel - YTP_CHANNEL_OFF].name == chname_) {
+      if (stream.peer == peer_ &&
+          ctrl_->channels[stream.channel - YTP_CHANNEL_OFF].name == chname_) {
         found_ = streamid;
       }
     }
     void insert() {
-      size_t sz = sizeof(stream_announcement_msg_t) + chname_.size() + encoding_.size();
+      size_t sz =
+          sizeof(stream_announcement_msg_t) + chname_.size() + encoding_.size();
       if (auto ptr = ytp_control_reserve(ctrl_, sz, error_); !*error_) {
         auto &hdr = *reinterpret_cast<stream_announcement_msg_t *>(ptr);
         hdr.channel_name_sz = htoye64(chname_.size());
         std::memcpy(hdr.channel_name, chname_.data(), chname_.size());
-        std::memcpy(hdr.channel_name + chname_.size(), encoding_.data(), encoding_.size());
+        std::memcpy(hdr.channel_name + chname_.size(), encoding_.data(),
+                    encoding_.size());
         ytp_control_commit(ctrl_, peer_, YTP_CHANNEL_ANN, time_, ptr, error_);
       }
     }
-    bool found() const noexcept { return found_ != std::numeric_limits<std::size_t>::max(); }
+    bool found() const noexcept {
+      return found_ != std::numeric_limits<std::size_t>::max();
+    }
 
     ytp_control_t *ctrl_;
     std::string_view chname_;
@@ -319,17 +340,22 @@ ytp_channel_t ytp_control_stream_decl(ytp_control_t *ctrl,
 
   auto chname = std::string_view(chname_ptr, chname_sz);
   auto it = ctrl->name_to_streamid.find({peer, chname});
-  handler_t handler {
-    .ctrl_ = ctrl,
-    .chname_ = chname,
-    .encoding_ = std::string_view(encoding_ptr, encoding_sz),
-    .peer_ = peer,
-    .time_ = time,
-    .error_ = error,
-    .found_ = it != ctrl->name_to_streamid.end() ? it->second : std::numeric_limits<std::size_t>::max(),
+  handler_t handler{
+      .ctrl_ = ctrl,
+      .chname_ = chname,
+      .encoding_ = std::string_view(encoding_ptr, encoding_sz),
+      .peer_ = peer,
+      .time_ = time,
+      .error_ = error,
+      .found_ = it != ctrl->name_to_streamid.end()
+                    ? it->second
+                    : std::numeric_limits<std::size_t>::max(),
   };
 
   lookup_or_insert_ctrl_msg(ctrl, error, &handler);
+  if (*error) {
+    return {};
+  }
 
   auto &stream = ctrl->streams[handler.found_];
   if (stream.encoding != handler.encoding_) {
@@ -340,14 +366,18 @@ ytp_channel_t ytp_control_stream_decl(ytp_control_t *ctrl,
   return stream.channel;
 }
 
+ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl, ytp_peer_t peer,
+                                  uint64_t time, size_t sz, const char *name,
+                                  fmc_error_t **error) {
+  return ytp_control_stream_decl(ctrl, time, peer, sz, name,
+                                 default_encoding.size(),
+                                 default_encoding.data(), error);
+}
+
 void ytp_control_peer_name(ytp_control_t *ctrl, ytp_peer_t peer, size_t *sz,
                            const char **name, fmc_error_t **error) {
-  if (peer < YTP_PEER_OFF) {
-    fmc_error_set(error, "peer not found");
-    return;
-  }
   auto idx = peer - YTP_PEER_OFF;
-  if (idx >= ctrl->peers.size()) {
+  if (peer < YTP_PEER_OFF || idx >= ctrl->peers.size()) {
     fmc_error_set(error, "peer not found");
     return;
   }
@@ -380,14 +410,17 @@ ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
 
   auto namestr = std::string_view(name, sz);
   auto it = ctrl->name_to_peerid.find(namestr);
-  handler_t handler {
-    .ctrl_ = ctrl,
-    .name_ = namestr,
-    .error_ = error,
-    .found_ = it != ctrl->name_to_peerid.end() ? it->second : ytp_peer_t{},
+  handler_t handler{
+      .ctrl_ = ctrl,
+      .name_ = namestr,
+      .error_ = error,
+      .found_ = it != ctrl->name_to_peerid.end() ? it->second : ytp_peer_t{},
   };
 
   lookup_or_insert_ctrl_msg(ctrl, error, &handler);
+  if (*error) {
+    return {};
+  }
 
   return handler.found_;
 }

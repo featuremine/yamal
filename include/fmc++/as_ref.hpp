@@ -19,4 +19,4 @@ template <typename T> struct as_ref : private T {
   T *operator->() noexcept { return this; }
 };
 
-}
+} // namespace fmc

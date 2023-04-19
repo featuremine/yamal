@@ -380,7 +380,7 @@ static void magic_number(bool enable_thread) {
   char magic_number[8];
   fseek(fp, 24, SEEK_SET);
   ASSERT_EQ(fread(magic_number, sizeof(magic_number), 1, fp), 1);
-  ASSERT_EQ(string_view(magic_number, 8), "YAMAL000");
+  ASSERT_EQ(string_view(magic_number, 8), "YAMAL001");
   fclose(fp);
 }
 
