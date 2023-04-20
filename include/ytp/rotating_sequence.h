@@ -56,7 +56,7 @@ typedef struct ytp_rotating_sequence ytp_rotating_sequence_t;
  * @param[out] error
  * @return ytp_rotating_sequence_t object
  */
-FMMODFUNC ytp_rotating_sequence_t *ytp_rotating_sequence_new(fmc_fd fd, fmc_error_t **error);
+FMMODFUNC ytp_rotating_sequence_t *ytp_rotating_sequence_new(const char* pattern, size_t maxsize, fmc_fmode mode, fmc_error_t **error);
 
 /**
  * @brief Destroys and deallocate a ytp_rotating_sequence_t object
