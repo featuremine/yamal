@@ -33,9 +33,7 @@
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
 #define YTP_MMNODE_HEADER_SIZE 24
-// Bool size is implementation dependant. Refer to standard section 5.3.3, Footnote 75:
-// sizeof(bool) is not required to be 1.
-#define YTP_YAMAL_HEADER_SIZE (32 + sizeof(bool))
+#define YTP_YAMAL_HEADER_SIZE 40
 
 #ifdef __cplusplus
 extern "C" {

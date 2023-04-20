@@ -41,10 +41,15 @@ struct mmnode {
 
 static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
+struct hdr_t {
+  fm_mmnode_t hdr;
+  std::atomic<size_t> magic_number;
+  std::atomic<bool> closable;
+};
+
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
-static_assert(sizeof(fm_mmnode_t) + sizeof(magic_number) + sizeof(bool) ==
-              YTP_YAMAL_HEADER_SIZE);
+static_assert(sizeof(hdr_t) == YTP_YAMAL_HEADER_SIZE);
 
 static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
 
@@ -253,17 +258,17 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
     fmc_error_mov(*error, &save_error);
     return;
   }
-  auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number) + sizeof(bool);
-  auto &data_ptr = *(std::atomic<size_t> *)(&hdr->data);
+  auto hdr_sz = sizeof(hdr_t);
+  auto &data_ptr = *(hdr_t *)hdr;
   if (yamal->readonly_) {
-    if (data_ptr.load() != *(uint64_t *)magic_number) {
+    if (data_ptr.magic_number.load() != *(uint64_t *)magic_number) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
   } else {
     atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
-    if (!atomic_expect_or_init<size_t>(data_ptr, *(uint64_t *)magic_number)) {
+    if (!atomic_expect_or_init<size_t>(data_ptr.magic_number, *(uint64_t *)magic_number)) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
