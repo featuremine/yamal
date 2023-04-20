@@ -268,11 +268,11 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
-    if (!atomic_expect_or_init<bool>(*(std::atomic<bool> *)(hdr->data + sizeof(size_t)), closable)) {
-      ytp_yamal_destroy(yamal, error);
-      FMC_ERROR_REPORT(error, "closable type differs from file");
-      return;
-    }
+    // if (!atomic_expect_or_init<bool>(*(std::atomic<bool> *)(hdr->data + sizeof(size_t)), closable)) {
+    //   ytp_yamal_destroy(yamal, error);
+    //   FMC_ERROR_REPORT(error, "closable type differs from file");
+    //   return;
+    // }
     mmlist_pages_allocation1(yamal, error);
     if (enable_thread) {
       yamal->thread_ = std::thread([yamal]() {
