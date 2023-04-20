@@ -304,17 +304,17 @@ static void seektell(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 0);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 32);
+  ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 40);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 72);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 80);
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
   ASSERT_EQ(ytp_yamal_seek(yamal, 0, &error), ytp_yamal_begin(yamal, &error));
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_seek(yamal, 32, &error), oneit);
+  ASSERT_EQ(ytp_yamal_seek(yamal, 40, &error), oneit);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_seek(yamal, 72, &error), ytp_yamal_end(yamal, &error));
+  ASSERT_EQ(ytp_yamal_seek(yamal, 80, &error), ytp_yamal_end(yamal, &error));
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;

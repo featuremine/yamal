@@ -273,11 +273,11 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
-    // if (!atomic_expect_or_init<bool>(*(std::atomic<bool> *)(hdr->data + sizeof(size_t)), closable)) {
-    //   ytp_yamal_destroy(yamal, error);
-    //   FMC_ERROR_REPORT(error, "closable type differs from file");
-    //   return;
-    // }
+    if (!atomic_expect_or_init<bool>(data_ptr.closable, closable)) {
+      ytp_yamal_destroy(yamal, error);
+      FMC_ERROR_REPORT(error, "closable type differs from file");
+      return;
+    }
     mmlist_pages_allocation1(yamal, error);
     if (enable_thread) {
       yamal->thread_ = std::thread([yamal]() {
@@ -356,12 +356,12 @@ char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
 
 ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                 fmc_error_t **error) {
-  // if (ytp_yamal_closed(yamal, error)) {
-  //   if (!*error) {
-  //     fmc_error_set2(error, FMC_ERROR_FILE_END);
-  //   }
-  //   return nullptr;
-  // }
+  if (ytp_yamal_closed(yamal, error)) {
+    if (!*error) {
+      fmc_error_set2(error, FMC_ERROR_FILE_END);
+    }
+    return nullptr;
+  }
 
   auto *node = mmnode_node_from_data(data);
   auto offs = node->prev.load();
