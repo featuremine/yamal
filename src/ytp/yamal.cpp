@@ -43,7 +43,7 @@ static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
-static_assert(sizeof(fm_mmnode_t) + sizeof(magic_number) ==
+static_assert(sizeof(fm_mmnode_t) + sizeof(magic_number) + sizeof(bool) ==
               YTP_YAMAL_HEADER_SIZE);
 
 static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
@@ -231,6 +231,15 @@ ytp_yamal_t *ytp_yamal_new(int fd, fmc_error_t **error) {
 
 void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
                       fmc_error_t **error) {
+  ytp_yamal_init_3(yamal, fd, enable_thread, false, error);
+}
+
+ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread, fmc_error_t **error) {
+  return ytp_yamal_new_3(fd, enable_thread, false, error);
+}
+
+void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
+                      bool closable, fmc_error_t **error) {
   fmc_error_clear(error);
   yamal->fd = fd;
   yamal->done_ = false;
@@ -244,7 +253,7 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
     fmc_error_mov(*error, &save_error);
     return;
   }
-  auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number);
+  auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number) + sizeof(bool);
   auto &data_ptr = *(std::atomic<size_t> *)(&hdr->data);
   if (yamal->readonly_) {
     if (data_ptr.load() != *(uint64_t *)magic_number) {
@@ -257,6 +266,11 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
     if (!atomic_expect_or_init<size_t>(data_ptr, *(uint64_t *)magic_number)) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
+      return;
+    }
+    if (!atomic_expect_or_init<bool>(*(std::atomic<bool> *)(hdr->data + sizeof(size_t)), closable)) {
+      ytp_yamal_destroy(yamal, error);
+      FMC_ERROR_REPORT(error, "closable type differs from file");
       return;
     }
     mmlist_pages_allocation1(yamal, error);
@@ -280,9 +294,9 @@ void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
   }
 }
 
-ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread, fmc_error_t **error) {
+ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread, bool closable, fmc_error_t **error) {
   auto *yamal = new ytp_yamal_t;
-  ytp_yamal_init_2(yamal, fd, enable_thread, error);
+  ytp_yamal_init_3(yamal, fd, enable_thread, closable, error);
   if (!*error) {
     return yamal;
   } else {
@@ -337,12 +351,12 @@ char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
 
 ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                 fmc_error_t **error) {
-  if (ytp_yamal_closed(yamal, error)) {
-    if (!*error) {
-      fmc_error_set2(error, FMC_ERROR_FILE_END);
-    }
-    return nullptr;
-  }
+  // if (ytp_yamal_closed(yamal, error)) {
+  //   if (!*error) {
+  //     fmc_error_set2(error, FMC_ERROR_FILE_END);
+  //   }
+  //   return nullptr;
+  // }
 
   auto *node = mmnode_node_from_data(data);
   auto offs = node->prev.load();
@@ -525,13 +539,12 @@ size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
 void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
   auto *header = yamal->header(error);
   if (*error) return;
-  // Is this operation atomic?
-  header->prev.store(header->next);
+  atomic_compare_exchange_weak(&header->prev, 0, header->next.load());
 }
 
 bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error) {
   auto *header = yamal->header(error);
-  //What is more appropriate? is the file closed if there is an error?
   if (*error) return false;
-  return header->prev == header->next;
+  return false;
+  // return header->prev != NULL && header->prev == header->next;
 }

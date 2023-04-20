@@ -60,59 +60,63 @@ void ytp_rotating_sequence_del(ytp_rotating_sequence_t *seq, fmc_error_t **error
 
 char *ytp_rotating_sequence_reserve(ytp_rotating_sequence_t *seq, size_t sz,
                                     fmc_error_t **error) {
-  // TODO: Handle errors correctly
-  if (sz > seq->maxsize) {
-    fmc_error_set(error, "Requested size is larger than maximum file size");
-    return nullptr;
-  }
-  auto currsz = ytp_yamal_reserved_size(&seq->seq.ctrl.yamal, error);
-  if (currsz + sz > seq->maxsize) {
-    ytp_sequence_close(&seq->seq, error);
-    // initialize new sequence
-    fmc_fd oldfd = seq->currfd;
-    ytp_sequence_t oldseq = seq->seq;
+//   // TODO: Handle errors correctly
+//   if (sz > seq->maxsize) {
+//     fmc_error_set(error, "Requested size is larger than maximum file size");
+//     return nullptr;
+//   }
+//   auto currsz = ytp_yamal_reserved_size(&seq->seq.ctrl.yamal, error);
+//   if (currsz + sz > seq->maxsize) {
+//     ytp_sequence_close(&seq->seq, error);
+//     // initialize new sequence
+//     fmc_fd oldfd = seq->currfd;
+//     ytp_sequence_t oldseq = seq->seq;
 
-    seq->currfd = fmc_fopen(file_name(seq->pattern, ++seq->curridx).c_str(), seq->mode, error);
-    ytp_sequence_init(&seq->seq, seq->currfd, error);
+//     seq->currfd = fmc_fopen(file_name(seq->pattern, ++seq->curridx).c_str(), seq->mode, error);
 
-    //TODO: migrate callbacks
+//     // change control
+//     // timeline read it points to begining of new file
 
-    // close old sequence
-    ytp_sequence_destroy(&oldseq, error);
-    fmc_fclose(oldfd, error);
+//     ytp_sequence_init(&seq->seq, seq->currfd, error);
 
-    return ytp_rotating_sequence_reserve(seq, sz, error);
-  }
-  return ytp_sequence_reserve(&seq->seq, sz, error);
+//     //TODO: migrate callbacks
+
+//     // close old sequence
+//     ytp_sequence_destroy(&oldseq, error);
+//     fmc_fclose(oldfd, error);
+
+//     return ytp_rotating_sequence_reserve(seq, sz, error);
+//   }
+//   return ytp_sequence_reserve(&seq->seq, sz, error);
 }
 
 ytp_iterator_t ytp_rotating_sequence_commit(ytp_rotating_sequence_t *seq, ytp_peer_t peer,
                                             ytp_channel_t channel, uint64_t time,
                                             void *data, fmc_error_t **error) {
-  // TODO: Handle errors correctly
-  auto it = ytp_control_commit(&seq->seq.ctrl, peer, channel, time, data, error);
-  if (*error && (*error)->code == FMC_ERROR_FILE_END) {
-    // open new file according to pattern
-    fmc_fd oldfd = seq->currfd;
-    ytp_sequence_t oldseq = seq->seq;
+//   // TODO: Handle errors correctly
+//   auto it = ytp_control_commit(&seq->seq.ctrl, peer, channel, time, data, error);
+//   if (*error && (*error)->code == FMC_ERROR_FILE_END) {
+//     // open new file according to pattern
+//     fmc_fd oldfd = seq->currfd;
+//     ytp_sequence_t oldseq = seq->seq;
 
-    seq->currfd = fmc_fopen(file_name(seq->pattern, ++seq->curridx).c_str(), seq->mode, error);
-    ytp_sequence_init(&seq->seq, seq->currfd, error);
+//     seq->currfd = fmc_fopen(file_name(seq->pattern, ++seq->curridx).c_str(), seq->mode, error);
+//     ytp_sequence_init(&seq->seq, seq->currfd, error);
 
-    // reserve and commit data in new sequence
-    auto *node = mmnode_node_from_data(data);
-    auto sz = node->size.value();
-    auto *buff = ytp_rotating_sequence_reserve(&seq->seq, sz, error) {
-    memcpy(buff, data, sz);
-    it = ytp_rotating_sequence_commit(seq, peer, channel, time, buff, error);
+//     // reserve and commit data in new sequence
+//     auto *node = mmnode_node_from_data(data);
+//     auto sz = node->size.value();
+//     auto *buff = ytp_rotating_sequence_reserve(&seq->seq, sz, error) {
+//     memcpy(buff, data, sz);
+//     it = ytp_rotating_sequence_commit(seq, peer, channel, time, buff, error);
 
-    //TODO: migrate callbacks
+//     //TODO: migrate callbacks
 
-    // clean up old sequence
-    ytp_sequence_destroy(&oldseq, error);
-    fmc_fclose(oldfd, error);
-  }
-  return it;
+//     // clean up old sequence
+//     ytp_sequence_destroy(&oldseq, error);
+//     fmc_fclose(oldfd, error);
+//   }
+//   return it;
 }
 
 void ytp_rotating_sequence_dir(ytp_rotating_sequence_t *seq, ytp_peer_t peer,

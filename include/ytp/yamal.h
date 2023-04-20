@@ -33,7 +33,9 @@
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
 #define YTP_MMNODE_HEADER_SIZE 24
-#define YTP_YAMAL_HEADER_SIZE 32
+// Bool size is implementation dependant. Refer to standard section 5.3.3, Footnote 75:
+// sizeof(bool) is not required to be 1.
+#define YTP_YAMAL_HEADER_SIZE (32 + sizeof(bool))
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,6 +94,12 @@ FMMODFUNC void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
  */
 FMMODFUNC ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread,
                                        fmc_error_t **error);
+
+FMMODFUNC void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
+                                bool closable, fmc_error_t **error);
+
+FMMODFUNC ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread,
+                                       bool closable, fmc_error_t **error);
 
 /**
  * @brief Returns the file descriptor from a ytp_yamal_t object
