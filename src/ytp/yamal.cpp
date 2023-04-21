@@ -559,7 +559,7 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
   if (*error) {
     return;
   }
-  if (!hdr->closable.load()) {
+  if (hdr->closable.load() != FMC_CLOSABLE::CLOSABLE) {
     FMC_ERROR_REPORT(error, "unable to close a non closable sequence");
     return;
   }
