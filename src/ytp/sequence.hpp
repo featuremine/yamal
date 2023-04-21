@@ -12,6 +12,8 @@
 
 *****************************************************************************/
 
+#pragma once
+
 #include "control.hpp"
 #include "timeline.hpp"
 
