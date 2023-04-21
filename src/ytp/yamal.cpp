@@ -41,7 +41,7 @@ struct mmnode {
 
 static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
-struct hdr_t {
+struct yamal_hdr_t {
   fm_mmnode_t hdr;
   std::atomic<size_t> magic_number;
   std::atomic<bool> closable;
@@ -49,7 +49,7 @@ struct hdr_t {
 
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
-static_assert(sizeof(hdr_t) == YTP_YAMAL_HEADER_SIZE);
+static_assert(sizeof(yamal_hdr_t) == YTP_YAMAL_HEADER_SIZE);
 
 static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
 
@@ -258,22 +258,22 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
     fmc_error_mov(*error, &save_error);
     return;
   }
-  auto hdr_sz = sizeof(hdr_t);
-  auto &data_ptr = *(hdr_t *)hdr;
+  auto hdr_sz = sizeof(yamal_hdr_t);
+  auto &hdr_ptr = *(yamal_hdr_t *)hdr;
   if (yamal->readonly_) {
-    if (data_ptr.magic_number.load() != *(uint64_t *)magic_number) {
+    if (hdr_ptr.magic_number.load() != *(uint64_t *)magic_number) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
   } else {
     atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
-    if (!atomic_expect_or_init<size_t>(data_ptr.magic_number, *(uint64_t *)magic_number)) {
+    if (!atomic_expect_or_init<size_t>(hdr_ptr.magic_number, *(uint64_t *)magic_number)) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
-    if (!atomic_expect_or_init<bool>(data_ptr.closable, closable)) {
+    if (!atomic_expect_or_init<bool>(hdr_ptr.closable, closable)) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "closable type differs from file");
       return;
@@ -356,13 +356,6 @@ char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
 
 ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                 fmc_error_t **error) {
-  if (ytp_yamal_closed(yamal, error)) {
-    if (!*error) {
-      fmc_error_set2(error, FMC_ERROR_FILE_END);
-    }
-    return nullptr;
-  }
-
   auto *node = mmnode_node_from_data(data);
   auto offs = node->prev.load();
 
@@ -542,14 +535,48 @@ size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
 }
 
 void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
-  auto *header = yamal->header(error);
-  if (*error) return;
-  atomic_compare_exchange_weak(&header->prev, 0, header->next.load());
+  fmc_error_clear(error);
+
+  // Validate file is not read only
+  if (yamal->readonly_) {
+    FMC_ERROR_REPORT(error,
+                     "unable to close using a readonly file descriptor");
+    return;
+  }
+
+  // Validate that sequence is closable
+  auto *hdr = (yamal_hdr_t *)yamal->header(error);
+  if (*error) {
+    return;
+  }
+  if (!hdr->closable.load()) {
+    FMC_ERROR_REPORT(error,
+                     "unable to close a non closable sequence");
+    return;
+  }
+
+  // Find end and close sequence
+  mmnode_offs last = hdr->hdr.prev;
+  mmnode_offs next_ptr = last;
+  fm_mmnode_t *node = nullptr;
+  do {
+    node = mmnode_get1(yamal, next_ptr, error);
+    if (*error)
+      return;
+    while (node->next) {
+      last = node->next;
+      node = mmnode_get1(yamal, last, error);
+      if (*error)
+        return;
+    }
+    next_ptr = 0;
+  } while (!atomic_compare_exchange_weak(&node->next, &next_ptr, hdr->hdr.next));
+
 }
 
 bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error) {
-  auto *header = yamal->header(error);
+  auto *hdr = yamal->header(error);
   if (*error) return false;
-  return false;
-  // return header->prev != NULL && header->prev == header->next;
+  mmnode_offs last = hdr->prev;
+  return last && last == hdr->next;
 }
