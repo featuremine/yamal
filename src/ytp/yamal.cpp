@@ -275,8 +275,10 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
     }
     if (!atomic_expect_or_init<FMC_CLOSABLE>(hdr->closable, closable)) {
       ytp_yamal_destroy(yamal, error);
-      // TODO: improve with what it was and what you are setting it to
-      FMC_ERROR_REPORT(error, "closable type differs from file");
+      std::string errormsg = "configured closable type ";
+      errormsg += (closable == FMC_CLOSABLE::CLOSABLE) ? "closable" : "unclosable";
+      errormsg += " differs from file closable type in file";
+      FMC_ERROR_REPORT(error, errormsg.c_str());
       return;
     }
     mmlist_pages_allocation1(yamal, error);
