@@ -14,13 +14,6 @@
 
 #include "control.hpp"
 #include "timeline.hpp"
-#include "yamal.hpp"
-
-#include <vector>
-#include <ytp/control.h>
-#include <ytp/sequence.h>
-#include <ytp/yamal.h>
-#include <ytp/sequence.h>
 
 struct ytp_sequence {
   ytp_control_t ctrl;
