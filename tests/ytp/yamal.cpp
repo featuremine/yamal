@@ -449,6 +449,10 @@ TEST(yamal, allocate_closable) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
 
+  // Validate that we cannot close an unclosable sequence
+  ytp_yamal_close(yamal, &error);
+  ASSERT_NE(error, nullptr);
+
   // Validate that we cannot open a unclosable sequence as closable
   ASSERT_EQ(ytp_yamal_new_3(fmc_fd_get(fp, &error), false,
                             FMC_CLOSABLE::CLOSABLE, &error),
