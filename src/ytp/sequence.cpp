@@ -15,16 +15,12 @@
 #include "control.hpp"
 #include "timeline.hpp"
 #include "yamal.hpp"
+#include "sequence.hpp"
 
 #include <vector>
 #include <ytp/control.h>
 #include <ytp/sequence.h>
 #include <ytp/yamal.h>
-
-struct ytp_sequence {
-  ytp_control_t ctrl;
-  ytp_timeline_t timeline;
-};
 
 struct ytp_sequence_shared {
   uint64_t ref_counter = 1;
@@ -193,6 +189,14 @@ ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, size_t off,
 size_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
                          fmc_error_t **error) {
   return ytp_timeline_tell(&seq->timeline, iterator, error);
+}
+
+void ytp_sequence_close(ytp_sequence_t *seq, fmc_error_t **error) {
+  ytp_control_close(&seq->ctrl, error);
+}
+
+bool ytp_sequence_closed(ytp_sequence_t *seq, fmc_error_t **error) {
+  return ytp_control_closed(&seq->ctrl, error);
 }
 
 ytp_sequence_shared_t *ytp_sequence_shared_new(const char *filename,

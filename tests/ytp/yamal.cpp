@@ -300,21 +300,21 @@ static void seektell(bool enable_thread) {
   ASSERT_NE(oneit, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_begin(yamal, &error), &error), 0);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_begin(yamal, &error), &error), 16);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 0);
+  ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 16);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 32);
+  ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 40);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 72);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 120);
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_seek(yamal, 0, &error), ytp_yamal_begin(yamal, &error));
+  ASSERT_EQ(ytp_yamal_seek(yamal, 16, &error), ytp_yamal_begin(yamal, &error));
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_seek(yamal, 32, &error), oneit);
+  ASSERT_EQ(ytp_yamal_seek(yamal, 40, &error), oneit);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_seek(yamal, 72, &error), ytp_yamal_end(yamal, &error));
+  ASSERT_EQ(ytp_yamal_seek(yamal, 80, &error), ytp_yamal_end(yamal, &error));
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
@@ -378,7 +378,7 @@ static void magic_number(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
 
   char magic_number[8];
-  fseek(fp, 24, SEEK_SET);
+  fseek(fp, 0, SEEK_SET);
   ASSERT_EQ(fread(magic_number, sizeof(magic_number), 1, fp), 1);
   ASSERT_EQ(string_view(magic_number, 8), "YAMAL001");
   fclose(fp);
@@ -411,6 +411,142 @@ static void allocate_out_of_range_page(bool enable_thread) {
 TEST(yamal, allocate_out_of_range_page) {
   allocate_out_of_range_page(true);
   allocate_out_of_range_page(false);
+}
+
+TEST(yamal, allocate_closable) {
+  fmc_error_t *error;
+  FILE *fp = tmpfile();
+  auto fd = fmc_fd_get(fp, &error);
+  ASSERT_TRUE(fmc_fvalid(fd));
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_3(fmc_fd_get(fp, &error), false, FMC_CLOSABLE::CLOSABLE, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(yamal, nullptr);
+
+  // Validate that we cannot open a closable sequence as unclosable
+  ASSERT_EQ(ytp_yamal_new_3(fmc_fd_get(fp, &error), false, FMC_CLOSABLE::UNCLOSABLE, &error), nullptr);
+  ASSERT_NE(error, nullptr);
+  fmc_error_clear(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_EQ(ytp_yamal_new_2(fmc_fd_get(fp, &error), false, &error), nullptr);
+  ASSERT_NE(error, nullptr);
+
+  ytp_yamal_del(yamal, &error);
+  yamal = nullptr;
+  ASSERT_EQ(error, nullptr);
+  ASSERT_EQ(yamal, nullptr);
+  fclose(fp);
+
+  fp = tmpfile();
+  fd = fmc_fd_get(fp, &error);
+  ASSERT_TRUE(fmc_fvalid(fd));
+  error = (fmc_error_t *)1;
+  yamal = ytp_yamal_new_3(fmc_fd_get(fp, &error), false, FMC_CLOSABLE::UNCLOSABLE, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(yamal, nullptr);
+
+  // Validate that we cannot open a unclosable sequence as closable
+  ASSERT_EQ(ytp_yamal_new_3(fmc_fd_get(fp, &error), false, FMC_CLOSABLE::CLOSABLE, &error), nullptr);
+  ASSERT_NE(error, nullptr);
+  fmc_error_clear(&error);
+  ASSERT_EQ(error, nullptr);
+
+  // Validate that we can open a unclosable sequence with the ytp_yamal_new_2 API
+  auto *yamal2 = ytp_yamal_new_2(fmc_fd_get(fp, &error), false, &error);
+  ASSERT_NE(yamal2, nullptr);
+  ASSERT_EQ(error, nullptr);
+  ytp_yamal_del(yamal2, &error);
+  ASSERT_EQ(error, nullptr);
+
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+  fclose(fp);
+}
+
+TEST(yamal, closable_empty_list) {
+  fmc_error_t *error;
+  FILE *fp = tmpfile();
+  auto fd = fmc_fd_get(fp, &error);
+  ASSERT_TRUE(fmc_fvalid(fd));
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_3(fmc_fd_get(fp, &error), false, FMC_CLOSABLE::CLOSABLE, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(yamal, nullptr);
+
+  ASSERT_FALSE(ytp_yamal_closed(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+  ytp_yamal_close(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  ASSERT_TRUE(ytp_yamal_closed(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+  // try to close more than once
+  ytp_yamal_close(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+  fclose(fp);
+}
+
+TEST(yamal, closable_write) {
+  fmc_error_t *error;
+  FILE *fp = tmpfile();
+  auto fd = fmc_fd_get(fp, &error);
+  ASSERT_TRUE(fmc_fvalid(fd));
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_3(fmc_fd_get(fp, &error), false, FMC_CLOSABLE::CLOSABLE, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(yamal, nullptr);
+
+  ASSERT_FALSE(ytp_yamal_closed(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+  auto *msg =
+      (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(msg, nullptr);
+  msg->index = 1;
+  error = (fmc_error_t *)1;
+  ASSERT_NE(ytp_yamal_commit(yamal, msg, &error), nullptr);
+  ASSERT_EQ(error, nullptr);
+
+  // Reserve before close
+
+  auto *msg2 =
+      (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(msg, nullptr);
+  msg2->index = 2;
+
+  ytp_yamal_close(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  ASSERT_TRUE(ytp_yamal_closed(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_commit(yamal, msg2, &error), nullptr);
+  ASSERT_NE(error, nullptr);
+  ASSERT_EQ(error->code, FMC_ERROR_FILE_END);
+
+  // Reserve after close
+  auto *msg3 =
+      (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(msg, nullptr);
+  msg3->index = 3;
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_commit(yamal, msg3, &error), nullptr);
+  ASSERT_NE(error, nullptr);
+  ASSERT_EQ(error->code, FMC_ERROR_FILE_END);
+
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+  fclose(fp);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
