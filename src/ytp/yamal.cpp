@@ -373,6 +373,10 @@ ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
     if (*error)
       return nullptr;
     while (node->next) {
+      if (node->next == offsetof(yamal_hdr_t, hdr)) {
+        fmc_error_set2(error, FMC_ERROR_FILE_END);
+        return nullptr;
+      }
       last = node->next;
       node = mmnode_get1(yamal, last, error);
       if (*error)
@@ -556,8 +560,6 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
     return;
   }
 
-  // TODO: Handle empty list scenario
-
   // Find end and close sequence
   mmnode_offs last = hdr->hdr.prev;
   mmnode_offs next_ptr = last;
@@ -568,18 +570,32 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
       return;
     while (node->next) {
       last = node->next;
+      if (last == offsetof(yamal_hdr_t, hdr))
+        return;
       node = mmnode_get1(yamal, last, error);
       if (*error)
         return;
     }
     next_ptr = 0;
-  } while (!atomic_compare_exchange_weak(&node->next, &next_ptr, hdr->hdr.next));
-
+  } while (!atomic_compare_exchange_weak(&node->next, &next_ptr, offsetof(yamal_hdr_t, hdr)));
 }
 
 bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error) {
   auto *hdr = yamal->header(error);
-  if (*error) return false;
+  if (*error)
+    return false;
   mmnode_offs last = hdr->prev;
-  return last && last == hdr->next;
+  fm_mmnode_t *node = nullptr;
+  node = mmnode_get1(yamal, last, error);
+  if (*error)
+    return false;
+  while (node->next) {
+    last = node->next;
+    if (last == offsetof(yamal_hdr_t, hdr))
+      return true;
+    node = mmnode_get1(yamal, last, error);
+    if (*error)
+      return false;
+  }
+  return false;
 }
