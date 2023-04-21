@@ -42,9 +42,9 @@ struct mmnode {
 static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
 struct yamal_hdr_t {
-  fm_mmnode_t hdr;
   std::atomic<size_t> magic_number;
-  std::atomic<bool> closable;
+  std::atomic<FMC_CLOSABLE> closable;
+  fm_mmnode_t hdr;
 };
 
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
@@ -55,7 +55,7 @@ static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
 
 template <typename T>
 static bool atomic_expect_or_init(std::atomic<T> &data, T desired) {
-  T expected = 0;
+  T expected = T(0);
   if (!atomic_compare_exchange_weak(&data, &expected, desired)) {
     return expected == desired;
   }
@@ -195,7 +195,7 @@ static bool mmlist_sync1(ytp_yamal_t *yamal, fmc_error_t **err) {
 }
 
 fm_mmnode_t *ytp_yamal_t::header(fmc_error_t **err) {
-  return mmnode_get1(this, 0, err);
+  return mmnode_get1(this, offsetof(yamal_hdr_t, hdr), err);
 }
 
 static std::atomic<mmnode_offs> &cast_iterator(ytp_iterator_t iterator) {
@@ -236,20 +236,20 @@ ytp_yamal_t *ytp_yamal_new(int fd, fmc_error_t **error) {
 
 void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
                       fmc_error_t **error) {
-  ytp_yamal_init_3(yamal, fd, enable_thread, false, error);
+  ytp_yamal_init_3(yamal, fd, enable_thread, FMC_CLOSABLE::UNCLOSABLE, error);
 }
 
 ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread, fmc_error_t **error) {
-  return ytp_yamal_new_3(fd, enable_thread, false, error);
+  return ytp_yamal_new_3(fd, enable_thread, FMC_CLOSABLE::UNCLOSABLE, error);
 }
 
 void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
-                      bool closable, fmc_error_t **error) {
+                      FMC_CLOSABLE closable, fmc_error_t **error) {
   fmc_error_clear(error);
   yamal->fd = fd;
   yamal->done_ = false;
   yamal->readonly_ = fmc_freadonly(fd);
-  auto *hdr = yamal->header(error);
+  auto *hdr = (yamal_hdr_t *)mmnode_get1(yamal, 0, error);
   if (*error) {
     fmc_error_t save_error;
     fmc_error_init_mov(&save_error, *error);
@@ -259,22 +259,22 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
     return;
   }
   auto hdr_sz = sizeof(yamal_hdr_t);
-  auto &hdr_ptr = *(yamal_hdr_t *)hdr;
   if (yamal->readonly_) {
-    if (hdr_ptr.magic_number.load() != *(uint64_t *)magic_number) {
+    if (hdr->magic_number.load() != *(uint64_t *)magic_number) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
   } else {
-    atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
-    if (!atomic_expect_or_init<size_t>(hdr_ptr.magic_number, *(uint64_t *)magic_number)) {
+    atomic_expect_or_init<size_t>(hdr->hdr.size, htoye64(hdr_sz));
+    if (!atomic_expect_or_init<size_t>(hdr->magic_number, *(uint64_t *)magic_number)) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
       return;
     }
-    if (!atomic_expect_or_init<bool>(hdr_ptr.closable, closable)) {
+    if (!atomic_expect_or_init<FMC_CLOSABLE>(hdr->closable, closable)) {
       ytp_yamal_destroy(yamal, error);
+      // TODO: improve with what it was and what you are setting it to
       FMC_ERROR_REPORT(error, "closable type differs from file");
       return;
     }
@@ -299,7 +299,7 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
   }
 }
 
-ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread, bool closable, fmc_error_t **error) {
+ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread, FMC_CLOSABLE closable, fmc_error_t **error) {
   auto *yamal = new ytp_yamal_t;
   ytp_yamal_init_3(yamal, fd, enable_thread, closable, error);
   if (!*error) {
@@ -545,7 +545,7 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
   }
 
   // Validate that sequence is closable
-  auto *hdr = (yamal_hdr_t *)yamal->header(error);
+  auto *hdr = (yamal_hdr_t *)mmnode_get1(yamal, 0, error);
   if (*error) {
     return;
   }
@@ -554,6 +554,8 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
                      "unable to close a non closable sequence");
     return;
   }
+
+  // TODO: Handle empty list scenario
 
   // Find end and close sequence
   mmnode_offs last = hdr->hdr.prev;

@@ -41,6 +41,8 @@ extern "C" {
 
 typedef struct ytp_yamal ytp_yamal_t;
 
+typedef enum { CLOSABLE = 1, UNCLOSABLE=2 } FMC_CLOSABLE;
+
 /**
  * @brief Initializes a ytp_yamal_t object
  *
@@ -94,10 +96,10 @@ FMMODFUNC ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread,
                                        fmc_error_t **error);
 
 FMMODFUNC void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
-                                bool closable, fmc_error_t **error);
+                                FMC_CLOSABLE closable, fmc_error_t **error);
 
 FMMODFUNC ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread,
-                                       bool closable, fmc_error_t **error);
+                                       FMC_CLOSABLE closable, fmc_error_t **error);
 
 /**
  * @brief Returns the file descriptor from a ytp_yamal_t object
