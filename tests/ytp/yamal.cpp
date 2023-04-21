@@ -530,7 +530,7 @@ TEST(yamal, closable_write) {
   error = (fmc_error_t *)1;
   ASSERT_EQ(ytp_yamal_commit(yamal, msg2, &error), nullptr);
   ASSERT_NE(error, nullptr);
-  ASSERT_EQ(error->code, FMC_ERROR_FILE_END);
+  ASSERT_EQ(error->code, FMC_ERROR_CLOSED);
 
   // Reserve after close
   auto *msg3 =
@@ -542,7 +542,7 @@ TEST(yamal, closable_write) {
   error = (fmc_error_t *)1;
   ASSERT_EQ(ytp_yamal_commit(yamal, msg3, &error), nullptr);
   ASSERT_NE(error, nullptr);
-  ASSERT_EQ(error->code, FMC_ERROR_FILE_END);
+  ASSERT_EQ(error->code, FMC_ERROR_CLOSED);
 
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);

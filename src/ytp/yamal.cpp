@@ -374,7 +374,7 @@ ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
       return nullptr;
     while (node->next) {
       if (node->next == offsetof(yamal_hdr_t, hdr)) {
-        fmc_error_set2(error, FMC_ERROR_FILE_END);
+        fmc_error_set2(error, FMC_ERROR_CLOSED);
         return nullptr;
       }
       last = node->next;
