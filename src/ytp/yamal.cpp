@@ -267,6 +267,7 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
     }
   } else {
     atomic_expect_or_init<size_t>(hdr->hdr.size, htoye64(hdr_sz));
+    atomic_expect_or_init<size_t>(hdr->hdr.prev, offsetof(yamal_hdr_t, hdr));
     if (!atomic_expect_or_init<size_t>(hdr->magic_number, *(uint64_t *)magic_number)) {
       ytp_yamal_destroy(yamal, error);
       FMC_ERROR_REPORT(error, "invalid yamal file format");
@@ -434,7 +435,7 @@ ytp_iterator_t ytp_yamal_end(ytp_yamal_t *yamal, fmc_error_t **error) {
 }
 
 bool ytp_yamal_term(ytp_iterator_t iterator) {
-  return cast_iterator(iterator) == 0;
+  return cast_iterator(iterator) == 0 || cast_iterator(iterator) == offsetof(yamal_hdr_t, hdr);
 }
 
 ytp_iterator_t ytp_yamal_next(ytp_yamal_t *yamal, ytp_iterator_t iterator,

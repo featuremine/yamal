@@ -300,17 +300,17 @@ static void seektell(bool enable_thread) {
   ASSERT_NE(oneit, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_begin(yamal, &error), &error), 0);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_begin(yamal, &error), &error), 16);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 0);
+  ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 16);
   ASSERT_EQ(error, nullptr);
   ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 40);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 80);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 120);
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_seek(yamal, 0, &error), ytp_yamal_begin(yamal, &error));
+  ASSERT_EQ(ytp_yamal_seek(yamal, 16, &error), ytp_yamal_begin(yamal, &error));
   ASSERT_EQ(error, nullptr);
   ASSERT_EQ(ytp_yamal_seek(yamal, 40, &error), oneit);
   ASSERT_EQ(error, nullptr);
@@ -378,7 +378,7 @@ static void magic_number(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
 
   char magic_number[8];
-  fseek(fp, 24, SEEK_SET);
+  fseek(fp, 0, SEEK_SET);
   ASSERT_EQ(fread(magic_number, sizeof(magic_number), 1, fp), 1);
   ASSERT_EQ(string_view(magic_number, 8), "YAMAL001");
   fclose(fp);
