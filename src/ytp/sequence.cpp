@@ -12,10 +12,10 @@
 
 *****************************************************************************/
 
+#include "sequence.hpp"
 #include "control.hpp"
 #include "timeline.hpp"
 #include "yamal.hpp"
-#include "sequence.hpp"
 
 #include <vector>
 #include <ytp/control.h>
