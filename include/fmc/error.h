@@ -35,7 +35,7 @@ typedef enum {
   FMC_ERROR_NONE,
   FMC_ERROR_MEMORY,
   FMC_ERROR_CUSTOM,
-  FMC_ERROR_FILE_END
+  FMC_ERROR_CLOSED
 } FMC_ERROR_CODE;
 
 struct fmc_error {
