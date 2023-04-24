@@ -594,7 +594,7 @@ bool ytp_timeline_consume(ytp_timeline_t *dest, ytp_timeline_t *src) {
     return false;
   }
 
-  fmc_error_t **error;
+  fmc_error_t **error = nullptr;
   ytp_timeline_ch_cb_rm(src, channel_announcement_wrapper, src, error);
   ytp_timeline_stream_cb(src, stream_announcement_wrapper, src, error);
   std::erase_if(src->data_cb[{{}, YTP_CHANNEL_ANN}],

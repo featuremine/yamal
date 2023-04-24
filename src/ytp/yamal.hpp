@@ -36,7 +36,7 @@ typedef struct mmnode fm_mmnode_t;
 static const size_t fm_mmlist_page_count = 1024 * 64 * 8;
 
 struct ytp_yamal {
-  fm_mmnode_t *header(fmc_error_t **err);
+  fm_mmnode_t *header();
   fmc_fd fd;
   std::condition_variable cv_;
   std::mutex m_;
