@@ -12,12 +12,12 @@
 
 *****************************************************************************/
 
-#include <ytp/rotating_sequence.h>
+#include <ytp/block.h>
 #include <ytp/sequence.h>
 #include <fmc/files.h>
 #include "sequence.hpp"
 
-struct ytp_rotating_sequence {
+struct ytp_block {
   ytp_sequence_t seq;
   std::string pattern;
   fmc_fmode mode;
@@ -33,8 +33,8 @@ std::string file_name(std::string prefix, uint32_t idx) {
   return prefix + str;
 }
 
-ytp_rotating_sequence_t *ytp_rotating_sequence_new(const char* pattern, size_t maxsize, fmc_fmode mode, fmc_error_t **error) {
-    auto *seq = new ytp_rotating_sequence_t();
+ytp_block_t *ytp_block_new(const char* pattern, size_t maxsize, fmc_fmode mode, fmc_error_t **error) {
+    auto *seq = new ytp_block_t();
     seq->pattern = pattern;
     seq->mode = mode;
     seq->maxsize = maxsize;
@@ -52,13 +52,13 @@ cleanup:
   return NULL;
 }
 
-void ytp_rotating_sequence_del(ytp_rotating_sequence_t *seq, fmc_error_t **error) {
+void ytp_block_del(ytp_block_t *seq, fmc_error_t **error) {
   ytp_sequence_destroy(&seq->seq, error);
   fmc_fclose(seq->currfd, error);
   delete seq;
 }
 
-char *ytp_rotating_sequence_reserve(ytp_rotating_sequence_t *seq, size_t sz,
+char *ytp_block_reserve(ytp_block_t *seq, size_t sz,
                                     fmc_error_t **error) {
 //   // TODO: Handle errors correctly
 //   if (sz > seq->maxsize) {
@@ -85,12 +85,12 @@ char *ytp_rotating_sequence_reserve(ytp_rotating_sequence_t *seq, size_t sz,
 //     ytp_sequence_destroy(&oldseq, error);
 //     fmc_fclose(oldfd, error);
 
-//     return ytp_rotating_sequence_reserve(seq, sz, error);
+//     return ytp_block_reserve(seq, sz, error);
 //   }
 //   return ytp_sequence_reserve(&seq->seq, sz, error);
 }
 
-ytp_iterator_t ytp_rotating_sequence_commit(ytp_rotating_sequence_t *seq, ytp_peer_t peer,
+ytp_iterator_t ytp_block_commit(ytp_block_t *seq, ytp_peer_t peer,
                                             ytp_channel_t channel, uint64_t time,
                                             void *data, fmc_error_t **error) {
 //   // TODO: Handle errors correctly
@@ -106,9 +106,9 @@ ytp_iterator_t ytp_rotating_sequence_commit(ytp_rotating_sequence_t *seq, ytp_pe
 //     // reserve and commit data in new sequence
 //     auto *node = mmnode_node_from_data(data);
 //     auto sz = node->size.value();
-//     auto *buff = ytp_rotating_sequence_reserve(&seq->seq, sz, error) {
+//     auto *buff = ytp_block_reserve(&seq->seq, sz, error) {
 //     memcpy(buff, data, sz);
-//     it = ytp_rotating_sequence_commit(seq, peer, channel, time, buff, error);
+//     it = ytp_block_commit(seq, peer, channel, time, buff, error);
 
 //     //TODO: migrate callbacks
 
@@ -119,79 +119,79 @@ ytp_iterator_t ytp_rotating_sequence_commit(ytp_rotating_sequence_t *seq, ytp_pe
 //   return it;
 }
 
-void ytp_rotating_sequence_dir(ytp_rotating_sequence_t *seq, ytp_peer_t peer,
+void ytp_block_dir(ytp_block_t *seq, ytp_peer_t peer,
                                 uint64_t time, size_t sz, const char *payload,
                                 fmc_error_t **error) {}
 
-void ytp_rotating_sequence_ch_name(ytp_rotating_sequence_t *seq, ytp_channel_t channel,
+void ytp_block_ch_name(ytp_block_t *seq, ytp_channel_t channel,
                                     size_t *sz, const char **name,
                                     fmc_error_t **error) {}
 
-ytp_channel_t ytp_rotating_sequence_ch_decl(ytp_rotating_sequence_t *seq,
+ytp_channel_t ytp_block_ch_decl(ytp_block_t *seq,
                                              ytp_peer_t peer, uint64_t time,
                                              size_t sz, const char *name,
                                              fmc_error_t **error) {}
 
-void ytp_rotating_sequence_ch_cb(ytp_rotating_sequence_t *seq, ytp_sequence_ch_cb_t cb,
+void ytp_block_ch_cb(ytp_block_t *seq, ytp_sequence_ch_cb_t cb,
                                   void *closure, fmc_error_t **error) {}
 
-void ytp_rotating_sequence_ch_cb_rm(ytp_rotating_sequence_t *seq,
+void ytp_block_ch_cb_rm(ytp_block_t *seq,
                                      ytp_sequence_ch_cb_t cb, void *closure,
                                      fmc_error_t **error) {}
 
-void ytp_rotating_sequence_peer_name(ytp_rotating_sequence_t *seq, ytp_peer_t peer,
+void ytp_block_peer_name(ytp_block_t *seq, ytp_peer_t peer,
                                       size_t *sz, const char **name,
                                       fmc_error_t **error) {}
 
-ytp_peer_t ytp_rotating_sequence_peer_decl(ytp_rotating_sequence_t *seq, size_t sz,
+ytp_peer_t ytp_block_peer_decl(ytp_block_t *seq, size_t sz,
                                             const char *name,
                                             fmc_error_t **error) {}
 
-void ytp_rotating_sequence_peer_cb(ytp_rotating_sequence_t *seq,
+void ytp_block_peer_cb(ytp_block_t *seq,
                                     ytp_sequence_peer_cb_t cb, void *closure,
                                     fmc_error_t **error) {}
 
-void ytp_rotating_sequence_peer_cb_rm(ytp_rotating_sequence_t *seq,
+void ytp_block_peer_cb_rm(ytp_block_t *seq,
                                        ytp_sequence_peer_cb_t cb, void *closure,
                                        fmc_error_t **error) {}
 
 
-void ytp_rotating_sequence_prfx_cb(ytp_rotating_sequence_t *seq, size_t sz,
+void ytp_block_prfx_cb(ytp_block_t *seq, size_t sz,
                                     const char *prfx, ytp_sequence_data_cb_t cb,
                                     void *closure, fmc_error_t **error) {}
 
-void ytp_rotating_sequence_prfx_cb_rm(ytp_rotating_sequence_t *seq, size_t sz,
+void ytp_block_prfx_cb_rm(ytp_block_t *seq, size_t sz,
                                        const char *prfx,
                                        ytp_sequence_data_cb_t cb, void *closure,
                                        fmc_error_t **error) {}
 
-void ytp_rotating_sequence_indx_cb(ytp_rotating_sequence_t *seq, ytp_channel_t channel,
+void ytp_block_indx_cb(ytp_block_t *seq, ytp_channel_t channel,
                                     ytp_sequence_data_cb_t cb, void *closure,
                                     fmc_error_t **error) {}
 
-void ytp_rotating_sequence_indx_cb_rm(ytp_rotating_sequence_t *seq,
+void ytp_block_indx_cb_rm(ytp_block_t *seq,
                                        ytp_channel_t channel,
                                        ytp_sequence_data_cb_t cb, void *closure,
                                        fmc_error_t **error) {}
 
-bool ytp_rotating_sequence_poll(ytp_rotating_sequence_t *seq, fmc_error_t **error) {}
+bool ytp_block_poll(ytp_block_t *seq, fmc_error_t **error) {}
 
-bool ytp_rotating_sequence_term(ytp_rotating_sequence_t *seq) {}
+bool ytp_block_term(ytp_block_t *seq) {}
 
-ytp_iterator_t ytp_rotating_sequence_end(ytp_rotating_sequence_t *seq,
+ytp_iterator_t ytp_block_end(ytp_block_t *seq,
                                           fmc_error_t **error) {}
 
-ytp_iterator_t ytp_rotating_sequence_cur(ytp_rotating_sequence_t *seq) {}
+ytp_iterator_t ytp_block_cur(ytp_block_t *seq) {}
 
-ytp_iterator_t ytp_rotating_sequence_get_it(ytp_rotating_sequence_t *seq) {}
+ytp_iterator_t ytp_block_get_it(ytp_block_t *seq) {}
 
-void ytp_rotating_sequence_set_it(ytp_rotating_sequence_t *seq,
+void ytp_block_set_it(ytp_block_t *seq,
                                    ytp_iterator_t iterator) {}
 
-void ytp_rotating_sequence_cb_rm(ytp_rotating_sequence_t *seq) {}
+void ytp_block_cb_rm(ytp_block_t *seq) {}
 
-ytp_iterator_t ytp_rotating_sequence_seek(ytp_rotating_sequence_t *seq, size_t off,
+ytp_iterator_t ytp_block_seek(ytp_block_t *seq, size_t off,
                                            fmc_error_t **error) {}
 
-size_t ytp_rotating_sequence_tell(ytp_rotating_sequence_t *seq, ytp_iterator_t iterator,
+size_t ytp_block_tell(ytp_block_t *seq, ytp_iterator_t iterator,
                                    fmc_error_t **error) {}

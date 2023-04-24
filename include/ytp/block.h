@@ -13,11 +13,11 @@
  *****************************************************************************/
 
 /**
- * @file rotating_sequence.h
+ * @file block.h
  * @date 23 Apr 2021
- * @brief File contains C declaration of rotating_sequence API of YTP
+ * @brief File contains C declaration of block API of YTP
  *
- * This file contains C declaration of rotating_sequence API of YTP.
+ * This file contains C declaration of block API of YTP.
  * @see http://www.featuremine.com
  */
 
@@ -39,32 +39,32 @@ extern "C" {
 /**
  * @brief Interface for reading and writing to ytp
  *
- * The ytp_rotating_sequence interface provides the ability to read and write to ytp
+ * The ytp_block interface provides the ability to read and write to ytp
  * using callbacks for reading, on top of the control layer of ytp
  *
  * Internally, it uses the ytp_control and ytp_timeline API.
  *
  * Guaranties: control iterator is always at or ahead of
- * any ytp_iterator returned by the rotating_sequence API.
+ * any ytp_iterator returned by the block API.
  */
-typedef struct ytp_rotating_sequence ytp_rotating_sequence_t;
+typedef struct ytp_block ytp_block_t;
 
 /**
- * @brief Allocates and initializes a ytp_rotating_sequence_t object
+ * @brief Allocates and initializes a ytp_block_t object
  *
  * @param[in] fd a yamal file descriptor
  * @param[out] error
- * @return ytp_rotating_sequence_t object
+ * @return ytp_block_t object
  */
-FMMODFUNC ytp_rotating_sequence_t *ytp_rotating_sequence_new(const char* pattern, size_t maxsize, fmc_fmode mode, fmc_error_t **error);
+FMMODFUNC ytp_block_t *ytp_block_new(const char* pattern, size_t maxsize, fmc_fmode mode, fmc_error_t **error);
 
 /**
- * @brief Destroys and deallocate a ytp_rotating_sequence_t object
+ * @brief Destroys and deallocate a ytp_block_t object
  *
  * @param[in] seq
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_del(ytp_rotating_sequence_t *seq, fmc_error_t **error);
+FMMODFUNC void ytp_block_del(ytp_block_t *seq, fmc_error_t **error);
 
 /**
  * @brief Reserves memory for data in the memory mapped list
@@ -74,7 +74,7 @@ FMMODFUNC void ytp_rotating_sequence_del(ytp_rotating_sequence_t *seq, fmc_error
  * @param[out] error
  * @return
  */
-FMMODFUNC char *ytp_rotating_sequence_reserve(ytp_rotating_sequence_t *seq, size_t sz,
+FMMODFUNC char *ytp_block_reserve(ytp_block_t *seq, size_t sz,
                                      fmc_error_t **error);
 
 /**
@@ -84,11 +84,11 @@ FMMODFUNC char *ytp_rotating_sequence_reserve(ytp_rotating_sequence_t *seq, size
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
  * @param[in] time
- * @param[in] data the value returned by ytp_rotating_sequence_reserve
+ * @param[in] data the value returned by ytp_block_reserve
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_iterator_t ytp_rotating_sequence_commit(ytp_rotating_sequence_t *seq,
+FMMODFUNC ytp_iterator_t ytp_block_commit(ytp_block_t *seq,
                                              ytp_peer_t peer,
                                              ytp_channel_t channel,
                                              uint64_t time, void *data,
@@ -108,7 +108,7 @@ FMMODFUNC ytp_iterator_t ytp_rotating_sequence_commit(ytp_rotating_sequence_t *s
  * @param[in] payload
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_dir(ytp_rotating_sequence_t *seq, ytp_peer_t peer,
+FMMODFUNC void ytp_block_dir(ytp_block_t *seq, ytp_peer_t peer,
                                 uint64_t time, size_t sz, const char *payload,
                                 fmc_error_t **error);
 
@@ -123,7 +123,7 @@ FMMODFUNC void ytp_rotating_sequence_dir(ytp_rotating_sequence_t *seq, ytp_peer_
  * @param[out] name
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_ch_name(ytp_rotating_sequence_t *seq, ytp_channel_t channel,
+FMMODFUNC void ytp_block_ch_name(ytp_block_t *seq, ytp_channel_t channel,
                                     size_t *sz, const char **name,
                                     fmc_error_t **error);
 
@@ -140,7 +140,7 @@ FMMODFUNC void ytp_rotating_sequence_ch_name(ytp_rotating_sequence_t *seq, ytp_c
  * @param[out] error
  * @return channel reference
  */
-FMMODFUNC ytp_channel_t ytp_rotating_sequence_ch_decl(ytp_rotating_sequence_t *seq,
+FMMODFUNC ytp_channel_t ytp_block_ch_decl(ytp_block_t *seq,
                                              ytp_peer_t peer, uint64_t time,
                                              size_t sz, const char *name,
                                              fmc_error_t **error);
@@ -155,7 +155,7 @@ FMMODFUNC ytp_channel_t ytp_rotating_sequence_ch_decl(ytp_rotating_sequence_t *s
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_ch_cb(ytp_rotating_sequence_t *seq, ytp_sequence_ch_cb_t cb,
+FMMODFUNC void ytp_block_ch_cb(ytp_block_t *seq, ytp_sequence_ch_cb_t cb,
                                   void *closure, fmc_error_t **error);
 
 /**
@@ -168,7 +168,7 @@ FMMODFUNC void ytp_rotating_sequence_ch_cb(ytp_rotating_sequence_t *seq, ytp_seq
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_ch_cb_rm(ytp_rotating_sequence_t *seq,
+FMMODFUNC void ytp_block_ch_cb_rm(ytp_block_t *seq,
                                      ytp_sequence_ch_cb_t cb, void *closure,
                                      fmc_error_t **error);
 
@@ -183,7 +183,7 @@ FMMODFUNC void ytp_rotating_sequence_ch_cb_rm(ytp_rotating_sequence_t *seq,
  * @param[out] name
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_peer_name(ytp_rotating_sequence_t *seq, ytp_peer_t peer,
+FMMODFUNC void ytp_block_peer_name(ytp_block_t *seq, ytp_peer_t peer,
                                       size_t *sz, const char **name,
                                       fmc_error_t **error);
 
@@ -198,7 +198,7 @@ FMMODFUNC void ytp_rotating_sequence_peer_name(ytp_rotating_sequence_t *seq, ytp
  * @param[out] error
  * @return peer reference
  */
-FMMODFUNC ytp_peer_t ytp_rotating_sequence_peer_decl(ytp_rotating_sequence_t *seq, size_t sz,
+FMMODFUNC ytp_peer_t ytp_block_peer_decl(ytp_block_t *seq, size_t sz,
                                             const char *name,
                                             fmc_error_t **error);
 
@@ -212,7 +212,7 @@ FMMODFUNC ytp_peer_t ytp_rotating_sequence_peer_decl(ytp_rotating_sequence_t *se
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_peer_cb(ytp_rotating_sequence_t *seq,
+FMMODFUNC void ytp_block_peer_cb(ytp_block_t *seq,
                                     ytp_sequence_peer_cb_t cb, void *closure,
                                     fmc_error_t **error);
 
@@ -226,7 +226,7 @@ FMMODFUNC void ytp_rotating_sequence_peer_cb(ytp_rotating_sequence_t *seq,
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_peer_cb_rm(ytp_rotating_sequence_t *seq,
+FMMODFUNC void ytp_block_peer_cb_rm(ytp_block_t *seq,
                                        ytp_sequence_peer_cb_t cb, void *closure,
                                        fmc_error_t **error);
 
@@ -245,7 +245,7 @@ FMMODFUNC void ytp_rotating_sequence_peer_cb_rm(ytp_rotating_sequence_t *seq,
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_prfx_cb(ytp_rotating_sequence_t *seq, size_t sz,
+FMMODFUNC void ytp_block_prfx_cb(ytp_block_t *seq, size_t sz,
                                     const char *prfx, ytp_sequence_data_cb_t cb,
                                     void *closure, fmc_error_t **error);
 /**
@@ -260,7 +260,7 @@ FMMODFUNC void ytp_rotating_sequence_prfx_cb(ytp_rotating_sequence_t *seq, size_
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_prfx_cb_rm(ytp_rotating_sequence_t *seq, size_t sz,
+FMMODFUNC void ytp_block_prfx_cb_rm(ytp_block_t *seq, size_t sz,
                                        const char *prfx,
                                        ytp_sequence_data_cb_t cb, void *closure,
                                        fmc_error_t **error);
@@ -275,7 +275,7 @@ FMMODFUNC void ytp_rotating_sequence_prfx_cb_rm(ytp_rotating_sequence_t *seq, si
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_indx_cb(ytp_rotating_sequence_t *seq, ytp_channel_t channel,
+FMMODFUNC void ytp_block_indx_cb(ytp_block_t *seq, ytp_channel_t channel,
                                     ytp_sequence_data_cb_t cb, void *closure,
                                     fmc_error_t **error);
 
@@ -290,7 +290,7 @@ FMMODFUNC void ytp_rotating_sequence_indx_cb(ytp_rotating_sequence_t *seq, ytp_c
  * @param[in] closure
  * @param[out] error
  */
-FMMODFUNC void ytp_rotating_sequence_indx_cb_rm(ytp_rotating_sequence_t *seq,
+FMMODFUNC void ytp_block_indx_cb_rm(ytp_block_t *seq,
                                        ytp_channel_t channel,
                                        ytp_sequence_data_cb_t cb, void *closure,
                                        fmc_error_t **error);
@@ -302,7 +302,7 @@ FMMODFUNC void ytp_rotating_sequence_indx_cb_rm(ytp_rotating_sequence_t *seq,
  * @param[out] error
  * @return true if a message was processed, false otherwise
  */
-FMMODFUNC bool ytp_rotating_sequence_poll(ytp_rotating_sequence_t *seq, fmc_error_t **error);
+FMMODFUNC bool ytp_block_poll(ytp_block_t *seq, fmc_error_t **error);
 
 /**
  * @brief Checks if there are not more messages
@@ -312,7 +312,7 @@ FMMODFUNC bool ytp_rotating_sequence_poll(ytp_rotating_sequence_t *seq, fmc_erro
  * @param[in] seq
  * @return true if there are not more messages, false otherwise
  */
-FMMODFUNC bool ytp_rotating_sequence_term(ytp_rotating_sequence_t *seq);
+FMMODFUNC bool ytp_block_term(ytp_block_t *seq);
 
 /**
  * @brief Returns the iterator to the end of yamal
@@ -323,7 +323,7 @@ FMMODFUNC bool ytp_rotating_sequence_term(ytp_rotating_sequence_t *seq);
  * @param[out] error
  * @return ytp_iterator_t
  */
-FMMODFUNC ytp_iterator_t ytp_rotating_sequence_end(ytp_rotating_sequence_t *seq,
+FMMODFUNC ytp_iterator_t ytp_block_end(ytp_block_t *seq,
                                           fmc_error_t **error);
 /**
  * @brief Returns the current data iterator
@@ -333,7 +333,7 @@ FMMODFUNC ytp_iterator_t ytp_rotating_sequence_end(ytp_rotating_sequence_t *seq,
  * @param[in] seq
  * @return ytp_iterator_t
  */
-FMMODFUNC ytp_iterator_t ytp_rotating_sequence_cur(ytp_rotating_sequence_t *seq);
+FMMODFUNC ytp_iterator_t ytp_block_cur(ytp_block_t *seq);
 
 /**
  * @brief Returns the current data iterator
@@ -341,7 +341,7 @@ FMMODFUNC ytp_iterator_t ytp_rotating_sequence_cur(ytp_rotating_sequence_t *seq)
  * @param[in] seq
  * @return ytp_iterator_t
  */
-FMMODFUNC ytp_iterator_t ytp_rotating_sequence_get_it(ytp_rotating_sequence_t *seq);
+FMMODFUNC ytp_iterator_t ytp_block_get_it(ytp_block_t *seq);
 
 /**
  * @brief Sets the current data iterator
@@ -349,15 +349,15 @@ FMMODFUNC ytp_iterator_t ytp_rotating_sequence_get_it(ytp_rotating_sequence_t *s
  * @param[in] seq
  * @param[in] iterator
  */
-FMMODFUNC void ytp_rotating_sequence_set_it(ytp_rotating_sequence_t *seq,
+FMMODFUNC void ytp_block_set_it(ytp_block_t *seq,
                                    ytp_iterator_t iterator);
 
 /**
- * @brief Removes all of the callbacks of the rotating_sequence
+ * @brief Removes all of the callbacks of the block
  *
- * @param rotating_sequence
+ * @param block
  */
-FMMODFUNC void ytp_rotating_sequence_cb_rm(ytp_rotating_sequence_t *seq);
+FMMODFUNC void ytp_block_cb_rm(ytp_block_t *seq);
 
 /**
  * @brief Returns an iterator given a serializable offset
@@ -371,7 +371,7 @@ FMMODFUNC void ytp_rotating_sequence_cb_rm(ytp_rotating_sequence_t *seq);
  * beginning up to the offset are guarantied do have been processed
  * and the callbacks to be called.
  */
-FMMODFUNC ytp_iterator_t ytp_rotating_sequence_seek(ytp_rotating_sequence_t *seq, size_t off,
+FMMODFUNC ytp_iterator_t ytp_block_seek(ytp_block_t *seq, size_t off,
                                            fmc_error_t **error);
 
 /**
@@ -382,7 +382,7 @@ FMMODFUNC ytp_iterator_t ytp_rotating_sequence_seek(ytp_rotating_sequence_t *seq
  * @param[out] error
  * @return size_t offset from the head of yamal
  */
-FMMODFUNC size_t ytp_rotating_sequence_tell(ytp_rotating_sequence_t *seq, ytp_iterator_t iterator,
+FMMODFUNC size_t ytp_block_tell(ytp_block_t *seq, ytp_iterator_t iterator,
                                    fmc_error_t **error);
 
 #ifdef __cplusplus
