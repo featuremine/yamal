@@ -36,12 +36,12 @@ extern "C" {
 struct ytp_cursor;
 typedef struct ytp_cursor ytp_cursor_t;
 
-typedef void (*ytp_cursor_announcement_cb_t)(
-    void *closure, uint64_t msgtime, ytp_stream_t stream, size_t peername_sz,
-    const char *peername, size_t chname_sz, const char *chname,
-    size_t encoding_sz, const char *encoding);
-typedef void (*ytp_cursor_data_cb_t)(void *closure, ytp_peer_t peer,
-                                     ytp_channel_t channel, ytp_stream_t stream,
+typedef void (*ytp_cursor_ann_cb_t)(void *closure, uint64_t msgtime,
+                                    ytp_stream_t stream, size_t peername_sz,
+                                    const char *peername, size_t chname_sz,
+                                    const char *chname, size_t encoding_sz,
+                                    const char *encoding);
+typedef void (*ytp_cursor_data_cb_t)(void *closure, ytp_stream_t stream,
                                      uint64_t msgtime, size_t sz,
                                      const char *data);
 typedef void (*ytp_cursor_sub_cb_t)(void *closure, uint64_t msgtime,
@@ -63,14 +63,12 @@ FMMODFUNC void ytp_cursor_sub_cb_rm(ytp_cursor_t *timeline,
                                     ytp_cursor_sub_cb_t cb, void *closure,
                                     fmc_error_t **error);
 
-FMMODFUNC void ytp_cursor_announcement_cb(ytp_cursor_t *timeline,
-                                          ytp_cursor_announcement_cb_t cb,
-                                          void *closure, fmc_error_t **error);
+FMMODFUNC void ytp_cursor_ann_cb(ytp_cursor_t *timeline, ytp_cursor_ann_cb_t cb,
+                                 void *closure, fmc_error_t **error);
 
-FMMODFUNC void ytp_cursor_announcement_cb_rm(ytp_cursor_t *timeline,
-                                             ytp_cursor_announcement_cb_t cb,
-                                             void *closure,
-                                             fmc_error_t **error);
+FMMODFUNC void ytp_cursor_ann_cb_rm(ytp_cursor_t *timeline,
+                                    ytp_cursor_ann_cb_t cb, void *closure,
+                                    fmc_error_t **error);
 
 FMMODFUNC void ytp_cursor_data_cb(ytp_cursor_t *timeline, uint64_t time,
                                   ytp_stream_t stream, ytp_cursor_data_cb_t cb,
