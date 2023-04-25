@@ -79,9 +79,6 @@ FMMODFUNC void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor, ytp_peer_t peer,
                                      ytp_cursor_data_cb_t cb, void *closure,
                                      fmc_error_t **error);
 
-FMMODFUNC void ytp_cursor_sub(ytp_cursor_t *cursor, ytp_stream_t stream,
-                              fmc_error_t **error);
-
 FMMODFUNC bool ytp_cursor_term(ytp_cursor_t *cursor);
 
 FMMODFUNC ytp_iterator_t ytp_cursor_iter_get(ytp_cursor_t *cursor);
