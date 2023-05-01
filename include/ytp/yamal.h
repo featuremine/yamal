@@ -33,13 +33,15 @@
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
 #define YTP_MMNODE_HEADER_SIZE 24
-#define YTP_YAMAL_HEADER_SIZE 32
+#define YTP_YAMAL_HEADER_SIZE 40
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct ytp_yamal ytp_yamal_t;
+
+typedef enum { CLOSABLE = 1, UNCLOSABLE = 2 } FMC_CLOSABLE;
 
 /**
  * @brief Initializes a ytp_yamal_t object
@@ -91,6 +93,13 @@ FMMODFUNC void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
  * @return ytp_yamal_t object
  */
 FMMODFUNC ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread,
+                                       fmc_error_t **error);
+
+FMMODFUNC void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
+                                FMC_CLOSABLE closable, fmc_error_t **error);
+
+FMMODFUNC ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread,
+                                       FMC_CLOSABLE closable,
                                        fmc_error_t **error);
 
 /**
@@ -236,6 +245,10 @@ FMMODFUNC ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
  */
 FMMODFUNC size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                                 fmc_error_t **error);
+
+FMMODFUNC void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error);
+
+FMMODFUNC bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error);
 
 /**
  * @brief Allocates a specific page
