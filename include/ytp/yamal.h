@@ -33,7 +33,8 @@
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
 #define YTP_MMNODE_HEADER_SIZE 24
-#define YTP_YAMAL_HEADER_SIZE 40
+#define YTP_YAMAL_HEADER_SIZE 408
+#define YTP_YAMAL_LISTS 16
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,9 +96,27 @@ FMMODFUNC void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
 FMMODFUNC ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread,
                                        fmc_error_t **error);
 
+/**
+ * @brief Initializes a ytp_yamal_t object
+ *
+ * @param[in] fd a yamal file descriptor
+ * @param[in] enable_thread enable the preallocation and sync thread
+ * @param[in] closable closable mode
+ * @param[out] error
+ * @return ytp_yamal_t object
+ */
 FMMODFUNC void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
                                 FMC_CLOSABLE closable, fmc_error_t **error);
 
+/**
+ * @brief Allocates and initializes a ytp_yamal_t object
+ *
+ * @param[in] fd a yamal file descriptor
+ * @param[in] enable_thread enable the preallocation and sync thread
+ * @param[in] closable closable mode
+ * @param[out] error
+ * @return ytp_yamal_t object
+ */
 FMMODFUNC ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread,
                                        FMC_CLOSABLE closable,
                                        fmc_error_t **error);
@@ -126,11 +145,12 @@ FMMODFUNC char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz,
  *
  * @param[in] yamal
  * @param[in] data the value returned by ytp_yamal_reserve
+ * @param[in] lstidx the list index to commit to
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
-                                          fmc_error_t **error);
+                                          size_t lstidx, fmc_error_t **error);
 
 /**
  * @brief Reads a message on yamal level
@@ -165,20 +185,23 @@ FMMODFUNC void ytp_yamal_del(ytp_yamal_t *yamal, fmc_error_t **error);
  * @brief Returns an iterator to the beginning of the list
  *
  * @param[in] yamal
+ * @param[in] lstidx
  * @param[out] error
  * @return ytp_iterator_t
  */
-FMMODFUNC ytp_iterator_t ytp_yamal_begin(ytp_yamal_t *yamal,
+FMMODFUNC ytp_iterator_t ytp_yamal_begin(ytp_yamal_t *yamal, size_t lstidx,
                                          fmc_error_t **error);
 
 /**
  * @brief Returns an iterator to the end of the list
  *
  * @param[in] yamal
+ * @param[in] lstidx
  * @param[out] error
  * @return ytp_iterator_t
  */
-FMMODFUNC ytp_iterator_t ytp_yamal_end(ytp_yamal_t *yamal, fmc_error_t **error);
+FMMODFUNC ytp_iterator_t ytp_yamal_end(ytp_yamal_t *yamal, size_t lstidx,
+                                       fmc_error_t **error);
 
 /**
  * @brief Checks if there are not more messages
@@ -246,9 +269,23 @@ FMMODFUNC ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
 FMMODFUNC size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                                 fmc_error_t **error);
 
+/**
+ * @brief Closes the yamal lists
+ *
+ * @param[in] yamal
+ * @param[out] error
+ */
 FMMODFUNC void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error);
 
-FMMODFUNC bool ytp_yamal_closed(ytp_yamal_t *yamal, fmc_error_t **error);
+/**
+ * @brief Determines if a list is closed
+ *
+ * @param[in] yamal
+ * @param[out] error
+ * @return true if the list is closed, false otherwise
+ */
+FMMODFUNC bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx,
+                                fmc_error_t **error);
 
 /**
  * @brief Allocates a specific page

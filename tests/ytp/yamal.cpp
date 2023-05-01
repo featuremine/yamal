@@ -58,7 +58,7 @@ static void sequential(bool enable_thread) {
       ASSERT_NE(msg, nullptr);
       msg->index = i;
       error = (fmc_error_t *)1;
-      ASSERT_NE(ytp_yamal_commit(yamal, msg, &error), nullptr);
+      ASSERT_NE(ytp_yamal_commit(yamal, msg, i % 2, &error), nullptr);
       ASSERT_EQ(error, nullptr);
     }
     ytp_yamal_del(yamal, &error);
@@ -70,10 +70,10 @@ static void sequential(bool enable_thread) {
     auto *yamal = ytp_yamal_new_2(fd, enable_thread, &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(yamal, nullptr);
-    unsigned count = 1;
+    unsigned count = 2;
     unsigned last_idx = 0;
     error = (fmc_error_t *)1;
-    auto it = ytp_yamal_begin(yamal, &error);
+    auto it = ytp_yamal_begin(yamal, 0, &error);
     ASSERT_EQ(error, nullptr);
     for (; !ytp_yamal_term(it); it = ytp_yamal_next(yamal, it, &error)) {
       size_t sz;
@@ -83,13 +83,34 @@ static void sequential(bool enable_thread) {
       ASSERT_EQ(error, nullptr);
       ASSERT_EQ(sz, sizeof(test_msg));
       last_idx = data->index;
-      ASSERT_EQ(data->index, count++);
+      ASSERT_EQ(data->index, count);
+      count += 2;
     }
-    error = (fmc_error_t *)1;
-    ytp_yamal_del(yamal, &error);
+    ASSERT_EQ(error, nullptr);
+    ASSERT_EQ(last_idx, test_size - 2);
+    ASSERT_EQ(count, test_size);
+
+    count = 1;
+    last_idx = 0;
+    it = ytp_yamal_begin(yamal, 1, &error);
+    ASSERT_EQ(error, nullptr);
+    for (; !ytp_yamal_term(it); it = ytp_yamal_next(yamal, it, &error)) {
+      size_t sz;
+      test_msg *data;
+      error = (fmc_error_t *)1;
+      ytp_yamal_read(yamal, it, &sz, (const char **)&data, &error);
+      ASSERT_EQ(error, nullptr);
+      ASSERT_EQ(sz, sizeof(test_msg));
+      last_idx = data->index;
+      ASSERT_EQ(data->index, count);
+      count += 2;
+    }
     ASSERT_EQ(error, nullptr);
     ASSERT_EQ(last_idx, test_size - 1);
-    ASSERT_EQ(count, test_size);
+    ASSERT_EQ(count, test_size + 1);
+
+    error = (fmc_error_t *)1;
+    ytp_yamal_del(yamal, &error);
   }
 
   error = (fmc_error_t *)1;
@@ -123,7 +144,7 @@ static void threaded(bool enable_thread) {
         ASSERT_NE(msg, nullptr);
         msg->index = index++;
         error = (fmc_error_t *)1;
-        ASSERT_NE(ytp_yamal_commit(yamal, msg, &error), nullptr);
+        ASSERT_NE(ytp_yamal_commit(yamal, msg, 0, &error), nullptr);
         ASSERT_EQ(error, nullptr);
       }
       this_thread::sleep_for(10us);
@@ -141,7 +162,7 @@ static void threaded(bool enable_thread) {
     unsigned count = 0;
     unsigned misses = 0;
     unsigned last_idx = 0;
-    auto it = ytp_yamal_begin(yamal, &error);
+    auto it = ytp_yamal_begin(yamal, 0, &error);
     while (count < test_size) {
       for (; !ytp_yamal_term(it); it = ytp_yamal_next(yamal, it, &error)) {
         size_t sz;
@@ -184,12 +205,12 @@ static void removal(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
   ytp_iterator_t iter;
-  auto it = ytp_yamal_begin(yamal, &error);
+  auto it = ytp_yamal_begin(yamal, 0, &error);
   ASSERT_EQ(error, nullptr);
-  auto end = ytp_yamal_end(yamal, &error);
+  auto end = ytp_yamal_end(yamal, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_EQ(it, end);
-  ASSERT_EQ(ytp_yamal_remove(yamal, it, &error), nullptr);
+  ASSERT_EQ(ytp_yamal_remove(yamal, it, 0, &error), nullptr);
   ASSERT_NE(error, nullptr);
 
   auto *zeromsg =
@@ -197,7 +218,7 @@ static void removal(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(zeromsg, nullptr);
   zeromsg->index = 0;
-  auto zeroit = ytp_yamal_commit(yamal, zeromsg, &error);
+  auto zeroit = ytp_yamal_commit(yamal, zeromsg, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(zeroit, nullptr);
 
@@ -205,7 +226,7 @@ static void removal(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(oneptr, nullptr);
   oneptr->index = 1;
-  auto oneit = ytp_yamal_commit(yamal, oneptr, &error);
+  auto oneit = ytp_yamal_commit(yamal, oneptr, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(oneit, nullptr);
 
@@ -213,7 +234,7 @@ static void removal(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(twoptr, nullptr);
   twoptr->index = 2;
-  auto *twoit = ytp_yamal_commit(yamal, twoptr, &error);
+  auto *twoit = ytp_yamal_commit(yamal, twoptr, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(twoit, nullptr);
 
@@ -222,14 +243,14 @@ static void removal(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(threeptr, nullptr);
   threeptr->index = 3;
-  auto threeit = ytp_yamal_commit(yamal, threeptr, &error);
+  auto threeit = ytp_yamal_commit(yamal, threeptr, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(threeit, nullptr);
 
-  ASSERT_NE(ytp_yamal_remove(yamal, zeroit, &error), nullptr);
+  ASSERT_NE(ytp_yamal_remove(yamal, zeroit, 0, &error), nullptr);
   ASSERT_EQ(error, nullptr);
 
-  iter = ytp_yamal_begin(yamal, &error);
+  iter = ytp_yamal_begin(yamal, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(iter, nullptr);
 
@@ -241,7 +262,7 @@ static void removal(bool enable_thread) {
 
   ASSERT_EQ(offmsg->index, 1LL);
 
-  ASSERT_NE(ytp_yamal_remove(yamal, twoit, &error), nullptr);
+  ASSERT_NE(ytp_yamal_remove(yamal, twoit, 0, &error), nullptr);
   ASSERT_EQ(error, nullptr);
 
   iter = ytp_yamal_next(yamal, iter, &error);
@@ -274,12 +295,12 @@ static void seektell(bool enable_thread) {
   auto *yamal = ytp_yamal_new_2(fd, enable_thread, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
-  auto it = ytp_yamal_begin(yamal, &error);
+  auto it = ytp_yamal_begin(yamal, 0, &error);
   ASSERT_EQ(error, nullptr);
-  auto end = ytp_yamal_end(yamal, &error);
+  auto end = ytp_yamal_end(yamal, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_EQ(it, end);
-  ASSERT_EQ(ytp_yamal_remove(yamal, it, &error), nullptr);
+  ASSERT_EQ(ytp_yamal_remove(yamal, it, 0, &error), nullptr);
   ASSERT_NE(error, nullptr);
 
   auto *zeromsg =
@@ -287,34 +308,44 @@ static void seektell(bool enable_thread) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(zeromsg, nullptr);
   zeromsg->index = 0;
-  auto zeroit = ytp_yamal_commit(yamal, zeromsg, &error);
+  auto zeroit = ytp_yamal_commit(yamal, zeromsg, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(zeroit, nullptr);
+
+  it = ytp_yamal_next(yamal, zeroit, &error);
+  ASSERT_EQ(error, nullptr);
+  end = ytp_yamal_end(yamal, 0, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_EQ(it, end);
 
   auto *oneptr = (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(oneptr, nullptr);
   oneptr->index = 1;
-  auto oneit = ytp_yamal_commit(yamal, oneptr, &error);
+  auto oneit = ytp_yamal_commit(yamal, oneptr, 0, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(oneit, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_begin(yamal, &error), &error), 16);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_begin(yamal, 0, &error), &error),
+            24);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 16);
+  ASSERT_EQ(ytp_yamal_tell(yamal, zeroit, &error), 24);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 40);
+  ASSERT_EQ(ytp_yamal_tell(yamal, oneit, &error), 408);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, &error), &error), 120);
+  ASSERT_EQ(ytp_yamal_tell(yamal, ytp_yamal_end(yamal, 0, &error), &error),
+            448);
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_seek(yamal, 16, &error), ytp_yamal_begin(yamal, &error));
+  ASSERT_EQ(ytp_yamal_seek(yamal, 24, &error),
+            ytp_yamal_begin(yamal, 0, &error));
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_seek(yamal, 40, &error), oneit);
+  ASSERT_EQ(ytp_yamal_seek(yamal, 408, &error), oneit);
   ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(ytp_yamal_seek(yamal, 80, &error), ytp_yamal_end(yamal, &error));
+  ASSERT_EQ(ytp_yamal_seek(yamal, 448, &error),
+            ytp_yamal_end(yamal, 0, &error));
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
@@ -485,13 +516,13 @@ TEST(yamal, closable_empty_list) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
 
-  ASSERT_FALSE(ytp_yamal_closed(yamal, &error));
+  ASSERT_FALSE(ytp_yamal_closed(yamal, 0, &error));
   ASSERT_EQ(error, nullptr);
 
   ytp_yamal_close(yamal, &error);
   ASSERT_EQ(error, nullptr);
 
-  ASSERT_TRUE(ytp_yamal_closed(yamal, &error));
+  ASSERT_TRUE(ytp_yamal_closed(yamal, 0, &error));
   ASSERT_EQ(error, nullptr);
 
   // try to close more than once
@@ -514,7 +545,7 @@ TEST(yamal, closable_write) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(yamal, nullptr);
 
-  ASSERT_FALSE(ytp_yamal_closed(yamal, &error));
+  ASSERT_FALSE(ytp_yamal_closed(yamal, 0, &error));
   ASSERT_EQ(error, nullptr);
 
   auto *msg = (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
@@ -522,7 +553,7 @@ TEST(yamal, closable_write) {
   ASSERT_NE(msg, nullptr);
   msg->index = 1;
   error = (fmc_error_t *)1;
-  ASSERT_NE(ytp_yamal_commit(yamal, msg, &error), nullptr);
+  ASSERT_NE(ytp_yamal_commit(yamal, msg, 0, &error), nullptr);
   ASSERT_EQ(error, nullptr);
 
   // Reserve before close
@@ -535,11 +566,11 @@ TEST(yamal, closable_write) {
   ytp_yamal_close(yamal, &error);
   ASSERT_EQ(error, nullptr);
 
-  ASSERT_TRUE(ytp_yamal_closed(yamal, &error));
+  ASSERT_TRUE(ytp_yamal_closed(yamal, 0, &error));
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_commit(yamal, msg2, &error), nullptr);
+  ASSERT_EQ(ytp_yamal_commit(yamal, msg2, 0, &error), nullptr);
   ASSERT_NE(error, nullptr);
   ASSERT_EQ(error->code, FMC_ERROR_CLOSED);
 
@@ -550,7 +581,7 @@ TEST(yamal, closable_write) {
   msg3->index = 3;
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_commit(yamal, msg3, &error), nullptr);
+  ASSERT_EQ(ytp_yamal_commit(yamal, msg3, 0, &error), nullptr);
   ASSERT_NE(error, nullptr);
   ASSERT_EQ(error->code, FMC_ERROR_CLOSED);
 
