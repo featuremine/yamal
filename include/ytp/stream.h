@@ -273,26 +273,26 @@ FMMODFUNC ytp_stream_t ytp_anns_stream(ytp_anns_t *cursor,
 
 
 /**
- * @brief Initializes a ytp_idx object
+ * @brief Initializes a ytp_inds object
  *
  * @param[in] cursor
  * @param[out] error
- * @return ytp_idx_t object
+ * @return ytp_inds_t object
  */
-FMMODFUNC void ytp_idx_init(ytp_idx_t *cursor, ytp_yamal_t *yamal,
+FMMODFUNC void ytp_inds_init(ytp_inds_t *cursor, ytp_yamal_t *yamal,
                             fmc_error_t **error);
 
 /**
  * @brief Reads the next index
  *
- * Enforces protocol by setting stream announcement idxcription flag is not set.
- * Skips duplicate idxcription messages.
- * @param[in] cursor the ytp_idx_t object
+ * Enforces protocol by setting stream announcement indscription flag is not set.
+ * Skips duplicate indscription messages.
+ * @param[in] cursor the ytp_inds_t object
  * @param[out] id of the stream
  * @param[out] error
  * @return true if advanced, false if at the end of the list
  */
-FMMODFUNC bool ytp_idx_next(ytp_idx_t *cursor, ytp_stream_t *id,
+FMMODFUNC bool ytp_inds_next(ytp_inds_t *cursor, ytp_stream_t *id,
                             uint64_t *offset, size_t *sz,
                             char **data, fmc_error_t **error);
 
