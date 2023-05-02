@@ -222,57 +222,6 @@ FMMODFUNC void ytp_cursor_seek(ytp_cursor_t *cursor, size_t off,
 FMMODFUNC size_t ytp_cursor_tell(ytp_cursor_t *cursor,
                                  fmc_error_t **error);
 
-
-/**
- * @brief Allocates and initializes a ytp_subs object
- *
- * yamal needs to be writable since subscription object is used by publishers only
- * @param[in] cursor
- * @param[out] error
- * @return ytp_subs_t object
- */
-FMMODFUNC ytp_subs_t *ytp_subs_new(ytp_yamal_t *yamal,
-                                       fmc_error_t **error);
-
-/**
- * @brief Initializes a ytp_subs object
- *
- * @param[in] cursor
- * @param[out] error
- * @return ytp_subs_t object
- */
-FMMODFUNC void ytp_subs_init(ytp_subs_t *cursor, ytp_yamal_t *yamal,
-                                 fmc_error_t **error);
-
-/**
- * @brief Destroys and deallocate a ytp_subs_t object
- *
- * @param[in] cursor
- * @param[out] error
- */
-FMMODFUNC void ytp_subs_del(ytp_subs_t *cursor, fmc_error_t **error);
-
-/**
- * @brief Destroys a ytp_subs_t object
- *
- * @param[in] cursor the ytp_subs_t object
- * @param[out] error
- */
-FMMODFUNC void ytp_subs_destroy(ytp_subs_t *cursor,
-                                fmc_error_t **error);
-
-/**
- * @brief Advances the iterator to the next subscription message
- *
- * Enforces protocol by setting stream announcement subscription flag is not set.
- * Skips duplicate subscription messages.
- * @param[in] cursor the ytp_subs_t object
- * @param[out] id of the stream
- * @param[out] error
- * @return true if advanced, false if at the end of the list
- */
-FMMODFUNC bool ytp_subs_next(ytp_subs_t *cursor, ytp_stream_t *id, fmc_error_t **error);
-
 /**
  * @brief Allocates and initializes a ytp_anns object
  *
@@ -322,6 +271,54 @@ FMMODFUNC ytp_stream_t ytp_anns_stream(ytp_anns_t *cursor,
                                        size_t pz, char* pn, size_t cz, char* cn,
                                        size_t ez, char* en, fmc_error_t **error);
 
+
+/**
+ * @brief Initializes a ytp_idx object
+ *
+ * @param[in] cursor
+ * @param[out] error
+ * @return ytp_idx_t object
+ */
+FMMODFUNC void ytp_idx_init(ytp_idx_t *cursor, ytp_yamal_t *yamal,
+                            fmc_error_t **error);
+
+/**
+ * @brief Reads the next index
+ *
+ * Enforces protocol by setting stream announcement idxcription flag is not set.
+ * Skips duplicate idxcription messages.
+ * @param[in] cursor the ytp_idx_t object
+ * @param[out] id of the stream
+ * @param[out] error
+ * @return true if advanced, false if at the end of the list
+ */
+FMMODFUNC bool ytp_idx_next(ytp_idx_t *cursor, ytp_stream_t *id,
+                            uint64_t *offset, size_t *sz,
+                            char **data, fmc_error_t **error);
+
+/**
+ * @brief Initializes a ytp_subs object
+ *
+ * @param[in] cursor
+ * @param[out] error
+ * @return ytp_subs_t object
+ */
+FMMODFUNC void ytp_subs_init(ytp_subs_t *subs, ytp_yamal_t *yamal,
+                             fmc_error_t **error);
+
+/**
+ * @brief Advances the iterator to the next subscription message
+ *
+ * Enforces protocol by setting stream announcement subscription flag is not set.
+ * Skips duplicate subscription messages.
+ * @param[in] cursor the ytp_subs_t object
+ * @param[out] id of the stream
+ * @param[out] error
+ * @return true if advanced, false if at the end of the list
+ */
+FMMODFUNC bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error);
+
+
 /**
  * @brief Commits the data to the memory mapped list using stream level protocol
  *
@@ -337,15 +334,30 @@ FMMODFUNC ytp_iterator_t ytp_stream_commit(ytp_yamal_t *yamal, uint64_t time,
                                            ytp_stream_t id, void *data,
                                            fmc_error_t **error);
 
-
 /**
  * @brief Returns the data corresponding to a given stream announcement.
  *
  */
 FMMODFUNC void ytp_stream_ann(ytp_yamal_t *yamal, ytp_stream_t id,
-                              size_t pz, char* pn, size_t cz, char* cn,
-                              size_t ez, char* en, uint64_t *seq, uint64_t *sub,
+                              size_t pz, char** pn, size_t cz, char** cn,
+                              size_t ez, char** en, uint64_t *seq, uint64_t *sub,
                               fmc_error_t **error);
+
+/**
+ * @brief Writes an index
+ *
+ * Enforces protocol by setting stream announcement idxcription flag is not set.
+ * Skips duplicate idxcription messages.
+ * @param[in] cursor the ytp_idx_t object
+ * @param[out] id of the stream
+ * @param[out] error
+ * @return true if advanced, false if at the end of the list
+ */
+FMMODFUNC void ytp_stream_idx(ytp_yamal_t *cursor, ytp_stream_t id,
+                              uint64_t offset, size_t sz,
+                              char *data, fmc_error_t **error);
+
+
 #ifdef __cplusplus
 }
 #endif
