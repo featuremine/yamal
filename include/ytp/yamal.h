@@ -236,18 +236,6 @@ FMMODFUNC ytp_iterator_t ytp_yamal_prev(ytp_yamal_t *yamal,
                                         fmc_error_t **error);
 
 /**
- * @brief Removes a node from the list
- *
- * @param[in] yamal
- * @param[in] iterator
- * @param[out] error
- * @return the next iterator
- */
-FMMODFUNC ytp_iterator_t ytp_yamal_remove(ytp_yamal_t *yamal,
-                                          ytp_iterator_t iterator,
-                                          fmc_error_t **error);
-
-/**
  * @brief Returns an iterator given a serializable ptr
  *
  * @param[in] yamal
