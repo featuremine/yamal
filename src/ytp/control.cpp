@@ -125,6 +125,9 @@ static bool lookup_or_insert_ctrl_msg(ytp_control_t *ctrl, fmc_error_t **error,
                                       const F &found, const I &insert) {
   fmc_error_clear(error);
   if (!process_control_msgs(ctrl, error, found)) {
+    if (*error) {
+      return false;
+    }
     insert();
     if (*error) {
       return false;
