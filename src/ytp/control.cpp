@@ -105,12 +105,16 @@ static bool process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
   bool f;
   while (!(f = found()) && !ytp_yamal_term(ctrl->ctrl)) {
     read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error);
-    if (!*error) {
-      auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
-      if (!*error) {
-        ctrl->ctrl = new_it;
-      }
+    if (*error) {
+      return false;
     }
+
+    auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
+    if (*error) {
+      return false;
+    }
+
+    ctrl->ctrl = new_it;
   }
 
   return f;
