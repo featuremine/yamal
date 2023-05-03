@@ -32,8 +32,8 @@
 
 #define YTP_MMLIST_PAGE_SIZE (1024 * 1024 * 8)
 #define YTP_MMLIST_PREALLOC_SIZE (1024 * 1024 * 3)
-#define YTP_MMNODE_HEADER_SIZE 24
-#define YTP_YAMAL_HEADER_SIZE 408
+#define YTP_MMNODE_HEADER_SIZE 32
+#define YTP_YAMAL_HEADER_SIZE 536
 #define YTP_YAMAL_LISTS 16
 
 #ifdef __cplusplus
@@ -157,12 +157,13 @@ FMMODFUNC ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
  *
  * @param[in] yamal
  * @param[in] iterator
+ * @param[out] seqno
  * @param[out] sz
  * @param[out] data
  * @param[out] error
  */
 FMMODFUNC void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                              size_t *sz, const char **data,
+                              size_t *seqno, size_t *sz, const char **data,
                               fmc_error_t **error);
 
 /**

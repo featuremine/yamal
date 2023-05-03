@@ -36,6 +36,7 @@ struct mmnode {
   std::atomic<size_t> size;
   std::atomic<mmnode_offs> next = 0;
   std::atomic<mmnode_offs> prev = 0;
+  mmnode_offs seqno = 0;
   char data[];
 };
 
@@ -398,13 +399,14 @@ ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data, size_t lstidx,
         return nullptr;
     }
     mem->prev = last;
+    mem->seqno = htoye64(ye64toh(node->seqno) + 1);
   } while (!atomic_compare_exchange_weak(&node->next, &next_ptr, offs));
   hdr->prev = offs;
   return &node->next;
 }
 
-void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *size,
-                    const char **data, fmc_error_t **error) {
+void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *seqno,
+                    size_t *size, const char **data, fmc_error_t **error) {
   auto offset = cast_iterator(iterator).load();
 
   auto *mmnode = mmnode_get1(yamal, offset, error);
@@ -414,6 +416,7 @@ void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *size,
 
   *data = (const char *)mmnode->data;
   *size = ye64toh(mmnode->size);
+  *seqno = ye64toh(mmnode->seqno);
 }
 
 void ytp_yamal_destroy(ytp_yamal_t *yamal, fmc_error_t **error) {
