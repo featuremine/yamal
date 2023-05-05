@@ -11,30 +11,6 @@ target_link_libraries(
 add_test(NAME ytp_yamal COMMAND tests_ytp_yamal)
 
 add_executable(
-    tests_ytp_peer
-    "peer.cpp"
-)
-target_link_libraries(
-    tests_ytp_peer
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_peer COMMAND tests_ytp_peer)
-
-add_executable(
-    tests_ytp_channel
-    "channel.cpp"
-)
-target_link_libraries(
-    tests_ytp_channel
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_channel COMMAND tests_ytp_channel)
-
-add_executable(
     tests_ytp_time
     "time.cpp"
 )
@@ -81,18 +57,6 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME ytp_sequence COMMAND tests_ytp_sequence)
-
-add_executable(
-    tests_ytp_containers
-    "containers.cpp"
-)
-target_link_libraries(
-    tests_ytp_containers
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_containers COMMAND tests_ytp_containers)
 
 add_executable(
     tests_ytp_compiles_c

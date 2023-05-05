@@ -15,18 +15,12 @@
 #include "control.hpp"
 #include "timeline.hpp"
 #include "yamal.hpp"
-#include <algorithm>
-#include <cstring>
-#include <fmc/alignment.h>
-#include <set>
-#include <string_view>
-#include <unordered_map>
+
 #include <vector>
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/sequence.h>
 #include <ytp/yamal.h>
-
+/*
 struct ytp_sequence {
   ytp_control_t ctrl;
   ytp_timeline_t timeline;
@@ -126,16 +120,6 @@ void ytp_sequence_ch_cb(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb,
 void ytp_sequence_ch_cb_rm(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb,
                            void *closure, fmc_error_t **error) {
   ytp_timeline_ch_cb_rm(&seq->timeline, cb, closure, error);
-}
-
-void ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
-                      size_t sz, const char *payload, fmc_error_t **error) {
-  ytp_control_sub(&seq->ctrl, peer, time, sz, payload, error);
-}
-
-void ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer, uint64_t time,
-                      size_t sz, const char *payload, fmc_error_t **error) {
-  ytp_control_dir(&seq->ctrl, peer, time, sz, payload, error);
 }
 
 void ytp_sequence_prfx_cb(ytp_sequence_t *seq, size_t sz, const char *prfx,
@@ -252,3 +236,4 @@ void ytp_sequence_shared_dec(ytp_sequence_shared_t *shared_seq,
 ytp_sequence_t *ytp_sequence_shared_get(ytp_sequence_shared_t *shared_seq) {
   return &shared_seq->seq;
 }
+*/

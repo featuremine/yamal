@@ -7,13 +7,10 @@ message transport between multiple peers on top of Yamal.
 - [Requeriments](#requirements)
 - [Layers](#layers)
   - [Yamal (Layer 0)](#yamal-layer-0)
-  - [Peer (Layer 1)](#peer-layer-1)
-  - [Channel (Layer 2)](#channel-layer-2)
-  - [Time (Layer 3)](#time-layer-3)
-  - [Control (Layer 4)](#control-layer-4)
-    - [channel](#channel)
+  - [Time (Layer 1)](#time-layer-1)
+  - [Stream (Layer 2)](#stream-layer-2)
+    - [stream](#stream)
     - [subscribe](#subscribe)
-    - [directory](#directory)
 - [Simple Channel Directory Protocol](#simple-channel-directory-protocol)
 
 ### Requirements
@@ -40,199 +37,106 @@ All fields specified in this section use network byte order.
 
 The transaction messaging bus Yamal.
 
-### Peer (Layer 1)
-
-A peer uniquely identifies a source of a messages.
-
-<table>
-    <tr>
-        <th colspan="2">peer</th>
-    </tr>
-    <tr>
-        <td>8 bytes</td>
-        <td>variable</td>
-    </tr>
-    <tr>
-        <td>Peer ID</td>
-        <td>Data</td>
-    </tr>
-</table>
-
-If Peer ID = 0, then it is an announcement message where data is the peer name.
-
-<table>
-    <tr>
-        <th colspan="2">peer</th>
-    </tr>
-    <tr>
-        <td>8 bytes</td>
-        <td>variable</td>
-    </tr>
-    <tr>
-        <td>Peer ID = 0</td>
-        <td>Peer name</td>
-    </tr>
-</table>
-
-The peer needs to avoid publishing duplicated announcement messages if there is an announcement message in yamal.
-
-### Channel (Layer 2)
-
-A channel uniquely identifies a logical partition of a set of messages.
-
-<table>
-    <tr>
-        <th colspan="3">peer/channel</th>
-    </tr>
-    <tr>
-        <td>8 bytes</td>
-        <td>8 bytes</td>
-        <td>variable</td>
-    </tr>
-    <tr>
-        <td>Peer ID</td>
-        <td>Channel ID</td>
-        <td>Data</td>
-    </tr>
-</table>
-
-### Time (Layer 3)
+### Time (Layer 1)
 
 Timestamp is the original time of the message. Whenever the message is copied or forwarded, it should maintain the timestamp.
 
 <table>
     <tr>
-        <th colspan="4">peer/channel/time</th>
+        <th colspan="2">time layer</th>
     </tr>
     <tr>
-        <td>8 bytes</td>
-        <td>8 bytes</td>
         <td>8 bytes</td>
         <td>variable</td>
     </tr>
     <tr>
-        <td>Peer ID</td>
-        <td>Channel ID</td>
         <td>Timestamp</td>
         <td>Data</td>
     </tr>
 </table>
 
-### Control (Layer 4)
+### Stream (Layer 2)
 
-A control channel is used for communicating peer, channel, publisher and subscription control information.
-
-A publisher is a peer that may publish messages on a channel.
+A control channel is used for communicating publisher and subscription control information.
 
 <table>
     <tr>
-        <th colspan="3">peer/channel/time header</th>
-        <th>control</th>
+        <th>time layer</th>
+        <th colspan="2">stream layer</th>
     </tr>
     <tr>
-        <td>8 bytes</td>
         <td>8 bytes</td>
         <td>8 bytes</td>
         <td>variable</td>
     </tr>
     <tr>
-        <td>Peer ID</td>
-        <td>Channel ID</td>
         <td>Timestamp</td>
+        <td>Stream ID</td>
         <td>Payload</td>
     </tr>
 </table>
 
-#### channel
+#### stream
 
-A peer announces a channel.
+A peer announces a stream.
 
 <table>
     <tr>
-        <th colspan="3">peer/channel/time header</th>
-        <th>channel announcement payload</th>
+        <th>time layer</th>
+        <th colspan="6">stream layer</th>
     </tr>
     <tr>
         <td>8 bytes</td>
         <td>8 bytes</td>
-        <td>8 bytes</td>
+        <td>2 bytes</td>
+        <td>2 bytes</td>
+        <td>variable</td>
+        <td>variable</td>
         <td>variable</td>
     </tr>
     <tr>
-        <td>Peer ID</td>
-        <td>Ctrl Channel ID = 0</td>
         <td>Timestamp</td>
+        <td>Stream ID = 0</td>
+        <td>Peer name length</td>
+        <td>Channel name length</td>
+        <td>Peer name</td>
         <td>Channel name</td>
+        <td>Stream encoding</td>
     </tr>
 </table>
 
-The peer needs to avoid publishing duplicated channel messages if the last channel message in yamal has the same payload.
+The peer needs to avoid publishing duplicated stream announcements messages for the same stream. The first stream announcement supersedes following announcements. Stream encoding is specified using [Channel Metadata Protocol](#channel-metadata-protocol) (see bellow).
 
 #### subscribe
 
-A peer announces a subscription to a channel.
+A peer announces a subscription to a stream.
 
 <table>
     <tr>
-        <th colspan="3">peer/channel/time header</th>
-        <th>subscribe payload</th>
+        <th>time layer</th>
+        <th colspan="2">stream layer</th>
     </tr>
     <tr>
         <td>8 bytes</td>
         <td>8 bytes</td>
         <td>8 bytes</td>
-        <td>variable</td>
     </tr>
     <tr>
-        <td>Peer ID</td>
-        <td>Ctrl Channel ID = 1</td>
         <td>Timestamp</td>
-        <td>Payload</td>
+        <td>Stream ID = 1</td>
+        <td>Stream ID to subscribe</td>
     </tr>
 </table>
 
-**Payload**: If it doesn't end with character "", a channel name; otherwise, a prefix.
+### Channel Metadata Protocol
 
-The peer needs to avoid publishing duplicated subscribe messages if the last subscription message in yamal has the same payload.
-
-#### directory
-
-Describes the messages that a particular peer will publish on a
-particular channel.
-
-<table>
-    <tr>
-        <th colspan="3">peer/channel/time header</th>
-        <th>directory payload</th>
-    </tr>
-    <tr>
-        <td>8 bytes</td>
-        <td>8 bytes</td>
-        <td>8 bytes</td>
-        <td>variable</td>
-    </tr>
-    <tr>
-        <td>Peer ID</td>
-        <td>Ctrl Channel ID = 2</td>
-        <td>Timestamp</td>
-        <td>Payload</td>
-    </tr>
-</table>
-
-**Payload**: An Simple Channel Directory Protocol (SCDP) encoded string.
-
-Take a look at [Simple Channel Directory Protocol](#simple-channel-directory-protocol). This field can be empty.
-
-The peer needs to avoid publishing duplicated directory message if the last directory message in yamal has the same payload.
-
-### Simple Channel Directory Protocol
-
-A Simple Channel Directory Protocol (SCDP) is a new line separated string where each line is composed of a metakey, followed by a space character, followed by metadata. It can be empty. For example:
+A Channel Metadata Protocol (CMP) is a new line separated string where each line is composed of a metakey, followed by a space character, followed by metadata. It can be empty. For example:
 
 ```
-CHANNEL marketdata/IBM
-APP ORE1.2.4
-ENCODING messagepack
-SCHEMATYPE AVRO
-SCHEMA {int}
+Content-Type application/msgpack
+Content-Encoding gzip
+Content-Schema ore1.2.4
+Schema-Type AVRO
+Schema {int}
 ```
+[CONTENT-TYPE](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)

@@ -28,8 +28,6 @@
 
 #include <fmc/error.h>
 #include <ytp/api.h>
-#include <ytp/channel.h>
-#include <ytp/peer.h>
 #include <ytp/yamal.h>
 
 #ifdef __cplusplus
@@ -142,7 +140,7 @@ FMMODFUNC char *ytp_sequence_reserve(ytp_sequence_t *seq, size_t sz,
 FMMODFUNC ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq,
                                              ytp_peer_t peer,
                                              ytp_channel_t channel,
-                                             uint64_t time, void *data,
+                                             uint64_t msgtime, void *data,
                                              fmc_error_t **error);
 
 /**
@@ -178,7 +176,7 @@ FMMODFUNC void ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer,
  * @param[out] error
  */
 FMMODFUNC void ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer,
-                                uint64_t time, size_t sz, const char *payload,
+                                uint64_t msgtime, size_t sz, const char *payload,
                                 fmc_error_t **error);
 
 /**
@@ -210,7 +208,7 @@ FMMODFUNC void ytp_sequence_ch_name(ytp_sequence_t *seq, ytp_channel_t channel,
  * @return channel reference
  */
 FMMODFUNC ytp_channel_t ytp_sequence_ch_decl(ytp_sequence_t *seq,
-                                             ytp_peer_t peer, uint64_t time,
+                                             ytp_peer_t peer, uint64_t msgtime,
                                              size_t sz, const char *name,
                                              fmc_error_t **error);
 

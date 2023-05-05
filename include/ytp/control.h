@@ -72,8 +72,6 @@
 #include <stdint.h>
 
 #include <fmc/error.h>
-#include <ytp/channel.h>
-#include <ytp/peer.h>
 #include <ytp/time.h>
 #include <ytp/yamal.h>
 
@@ -89,10 +87,12 @@ extern "C" {
  */
 typedef struct ytp_control ytp_control_t;
 
+#define YTP_PEER_ANN 0
 #define YTP_CHANNEL_ANN 0
 #define YTP_CHANNEL_SUB 1
 #define YTP_CHANNEL_DIR 2
 
+#define YTP_PEER_OFF 0x100
 #define YTP_CHANNEL_OFF 0x100
 
 /**
@@ -171,7 +171,7 @@ FMMODFUNC char *ytp_control_reserve(ytp_control_t *ctrl, size_t sz,
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
- * @param[in] time the time to publish the data
+ * @param[in] msgtime the time to publish the data
  * @param[in] data the value returned by ytp_control_reserve()
  * @param[out] error out-parameter for error handling
  * @return iterator to the next memory mapped node
@@ -179,7 +179,7 @@ FMMODFUNC char *ytp_control_reserve(ytp_control_t *ctrl, size_t sz,
 FMMODFUNC ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl,
                                             ytp_peer_t peer,
                                             ytp_channel_t channel,
-                                            uint64_t time, void *data,
+                                            uint64_t msgtime, void *data,
                                             fmc_error_t **error);
 
 /**
@@ -236,14 +236,14 @@ FMMODFUNC void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel,
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the channel announcement
- * @param[in] time the time to publish the channel announcement
+ * @param[in] msgtime the time to publish the channel announcement
  * @param[in] sz size of the channel name
  * @param[in] name name of the channel
  * @param[out] error out-parameter for error handling
  * @return channel reference declared
  */
 FMMODFUNC ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl,
-                                            ytp_peer_t peer, uint64_t time,
+                                            ytp_peer_t peer, uint64_t msgtime,
                                             size_t sz, const char *name,
                                             fmc_error_t **error);
 
@@ -307,7 +307,7 @@ FMMODFUNC ytp_iterator_t ytp_control_next(ytp_control_t *ctrl,
  */
 FMMODFUNC void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t iter,
                                 ytp_peer_t *peer, ytp_channel_t *channel,
-                                uint64_t *time, size_t *sz, const char **data,
+                                uint64_t *msgtime, size_t *sz, const char **data,
                                 fmc_error_t **error);
 
 /**

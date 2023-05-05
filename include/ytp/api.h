@@ -37,10 +37,10 @@ typedef void *ytp_iterator_t;
 typedef void (*ytp_sequence_peer_cb_t)(void *closure, ytp_peer_t peer,
                                        size_t sz, const char *name);
 typedef void (*ytp_sequence_ch_cb_t)(void *closure, ytp_peer_t peer,
-                                     ytp_channel_t channel, uint64_t time,
+                                     ytp_channel_t channel, uint64_t msgtime,
                                      size_t sz, const char *name);
 typedef void (*ytp_sequence_data_cb_t)(void *closure, ytp_peer_t peer,
-                                       ytp_channel_t channel, uint64_t time,
+                                       ytp_channel_t channel, uint64_t msgtime,
                                        size_t sz, const char *data);
 
 typedef char *(*sharedseqfunc_reserve)(shared_sequence *, size_t,

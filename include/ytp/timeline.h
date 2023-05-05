@@ -27,9 +27,7 @@
 #include <stdint.h>
 
 #include <fmc/error.h>
-#include <ytp/channel.h>
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/yamal.h>
 
 #ifdef __cplusplus
@@ -50,10 +48,10 @@ typedef struct ytp_timeline ytp_timeline_t;
 typedef void (*ytp_timeline_peer_cb_t)(void *closure, ytp_peer_t peer,
                                        size_t sz, const char *name);
 typedef void (*ytp_timeline_ch_cb_t)(void *closure, ytp_peer_t peer,
-                                     ytp_channel_t channel, uint64_t time,
+                                     ytp_channel_t channel, uint64_t msgtime,
                                      size_t sz, const char *name);
 typedef void (*ytp_timeline_data_cb_t)(void *closure, ytp_peer_t peer,
-                                       ytp_channel_t channel, uint64_t time,
+                                       ytp_channel_t channel, uint64_t msgtime,
                                        size_t sz, const char *data);
 typedef void (*ytp_timeline_idle_cb_t)(void *closure);
 

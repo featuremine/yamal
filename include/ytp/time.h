@@ -30,15 +30,12 @@
  * @see http://www.featuremine.com
  */
 
-#ifndef __FM_YTP_TIME_H__
-#define __FM_YTP_TIME_H__
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 
 #include <fmc/error.h>
-#include <ytp/channel.h>
-#include <ytp/peer.h>
 #include <ytp/yamal.h>
 
 #ifdef __cplusplus
@@ -60,36 +57,30 @@ FMMODFUNC char *ytp_time_reserve(ytp_yamal_t *yamal, size_t sz,
  * @brief Commits the data to the memory mapped list
  *
  * @param[in] yamal
- * @param[in] peer the peer that publishes the data
- * @param[in] channel the channel to publish the data
  * @param[in] time
  * @param[in] data the value returned by ytp_time_reserve
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
-                                         ytp_channel_t channel, uint64_t time,
-                                         void *data, fmc_error_t **error);
+FMMODFUNC ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, uint64_t msgtime,
+                                         void *data, size_t listidx,
+                                         fmc_error_t **error);
 
 /**
  * @brief Reads a message on channel level
  *
  * @param[in] yamal
  * @param[in] iterator
- * @param[out] peer
- * @param[out] channel
+ * @param[out] seqno
  * @param[out] time
  * @param[out] sz
  * @param[out] data
  * @param[out] error
  */
 FMMODFUNC void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                             ytp_peer_t *peer, ytp_channel_t *channel,
-                             uint64_t *time, size_t *sz, const char **data,
-                             fmc_error_t **error);
+                             size_t *seqno, uint64_t *time, size_t *sz,
+                             const char **data, fmc_error_t **error);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif // __FM_YTP_TIME_H__
