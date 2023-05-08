@@ -12,6 +12,7 @@
 
 *****************************************************************************/
 
+#include <fmc++/error.hpp>
 #include <fmc/alignment.h>
 #include <fmc/endianness.h>
 #include <fmc/error.h>
@@ -247,32 +248,71 @@ ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread, fmc_error_t **error) {
 
 void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
                       FMC_CLOSABLE closable, fmc_error_t **error) {
-  fmc_error_clear(error);
-  yamal->fd = fd;
-  yamal->done_ = false;
-  yamal->readonly_ = fmc_freadonly(fd);
-  auto *hdr = (yamal_hdr_t *)mmnode_get1(yamal, 0, error);
-  if (*error) {
-    fmc_error_t save_error;
-    fmc_error_init_mov(&save_error, *error);
-    ytp_yamal_destroy(yamal, error);
+  try {
+    new (yamal) ytp_yamal_t(fd, enable_thread, closable);
+  }
+  catch (fmc::error &e) {
     *error = fmc_error_inst();
-    fmc_error_mov(*error, &save_error);
+    fmc_error_mov(*error, &e);
+  }
+}
+
+ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread, FMC_CLOSABLE closable,
+                             fmc_error_t **error) {
+  auto *yamal = static_cast<ytp_yamal_t *>(aligned_alloc(alignof(ytp_yamal_t), sizeof(ytp_yamal_t)));
+  if (!yamal) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return {};
+  }
+
+  ytp_yamal_init_3(yamal, fd, enable_thread, closable, error);
+  if (*error) {
+    free(yamal);
+    return {};
+  }
+
+  return yamal;
+}
+
+void ytp_yamal_destroy(ytp_yamal_t *yamal, fmc_error_t **error) {
+  fmc_error_clear(error);
+  yamal->~ytp_yamal();
+}
+
+void ytp_yamal_del(ytp_yamal_t *yamal, fmc_error_t **error) {
+  ytp_yamal_destroy(yamal, error);
+  if (error) {
     return;
   }
+
+  free(yamal);
+}
+
+ytp_yamal::ytp_yamal(int fd, bool enable_thread, FMC_CLOSABLE closable) {
+  fmc_error_t *error;
+
+  this->fd = fd;
+  done_ = false;
+  readonly_ = fmc_freadonly(fd);
+  auto *hdr = (yamal_hdr_t *)mmnode_get1(this, 0, &error);
+  if (error) {
+    fmc::error reterror(*error);
+    ytp_yamal_destroy(this, &error);
+    throw reterror;
+  }
   auto hdr_sz = sizeof(yamal_hdr_t);
-  if (yamal->readonly_) {
+  if (readonly_) {
     if (hdr->magic_number.load() != *(uint64_t *)magic_number) {
-      ytp_yamal_destroy(yamal, error);
-      FMC_ERROR_REPORT(error, "invalid yamal file format");
-      return;
+      ytp_yamal_destroy(this, &error);
+      FMC_ERROR_REPORT(&error, "invalid yamal file format");
+      throw fmc::error(*error);
     }
   } else {
     if (!atomic_expect_or_init<size_t>(hdr->magic_number,
                                        *(uint64_t *)magic_number)) {
-      ytp_yamal_destroy(yamal, error);
-      FMC_ERROR_REPORT(error, "invalid yamal file format");
-      return;
+      ytp_yamal_destroy(this, &error);
+      FMC_ERROR_REPORT(&error, "invalid yamal file format");
+      throw fmc::error(*error);
     }
     atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
     for (size_t lstidx = 0; lstidx < YTP_YAMAL_LISTS; ++lstidx) {
@@ -281,44 +321,49 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
           htoye64((mmnode_offs) & ((yamal_hdr_t *)0)->hdr[lstidx]));
     }
     if (!atomic_expect_or_init<FMC_CLOSABLE>(hdr->closable, closable)) {
-      ytp_yamal_destroy(yamal, error);
+      ytp_yamal_destroy(this, &error);
       std::string errormsg = "configured closable type ";
       errormsg +=
           (closable == FMC_CLOSABLE::CLOSABLE) ? "'closable'" : "'unclosable'";
       errormsg += " differs from file closable type in file";
-      FMC_ERROR_REPORT(error, errormsg.c_str());
+      FMC_ERROR_REPORT(&error, errormsg.c_str());
       return;
     }
-    mmlist_pages_allocation1(yamal, error);
+    mmlist_pages_allocation1(this, &error);
     if (enable_thread) {
-      yamal->thread_ = std::thread([yamal]() {
+      thread_ = std::thread([this]() {
         fmc_error_t *err;
         int *cpuid = _set_yamal_aux_thread_affinity(NULL, false);
         if (cpuid) {
           fmc_set_cur_affinity(*cpuid, &err);
         }
-        while (!yamal->done_) {
-          std::unique_lock<std::mutex> sl_(yamal->m_);
-          if (yamal->cv_.wait_for(sl_, 10ms) != std::cv_status::timeout)
+        while (!done_) {
+          std::unique_lock<std::mutex> sl_(m_);
+          if (cv_.wait_for(sl_, 10ms) != std::cv_status::timeout)
             break;
 
-          mmlist_pages_allocation1(yamal, &err);
-          mmlist_sync1(yamal, &err);
+          mmlist_pages_allocation1(this, &err);
+          mmlist_sync1(this, &err);
         }
       });
     }
   }
 }
 
-ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread, FMC_CLOSABLE closable,
-                             fmc_error_t **error) {
-  auto *yamal = new ytp_yamal_t;
-  ytp_yamal_init_3(yamal, fd, enable_thread, closable, error);
-  if (!*error) {
-    return yamal;
-  } else {
-    delete yamal;
-    return nullptr;
+ytp_yamal::~ytp_yamal() {
+  fmc_error_t *error;
+  {
+    std::lock_guard<std::mutex> sl_(m_);
+    done_ = true;
+  }
+  if (thread_.joinable()) {
+    cv_.notify_all();
+    thread_.join();
+  }
+  for (unsigned long int i = 0; i < fm_mmlist_page_count; ++i) {
+    if (fmc_fview_data(&pages[i])) {
+      fmc_fview_destroy(&pages[i], fm_mmlist_page_sz, &error);
+    }
   }
 }
 
@@ -417,28 +462,6 @@ void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *seqno,
   *data = (const char *)mmnode->data;
   *size = ye64toh(mmnode->size);
   *seqno = ye64toh(mmnode->seqno);
-}
-
-void ytp_yamal_destroy(ytp_yamal_t *yamal, fmc_error_t **error) {
-  fmc_error_clear(error);
-  {
-    std::lock_guard<std::mutex> sl_(yamal->m_);
-    yamal->done_ = true;
-  }
-  if (yamal->thread_.joinable()) {
-    yamal->cv_.notify_all();
-    yamal->thread_.join();
-  }
-  for (unsigned long int i = 0; i < fm_mmlist_page_count; ++i) {
-    if (fmc_fview_data(&yamal->pages[i])) {
-      fmc_fview_destroy(&yamal->pages[i], fm_mmlist_page_sz, error);
-    }
-  }
-}
-
-void ytp_yamal_del(ytp_yamal_t *yamal, fmc_error_t **error) {
-  ytp_yamal_destroy(yamal, error);
-  delete yamal;
 }
 
 ytp_iterator_t ytp_yamal_begin(ytp_yamal_t *yamal, size_t lstidx,

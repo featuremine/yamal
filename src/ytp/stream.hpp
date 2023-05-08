@@ -59,19 +59,19 @@ using ytp_cursor_data_cb_cl_t = std::pair<ytp_cursor_data_cb_t, void *>;
 using stream_name = std::pair<std::string_view, std::string_view>;
 
 struct ytp_cursor {
-  ytp_cursor(ytp_yamal_t *yamal, fmc_error_t **error);
+  ytp_cursor(ytp_yamal_t *yamal);
   ytp_yamal_t *yamal;
   ytp_iterator_t it_data;
   ytp_iterator_t it_ann;
   size_t ann_processed;
-  size_t last_read_seqno;
+  size_t data_processed;
 
   std::list<ytp_cursor_ann_cb_cl_t> cb_ann;
   std::unordered_map<ytp_stream_t, std::list<ytp_cursor_data_cb_cl_t>> cb_data;
 };
 
 struct ytp_anns {
-  ytp_anns(ytp_yamal_t *yamal, fmc_error_t **error);
+  ytp_anns(ytp_yamal_t *yamal);
   ytp_yamal_t *yamal;
   ytp_iterator_t it_ann;
   size_t ann_processed;

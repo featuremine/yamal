@@ -47,8 +47,6 @@ struct ann_info {
   std::string_view peername;
   std::string_view chname;
   std::string_view encoding;
-  bool is_peer_new = false;
-  bool is_ch_new = false;
 };
 
 struct data_info {
@@ -58,22 +56,34 @@ struct data_info {
   std::string_view data;
 };
 
-enum class last_info_type {NONE, ANN, DATA};
-enum class iterator_state {NONE, CH_ANN_PENDING};
-
 using stream_key = std::pair<ytp_peer_t, ytp_channel_t>;
 using stream_name = std::pair<std::string_view, std::string_view>;
 
-struct ytp_control {
-  ytp_control(fmc_fd fd, bool enable_thread, fmc_error_t **error);
-  ytp_yamal_t yamal;
-  ytp_cursor_t cursor;
-  ytp_anns_t anns;
+struct ytp_control_cursor {
+  enum class state_t {
+    NONE,
+    DATA,
+    ANN_PEERCH,
+    ANN_CH,
+  };
 
-  ann_info last_ann;
-  data_info last_data;
-  last_info_type last_type;
-  iterator_state it_state;
+  ytp_control_cursor(ytp_yamal_t *yamal) : cursor(yamal) {}
+
+  state_t state;
+  ytp_cursor_t cursor;
+  union last_t {
+    last_t() {}
+    data_info data;
+    ann_info ann;
+  } last;
+};
+
+struct ytp_control {
+  ytp_control(fmc_fd fd, bool enable_thread);
+  ytp_yamal_t yamal;
+
+  ytp_control_cursor data;
+  ytp_control_cursor ann;
 
   std::vector<peer_data> peers;
   std::vector<channel_data> channels;

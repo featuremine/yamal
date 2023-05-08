@@ -72,13 +72,13 @@ FMMODFUNC ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, uint64_t msgtime,
  * @param[in] yamal
  * @param[in] iterator
  * @param[out] seqno
- * @param[out] time
+ * @param[out] msgtime
  * @param[out] sz
  * @param[out] data
  * @param[out] error
  */
 FMMODFUNC void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                             size_t *seqno, uint64_t *time, size_t *sz,
+                             size_t *seqno, uint64_t *msgtime, size_t *sz,
                              const char **data, fmc_error_t **error);
 
 #ifdef __cplusplus

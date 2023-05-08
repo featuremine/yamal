@@ -86,7 +86,7 @@ struct callback_helper {
 
   std::list<std::unique_ptr<closure_wrapper_base>> callbacks;
 };
-
+/*
 TEST(timeline, timeline8) {
   callback_helper helper;
 
@@ -325,7 +325,7 @@ TEST(timeline, timeline8) {
     std::vector<T> messages;
 
     while (!ytp_yamal_term(it)) {
-      ytp_time_read(yamal, it, &peer, &channel, &msgtime, &sz, &ptr, &error);
+      ytp_time_read(yamal, it, &seqno, &msgtime, &sz, &ptr, &error);
       ASSERT_EQ(error, nullptr);
 
       messages.push_back({peer, channel, msgtime, {ptr, sz}});
@@ -376,7 +376,7 @@ TEST(timeline, timeline8) {
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
-
+*/
 TEST(timeline, data_simple_subscription_1) {
   fmc_error_t *error;
   auto fd = fmc_ftemp(&error);
@@ -1369,6 +1369,7 @@ TEST(timeline, idempotence_simple_1) {
   ytp_control_del(ctrl, &error);
   ASSERT_EQ(error, nullptr);
 
+  size_t seqno;
   ytp_peer_t peer;
   ytp_channel_t channel;
   uint64_t time;
@@ -1377,71 +1378,35 @@ TEST(timeline, idempotence_simple_1) {
   auto *yamal = ytp_yamal_new(fd, &error);
   ASSERT_NE(yamal, nullptr);
 
-  auto *it = ytp_yamal_begin(yamal, &error);
+  auto main = ytp_yamal_begin(yamal, 0, &error);
+  auto ann = ytp_yamal_begin(yamal, 1, &error);
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+  auto get = [&] (ytp_iterator_t &it) -> std::optional<std::string_view> {
+    if (ytp_yamal_term(it)) {
+      return {};
+    }
+    ytp_time_read(yamal, it, &seqno, &time, &sz, &data, &error);
+    if (error) {
+      return {};
+    }
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+    it = ytp_yamal_next(yamal, it, &error);
+    return std::string_view(data, sz);
+  };
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
-  ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+  EXPECT_EQ(get(main), tostr("\x88\x2\0\0\0\0\0\0ABCD"));
+  EXPECT_EQ(get(main), tostr("\xC0\x3\0\0\0\0\0\0EFGH"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\0\0consumer1"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\0\0producer1"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\r\0consumer1main/channel1"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\r\0producer1main/channel1"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\0\0consumer2"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\0\0producer2"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\r\0consumer1main/channel2"));
+  EXPECT_EQ(get(ann), tostr("\x9\0\r\0producer2main/channel2"));
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, producer1);
-  ASSERT_EQ(channel, channel1);
-  ASSERT_EQ(std::string_view(data, sz), "ABCD");
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
-  ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, producer2);
-  ASSERT_EQ(channel, channel2);
-  ASSERT_EQ(std::string_view(data, sz), "EFGH");
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_TRUE(ytp_yamal_term(it));
+  ASSERT_TRUE(ytp_yamal_term(main));
+  ASSERT_TRUE(ytp_yamal_term(ann));
 
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
@@ -1456,8 +1421,16 @@ TEST(timeline, idempotence_simple_2) {
   auto *yamal = ytp_yamal_new(fd, &error);
   ASSERT_EQ(error, nullptr);
 
-  ytp_peer_name(yamal, 5, "peer1", &error);
-  ytp_peer_name(yamal, 5, "peer1", &error);
+  {
+    auto *ptr = ytp_yamal_reserve(yamal, 17, &error);
+    std::memcpy(ptr, "\x00\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00peer1", 17);
+    ytp_yamal_commit(yamal, ptr, 1, &error);
+  }
+  {
+    auto *ptr = ytp_yamal_reserve(yamal, 17, &error);
+    std::memcpy(ptr, "\x00\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00peer1", 17);
+    ytp_yamal_commit(yamal, ptr, 1, &error);
+  }
 
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);

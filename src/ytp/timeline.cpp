@@ -221,7 +221,7 @@ void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel,
 }
 
 bool ytp_timeline_term(ytp_timeline_t *timeline) {
-  return ytp_yamal_term(timeline->read);
+  return ytp_yamal_term(timeline->read) && ytp_yamal_term(timeline->ctrl->data.cursor.it_ann);
 }
 
 ytp_iterator_t ytp_timeline_iter_get(ytp_timeline_t *timeline) {
@@ -283,8 +283,7 @@ bool was_announced(std::unordered_set<std::string_view> &announced_set,
   return false;
 }
 
-static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
-                                   fmc_error_t **error) {
+bool ytp_timeline_poll(ytp_timeline_t *timeline, fmc_error_t **error) {
   fmc_error_clear(error);
 
   if (!ytp_timeline_term(timeline)) {
@@ -385,10 +384,6 @@ static bool ytp_timeline_poll_impl(ytp_timeline_t *timeline,
   timeline->cb_idle.release();
 
   return false;
-}
-
-bool ytp_timeline_poll(ytp_timeline_t *timeline, fmc_error_t **error) {
-  return ytp_timeline_poll_impl(timeline, error);
 }
 
 bool ytp_timeline_consume(ytp_timeline_t *dest, ytp_timeline_t *src) {

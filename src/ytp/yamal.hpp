@@ -34,6 +34,8 @@
 static const size_t fm_mmlist_page_count = 1024 * 64 * 8;
 
 struct ytp_yamal {
+  ytp_yamal(int fd, bool enable_thread, FMC_CLOSABLE closable);
+  ~ytp_yamal();
   struct yamal_hdr_t *header(fmc_error_t **err);
   fmc_fd fd;
   std::condition_variable cv_;

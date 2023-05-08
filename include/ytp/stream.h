@@ -353,21 +353,30 @@ FMMODFUNC ytp_iterator_t ytp_stream_commit(ytp_yamal_t *yamal, uint64_t msgtime,
  * @brief Returns the data corresponding to a given stream announcement.
  *
  */
-FMMODFUNC void ytp_stream_ann(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t *seqno, size_t *pz, const char **pn, size_t *cz, const char **cn, size_t *ez, const char **en, uint64_t *sub, fmc_error_t **error);
+FMMODFUNC void ytp_stream_read_ann(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t *seqno, size_t *pz, const char **pn, size_t *cz, const char **cn, size_t *ez, const char **en, uint64_t *sub, fmc_error_t **error);
 
 /**
  * @brief Writes an index
  *
- * Enforces protocol by setting stream announcement idxcription flag is not set.
- * Skips duplicate idxcription messages.
- * @param[in] cursor the ytp_idx_t object
+ * @param[in] yamal the ytp_yamal_t object
  * @param[out] id of the stream
  * @param[out] error
  * @return true if advanced, false if at the end of the list
  */
-FMMODFUNC void ytp_stream_idx(ytp_yamal_t *yamal, ytp_stream_t id,
-                              uint64_t offset, size_t sz,
-                              char *data, fmc_error_t **error);
+FMMODFUNC void ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t id,
+                                    uint64_t offset, size_t sz,
+                                    char *data, fmc_error_t **error);
+
+/**
+ * @brief Writes an stream announcement
+ *
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[out] error
+ * @return true if advanced, false if at the end of the list
+ */
+FMMODFUNC ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal,
+                                              size_t pz, const char *pn, size_t cz, const char *cn, size_t ez, const char *en,
+                                              fmc_error_t **error);
 
 
 #ifdef __cplusplus
