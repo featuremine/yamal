@@ -59,7 +59,7 @@ struct data_info {
 using stream_key = std::pair<ytp_peer_t, ytp_channel_t>;
 using stream_name = std::pair<std::string_view, std::string_view>;
 
-struct ytp_control_cursor {
+struct poll_result_t {
   enum class state_t {
     NONE,
     DATA,
@@ -67,10 +67,7 @@ struct ytp_control_cursor {
     ANN_CH,
   };
 
-  ytp_control_cursor(ytp_yamal_t *yamal) : cursor(yamal) {}
-
-  state_t state;
-  ytp_cursor_t cursor;
+  state_t state = state_t::NONE;
   union last_t {
     last_t() {}
     data_info data;
@@ -82,8 +79,10 @@ struct ytp_control {
   ytp_control(fmc_fd fd, bool enable_thread);
   ytp_yamal_t yamal;
 
-  ytp_control_cursor data;
-  ytp_control_cursor ann;
+  ytp_cursor_t data_cursor;
+  poll_result_t poll_result;
+
+  ytp_anns_t anns;
 
   std::vector<peer_data> peers;
   std::vector<channel_data> channels;
@@ -91,10 +90,5 @@ struct ytp_control {
 
   std::unordered_map<std::string_view, ytp_peer_t> name_to_peerid;
   std::map<std::string_view, ytp_channel_t> name_to_channelid;
-  std::unordered_map<stream_name, ytp_stream_t> name_to_streamid;
   std::unordered_map<stream_key, ytp_stream_t> key_to_streamid;
-};
-
-struct base_handler {
-  void on_stream(const ann_info &data) {}
 };

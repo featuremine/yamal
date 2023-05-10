@@ -363,9 +363,9 @@ FMMODFUNC void ytp_stream_read_ann(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t
  * @param[out] error
  * @return true if advanced, false if at the end of the list
  */
-FMMODFUNC void ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t id,
-                                    uint64_t offset, size_t sz,
-                                    char *data, fmc_error_t **error);
+FMMODFUNC ytp_iterator_t ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t id,
+                                              uint64_t offset, size_t sz,
+                                              const char *data, fmc_error_t **error);
 
 /**
  * @brief Writes an stream announcement
@@ -378,6 +378,14 @@ FMMODFUNC ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal,
                                               size_t pz, const char *pn, size_t cz, const char *cn, size_t ez, const char *en,
                                               fmc_error_t **error);
 
+/**
+ * @brief Writes a sub message
+ *
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[out] error
+ * @return true if advanced, false if at the end of the list
+ */
+FMMODFUNC ytp_iterator_t ytp_stream_write_sub(ytp_yamal_t *yamal, ytp_stream_t id, fmc_error_t **error);
 
 #ifdef __cplusplus
 }

@@ -38,6 +38,7 @@ using prfx_cb_key = std::string;
 using ch_key = ytp_channel_t;
 
 struct ytp_timeline {
+  ytp_timeline(ytp_control_t *ctrl);
   ytp_control_t *ctrl;
   ytp_iterator_t read;
 

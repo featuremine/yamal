@@ -44,7 +44,29 @@ target_link_libraries(
     ytp
     PkgConfig::GTEST
 )
+target_include_directories(
+    tests_ytp_timeline
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/src/ytp"
+)
 add_test(NAME ytp_timeline COMMAND tests_ytp_timeline)
+
+add_executable(
+    tests_ytp_stream
+    "stream.cpp"
+)
+target_link_libraries(
+    tests_ytp_stream
+    PRIVATE
+    ytp
+    PkgConfig::GTEST
+)
+target_include_directories(
+    tests_ytp_stream
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/src/ytp"
+)
+add_test(NAME ytp_stream COMMAND tests_ytp_stream)
 
 add_executable(
     tests_ytp_sequence

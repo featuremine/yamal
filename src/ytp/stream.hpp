@@ -23,11 +23,16 @@
 #include <ytp/stream.h>
 #include <ytp/yamal.h>
 
-#include <list>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+enum STREAM_STATE : uint64_t {
+  UNKNOWN = 0,
+  DUPLICATED = 1,
+  NO_SUBSCRIPTION = 2,
+};
 
 #pragma pack(push, 1)
 struct ann_msg_t {
@@ -59,15 +64,15 @@ using ytp_cursor_data_cb_cl_t = std::pair<ytp_cursor_data_cb_t, void *>;
 using stream_name = std::pair<std::string_view, std::string_view>;
 
 struct ytp_cursor {
-  ytp_cursor(ytp_yamal_t *yamal);
+  explicit ytp_cursor(ytp_yamal_t *yamal);
   ytp_yamal_t *yamal;
   ytp_iterator_t it_data;
   ytp_iterator_t it_ann;
   size_t ann_processed;
   size_t data_processed;
 
-  std::list<ytp_cursor_ann_cb_cl_t> cb_ann;
-  std::unordered_map<ytp_stream_t, std::list<ytp_cursor_data_cb_cl_t>> cb_data;
+  fmc::lazy_rem_vector<ytp_cursor_ann_cb_cl_t> cb_ann;
+  std::unordered_map<ytp_stream_t, fmc::lazy_rem_vector<ytp_cursor_data_cb_cl_t>> cb_data;
 };
 
 struct ytp_anns {
@@ -78,5 +83,62 @@ struct ytp_anns {
   std::unordered_map<stream_name, ytp_stream_t> reverse_map;
 };
 
-extern bool ytp_cursor_poll_one_ann(ytp_cursor_t *cursor, fmc_error_t **error);
-extern bool ytp_cursor_poll_one_data(ytp_cursor_t *cursor, fmc_error_t **error);
+extern bool ytp_cursor_poll_ann(ytp_cursor_t *cursor, fmc_error_t **error);
+extern bool ytp_cursor_poll_data(ytp_cursor_t *cursor, fmc_error_t **error);
+extern bool ytp_cursor_term_ann(ytp_cursor_t *cursor);
+extern std::tuple<std::string_view, std::string_view, std::string_view, const std::atomic<uint64_t> *> parse_ann_payload(const char *data, std::size_t sz, fmc_error_t **error);
+
+template<typename F>
+void ytp_anns_lookup_one(ytp_anns_t *anns, fmc_error_t **error, const F &should_stop) {
+  while (!ytp_yamal_term(anns->it_ann)) {
+    size_t seqno;
+    size_t sz;
+    const char *dataptr;
+
+    ytp_yamal_read(anns->yamal, anns->it_ann, &seqno, &sz, &dataptr, error);
+    if (*error) {
+      return;
+    }
+
+    ytp_stream_t stream = ytp_yamal_tell(anns->yamal, anns->it_ann, error);
+    if (*error) {
+      return;
+    }
+
+    auto next_it = ytp_yamal_next(anns->yamal, anns->it_ann, error);
+    if (*error) {
+      return;
+    }
+
+    auto [peername, chname, encoding, const_sub] = parse_ann_payload(dataptr, sz, error);
+    if (*error) {
+      return;
+    }
+
+    using key_t = typename decltype(anns->reverse_map)::key_type;
+    auto it = anns->reverse_map.emplace(key_t{peername, chname}, stream);
+
+    STREAM_STATE state;
+    if (anns->yamal->readonly_) {
+      state = static_cast<STREAM_STATE>(const_sub->load());
+      if (state == STREAM_STATE::UNKNOWN) {
+        break;
+      }
+    }
+    else {
+      uint64_t unset = STREAM_STATE::UNKNOWN;
+      auto &sub = *const_cast<std::atomic<uint64_t> *>(const_sub);
+      sub.compare_exchange_weak(unset, it.second ? STREAM_STATE::NO_SUBSCRIPTION : STREAM_STATE::DUPLICATED);
+      state = static_cast<STREAM_STATE>(sub.load());
+    }
+
+    anns->it_ann = next_it;
+    anns->ann_processed = seqno;
+
+    if (state != STREAM_STATE::DUPLICATED) {
+      if (should_stop(it.first->second, peername, chname, encoding)) {
+        return;
+      }
+    }
+  }
+}

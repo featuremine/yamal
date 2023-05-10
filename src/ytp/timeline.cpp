@@ -17,6 +17,8 @@
 #include <vector>
 #include <ytp/timeline.h>
 
+#include <fmc++/error.hpp>
+
 #include "control.hpp"
 #include "timeline.hpp"
 
@@ -96,47 +98,63 @@ static void channel_announcement_msg(void *closure, ytp_peer_t peer,
   timeline->cb_ch.release();
 }
 
+ytp_timeline::ytp_timeline(ytp_control_t *ctrl) : ctrl(ctrl) {
+  fmc_error_t *error;
+  read = ytp_control_begin(ctrl, &error);
+  if (error) {
+    throw fmc::error(*error);
+  }
+
+  ytp_timeline_ch_cb(this, channel_announcement_wrapper, this, &error);
+  if (error) {
+    throw fmc::error(*error);
+  }
+
+  ytp_timeline_indx_cb(this, YTP_CHANNEL_ANN, channel_announcement_msg, this, &error);
+  if (error) {
+    throw fmc::error(*error);
+  }
+}
+
 ytp_timeline_t *ytp_timeline_new(ytp_control_t *ctrl, fmc_error_t **error) {
-  auto *timeline = new ytp_timeline_t;
+  auto *timeline = static_cast<ytp_timeline_t *>(aligned_alloc(alignof(ytp_timeline_t), sizeof(ytp_timeline_t)));
+  if (!timeline) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return {};
+  }
+
   ytp_timeline_init(timeline, ctrl, error);
   if (*error) {
-    delete timeline;
-    return nullptr;
+    free(timeline);
+    return {};
   }
+
   return timeline;
 }
 
 void ytp_timeline_init(ytp_timeline_t *timeline, ytp_control_t *ctrl,
                        fmc_error_t **error) {
-  timeline->ctrl = ctrl;
-
-  timeline->read = ytp_control_begin(ctrl, error);
-  if (*error) {
-    return;
+  try {
+    new (timeline) ytp_timeline(ctrl);
   }
-
-  ytp_timeline_ch_cb(timeline, channel_announcement_wrapper, timeline, error);
-  if (*error) {
-    return;
-  }
-
-  ytp_timeline_indx_cb(timeline, YTP_CHANNEL_ANN, channel_announcement_msg,
-                       timeline, error);
-  if (*error) {
-    return;
+  catch (fmc::error &e) {
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &e);
   }
 }
 
 void ytp_timeline_destroy(ytp_timeline_t *timeline, fmc_error_t **error) {
-  ytp_timeline_indx_cb_rm(timeline, YTP_CHANNEL_ANN, channel_announcement_msg,
-                          timeline, error);
-  ytp_timeline_ch_cb_rm(timeline, channel_announcement_wrapper, timeline,
-                        error);
+  fmc_error_clear(error);
+  timeline->~ytp_timeline();
 }
 
 void ytp_timeline_del(ytp_timeline_t *timeline, fmc_error_t **error) {
   ytp_timeline_destroy(timeline, error);
-  delete timeline;
+  if (error) {
+    return;
+  }
+
+  free(timeline);
 }
 
 void ytp_timeline_ch_cb(ytp_timeline_t *timeline, ytp_timeline_ch_cb_t cb,
@@ -221,7 +239,7 @@ void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel,
 }
 
 bool ytp_timeline_term(ytp_timeline_t *timeline) {
-  return ytp_yamal_term(timeline->read) && ytp_yamal_term(timeline->ctrl->data.cursor.it_ann);
+  return ytp_yamal_term(timeline->read) && ytp_cursor_term_ann(&timeline->ctrl->data_cursor);
 }
 
 ytp_iterator_t ytp_timeline_iter_get(ytp_timeline_t *timeline) {

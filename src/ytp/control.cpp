@@ -80,25 +80,15 @@ void ytp_control_destroy(ytp_control_t *ctrl, fmc_error_t **error) {
 
 static void data_cb(void *closure, size_t seqno, uint64_t msgtime, ytp_stream_t stream, size_t sz, const char *data) {
   auto ctrl = (ytp_control_t *)closure;
-  auto &cursor = ctrl->data;
-  cursor.last.data.seqno = seqno;
-  cursor.last.data.msgtime = msgtime;
-  cursor.last.data.stream = stream;
-  cursor.last.data.data = {data, sz};
-  cursor.state = ytp_control_cursor::state_t::DATA;
+  auto &result = ctrl->poll_result;
+  result.last.data.seqno = seqno;
+  result.last.data.msgtime = msgtime;
+  result.last.data.stream = stream;
+  result.last.data.data = {data, sz};
+  result.state = poll_result_t::state_t::DATA;
 }
 
-static void ann_cb(ytp_control_t *ctrl, ytp_stream_t stream,
-                   size_t seqno,
-                   size_t peer_sz, const char *peer_name,
-                   size_t ch_sz, const char *ch_name,
-                   size_t encoding_sz,
-                   const char *encoding_data,
-                   ytp_control_cursor &cursor) {
-  auto peername = std::string_view{peer_name, peer_sz};
-  auto chname = std::string_view{ch_name, ch_sz};
-  auto encoding = std::string_view{encoding_data, encoding_sz};
-
+static void process_ann(ytp_control_t *ctrl, size_t seqno, ytp_stream_t stream, std::string_view peername, std::string_view chname, std::string_view encoding, poll_result_t &result) {
   auto it_peer = ctrl->name_to_peerid.emplace(peername, ctrl->name_to_peerid.size() + YTP_PEER_OFF);
   if (it_peer.second) {
     ctrl->peers.emplace_back().name = peername;
@@ -113,59 +103,36 @@ static void ann_cb(ytp_control_t *ctrl, ytp_stream_t stream,
 
   auto it_stream = ctrl->key_to_streamid.emplace(stream_key(peerid, channelid), stream);
   if (it_stream.second) {
-    auto &peer = ctrl->peers[peerid - YTP_PEER_OFF];
-    auto &channel = ctrl->channels[channelid - YTP_CHANNEL_OFF];
-    ctrl->name_to_streamid.emplace(stream_name(peer.name, channel.name), stream);
-
     auto &stream_data = ctrl->streams[stream];
     stream_data.peer = peerid;
     stream_data.channel = channelid;
+
+    fmc_error_t *error;
+    ytp_cursor_data_cb(&ctrl->data_cursor, stream, data_cb, ctrl, &error);
   }
 
-  cursor.last.ann.stream = stream;
-  cursor.last.ann.peer = peerid;
-  cursor.last.ann.channel = channelid;
-  cursor.last.ann.seqno = seqno;
-  cursor.last.ann.peername = peername;
-  cursor.last.ann.chname = chname;
-  cursor.last.ann.encoding = encoding;
-  cursor.state = ytp_control_cursor::state_t::ANN_PEERCH;
+  result.last.ann.stream = stream;
+  result.last.ann.peer = peerid;
+  result.last.ann.channel = channelid;
+  result.last.ann.seqno = seqno;
+  result.last.ann.peername = peername;
+  result.last.ann.chname = chname;
+  result.last.ann.encoding = encoding;
+  result.state = poll_result_t::state_t::ANN_PEERCH;
 }
 
-static void main_ann_cb(void *closure, ytp_stream_t stream,
-                        size_t seqno,
-                        size_t peer_sz, const char *peer_name,
-                        size_t ch_sz, const char *ch_name,
-                        size_t encoding_sz,
-                        const char *encoding_data) {
+static void ann_cb(void *closure, ytp_stream_t stream, size_t seqno, size_t peer_sz, const char *peer_name, size_t ch_sz, const char *ch_name, size_t encoding_sz, const char *encoding_data) {
   auto ctrl = (ytp_control_t *)closure;
-  ann_cb(ctrl, stream, seqno, peer_sz, peer_name, ch_sz, ch_name, encoding_sz, encoding_data, ctrl->data);
-  fmc_error_t *error;
-  ytp_cursor_data_cb(&ctrl->data.cursor, stream, data_cb, ctrl, &error);
-}
-
-static void ann_ann_cb(void *closure, ytp_stream_t stream,
-                        size_t seqno,
-                        size_t peer_sz, const char *peer_name,
-                        size_t ch_sz, const char *ch_name,
-                        size_t encoding_sz,
-                        const char *encoding_data) {
-  auto ctrl = (ytp_control_t *)closure;
-  ann_cb(ctrl, stream, seqno, peer_sz, peer_name, ch_sz, ch_name, encoding_sz, encoding_data, ctrl->ann);
+  process_ann(ctrl, seqno, stream, {peer_name, peer_sz}, {ch_name, ch_sz}, {encoding_data, encoding_sz}, ctrl->poll_result);
 }
 
 ytp_control::ytp_control(fmc_fd fd, bool enable_thread) :
     yamal(fd, enable_thread, FMC_CLOSABLE::UNCLOSABLE),
-    data(&yamal),
-    ann(&yamal) {
+    data_cursor(&yamal),
+    anns(&yamal) {
   fmc_error_t *error;
 
-  ytp_cursor_ann_cb(&data.cursor, main_ann_cb, this, &error);
-  if (error) {
-    throw fmc::error(*error);
-  }
-
-  ytp_cursor_ann_cb(&ann.cursor, ann_ann_cb, this, &error);
+  ytp_cursor_ann_cb(&data_cursor, ann_cb, this, &error);
   if (error) {
     throw fmc::error(*error);
   }
@@ -175,17 +142,17 @@ template <typename Handler>
 static void process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
                                  Handler &handler) {
   fmc_error_clear(error);
-  auto more = !ytp_yamal_term(ctrl->ann.cursor.it_ann);
-  while (!handler.found() && !*error && more) {
-    ctrl->ann.state = ytp_control_cursor::state_t::NONE;
-    more = ytp_cursor_poll_one_ann(&ctrl->ann.cursor, error);
-    if (*error) {
-      return;
-    }
-    if (ctrl->ann.state == ytp_control_cursor::state_t::ANN_PEERCH) {
-      handler.on_stream(ctrl->ann.last.ann);
-    }
+
+  if (handler.found() || ytp_yamal_term(ctrl->anns.it_ann)) {
+    return;
   }
+
+  ytp_anns_lookup_one(&ctrl->anns, error, [&] (ytp_stream_t stream, std::string_view peer, std::string_view ch, std::string_view encoding) {
+    poll_result_t result;
+    process_ann(ctrl, {}, stream, peer, ch, encoding, result);
+    handler.on_stream(result.last.ann);
+    return handler.found() || *error;
+  });
 }
 
 template <typename Handler>
@@ -214,10 +181,10 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
                                   ytp_channel_t channel, uint64_t msgtime,
                                   void *data, fmc_error_t **error) {
   fmc_error_clear(error);
-  struct handler_t : base_handler {
-    void on_stream(const ann_info &data) {
-      if (data.peer == peer && data.channel == channel) {
-        found_streamid = data.stream;
+  struct handler_t {
+    void on_stream(const ann_info &ann) {
+      if (ann.peer == peer && ann.channel == channel) {
+        found_streamid = ann.stream;
       }
     }
     void insert() {
@@ -234,7 +201,7 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
 
       ytp_stream_write_ann(&ctrl->yamal, peerdata.name.size(), peerdata.name.data(), channeldata.name.size(), channeldata.name.data(), default_encoding.size(), default_encoding.data(), error);
     }
-    bool found() const noexcept { return found_streamid != std::numeric_limits<ytp_stream_t>::max(); }
+    bool found() const { return found_streamid != std::numeric_limits<ytp_stream_t>::max(); }
 
     ytp_control_t *ctrl;
     ytp_peer_t peer;
@@ -280,10 +247,10 @@ ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl, ytp_peer_t peer,
                                   const char *name, fmc_error_t **error) {
   fmc_error_clear(error);
 
-  struct handler_t : base_handler {
-    void on_stream(const ann_info &data) {
-      if (data.chname == channel) {
-        found_chid = data.channel;
+  struct handler_t {
+    void on_stream(const ann_info &ann) {
+      if (ann.chname == channel) {
+        found_chid = ann.channel;
       }
     }
     void insert() {
@@ -296,7 +263,7 @@ ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl, ytp_peer_t peer,
 
       ytp_stream_write_ann(&ctrl->yamal, peername.size(), peername.data(), channel.size(), channel.data(), default_encoding.size(), default_encoding.data(), error);
     }
-    bool found() const noexcept { return found_chid != std::numeric_limits<ytp_channel_t>::max(); }
+    bool found() const { return found_chid != std::numeric_limits<ytp_channel_t>::max(); }
 
     ytp_control_t *ctrl;
     ytp_peer_t peer;
@@ -340,16 +307,16 @@ ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
                                  const char *name, fmc_error_t **error) {
   fmc_error_clear(error);
 
-  struct handler_t : base_handler {
-    void on_stream(const ann_info &data) {
-      if (data.peername == peer) {
-        found_peerid = data.peer;
+  struct handler_t {
+    void on_stream(const ann_info &ann) {
+      if (ann.peername == peer) {
+        found_peerid = ann.peer;
       }
     }
     void insert() {
       ytp_stream_write_ann(&ctrl->yamal, peer.size(), peer.data(), 0, nullptr, default_encoding.size(), default_encoding.data(), error);
     }
-    bool found() const noexcept { return found_peerid != std::numeric_limits<ytp_peer_t>::max(); }
+    bool found() const { return found_peerid != std::numeric_limits<ytp_peer_t>::max(); }
 
     ytp_control_t *ctrl;
     std::string_view peer;
@@ -377,7 +344,7 @@ ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
 ytp_iterator_t ytp_control_next(ytp_control_t *ctrl, ytp_iterator_t iter,
                                 fmc_error_t **error) {
   fmc_error_clear(error);
-  return ctrl->data.cursor.it_data;
+  return ctrl->data_cursor.it_data;
 }
 
 void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
@@ -385,38 +352,38 @@ void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
                       const char **data, fmc_error_t **error) {
   fmc_error_clear(error);
 
-  if (ctrl->data.state == ytp_control_cursor::state_t::NONE) {
-    ctrl->data.cursor.it_data = it;
-    ytp_cursor_poll(&ctrl->data.cursor, error);
+  if (ctrl->poll_result.state == poll_result_t::state_t::NONE) {
+    ctrl->data_cursor.it_data = it;
+    ytp_cursor_poll(&ctrl->data_cursor, error);
     if (*error) {
       return;
     }
   }
 
-  if (ctrl->data.state == ytp_control_cursor::state_t::ANN_PEERCH) {
-    ctrl->data.state = ytp_control_cursor::state_t::ANN_CH;
+  if (ctrl->poll_result.state == poll_result_t::state_t::ANN_PEERCH) {
+    ctrl->poll_result.state = poll_result_t::state_t::ANN_CH;
     *peer = YTP_PEER_ANN;
     *channel = ytp_channel_t{};
     *msgtime = {};
-    *data = ctrl->data.last.ann.peername.data();
-    *sz = ctrl->data.last.ann.peername.size();
+    *data = ctrl->poll_result.last.ann.peername.data();
+    *sz = ctrl->poll_result.last.ann.peername.size();
     return;
   }
 
-  if (ctrl->data.state == ytp_control_cursor::state_t::ANN_CH) {
-    ctrl->data.state = ytp_control_cursor::state_t::NONE;
-    *peer = ctrl->data.last.ann.peer;
+  if (ctrl->poll_result.state == poll_result_t::state_t::ANN_CH) {
+    ctrl->poll_result.state = poll_result_t::state_t::NONE;
+    *peer = ctrl->poll_result.last.ann.peer;
     *channel = YTP_CHANNEL_ANN;
     *msgtime = {};
-    *data = ctrl->data.last.ann.chname.data();
-    *sz = ctrl->data.last.ann.chname.size();
+    *data = ctrl->poll_result.last.ann.chname.data();
+    *sz = ctrl->poll_result.last.ann.chname.size();
     return;
   }
 
-  if (ctrl->data.state == ytp_control_cursor::state_t::DATA) {
-    ctrl->data.state = ytp_control_cursor::state_t::NONE;
+  if (ctrl->poll_result.state == poll_result_t::state_t::DATA) {
+    ctrl->poll_result.state = poll_result_t::state_t::NONE;
 
-    auto it_stream = ctrl->streams.find(ctrl->data.last.data.stream);
+    auto it_stream = ctrl->streams.find(ctrl->poll_result.last.data.stream);
     if (it_stream == ctrl->streams.end()) {
       fmc_error_set(error, "referenced stream not found");
       return;
@@ -425,9 +392,9 @@ void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
     auto &stream = it_stream->second;
     *peer = stream.peer;
     *channel = stream.channel;
-    *msgtime = ctrl->data.last.data.msgtime;
-    *sz = ctrl->data.last.data.data.size();
-    *data = ctrl->data.last.data.data.data();
+    *msgtime = ctrl->poll_result.last.data.msgtime;
+    *sz = ctrl->poll_result.last.data.data.size();
+    *data = ctrl->poll_result.last.data.data.data();
     return;
   }
 }

@@ -17,6 +17,28 @@
 #include <fmc++/error.hpp>
 #include <fmc++/lazy_rem_vector.hpp>
 
+std::tuple<std::string_view, std::string_view, std::string_view, const std::atomic<uint64_t> *> parse_ann_payload(const char *data, std::size_t sz, fmc_error_t **error) {
+  if (sz < sizeof(ann_msg_t)) {
+    fmc_error_set(error, "invalid stream announcement");
+    return {};
+  }
+
+  auto &hdr = *reinterpret_cast<const ann_msg_t *>(data);
+  std::size_t peer_name_sz = (uint16_t)ye16toh(hdr.peer_name_sz);
+  std::size_t channel_name_sz = (uint16_t)ye16toh(hdr.channel_name_sz);
+
+  if (sz < peer_name_sz + channel_name_sz) {
+    fmc_error_set(error, "invalid stream announcement");
+    return {};
+  }
+
+  auto peername = std::string_view(hdr.payload, peer_name_sz);
+  auto chname = std::string_view(hdr.payload + peer_name_sz, channel_name_sz);
+  auto encoding = std::string_view(hdr.payload + peer_name_sz + channel_name_sz, sz - channel_name_sz - peer_name_sz - sizeof(ann_msg_t));
+
+  return {peername, chname, encoding, &hdr.subscription};
+}
+
 ytp_cursor_t *ytp_cursor_new(ytp_yamal_t *yamal, fmc_error_t **error) {
   auto *cursor = static_cast<ytp_cursor_t *>(aligned_alloc(alignof(ytp_cursor_t), sizeof(ytp_cursor_t)));
   if (!cursor) {
@@ -73,7 +95,7 @@ void ytp_cursor_ann_cb(ytp_cursor_t *cursor,
                        ytp_cursor_ann_cb_t cb, void *closure,
                        fmc_error_t **error) {
   fmc_error_clear(error);
-  cursor->cb_ann.emplace_back(ytp_cursor_ann_cb_cl_t{cb, closure});
+  cursor->cb_ann.emplace_back(cb, closure);
 }
 
 void ytp_cursor_ann_cb_rm(ytp_cursor_t *cursor,
@@ -82,11 +104,9 @@ void ytp_cursor_ann_cb_rm(ytp_cursor_t *cursor,
   fmc_error_clear(error);
   auto &l = cursor->cb_ann;
   auto c = ytp_cursor_ann_cb_cl_t(cb, closure);
-  for(auto it = l.begin(); it != l.end(); ++it) {
-    if (*it == c) {
-      l.erase(it);
-    }
-  }
+  std::erase_if(l, [&] (const ytp_cursor_ann_cb_cl_t &item) {
+    return c == item;
+  });
 }
 
 void ytp_cursor_data_cb(ytp_cursor_t *cursor,
@@ -94,8 +114,41 @@ void ytp_cursor_data_cb(ytp_cursor_t *cursor,
                         ytp_cursor_data_cb_t cb, void *closure,
                         fmc_error_t **error) {
   fmc_error_clear(error);
+
+  if (!cursor->yamal->readonly_) {
+    auto stream_it = ytp_yamal_seek(cursor->yamal, stream, error);
+    if (*error) {
+      return;
+    }
+
+    size_t stream_seqno;
+    size_t stream_sz;
+    const char *stream_dataptr;
+    ytp_yamal_read(cursor->yamal, stream_it, &stream_seqno, &stream_sz, &stream_dataptr, error);
+    if (*error) {
+      return;
+    }
+
+    auto &const_sub = *std::get<3>(parse_ann_payload(stream_dataptr, stream_sz, error));
+    uint64_t unset = STREAM_STATE::NO_SUBSCRIPTION;
+    if (const_sub.load() == unset) {
+      auto it_sub = ytp_stream_write_sub(cursor->yamal, stream, error);
+      if (*error) {
+        return;
+      }
+
+      auto off_sub = ytp_yamal_tell(cursor->yamal, it_sub, error);
+      if (*error) {
+        return;
+      }
+
+      auto &sub = const_cast<std::atomic<uint64_t> &>(const_sub);
+      sub.compare_exchange_weak(unset, off_sub);
+    }
+  }
+
   auto &l = cursor->cb_data[stream];
-  l.emplace_back(ytp_cursor_data_cb_cl_t{cb, closure});
+  l.emplace_back(cb, closure);
 }
 
 void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor,
@@ -106,45 +159,39 @@ void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor,
   if(auto where = cursor->cb_data.find(stream); where != cursor->cb_data.end()) {
     auto &l = where->second;
     auto c = ytp_cursor_data_cb_cl_t(cb, closure);
-    for(auto it = l.begin(); it != l.end(); ++it) {
-      if (*it == c) {
-        l.erase(it);
-      }
-    }
+    std::erase_if(l, [&] (const ytp_cursor_data_cb_cl_t &item) {
+      return c == item;
+    });
   }
 }
 
+bool ytp_cursor_term_ann(ytp_cursor_t *cursor) {
+  if (ytp_yamal_term(cursor->it_ann)) {
+    return true;
+  }
+
+  fmc_error_t *error;
+  size_t stream_seqno;
+  size_t stream_sz;
+  const char *stream_dataptr;
+  ytp_yamal_read(cursor->yamal, cursor->it_ann, &stream_seqno, &stream_sz, &stream_dataptr, &error);
+  if (error) {
+    return true;
+  }
+
+  auto sub = std::get<3>(parse_ann_payload(stream_dataptr, stream_sz, &error))->load();
+  return sub < STREAM_STATE::NO_SUBSCRIPTION;
+}
+
 bool ytp_cursor_term(ytp_cursor_t *cursor) {
-  return ytp_yamal_term(cursor->it_data) && ytp_yamal_term(cursor->it_ann);
+  return ytp_yamal_term(cursor->it_data) && ytp_cursor_term_ann(cursor);
 }
 
 uint64_t ytp_cursor_count(ytp_cursor_t *cursor) {
   return cursor->data_processed;
 }
 
-static std::tuple<std::string_view, std::string_view, std::string_view, const std::atomic<uint64_t> *> parse_ann_payload(const char *data, std::size_t sz, fmc_error_t **error) {
-  if (sz < sizeof(ann_msg_t)) {
-    fmc_error_set(error, "invalid stream announcement");
-    return {};
-  }
-
-  auto &hdr = *reinterpret_cast<const ann_msg_t *>(data);
-  std::size_t peer_name_sz = (uint16_t)ye16toh(hdr.peer_name_sz);
-  std::size_t channel_name_sz = (uint16_t)ye16toh(hdr.channel_name_sz);
-
-  if (sz < peer_name_sz + channel_name_sz) {
-    fmc_error_set(error, "invalid stream announcement");
-    return {};
-  }
-
-  auto peername = std::string_view(hdr.payload, peer_name_sz);
-  auto chname = std::string_view(hdr.payload + peer_name_sz, channel_name_sz);
-  auto encoding = std::string_view(hdr.payload + peer_name_sz + channel_name_sz, sz - channel_name_sz - peer_name_sz - sizeof(ann_msg_t));
-
-  return {peername, chname, encoding, &hdr.subscription};
-}
-
-std::tuple<ytp_stream_t, std::string_view> parse_data_payload(const char *data, std::size_t sz, fmc_error_t **error) {
+static std::tuple<ytp_stream_t, std::string_view> parse_data_payload(const char *data, std::size_t sz, fmc_error_t **error) {
   if (sz < sizeof(data_msg_t)) {
     fmc_error_set(error, "invalid stream announcement");
     return {};
@@ -155,7 +202,11 @@ std::tuple<ytp_stream_t, std::string_view> parse_data_payload(const char *data, 
   return {stream, std::string_view(hdr.payload, sz - sizeof(data_msg_t))};
 }
 
-bool ytp_cursor_poll_one_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
+bool ytp_cursor_poll_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
+  if (ytp_yamal_term(cursor->it_ann)) {
+    return false;
+  }
+
   size_t seqno;
   size_t sz;
   const char *dataptr;
@@ -165,8 +216,13 @@ bool ytp_cursor_poll_one_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
     return false;
   }
 
-  ytp_stream_t stream = ytp_yamal_tell(cursor->yamal, cursor->it_ann, error);
+  auto [peername, chname, encoding, const_sub] = parse_ann_payload(dataptr, sz, error);
   if (*error) {
+    return false;
+  }
+
+  auto sub = const_sub->load();
+  if (sub == STREAM_STATE::UNKNOWN) {
     return false;
   }
 
@@ -175,21 +231,34 @@ bool ytp_cursor_poll_one_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
     return false;
   }
 
-  auto [peername, chname, encoding, sub] = parse_ann_payload(dataptr, sz, error);
+  ytp_stream_t stream = ytp_yamal_tell(cursor->yamal, cursor->it_ann, error);
   if (*error) {
     return false;
   }
 
   cursor->it_ann = next_it;
   cursor->ann_processed = seqno;
+  if (sub == STREAM_STATE::DUPLICATED) {
+    return true;
+  }
 
-  for (auto &cb : cursor->cb_ann) {
+  cursor->cb_ann.lock();
+  for (auto it = cursor->cb_ann.begin(); it != cursor->cb_ann.end(); ++it) {
+    if (it.was_removed()) {
+      continue;
+    }
+    auto &cb = *it;
     cb.first(cb.second, stream, seqno, peername.size(), peername.data(), chname.size(), chname.data(), encoding.size(), encoding.data());
   }
+  cursor->cb_ann.release();
   return true;
 }
 
-extern bool ytp_cursor_poll_one_data(ytp_cursor_t *cursor, fmc_error_t **error) {
+extern bool ytp_cursor_poll_data(ytp_cursor_t *cursor, fmc_error_t **error) {
+  if (ytp_yamal_term(cursor->it_data)) {
+    return false;
+  }
+
   size_t seqno;
   size_t sz;
   const char *dataptr;
@@ -219,13 +288,11 @@ extern bool ytp_cursor_poll_one_data(ytp_cursor_t *cursor, fmc_error_t **error) 
   }
 
   if (cursor->ann_processed < stream_seqno) {
-    if (ytp_yamal_term(cursor->it_ann)) {
+    if (!ytp_cursor_poll_ann(cursor, error)) {
       fmc_error_set(error, "unknown stream reference in data seqno=%zu", seqno);
       return false;
     }
-    else {
-      return ytp_cursor_poll_one_ann(cursor, error);
-    }
+    return true;
   }
 
   auto next_it = ytp_yamal_next(cursor->yamal, cursor->it_data, error);
@@ -236,23 +303,38 @@ extern bool ytp_cursor_poll_one_data(ytp_cursor_t *cursor, fmc_error_t **error) 
   cursor->it_data = next_it;
   cursor->data_processed = seqno;
 
-  if (auto it = cursor->cb_data.find(stream); it != cursor->cb_data.end()) {
-    for (auto &cb : it->second) {
+  if (auto it2 = cursor->cb_data.find(stream); it2 != cursor->cb_data.end()) {
+    auto &d = it2->second;
+    d.lock();
+    for (auto it = d.begin(); it != d.end(); ++it) {
+      if (it.was_removed()) {
+        continue;
+      }
+      auto &cb = *it;
       cb.first(cb.second, seqno, msgtime, stream, data.size(), data.data());
     }
+    d.release();
   }
   return true;
 }
 
 bool ytp_cursor_poll(ytp_cursor_t *cursor, fmc_error_t **error) {
-  if (!ytp_yamal_term(cursor->it_ann)) {
-    return ytp_cursor_poll_one_ann(cursor, error);
+  bool polled = ytp_cursor_poll_ann(cursor, error);
+  if (polled || *error) {
+    return polled;
   }
-  if (!ytp_yamal_term(cursor->it_data)) {
-    return ytp_cursor_poll_one_data(cursor, error);
+  return ytp_cursor_poll_data(cursor, error);
+}
+
+template<typename T>
+static void concat_callbacks(fmc::lazy_rem_vector<T> &d, fmc::lazy_rem_vector<T> &s) {
+  for (auto it = s.begin(); it != s.end(); ++it) {
+    if (it.was_removed()) {
+      continue;
+    }
+    d.emplace_back(*it);
   }
-  fmc_error_clear(error);
-  return false;
+  s.clear();
 }
 
 bool ytp_cursor_consume(ytp_cursor_t *dest, ytp_cursor_t *src) {
@@ -260,35 +342,19 @@ bool ytp_cursor_consume(ytp_cursor_t *dest, ytp_cursor_t *src) {
     return false;
   }
 
-  if (dest->cb_data.empty()) {
-    dest->cb_data = std::move(src->cb_data);
-  }
-  else {
-    for (auto &&[k, v] : src->cb_data) {
-      auto &d = dest->cb_data[k];
-      if (d.empty()) {
-        d = std::move(v);
-      }
-      else {
-        d.splice(d.end(), v);
-        v.clear();
-      }
-    }
+  for (auto &&[k, s] : src->cb_data) {
+    concat_callbacks(dest->cb_data[k], s);
   }
 
-  if (dest->cb_ann.empty()) {
-    dest->cb_ann = std::move(src->cb_ann);
-  }
-  else {
-    dest->cb_ann.splice(dest->cb_ann.end(), src->cb_ann);
-    src->cb_ann.clear();
-  }
-
+  concat_callbacks(dest->cb_ann, src->cb_ann);
   return true;
 }
 
 void ytp_cursor_all_cb_rm(ytp_cursor_t *cursor) {
-  cursor->cb_data.clear();
+  for (auto &&[k, s] : cursor->cb_data) {
+    s.clear();
+  }
+
   cursor->cb_ann.clear();
 }
 
@@ -353,46 +419,6 @@ ytp_anns::ytp_anns(ytp_yamal_t *yamal) : yamal(yamal) {
   }
 }
 
-template<typename F>
-static bool ytp_anns_find_one(ytp_anns_t *anns, fmc_error_t **error, const F &should_stop) {
-  do {
-    size_t seqno;
-    size_t sz;
-    const char *dataptr;
-
-    ytp_yamal_read(anns->yamal, anns->it_ann, &seqno, &sz, &dataptr, error);
-    if (*error) {
-      return false;
-    }
-
-    ytp_stream_t stream = ytp_yamal_tell(anns->yamal, anns->it_ann, error);
-    if (*error) {
-      return false;
-    }
-
-    auto next_it = ytp_yamal_next(anns->yamal, anns->it_ann, error);
-    if (*error) {
-      return false;
-    }
-
-    auto [peername, chname, encoding, sub] = parse_ann_payload(dataptr, sz, error);
-    if (*error) {
-      return false;
-    }
-
-    anns->it_ann = next_it;
-    anns->ann_processed = seqno;
-
-    using key_t = typename decltype(anns->reverse_map)::key_type;
-    auto it = anns->reverse_map.emplace(key_t{peername, chname}, stream);
-
-    if (should_stop(it.first->second, peername, chname, encoding)) {
-      break;
-    }
-  } while (true);
-  return true;
-}
-
 ytp_stream_t ytp_anns_stream(ytp_anns_t *anns, size_t pz, const char *pn, size_t cz, const char *cn, size_t ez, const char *en, fmc_error_t **error) {
   fmc_error_clear(error);
 
@@ -401,7 +427,31 @@ ytp_stream_t ytp_anns_stream(ytp_anns_t *anns, size_t pz, const char *pn, size_t
   std::string_view arg_encoding(en, ez);
 
   if (auto it = anns->reverse_map.find({arg_peer, arg_ch}); it != anns->reverse_map.end()) {
-    return it->second;
+    auto stream = it->second;
+    auto it_stream = ytp_yamal_seek(anns->yamal, stream, error);
+    if (*error) {
+      return {};
+    }
+
+    size_t stream_seqno;
+    size_t stream_sz;
+    const char *stream_dataptr;
+    ytp_yamal_read(anns->yamal, it_stream, &stream_seqno, &stream_sz, &stream_dataptr, error);
+    if (*error) {
+      return {};
+    }
+
+    auto [peername, chname, encoding, const_sub] = parse_ann_payload(stream_dataptr, stream_sz, error);
+    if (*error) {
+      return {};
+    }
+
+    if (arg_encoding != encoding) {
+      fmc_error_set(error, "stream encoding redefinition is not allowed");
+      return {};
+    }
+
+    return stream;
   }
 
   ytp_stream_write_ann(anns->yamal, pz, pn, cz, cn, ez, en, error);
@@ -410,48 +460,44 @@ ytp_stream_t ytp_anns_stream(ytp_anns_t *anns, size_t pz, const char *pn, size_t
   }
 
   auto ret = ytp_stream_t{};
-  ytp_anns_find_one(anns, error, [&] (ytp_stream_t stream, std::string_view peer, std::string_view ch, std::string_view encoding) {
-    if (arg_peer == peer && arg_ch == ch) {
-      if (arg_encoding != encoding) {
-        fmc_error_set(error, "stream encoding redefinition is not allowed");
-        return true;
-      }
+  ytp_anns_lookup_one(anns, error, [&] (ytp_stream_t stream, std::string_view peer, std::string_view ch, std::string_view encoding) {
+    if (arg_peer != peer || arg_ch != ch) {
+      return false;
+    }
 
-      ret = stream;
+    if (arg_encoding != encoding) {
+      fmc_error_set(error, "stream encoding redefinition is not allowed");
       return true;
     }
 
-    return false;
+    ret = stream;
+    return true;
   });
 
   return ret;
 }
 
 template<typename Handler>
-static bool ytp_any_next(ytp_yamal_t *yamal, ytp_iterator_t &it, size_t *sz, const char **data, fmc_error_t **error, const Handler &handler) {
+static void ytp_any_next(ytp_yamal_t *yamal, ytp_iterator_t &it, size_t *sz, const char **data, fmc_error_t **error, const Handler &handler) {
   fmc_error_clear(error);
-  if (ytp_yamal_term(it)) {
-    return false;
-  }
 
   size_t seqno;
   ytp_yamal_read(yamal, it, &seqno, sz, data, error);
   if (*error) {
-    return false;
-  }
-
-  handler(error);
-  if (*error) {
-    return false;
+    return;
   }
 
   auto next_it = ytp_yamal_next(yamal, it, error);
   if (*error) {
-    return false;
+    return;
+  }
+
+  handler(error);
+  if (*error) {
+    return;
   }
 
   it = next_it;
-  return !ytp_yamal_term(it);
 }
 
 void ytp_inds_init(ytp_inds_t *inds, ytp_yamal_t *yamal, fmc_error_t **error) {
@@ -460,7 +506,13 @@ void ytp_inds_init(ytp_inds_t *inds, ytp_yamal_t *yamal, fmc_error_t **error) {
 }
 
 bool ytp_inds_next(ytp_inds_t *inds, ytp_stream_t *id, uint64_t *offset, size_t *sz, const char **data, fmc_error_t **error) {
-  return ytp_any_next(inds->yamal, inds->it_idx, sz, data, error, [&] (fmc_error_t **error) {
+  fmc_error_clear(error);
+
+  if (!ytp_yamal_term(inds->it_idx)) {
+    return false;
+  }
+
+  ytp_any_next(inds->yamal, inds->it_idx, sz, data, error, [&] (fmc_error_t **error) {
     if (*sz < sizeof(idx_msg_t)) {
       fmc_error_set(error, "invalid index message");
       return;
@@ -472,6 +524,8 @@ bool ytp_inds_next(ytp_inds_t *inds, ytp_stream_t *id, uint64_t *offset, size_t 
     *sz -= sizeof(idx_msg_t);
     *data += sizeof(idx_msg_t);
   });
+
+  return !*error;
 }
 
 void ytp_subs_init(ytp_subs_t *subs, ytp_yamal_t *yamal, fmc_error_t **error) {
@@ -485,18 +539,20 @@ void ytp_subs_init(ytp_subs_t *subs, ytp_yamal_t *yamal, fmc_error_t **error) {
 }
 
 bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error) {
-  size_t *sz;
-  const char **data;
-  bool skip = false;
-  do {
-    auto ret = ytp_any_next(subs->yamal, subs->it_subs, sz, data, error, [&] (fmc_error_t **error) {
-      if (*sz < sizeof(sub_msg_t)) {
+  fmc_error_clear(error);
+
+  size_t sz;
+  const char *data;
+  bool ret = false;
+  while(!ytp_yamal_term(subs->it_subs)) {
+    ytp_any_next(subs->yamal, subs->it_subs, &sz, &data, error, [&] (fmc_error_t **error) {
+      if (sz < sizeof(sub_msg_t)) {
         fmc_error_set(error, "invalid index message");
         return;
       }
 
-      auto &idx = *reinterpret_cast<sub_msg_t *>(data);
-      *id = ye64toh(idx.stream);
+      auto &submsg = *reinterpret_cast<const sub_msg_t *>(data);
+      *id = ye64toh(submsg.stream);
 
       auto off_sub = ytp_yamal_tell(subs->yamal, subs->it_subs, error);
       if (*error) {
@@ -521,14 +577,16 @@ bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error) {
         return;
       }
 
-      uint64_t prev_val = 0;
+      uint64_t prev_val = STREAM_STATE::NO_SUBSCRIPTION;
       auto &sub = const_cast<std::atomic<uint64_t> &>(*const_sub);
-      skip = !sub.compare_exchange_weak(prev_val, off_sub);
+      ret = sub.compare_exchange_weak(prev_val, off_sub) || prev_val == off_sub;
     });
-    if (error || !skip) {
-      return ret;
+    if (*error || ret) {
+      return !*error;
     }
-  } while(true);
+  }
+
+  return false;
 }
 
 char *ytp_stream_reserve(ytp_yamal_t *yamal, size_t size, fmc_error_t **error) {
@@ -574,15 +632,15 @@ void ytp_stream_read_ann(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t *seqno, s
   *sub = const_sub->load();
 }
 
-void ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t offset, size_t sz, char *data, fmc_error_t **error) {
+ytp_iterator_t ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t offset, size_t sz, const char *data, fmc_error_t **error) {
   auto *ptr = (idx_msg_t *)ytp_yamal_reserve(yamal, sz + sizeof(idx_msg_t), error);
   if (*error) {
-    return;
+    return {};
   }
   ptr->stream = id;
   ptr->offset = offset;
   std::memcpy(ptr->payload, data, sz);
-  ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_IDX, error);
+  return ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_IDX, error);
 }
 
 ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal, size_t pz, const char *pn, size_t cz, const char *cn, size_t ez, const char *en, fmc_error_t **error) {
@@ -604,9 +662,18 @@ ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal, size_t pz, const char *p
   }
   ptr->peer_name_sz = pz;
   ptr->channel_name_sz = cz;
-  ptr->subscription = 0;
+  ptr->subscription = STREAM_STATE::UNKNOWN;
   std::memcpy(ptr->payload, pn, pz);
   std::memcpy(ptr->payload + pz, cn, cz);
   std::memcpy(ptr->payload + pz + cz, en, ez);
   return ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, error);
+}
+
+ytp_iterator_t ytp_stream_write_sub(ytp_yamal_t *yamal, ytp_stream_t id, fmc_error_t **error) {
+  auto *ptr = (sub_msg_t *)ytp_yamal_reserve(yamal, sizeof(sub_msg_t), error);
+  if (*error) {
+    return {};
+  }
+  ptr->stream = htoye64(id);
+  return ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_SUB, error);
 }
