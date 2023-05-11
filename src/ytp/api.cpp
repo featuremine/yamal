@@ -193,14 +193,14 @@ void ytp_sequence_shared_set_it(shared_sequence *sh_seq,
   ytp_sequence_set_it(seq, iterator);
 }
 // Returns an iterator given a serializable offset
-ytp_iterator_t ytp_sequence_shared_seek(shared_sequence *sh_seq, size_t off,
+ytp_iterator_t ytp_sequence_shared_seek(shared_sequence *sh_seq, uint64_t off,
                                         fmc_error_t **error) {
   ytp_sequence_t *seq =
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
   return ytp_sequence_seek(seq, off, error);
 }
 // Returns serializable offset given an iterator
-size_t ytp_sequence_shared_tell(shared_sequence *sh_seq,
+uint64_t ytp_sequence_shared_tell(shared_sequence *sh_seq,
                                 ytp_iterator_t iterator, fmc_error_t **error) {
   ytp_sequence_t *seq =
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);

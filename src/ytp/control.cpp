@@ -78,7 +78,7 @@ void ytp_control_destroy(ytp_control_t *ctrl, fmc_error_t **error) {
   ctrl->~ytp_control();
 }
 
-static void data_cb(void *closure, size_t seqno, uint64_t msgtime, ytp_stream_t stream, size_t sz, const char *data) {
+static void data_cb(void *closure, uint64_t seqno, uint64_t msgtime, ytp_stream_t stream, size_t sz, const char *data) {
   auto ctrl = (ytp_control_t *)closure;
   auto &result = ctrl->poll_result;
   result.last.data.seqno = seqno;
@@ -88,7 +88,7 @@ static void data_cb(void *closure, size_t seqno, uint64_t msgtime, ytp_stream_t 
   result.state = poll_result_t::state_t::DATA;
 }
 
-static void process_ann(ytp_control_t *ctrl, size_t seqno, ytp_stream_t stream, std::string_view peername, std::string_view chname, std::string_view encoding, poll_result_t &result) {
+static void process_ann(ytp_control_t *ctrl, uint64_t seqno, ytp_stream_t stream, std::string_view peername, std::string_view chname, std::string_view encoding, poll_result_t &result) {
   auto it_peer = ctrl->name_to_peerid.emplace(peername, ctrl->name_to_peerid.size() + YTP_PEER_OFF);
   if (it_peer.second) {
     ctrl->peers.emplace_back().name = peername;
@@ -121,7 +121,7 @@ static void process_ann(ytp_control_t *ctrl, size_t seqno, ytp_stream_t stream, 
   result.state = poll_result_t::state_t::ANN_PEERCH;
 }
 
-static void ann_cb(void *closure, ytp_stream_t stream, size_t seqno, size_t peer_sz, const char *peer_name, size_t ch_sz, const char *ch_name, size_t encoding_sz, const char *encoding_data) {
+static void ann_cb(void *closure, ytp_stream_t stream, uint64_t seqno, size_t peer_sz, const char *peer_name, size_t ch_sz, const char *ch_name, size_t encoding_sz, const char *encoding_data) {
   auto ctrl = (ytp_control_t *)closure;
   process_ann(ctrl, seqno, stream, {peer_name, peer_sz}, {ch_name, ch_sz}, {encoding_data, encoding_sz}, ctrl->poll_result);
 }
@@ -411,12 +411,12 @@ bool ytp_control_term(ytp_iterator_t iterator) {
   return ytp_yamal_term(iterator);
 }
 
-ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t ptr,
+ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, uint64_t ptr,
                                 fmc_error_t **error) {
   return ytp_yamal_seek(&ctrl->yamal, ptr, error);
 }
 
-size_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
+uint64_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
                         fmc_error_t **error) {
   return ytp_yamal_tell(&ctrl->yamal, iterator, error);
 }

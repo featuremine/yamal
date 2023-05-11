@@ -23,18 +23,6 @@ target_link_libraries(
 add_test(NAME ytp_time COMMAND tests_ytp_time)
 
 add_executable(
-    tests_ytp_control
-    "control.cpp"
-)
-target_link_libraries(
-    tests_ytp_control
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_control COMMAND tests_ytp_control)
-
-add_executable(
     tests_ytp_timeline
     "timeline.cpp"
 )

@@ -121,7 +121,7 @@ void ytp_cursor_data_cb(ytp_cursor_t *cursor,
       return;
     }
 
-    size_t stream_seqno;
+    uint64_t stream_seqno;
     size_t stream_sz;
     const char *stream_dataptr;
     ytp_yamal_read(cursor->yamal, stream_it, &stream_seqno, &stream_sz, &stream_dataptr, error);
@@ -130,7 +130,7 @@ void ytp_cursor_data_cb(ytp_cursor_t *cursor,
     }
 
     auto &const_sub = *std::get<3>(parse_ann_payload(stream_dataptr, stream_sz, error));
-    uint64_t unset = STREAM_STATE::NO_SUBSCRIPTION;
+    uint64_t unset = SUBSCRIPTION_STATE::NO_SUBSCRIPTION;
     if (const_sub.load() == unset) {
       auto it_sub = ytp_stream_write_sub(cursor->yamal, stream, error);
       if (*error) {
@@ -171,7 +171,7 @@ bool ytp_cursor_term_ann(ytp_cursor_t *cursor) {
   }
 
   fmc_error_t *error;
-  size_t stream_seqno;
+  uint64_t stream_seqno;
   size_t stream_sz;
   const char *stream_dataptr;
   ytp_yamal_read(cursor->yamal, cursor->it_ann, &stream_seqno, &stream_sz, &stream_dataptr, &error);
@@ -180,7 +180,7 @@ bool ytp_cursor_term_ann(ytp_cursor_t *cursor) {
   }
 
   auto sub = std::get<3>(parse_ann_payload(stream_dataptr, stream_sz, &error))->load();
-  return sub < STREAM_STATE::NO_SUBSCRIPTION;
+  return sub < SUBSCRIPTION_STATE::NO_SUBSCRIPTION;
 }
 
 bool ytp_cursor_term(ytp_cursor_t *cursor) {
@@ -207,7 +207,7 @@ bool ytp_cursor_poll_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
     return false;
   }
 
-  size_t seqno;
+  uint64_t seqno;
   size_t sz;
   const char *dataptr;
 
@@ -222,7 +222,7 @@ bool ytp_cursor_poll_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
   }
 
   auto sub = const_sub->load();
-  if (sub == STREAM_STATE::UNKNOWN) {
+  if (sub == SUBSCRIPTION_STATE::UNKNOWN) {
     return false;
   }
 
@@ -238,7 +238,7 @@ bool ytp_cursor_poll_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
 
   cursor->it_ann = next_it;
   cursor->ann_processed = seqno;
-  if (sub == STREAM_STATE::DUPLICATED) {
+  if (sub == SUBSCRIPTION_STATE::DUPLICATED) {
     return true;
   }
 
@@ -259,7 +259,7 @@ extern bool ytp_cursor_poll_data(ytp_cursor_t *cursor, fmc_error_t **error) {
     return false;
   }
 
-  size_t seqno;
+  uint64_t seqno;
   size_t sz;
   const char *dataptr;
   uint64_t msgtime;
@@ -279,7 +279,7 @@ extern bool ytp_cursor_poll_data(ytp_cursor_t *cursor, fmc_error_t **error) {
     return false;
   }
 
-  size_t stream_seqno;
+  uint64_t stream_seqno;
   size_t stream_sz;
   const char *stream_dataptr;
   ytp_yamal_read(cursor->yamal, stream_it, &stream_seqno, &stream_sz, &stream_dataptr, error);
@@ -358,8 +358,8 @@ void ytp_cursor_all_cb_rm(ytp_cursor_t *cursor) {
   cursor->cb_ann.clear();
 }
 
-void ytp_cursor_seek(ytp_cursor_t *cursor, size_t off, fmc_error_t **error) {
-  auto new_it = ytp_yamal_seek(cursor->yamal, off, error);
+void ytp_cursor_seek(ytp_cursor_t *cursor, uint64_t offset, fmc_error_t **error) {
+  auto new_it = ytp_yamal_seek(cursor->yamal, offset, error);
   if (*error) {
     return;
   }
@@ -367,7 +367,7 @@ void ytp_cursor_seek(ytp_cursor_t *cursor, size_t off, fmc_error_t **error) {
   cursor->it_data = new_it;
 }
 
-size_t ytp_cursor_tell(ytp_cursor_t *cursor, fmc_error_t **error) {
+uint64_t ytp_cursor_tell(ytp_cursor_t *cursor, fmc_error_t **error) {
   return ytp_yamal_tell(cursor->yamal, cursor->it_data, error);
 }
 
@@ -433,7 +433,7 @@ ytp_stream_t ytp_anns_stream(ytp_anns_t *anns, size_t pz, const char *pn, size_t
       return {};
     }
 
-    size_t stream_seqno;
+    uint64_t stream_seqno;
     size_t stream_sz;
     const char *stream_dataptr;
     ytp_yamal_read(anns->yamal, it_stream, &stream_seqno, &stream_sz, &stream_dataptr, error);
@@ -481,7 +481,7 @@ template<typename Handler>
 static void ytp_any_next(ytp_yamal_t *yamal, ytp_iterator_t &it, size_t *sz, const char **data, fmc_error_t **error, const Handler &handler) {
   fmc_error_clear(error);
 
-  size_t seqno;
+  uint64_t seqno;
   ytp_yamal_read(yamal, it, &seqno, sz, data, error);
   if (*error) {
     return;
@@ -564,7 +564,7 @@ bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error) {
         return;
       }
 
-      size_t stream_seqno;
+      uint64_t stream_seqno;
       size_t stream_sz;
       const char *stream_dataptr;
       ytp_yamal_read(subs->yamal, it_stream, &stream_seqno, &stream_sz, &stream_dataptr, error);
@@ -577,7 +577,7 @@ bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error) {
         return;
       }
 
-      uint64_t prev_val = STREAM_STATE::NO_SUBSCRIPTION;
+      uint64_t prev_val = SUBSCRIPTION_STATE::NO_SUBSCRIPTION;
       auto &sub = const_cast<std::atomic<uint64_t> &>(*const_sub);
       ret = sub.compare_exchange_weak(prev_val, off_sub) || prev_val == off_sub;
     });
@@ -589,9 +589,9 @@ bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error) {
   return false;
 }
 
-char *ytp_stream_reserve(ytp_yamal_t *yamal, size_t size, fmc_error_t **error) {
+char *ytp_stream_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
   fmc_error_clear(error);
-  auto *data_msg = (data_msg_t *)ytp_time_reserve(yamal, size + sizeof(data_msg_t), error);
+  auto *data_msg = (data_msg_t *)ytp_time_reserve(yamal, sz + sizeof(data_msg_t), error);
   if (*error) {
     return nullptr;
   }
@@ -662,7 +662,7 @@ ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal, size_t pz, const char *p
   }
   ptr->peer_name_sz = pz;
   ptr->channel_name_sz = cz;
-  ptr->subscription = STREAM_STATE::UNKNOWN;
+  ptr->subscription = SUBSCRIPTION_STATE::UNKNOWN;
   std::memcpy(ptr->payload, pn, pz);
   std::memcpy(ptr->payload + pz, cn, cz);
   std::memcpy(ptr->payload + pz + cz, en, ez);

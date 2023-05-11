@@ -29,12 +29,12 @@
 
 using namespace std::chrono_literals;
 
-typedef size_t mmnode_offs;
+typedef uint64_t mmnode_offs;
 typedef struct fm_mmlist fm_mmlist_t;
 
 struct mmnode {
-  mmnode(size_t sz) : size(htoye64(sz)) {}
-  std::atomic<size_t> size;
+  mmnode(uint64_t sz) : size(htoye64(sz)) {}
+  std::atomic<uint64_t> size;
   std::atomic<mmnode_offs> next = 0;
   std::atomic<mmnode_offs> prev = 0;
   mmnode_offs seqno = 0;
@@ -44,9 +44,9 @@ struct mmnode {
 static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
 
 struct yamal_hdr_t {
-  std::atomic<size_t> magic_number;
+  std::atomic<uint64_t> magic_number;
   std::atomic<FMC_CLOSABLE> closable;
-  std::atomic<size_t> size;
+  std::atomic<uint64_t> size;
   mmnode hdr[YTP_YAMAL_LISTS];
 };
 
@@ -54,7 +54,7 @@ static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
 static_assert(sizeof(yamal_hdr_t) == YTP_YAMAL_HEADER_SIZE);
 
-static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
+static const uint64_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
 
 template <typename T>
 static bool atomic_expect_or_init(std::atomic<T> &data, T desired) {
@@ -72,7 +72,7 @@ static void *allocate_page(ytp_yamal_t *yamal, size_t page,
   auto *page_ptr = fmc_fview_data(mem_page);
 
   if (!page_ptr) {
-    size_t f_offset = page * fm_mmlist_page_sz;
+    uint64_t f_offset = page * fm_mmlist_page_sz;
     if (!yamal->readonly_) {
       fmc_falloc(yamal->fd, f_offset + fm_mmlist_page_sz, error);
       if (*error) {
@@ -123,9 +123,9 @@ size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal, fmc_error_t **error) {
 static void *get_mapped_memory(ytp_yamal_t *yamal, mmnode_offs offs,
                                fmc_error_t **error) {
   fmc_error_clear(error);
-  size_t loffs = ye64toh(offs);
+  uint64_t loffs = ye64toh(offs);
   size_t page = loffs / fm_mmlist_page_sz;
-  size_t mem_offset = loffs % fm_mmlist_page_sz;
+  uint64_t mem_offset = loffs % fm_mmlist_page_sz;
   void *page_ptr = fmc_fview_data(&yamal->pages[page]);
   if (!page_ptr) {
     std::lock_guard<std::mutex> lock(yamal->pa_mutex_);
@@ -308,15 +308,15 @@ ytp_yamal::ytp_yamal(int fd, bool enable_thread, FMC_CLOSABLE closable) {
       throw fmc::error(*error);
     }
   } else {
-    if (!atomic_expect_or_init<size_t>(hdr->magic_number,
+    if (!atomic_expect_or_init<uint64_t>(hdr->magic_number,
                                        *(uint64_t *)magic_number)) {
       ytp_yamal_destroy(this, &error);
       FMC_ERROR_REPORT(&error, "invalid yamal file format");
       throw fmc::error(*error);
     }
-    atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
+    atomic_expect_or_init<uint64_t>(hdr->size, htoye64(hdr_sz));
     for (size_t lstidx = 0; lstidx < YTP_YAMAL_LISTS; ++lstidx) {
-      atomic_expect_or_init<size_t>(
+      atomic_expect_or_init<uint64_t>(
           hdr->hdr[lstidx].prev,
           htoye64((mmnode_offs) & ((yamal_hdr_t *)0)->hdr[lstidx]));
     }
@@ -385,13 +385,13 @@ char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
   if (*error) {
     return nullptr;
   }
-  size_t old_reserve;
+  uint64_t old_reserve;
   do {
 #ifdef DIRECT_BYTE_ORDER
     old_reserve = atomic_fetch_add(&hdr->size, node_size);
 #else
-    size_t val;
-    size_t expected = hdr->size.load();
+    uint64_t val;
+    uint64_t expected = hdr->size.load();
     do {
       old_reserve = ye64toh(expected);
       val = old_reserve + node_size;
@@ -450,7 +450,7 @@ ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data, size_t lstidx,
   return &node->next;
 }
 
-void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *seqno,
+void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno,
                     size_t *size, const char **data, fmc_error_t **error) {
   auto offset = cast_iterator(iterator).load();
 
@@ -499,7 +499,7 @@ ytp_iterator_t ytp_yamal_next(ytp_yamal_t *yamal, ytp_iterator_t iterator,
 ytp_iterator_t ytp_yamal_prev(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                               fmc_error_t **error) {
   auto &it = cast_iterator(iterator);
-  constexpr size_t diff = offsetof(mmnode, prev) - offsetof(mmnode, next);
+  constexpr uint64_t diff = offsetof(mmnode, prev) - offsetof(mmnode, next);
   auto &prev_it = *(std::atomic<mmnode_offs> *)((char *)&it + diff);
   if (auto *prev = mmnode_get1(yamal, prev_it.load(), error); !*error) {
     return &prev->next;
@@ -566,7 +566,7 @@ ytp_iterator_t ytp_yamal_remove(ytp_yamal_t *yamal, ytp_iterator_t iterator,
   return (ytp_iterator_t)&prev->next;
 }
 
-ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
+ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, uint64_t ptr,
                               fmc_error_t **error) {
   if (auto *node = mmnode_get1(yamal, htoye64(ptr), error); !*error) {
     return &node->next;
@@ -575,7 +575,7 @@ ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
   return nullptr;
 }
 
-size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
+uint64_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                       fmc_error_t **error) {
   auto *hdr = yamal->header(error);
   if (*error) {
@@ -586,7 +586,7 @@ size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
     return (uint64_t)iterator - offsetof(mmnode, next) - (uint64_t)hdr;
   }
 
-  constexpr size_t diff = offsetof(mmnode, prev) - offsetof(mmnode, next);
+  constexpr uint64_t diff = offsetof(mmnode, prev) - offsetof(mmnode, next);
   auto &prev_it = cast_iterator((char *)iterator + diff);
   if (auto *node = mmnode_get1(yamal, prev_it.load(), error); !*error) {
     return ye64toh(node->next.load());
@@ -638,7 +638,7 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
   }
 }
 
-bool ytp_yamal_closed(ytp_yamal_t *yamal, std::size_t lstidx,
+bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx,
                       fmc_error_t **error) {
   auto *hdr = yamal->header(error);
   if (*error)

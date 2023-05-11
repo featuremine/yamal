@@ -43,14 +43,14 @@ struct ann_info {
   ytp_stream_t stream;
   ytp_peer_t peer;
   ytp_channel_t channel;
-  size_t seqno;
+  uint64_t seqno;
   std::string_view peername;
   std::string_view chname;
   std::string_view encoding;
 };
 
 struct data_info {
-  size_t seqno;
+  uint64_t seqno;
   uint64_t msgtime;
   ytp_stream_t stream;
   std::string_view data;

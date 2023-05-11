@@ -9,8 +9,10 @@ message transport between multiple peers on top of Yamal.
   - [Yamal (Layer 0)](#yamal-layer-0)
   - [Time (Layer 1)](#time-layer-1)
   - [Stream (Layer 2)](#stream-layer-2)
-    - [stream](#stream)
-    - [subscribe](#subscribe)
+      - [List 0 (data)](#list-0-list-0-data)
+      - [List 1 (announcement)](#list-1-announcement)
+      - [List 2 (subscription)](#list-2-subscription)
+      - [List 3 (index)](#list-3-index)
 - [Simple Channel Directory Protocol](#simple-channel-directory-protocol)
 
 ### Requirements
@@ -31,11 +33,11 @@ message transport between multiple peers on top of Yamal.
 
 ## Layers
 
-All fields specified in this section use network byte order.
+All fields specified in this section use big endian byte order.
 
 ### Yamal (Layer 0)
 
-The transaction messaging bus Yamal.
+The transaction messaging bus Yamal. Every message includes a sequence number.
 
 ### Time (Layer 1)
 
@@ -57,12 +59,20 @@ Timestamp is the original time of the message. Whenever the message is copied or
 
 ### Stream (Layer 2)
 
-A control channel is used for communicating publisher and subscription control information.
+Uses 4 yamal lists:
+  - List 0: used for **user data** messages.
+  - List 1: used for **stream** announcements.
+  - List 2: used for **subscription** messages.
+  - List 3: used for **index** messages.
+
+#### List 0 (data)
+
+The list 0 of the yamal file has all the user data messages for all the streams.
 
 <table>
     <tr>
         <th>time layer</th>
-        <th colspan="2">stream layer</th>
+        <th colspan="2">data payload</th>
     </tr>
     <tr>
         <td>8 bytes</td>
@@ -72,21 +82,19 @@ A control channel is used for communicating publisher and subscription control i
     <tr>
         <td>Timestamp</td>
         <td>Stream ID</td>
-        <td>Payload</td>
+        <td>Data</td>
     </tr>
 </table>
 
-#### stream
+#### List 1 (announcement)
 
 A peer announces a stream.
 
 <table>
     <tr>
-        <th>time layer</th>
-        <th colspan="6">stream layer</th>
+        <th colspan="6">announcement message</th>
     </tr>
     <tr>
-        <td>8 bytes</td>
         <td>8 bytes</td>
         <td>2 bytes</td>
         <td>2 bytes</td>
@@ -95,8 +103,7 @@ A peer announces a stream.
         <td>variable</td>
     </tr>
     <tr>
-        <td>Timestamp</td>
-        <td>Stream ID = 0</td>
+        <td>Subscription ID</td>
         <td>Peer name length</td>
         <td>Channel name length</td>
         <td>Peer name</td>
@@ -105,26 +112,45 @@ A peer announces a stream.
     </tr>
 </table>
 
-The peer needs to avoid publishing duplicated stream announcements messages for the same stream. The first stream announcement supersedes following announcements. Stream encoding is specified using [Channel Metadata Protocol](#channel-metadata-protocol) (see bellow).
+The peer needs to avoid publishing duplicated stream announcements messages for the same stream. The first stream announcement supersedes following announcements.
 
-#### subscribe
+The ID of a stream is the offset in the file of the first message.
 
-A peer announces a subscription to a stream.
+Stream encoding is specified using [Channel Metadata Protocol](#channel-metadata-protocol) (see bellow).
+
+#### List 2 (subscription)
+
+A subscription announcement to a stream.
 
 <table>
     <tr>
-        <th>time layer</th>
-        <th colspan="2">stream layer</th>
+        <th>subscribe message</th>
+    </tr>
+    <tr>
+        <td>8 bytes</td>
+    </tr>
+    <tr>
+        <td>Stream ID</td>
+    </tr>
+</table>
+
+#### List 3 (index)
+
+An index message that references a message in the data list.
+
+<table>
+    <tr>
+        <th colspan="3">index message</th>
     </tr>
     <tr>
         <td>8 bytes</td>
         <td>8 bytes</td>
-        <td>8 bytes</td>
+        <td>variable</td>
     </tr>
     <tr>
-        <td>Timestamp</td>
-        <td>Stream ID = 1</td>
-        <td>Stream ID to subscribe</td>
+        <td>Stream ID</td>
+        <td>Data message offset</td>
+        <td>Payload</td>
     </tr>
 </table>
 

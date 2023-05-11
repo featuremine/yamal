@@ -43,7 +43,7 @@ ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, uint64_t time, void *data, si
   return ytp_yamal_commit(yamal, time_msg, listidx, error);
 }
 
-void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *seqno, uint64_t *msgtime, size_t *size, const char **data, fmc_error_t **error) {
+void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno, uint64_t *msgtime, size_t *size, const char **data, fmc_error_t **error) {
   const ytp_time_msg *time_msg;
   ytp_yamal_read(yamal, iterator, seqno, size, (const char **)&time_msg, error);
   if (*error) {

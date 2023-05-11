@@ -28,12 +28,6 @@
 #include <unordered_set>
 #include <vector>
 
-enum STREAM_STATE : uint64_t {
-  UNKNOWN = 0,
-  DUPLICATED = 1,
-  NO_SUBSCRIPTION = 2,
-};
-
 #pragma pack(push, 1)
 struct ann_msg_t {
   std::atomic<uint64_t> subscription;
@@ -46,7 +40,7 @@ struct sub_msg_t {
 };
 struct idx_msg_t {
   ytp_stream_t stream;
-  size_t offset;
+  uint64_t offset;
   char payload[];
 };
 struct data_msg_t {
@@ -68,8 +62,8 @@ struct ytp_cursor {
   ytp_yamal_t *yamal;
   ytp_iterator_t it_data;
   ytp_iterator_t it_ann;
-  size_t ann_processed;
-  size_t data_processed;
+  uint64_t ann_processed;
+  uint64_t data_processed;
 
   fmc::lazy_rem_vector<ytp_cursor_ann_cb_cl_t> cb_ann;
   std::unordered_map<ytp_stream_t, fmc::lazy_rem_vector<ytp_cursor_data_cb_cl_t>> cb_data;
@@ -79,7 +73,7 @@ struct ytp_anns {
   ytp_anns(ytp_yamal_t *yamal);
   ytp_yamal_t *yamal;
   ytp_iterator_t it_ann;
-  size_t ann_processed;
+  uint64_t ann_processed;
   std::unordered_map<stream_name, ytp_stream_t> reverse_map;
 };
 
@@ -91,7 +85,7 @@ extern std::tuple<std::string_view, std::string_view, std::string_view, const st
 template<typename F>
 void ytp_anns_lookup_one(ytp_anns_t *anns, fmc_error_t **error, const F &should_stop) {
   while (!ytp_yamal_term(anns->it_ann)) {
-    size_t seqno;
+    uint64_t seqno;
     size_t sz;
     const char *dataptr;
 
@@ -118,24 +112,24 @@ void ytp_anns_lookup_one(ytp_anns_t *anns, fmc_error_t **error, const F &should_
     using key_t = typename decltype(anns->reverse_map)::key_type;
     auto it = anns->reverse_map.emplace(key_t{peername, chname}, stream);
 
-    STREAM_STATE state;
+    SUBSCRIPTION_STATE state;
     if (anns->yamal->readonly_) {
-      state = static_cast<STREAM_STATE>(const_sub->load());
-      if (state == STREAM_STATE::UNKNOWN) {
+      state = static_cast<SUBSCRIPTION_STATE>(const_sub->load());
+      if (state == SUBSCRIPTION_STATE::UNKNOWN) {
         break;
       }
     }
     else {
-      uint64_t unset = STREAM_STATE::UNKNOWN;
+      uint64_t unset = SUBSCRIPTION_STATE::UNKNOWN;
       auto &sub = *const_cast<std::atomic<uint64_t> *>(const_sub);
-      sub.compare_exchange_weak(unset, it.second ? STREAM_STATE::NO_SUBSCRIPTION : STREAM_STATE::DUPLICATED);
-      state = static_cast<STREAM_STATE>(sub.load());
+      sub.compare_exchange_weak(unset, it.second ? SUBSCRIPTION_STATE::NO_SUBSCRIPTION : SUBSCRIPTION_STATE::DUPLICATED);
+      state = static_cast<SUBSCRIPTION_STATE>(sub.load());
     }
 
     anns->it_ann = next_it;
     anns->ann_processed = seqno;
 
-    if (state != STREAM_STATE::DUPLICATED) {
+    if (state != SUBSCRIPTION_STATE::DUPLICATED) {
       if (should_stop(it.first->second, peername, chname, encoding)) {
         return;
       }

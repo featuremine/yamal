@@ -304,14 +304,14 @@ TEST(stream, main_test_1) {
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_SUB), buildmsg(stream22));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_SUB), "");
 
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{subs[2]}, uint16_t{5}, uint16_t{3}, "peer1", "ch2", "encoding2"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{subs[0]}, uint16_t{5}, uint16_t{3}, "peer2", "ch1", "encoding3"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{subs[3]}, uint16_t{5}, uint16_t{3}, "peer2", "ch2", "encoding4"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "update-encoding123"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer1", "ch2", "encoding2"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer2", "ch1", "encoding3"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "update-encoding123"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer1", "ch2", "encoding2"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::UNKNOWN}, uint16_t{5}, uint16_t{3}, "peer2", "ch1", "encoding3"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), "");
 
     for (size_t i = 0; i < 4; ++i) {
@@ -322,15 +322,15 @@ TEST(stream, main_test_1) {
     ytp_anns_stream(anns, 5, "peer2", 3, "ch3", 9, "encoding5", &error);
     ASSERT_EQ(error, nullptr);
 
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{subs[2]}, uint16_t{5}, uint16_t{3}, "peer1", "ch2", "encoding2"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{subs[0]}, uint16_t{5}, uint16_t{3}, "peer2", "ch1", "encoding3"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{subs[3]}, uint16_t{5}, uint16_t{3}, "peer2", "ch2", "encoding4"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "update-encoding123"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer1", "ch2", "encoding2"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer2", "ch1", "encoding3"));
-    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{STREAM_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{3}, "peer2", "ch3", "encoding5"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer1", "ch1", "update-encoding123"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer1", "ch2", "encoding2"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::DUPLICATED}, uint16_t{5}, uint16_t{3}, "peer2", "ch1", "encoding3"));
+    EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), buildmsg(uint64_t{SUBSCRIPTION_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{3}, "peer2", "ch3", "encoding5"));
     EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), "");
 
     EXPECT_EQ(readone(), Msg{std::monostate{}});

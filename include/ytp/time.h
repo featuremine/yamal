@@ -17,16 +17,6 @@
  * @date 23 Apr 2021
  * @brief File contains C declaration of time layer of YTP
  *
- * Timestamp is the original time of the message. Whenever the message is copied
- * or forwarded, it should maintain the timestamp.
- *
- * <table>
- * <caption id="multi_row">Time message</caption>
- * <tr><th colspan="4">peer/channel/time
- * <tr><th>8 bytes  <th>8 bytes  <th>8 bytes  <th>  variable
- * <tr><td>Peer ID  <td>Channel ID  <td>Timestmap  <td>Data
- * </table>
- *
  * @see http://www.featuremine.com
  */
 
@@ -45,9 +35,9 @@ extern "C" {
 /**
  * @brief Reserves memory for data in the memory mapped list
  *
- * @param[in] yamal
+ * @param[in] yamal the ytp_yamal_t object
  * @param[in] sz the size of the data payload
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return a writable pointer for data
  */
 FMMODFUNC char *ytp_time_reserve(ytp_yamal_t *yamal, size_t sz,
@@ -56,10 +46,10 @@ FMMODFUNC char *ytp_time_reserve(ytp_yamal_t *yamal, size_t sz,
 /**
  * @brief Commits the data to the memory mapped list
  *
- * @param[in] yamal
- * @param[in] time
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[in] msgtime the time to publish the message
  * @param[in] data the value returned by ytp_time_reserve
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, uint64_t msgtime,
@@ -69,16 +59,16 @@ FMMODFUNC ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, uint64_t msgtime,
 /**
  * @brief Reads a message on channel level
  *
- * @param[in] yamal
+ * @param[in] yamal the ytp_yamal_t object
  * @param[in] iterator
  * @param[out] seqno
  * @param[out] msgtime
  * @param[out] sz
  * @param[out] data
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                             size_t *seqno, uint64_t *msgtime, size_t *sz,
+                             uint64_t *seqno, uint64_t *msgtime, size_t *sz,
                              const char **data, fmc_error_t **error);
 
 #ifdef __cplusplus

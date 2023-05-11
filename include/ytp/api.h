@@ -88,10 +88,10 @@ typedef ytp_iterator_t (*sharedseqfunc_end)(shared_sequence *, fmc_error_t **);
 typedef ytp_iterator_t (*sharedseqfunc_cur)(shared_sequence *);
 typedef ytp_iterator_t (*sharedseqfunc_get_it)(shared_sequence *);
 typedef void (*sharedseqfunc_set_it)(shared_sequence *, ytp_iterator_t);
-typedef ytp_iterator_t (*sharedseqfunc_seek)(shared_sequence *, size_t,
+typedef ytp_iterator_t (*sharedseqfunc_seek)(shared_sequence *, uint64_t,
                                              fmc_error_t **);
-typedef size_t (*sharedseqfunc_tell)(shared_sequence *, ytp_iterator_t,
-                                     fmc_error_t **);
+typedef uint64_t (*sharedseqfunc_tell)(shared_sequence *, ytp_iterator_t,
+                                       fmc_error_t **);
 typedef void (*sharedseqfunc_inc)(shared_sequence *);
 typedef void (*sharedseqfunc_dec)(shared_sequence *, fmc_error_t **);
 

@@ -221,12 +221,12 @@ void ytp_sequence_cb_rm(ytp_sequence_t *seq) {
   ytp_timeline_cb_rm(&seq->timeline);
 }
 
-ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, size_t off,
+ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, uint64_t offset,
                                  fmc_error_t **error) {
-  return ytp_timeline_seek(&seq->timeline, off, error);
+  return ytp_timeline_seek(&seq->timeline, offset, error);
 }
 
-size_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
+uint64_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
                          fmc_error_t **error) {
   return ytp_timeline_tell(&seq->timeline, iterator, error);
 }

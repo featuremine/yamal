@@ -239,7 +239,7 @@ void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel,
 }
 
 bool ytp_timeline_term(ytp_timeline_t *timeline) {
-  return ytp_yamal_term(timeline->read) && ytp_cursor_term_ann(&timeline->ctrl->data_cursor);
+  return ytp_yamal_term(timeline->read) && ytp_cursor_term_ann(&timeline->ctrl->data_cursor) && timeline->ctrl->poll_result.state == poll_result_t::state_t::NONE;
 }
 
 ytp_iterator_t ytp_timeline_iter_get(ytp_timeline_t *timeline) {
@@ -250,14 +250,14 @@ void ytp_timeline_iter_set(ytp_timeline_t *timeline, ytp_iterator_t iterator) {
   timeline->read = iterator;
 }
 
-ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline, size_t ptr,
+ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline, uint64_t ptr,
                                  fmc_error_t **error) {
   auto it = ytp_control_seek(timeline->ctrl, ptr, error);
   timeline->read = it;
   return it;
 }
 
-size_t ytp_timeline_tell(ytp_timeline_t *timeline, ytp_iterator_t iterator,
+uint64_t ytp_timeline_tell(ytp_timeline_t *timeline, ytp_iterator_t iterator,
                          fmc_error_t **error) {
   return ytp_control_tell(timeline->ctrl, iterator, error);
 }

@@ -35,9 +35,11 @@
 #define YTP_STREAM_LIST_SUB 2
 #define YTP_STREAM_LIST_IDX 3
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+enum SUBSCRIPTION_STATE : uint64_t {
+    UNKNOWN = 0,
+    DUPLICATED = 1,
+    NO_SUBSCRIPTION = 2,
+};
 
 struct ytp_inds {
   ytp_yamal_t *yamal;
@@ -53,23 +55,27 @@ typedef struct ytp_cursor ytp_cursor_t;
 typedef struct ytp_anns ytp_anns_t;
 typedef struct ytp_inds ytp_inds_t;
 typedef struct ytp_subs ytp_subs_t;
-typedef size_t ytp_stream_t;
+typedef uint64_t ytp_stream_t;
 
 typedef void (*ytp_cursor_ann_cb_t)(void *closure, ytp_stream_t stream,
-                                    size_t seqno,
+                                    uint64_t seqno,
                                     size_t peer_sz, const char *peer_name,
                                     size_t ch_sz, const char *ch_name,
                                     size_t encoding_sz,
                                     const char *encoding_data);
-typedef void (*ytp_cursor_data_cb_t)(void *closure, size_t seqno,
+typedef void (*ytp_cursor_data_cb_t)(void *closure, uint64_t seqno,
                                      uint64_t msgtime, ytp_stream_t stream,
                                      size_t sz, const char *data);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Allocates and initializes a ytp_cursor object
  *
- * @param[in] yamal
- * @param[out] error
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[out] error out-parameter for error handling
  * @return ytp_cursor_t object
  */
 FMMODFUNC ytp_cursor_t *ytp_cursor_new(ytp_yamal_t *yamal,
@@ -78,9 +84,9 @@ FMMODFUNC ytp_cursor_t *ytp_cursor_new(ytp_yamal_t *yamal,
 /**
  * @brief Initializes a ytp_cursor object
  *
- * @param[in] cursor
- * @param[in] yamal
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[out] error out-parameter for error handling
  * @return ytp_cursor_t object
  */
 FMMODFUNC void ytp_cursor_init(ytp_cursor_t *cursor, ytp_yamal_t *yamal,
@@ -89,8 +95,8 @@ FMMODFUNC void ytp_cursor_init(ytp_cursor_t *cursor, ytp_yamal_t *yamal,
 /**
  * @brief Destroys and deallocate a ytp_cursor_t object
  *
- * @param[in] cursor
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_cursor_del(ytp_cursor_t *cursor, fmc_error_t **error);
 
@@ -98,7 +104,7 @@ FMMODFUNC void ytp_cursor_del(ytp_cursor_t *cursor, fmc_error_t **error);
  * @brief Destroys a ytp_cursor_t object
  *
  * @param[in] cursor the ytp_cursor_t object
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_cursor_destroy(ytp_cursor_t *cursor,
                                   fmc_error_t **error);
@@ -108,10 +114,10 @@ FMMODFUNC void ytp_cursor_destroy(ytp_cursor_t *cursor,
  *
  * Complexity: Linear with the number of registered callbacks.
  *
- * @param[in] cursor
- * @param[in] cb
- * @param[in] closure
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[in] cb the callback pointer
+ * @param[in] closure the closure pointer
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_cursor_ann_cb(ytp_cursor_t *cursor,
                                  ytp_cursor_ann_cb_t cb, void *closure,
@@ -122,10 +128,10 @@ FMMODFUNC void ytp_cursor_ann_cb(ytp_cursor_t *cursor,
  *
  * Complexity: Linear with the number of registered callbacks.
  *
- * @param[in] cursor
- * @param[in] cb
- * @param[in] closure
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[in] cb the callback pointer
+ * @param[in] closure the closure pointer
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_cursor_ann_cb_rm(ytp_cursor_t *cursor,
                                     ytp_cursor_ann_cb_t cb, void *closure,
@@ -136,11 +142,11 @@ FMMODFUNC void ytp_cursor_ann_cb_rm(ytp_cursor_t *cursor,
  *
  * Complexity: Linear with the number of callbacks on that stream.
  *
- * @param[in] cursor
- * @param[in] stream
- * @param[in] cb
- * @param[in] closure
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[in] stream the stream id
+ * @param[in] cb the callback pointer
+ * @param[in] closure the closure pointer
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_cursor_data_cb(ytp_cursor_t *cursor,
                                   ytp_stream_t stream,
@@ -152,11 +158,11 @@ FMMODFUNC void ytp_cursor_data_cb(ytp_cursor_t *cursor,
  *
  * Complexity: Linear with the number of callbacks on that stream.
  *
- * @param[in] cursor
- * @param[in] stream
- * @param[in] cb
- * @param[in] closure
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[in] stream the stream id
+ * @param[in] cb the callback pointer
+ * @param[in] closure the closure pointer
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor,
                                        ytp_stream_t stream,
@@ -168,7 +174,7 @@ FMMODFUNC void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor,
  *
  * Complexity: Constant.
  *
- * @param[in] cursor
+ * @param[in] cursor the ytp_cursor_t object
  * @return true if there are not more messages, false otherwise
  */
 FMMODFUNC bool ytp_cursor_term(ytp_cursor_t *cursor);
@@ -176,7 +182,7 @@ FMMODFUNC bool ytp_cursor_term(ytp_cursor_t *cursor);
 /**
  * @brief Returns the seqno of the last data message read.
  *
- * @param[in] cursor
+ * @param[in] cursor the ytp_cursor_t object
  * @return the seqno of the last data message read
  */
 FMMODFUNC uint64_t ytp_cursor_count(ytp_cursor_t *cursor);
@@ -184,8 +190,8 @@ FMMODFUNC uint64_t ytp_cursor_count(ytp_cursor_t *cursor);
 /**
  * @brief Reads one message and executes the callbacks that applies.
  *
- * @param[in] cursor
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[out] error out-parameter for error handling
  * @return true if a message was processed, false otherwise
  */
 FMMODFUNC bool ytp_cursor_poll(ytp_cursor_t *cursor, fmc_error_t **error);
@@ -194,8 +200,8 @@ FMMODFUNC bool ytp_cursor_poll(ytp_cursor_t *cursor, fmc_error_t **error);
  * @brief Moves all of the callbacks of the source cursor into destination if
  * both cursors have the same iterator
  *
- * @param dest
- * @param src
+ * @param dest the destination ytp_cursor_t
+ * @param src the source ytp_cursor_t
  * @return true if both cursors have the same iterator and all the callbacks
  * were moved, false otherwise.
  */
@@ -204,7 +210,7 @@ FMMODFUNC bool ytp_cursor_consume(ytp_cursor_t *dest, ytp_cursor_t *src);
 /**
  * @brief Removes all of the callbacks of the cursor
  *
- * @param cursor
+ * @param[in] cursor the ytp_cursor_t object
  */
 FMMODFUNC void ytp_cursor_all_cb_rm(ytp_cursor_t *cursor);
 
@@ -212,30 +218,30 @@ FMMODFUNC void ytp_cursor_all_cb_rm(ytp_cursor_t *cursor);
  * @brief Returns an iterator given a serializable offset
  *
  * Moves data pointer to the specified offset.
- * @param[in] cursor
- * @param[in] off
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[in] offset from the head of yamal
+ * @param[out] error out-parameter for error handling
  */
-FMMODFUNC void ytp_cursor_seek(ytp_cursor_t *cursor, size_t off,
+FMMODFUNC void ytp_cursor_seek(ytp_cursor_t *cursor, uint64_t offset,
                                fmc_error_t **error);
 
 /**
  * @brief Returns serializable offset of the current data iterator
  *
- * @param[in] cursor
+ * @param[in] cursor the ytp_cursor_t object
  * @param[in] iterator
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return serializable
  */
-FMMODFUNC size_t ytp_cursor_tell(ytp_cursor_t *cursor,
+FMMODFUNC uint64_t ytp_cursor_tell(ytp_cursor_t *cursor,
                                  fmc_error_t **error);
 
 /**
  * @brief Allocates and initializes a ytp_anns object
  *
  * yamal needs to be writable since announcementscription object is used by publishers only
- * @param[in] cursor
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[out] error out-parameter for error handling
  * @return ytp_anns_t object
  */
 FMMODFUNC ytp_anns_t *ytp_anns_new(ytp_yamal_t *yamal,
@@ -244,8 +250,8 @@ FMMODFUNC ytp_anns_t *ytp_anns_new(ytp_yamal_t *yamal,
 /**
  * @brief Initializes a ytp_anns object
  *
- * @param[in] cursor
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[out] error out-parameter for error handling
  * @return ytp_anns_t object
  */
 FMMODFUNC void ytp_anns_init(ytp_anns_t *cursor, ytp_yamal_t *yamal,
@@ -254,8 +260,8 @@ FMMODFUNC void ytp_anns_init(ytp_anns_t *cursor, ytp_yamal_t *yamal,
 /**
  * @brief Destroys and deallocate a ytp_anns_t object
  *
- * @param[in] cursor
- * @param[out] error
+ * @param[in] cursor the ytp_cursor_t object
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_anns_del(ytp_anns_t *cursor, fmc_error_t **error);
 
@@ -263,7 +269,7 @@ FMMODFUNC void ytp_anns_del(ytp_anns_t *cursor, fmc_error_t **error);
  * @brief Destroys a ytp_anns_t object
  *
  * @param[in] cursor the ytp_anns_t object
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_anns_destroy(ytp_anns_t *cursor,
                                 fmc_error_t **error);
@@ -273,13 +279,13 @@ FMMODFUNC void ytp_anns_destroy(ytp_anns_t *cursor,
  *
  * Enforces stream sequence number for all of the announcements.
  * @param[in] cursor the ytp_anns_t object
- * @param[in] pz
- * @param[in] pn
- * @param[in] cz
- * @param[in] cn
- * @param[in] ez
- * @param[in] en
- * @param[out] error
+ * @param[in] pz the peer name size
+ * @param[in] pn the peer name pointer
+ * @param[in] cz the channel name size
+ * @param[in] cn the channel name pointer
+ * @param[in] ez the encoding string size
+ * @param[in] en the encoding string pointer
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC ytp_stream_t ytp_anns_stream(ytp_anns_t *cursor,
                                        size_t pz, const char *pn, size_t cz, const char *cn, size_t ez, const char *en,
@@ -289,11 +295,11 @@ FMMODFUNC ytp_stream_t ytp_anns_stream(ytp_anns_t *cursor,
 /**
  * @brief Initializes a ytp_inds object
  *
- * @param[in] cursor
- * @param[out] error
- * @return ytp_inds_t object
+ * @param[in] inds the ytp_inds_t object
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[out] error out-parameter for error handling
  */
-FMMODFUNC void ytp_inds_init(ytp_inds_t *cursor, ytp_yamal_t *yamal,
+FMMODFUNC void ytp_inds_init(ytp_inds_t *inds, ytp_yamal_t *yamal,
                              fmc_error_t **error);
 
 /**
@@ -303,7 +309,10 @@ FMMODFUNC void ytp_inds_init(ytp_inds_t *cursor, ytp_yamal_t *yamal,
  * Skips duplicate indscription messages.
  * @param[in] cursor the ytp_inds_t object
  * @param[out] id of the stream
- * @param[out] error
+ * @param[out] offset of the data
+ * @param[out] sz
+ * @param[out] data
+ * @param[out] error out-parameter for error handling
  * @return true if advanced, false if at the end of the list
  */
 FMMODFUNC bool ytp_inds_next(ytp_inds_t *cursor, ytp_stream_t *id,
@@ -313,9 +322,9 @@ FMMODFUNC bool ytp_inds_next(ytp_inds_t *cursor, ytp_stream_t *id,
 /**
  * @brief Initializes a ytp_subs object
  *
- * @param[in] cursor
- * @param[out] error
- * @return ytp_subs_t object
+ * @param[in] subs the ytp_subs_t object
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_subs_init(ytp_subs_t *subs, ytp_yamal_t *yamal,
                              fmc_error_t **error);
@@ -325,24 +334,31 @@ FMMODFUNC void ytp_subs_init(ytp_subs_t *subs, ytp_yamal_t *yamal,
  *
  * Enforces protocol by setting stream announcement subscription flag is not set.
  * Skips duplicate subscription messages.
- * @param[in] cursor the ytp_subs_t object
+ * @param[in] subs the ytp_subs_t object
  * @param[out] id of the stream
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return true if advanced, false if at the end of the list
  */
 FMMODFUNC bool ytp_subs_next(ytp_subs_t *subs, ytp_stream_t *id, fmc_error_t **error);
 
-FMMODFUNC char *ytp_stream_reserve(ytp_yamal_t *yamal, size_t size, fmc_error_t **error);
+/**
+ * @brief Reserves memory for data in the memory mapped list
+ *
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[in] sz the size of the data payload
+ * @param[out] error out-parameter for error handling
+ * @return buffer to hold the reserved memory
+ */
+FMMODFUNC char *ytp_stream_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error);
 
 /**
  * @brief Commits the data to the memory mapped list using stream level protocol
  *
- * @param[in] yamal
- * @param[in] peer the peer that publishes the data
- * @param[in] channel the channel to publish the data
- * @param[in] time
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[in] msgtime the time to publish the message
+ * @param[in] id of the stream
  * @param[in] data the value returned by ytp_sequence_reserve
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_stream_commit(ytp_yamal_t *yamal, uint64_t msgtime,
@@ -352,6 +368,16 @@ FMMODFUNC ytp_iterator_t ytp_stream_commit(ytp_yamal_t *yamal, uint64_t msgtime,
 /**
  * @brief Returns the data corresponding to a given stream announcement.
  *
+ * @param[in] yamal the ytp_yamal_t object
+ * @param[in] id of the stream
+ * @param[out] pz the peer name size
+ * @param[out] pn the peer name pointer
+ * @param[out] cz the channel name size
+ * @param[out] cn the channel name pointer
+ * @param[out] ez the encoding string size
+ * @param[out] en the encoding string pointer
+ * @param[out] sub
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_stream_read_ann(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t *seqno, size_t *pz, const char **pn, size_t *cz, const char **cn, size_t *ez, const char **en, uint64_t *sub, fmc_error_t **error);
 
@@ -359,9 +385,12 @@ FMMODFUNC void ytp_stream_read_ann(ytp_yamal_t *yamal, ytp_stream_t id, uint64_t
  * @brief Writes an index
  *
  * @param[in] yamal the ytp_yamal_t object
- * @param[out] id of the stream
- * @param[out] error
- * @return true if advanced, false if at the end of the list
+ * @param[in] id of the stream
+ * @param[in] offset of the data message
+ * @param[in] sz
+ * @param[in] data
+ * @param[out] error out-parameter for error handling
+ * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t id,
                                               uint64_t offset, size_t sz,
@@ -371,8 +400,14 @@ FMMODFUNC ytp_iterator_t ytp_stream_write_idx(ytp_yamal_t *yamal, ytp_stream_t i
  * @brief Writes an stream announcement
  *
  * @param[in] yamal the ytp_yamal_t object
- * @param[out] error
- * @return true if advanced, false if at the end of the list
+ * @param[in] pz the peer name size
+ * @param[in] pn the peer name pointer
+ * @param[in] cz the channel name size
+ * @param[in] cn the channel name pointer
+ * @param[in] ez the encoding string size
+ * @param[in] en the encoding string pointer
+ * @param[out] error out-parameter for error handling
+ * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal,
                                               size_t pz, const char *pn, size_t cz, const char *cn, size_t ez, const char *en,
@@ -382,8 +417,9 @@ FMMODFUNC ytp_iterator_t ytp_stream_write_ann(ytp_yamal_t *yamal,
  * @brief Writes a sub message
  *
  * @param[in] yamal the ytp_yamal_t object
- * @param[out] error
- * @return true if advanced, false if at the end of the list
+ * @param[in] id of the stream
+ * @param[out] error out-parameter for error handling
+ * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_stream_write_sub(ytp_yamal_t *yamal, ytp_stream_t id, fmc_error_t **error);
 

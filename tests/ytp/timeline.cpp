@@ -23,7 +23,6 @@
 #include <thread>
 
 #include <ytp/control.h>
-#include <ytp/time.h>
 #include <ytp/timeline.h>
 #include <ytp/yamal.h>
 
@@ -1164,16 +1163,16 @@ TEST(timeline, idempotence_simple_2) {
   ASSERT_EQ(error, nullptr);
 
   {
-    auto data = buildmsg(uint64_t{STREAM_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{0}, "peer1");
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{0}, "peer1");
     auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
     std::memcpy(ptr, data.data(), data.size());
-    ytp_yamal_commit(yamal, ptr, 1, &error);
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
   }
   {
-    auto data = buildmsg(uint64_t{STREAM_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{0}, "peer1");
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::DUPLICATED}, uint16_t{5}, uint16_t{0}, "peer1");
     auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
     std::memcpy(ptr, data.data(), data.size());
-    ytp_yamal_commit(yamal, ptr, 1, &error);
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
   }
 
   ytp_yamal_del(yamal, &error);
@@ -1203,6 +1202,61 @@ TEST(timeline, idempotence_simple_2) {
 
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "peer1");
+
+  ytp_timeline_del(timeline, &error);
+  ASSERT_EQ(error, nullptr);
+  ytp_control_del(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(timeline, idempotence_simple_3) {
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *yamal = ytp_yamal_new(fd, &error);
+  ASSERT_EQ(error, nullptr);
+
+  {
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::NO_SUBSCRIPTION}, uint16_t{5}, uint16_t{8}, "peer1", "channel1");
+    auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
+    std::memcpy(ptr, data.data(), data.size());
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
+  }
+  {
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::DUPLICATED}, uint16_t{5}, uint16_t{8}, "peer1", "channel1");
+    auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
+    std::memcpy(ptr, data.data(), data.size());
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
+  }
+
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *ctrl = ytp_control_new(fd, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *timeline = ytp_timeline_new(ctrl, &error);
+  ASSERT_EQ(error, nullptr);
+
+  std::vector<std::string_view> output;
+
+  auto ch_cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
+                  uint64_t time, size_t sz, const char *name) {
+    auto *output = (std::vector<std::string_view> *)closure;
+    output->emplace_back(std::string_view(name, sz));
+  };
+
+  ytp_timeline_ch_cb(timeline, ch_cb, &output, &error);
+
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
+
+  ASSERT_EQ(output.size(), 1);
+  ASSERT_EQ(output[0], "channel1");
 
   ytp_timeline_del(timeline, &error);
   ASSERT_EQ(error, nullptr);
