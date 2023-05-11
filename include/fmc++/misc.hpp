@@ -55,7 +55,8 @@ public:
   functional_iterator &operator=(functional_iterator<T> &&) = default;
   template <class Op,
             class P = enable_if_t<!is_same_v<Op, functional_iterator<T> &>>>
-  functional_iterator(Op &&op) : next_(std::forward<Op>(op)), current_(next_()) {}
+  functional_iterator(Op &&op)
+      : next_(std::forward<Op>(op)), current_(next_()) {}
   bool operator!=(const functional_iterator &a) const {
     return (bool(current_) && bool(a.current_))
                ? count != a.count
