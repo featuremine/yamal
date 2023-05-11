@@ -120,9 +120,9 @@ cleanup:
 
 static void generic_component_del(struct fmc_component *comp) { free(comp); };
 
-static struct fmc_component *
-dummy_component_new(struct fmc_cfg_sect_item *cfg,
-                       struct fmc_reactor_ctx *ctx, char **inp_tps) {
+static struct fmc_component *dummy_component_new(struct fmc_cfg_sect_item *cfg,
+                                                 struct fmc_reactor_ctx *ctx,
+                                                 char **inp_tps) {
   if (inp_tps && inp_tps[0]) {
     _reactor->set_error(ctx, "dummy component does not expect any inputs");
     return NULL;
@@ -169,15 +169,14 @@ dummy_component_new(struct fmc_cfg_sect_item *cfg,
     }
   }
 
-  struct fmc_component *c =
-      (struct fmc_component *)calloc(1, sizeof(*c));
-  if (!c)
-    goto cleanup;
+  struct fmc_component *c = (struct fmc_component *)calloc(1, sizeof(*c));
+  if (!c) {
+    _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+    return NULL;
+  }
+
   memset(c, 0, sizeof(*c));
   return c;
-cleanup:
-  _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
-  return NULL;
 };
 
 #ifdef __cplusplus
@@ -187,53 +186,52 @@ extern "C" {
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
     {"teststr", "Test string", true, {FMC_CFG_STR, {NULL}}}, {NULL}};
 
-struct fmc_cfg_node_spec all_cfg_spec[] = {
-  {
-      .key = "booleanval",
-      .descr = "boolean value",
-      .required = true,
-      .type =
-          {
-              .type = FMC_CFG_BOOLEAN,
-          },
-  },
-  {
-      .key = "float64val",
-      .descr = "float64 value",
-      .required = true,
-      .type =
-          {
-              .type = FMC_CFG_FLOAT64,
-          },
-  },
-  {
-      .key = "int64val",
-      .descr = "int64 value",
-      .required = true,
-      .type =
-          {
-              .type = FMC_CFG_INT64,
-          },
-  },
-  {
-      .key = "noneval",
-      .descr = "none value",
-      .required = true,
-      .type =
-          {
-              .type = FMC_CFG_NONE,
-          },
-  },
-  {
-      .key = "stringval",
-      .descr = "string value",
-      .required = true,
-      .type =
-          {
-              .type = FMC_CFG_STR,
-          },
-  },
-  {NULL}};
+struct fmc_cfg_node_spec all_cfg_spec[] = {{
+                                               .key = "booleanval",
+                                               .descr = "boolean value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_BOOLEAN,
+                                                   },
+                                           },
+                                           {
+                                               .key = "float64val",
+                                               .descr = "float64 value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_FLOAT64,
+                                                   },
+                                           },
+                                           {
+                                               .key = "int64val",
+                                               .descr = "int64 value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_INT64,
+                                                   },
+                                           },
+                                           {
+                                               .key = "noneval",
+                                               .descr = "none value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_NONE,
+                                                   },
+                                           },
+                                           {
+                                               .key = "stringval",
+                                               .descr = "string value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_STR,
+                                                   },
+                                           },
+                                           {NULL}};
 
 struct fmc_component_def_v1 components[] = {
     {

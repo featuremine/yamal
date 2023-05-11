@@ -20,26 +20,26 @@
  * @see http://www.featuremine.com
  */
 
-#include <fmc/config.h>
 #include <exception>
-#include <json/json.hpp>
-#include <uthash/utlist.h>
+#include <fmc/config.h>
 #include <fmc/string.h>
+#include <json/json.hpp>
 #include <set>
+#include <uthash/utlist.h>
 
 #define JSON_PARSER_BUFF_SIZE 8192
 
-static struct fmc_cfg_arr_item *parse_array(nlohmann::json j_obj,
-                                            struct fmc_cfg_type *spec,
-                                            fmc_error_t **err);
+static struct fmc_cfg_arr_item *
+parse_array(nlohmann::json j_obj, struct fmc_cfg_type *spec, fmc_error_t **err);
 static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj,
                                                struct fmc_cfg_node_spec *spec,
                                                fmc_error_t **err);
 static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
                         struct fmc_cfg_item *out, fmc_error_t **err);
 
-static struct fmc_cfg_arr_item *
-parse_array(nlohmann::json j_obj, struct fmc_cfg_type *spec, fmc_error_t **err) {
+static struct fmc_cfg_arr_item *parse_array(nlohmann::json j_obj,
+                                            struct fmc_cfg_type *spec,
+                                            fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_arr_item *arr = NULL;
@@ -86,7 +86,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
     if (j_obj.is_null()) {
       out->type = FMC_CFG_NONE;
     } else {
-      fmc_error_set(err, "config error: unable to parse none from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse none from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
@@ -95,7 +96,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
       out->type = FMC_CFG_BOOLEAN;
       out->value.boolean = j_obj.get<bool>();
     } else {
-      fmc_error_set(err, "config error: unable to parse boolean from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse boolean from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
@@ -104,7 +106,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
       out->type = FMC_CFG_INT64;
       out->value.int64 = j_obj.get<int64_t>();
     } else {
-      fmc_error_set(err, "config error: unable to parse int64 from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse int64 from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
@@ -113,7 +116,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
       out->type = FMC_CFG_FLOAT64;
       out->value.float64 = j_obj.get<double>();
     } else {
-      fmc_error_set(err, "config error: unable to parse float64 from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse float64 from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
@@ -123,7 +127,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
       auto str = j_obj.get<std::string>();
       out->value.str = fmc_cstr_new2(str.c_str(), str.size(), err);
     } else {
-      fmc_error_set(err, "config error: unable to parse string from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse string from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
@@ -137,7 +142,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
       }
       out->value.sect = sect;
     } else {
-      fmc_error_set(err, "config error: unable to parse section from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse section from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
@@ -151,14 +157,17 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
       }
       out->value.arr = subarr;
     } else {
-      fmc_error_set(err, "config error: unable to parse array from '%s'", j_obj.dump().c_str());
+      fmc_error_set(err, "config error: unable to parse array from '%s'",
+                    j_obj.dump().c_str());
       return;
     }
   } break;
   }
 }
 
-static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_cfg_node_spec *spec, fmc_error_t **err) {
+static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj,
+                                               struct fmc_cfg_node_spec *spec,
+                                               fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *sect = NULL;
@@ -166,7 +175,7 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
   std::set<std::string> visited;
 
   for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key;
-      ++spec_item) {
+       ++spec_item) {
     auto elemit = j_obj.find(spec_item->key);
     if (elemit == j_obj.end()) {
       if (spec_item->required) {
@@ -194,8 +203,7 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
   }
 
   if (visited.size() != j_obj.size()) {
-    for (auto it = j_obj.begin(); it != j_obj.end(); ++it)
-    {
+    for (auto it = j_obj.begin(); it != j_obj.end(); ++it) {
       if (visited.find(it.key()) == visited.end()) {
         fmc_error_set(err, "config error: unknown field %s", it.key().c_str());
         goto do_cleanup;
@@ -210,21 +218,21 @@ do_cleanup:
   return NULL;
 }
 
-
 struct fmc_cfg_sect_item *
-fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const char *root_key, fmc_error_t **err) {
+fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
+                             const char *root_key, fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *ret = NULL;
   struct fmc_cfg_sect_item *sect = NULL;
 
-  try
-  {
+  try {
     std::string buffer;
     buffer.reserve(JSON_PARSER_BUFF_SIZE);
     size_t cfgsz = 0;
     while (true) {
-      auto sz = fmc_fread(fd, buffer.data() + buffer.size(), JSON_PARSER_BUFF_SIZE, err);
+      auto sz = fmc_fread(fd, buffer.data() + buffer.size(),
+                          JSON_PARSER_BUFF_SIZE, err);
       if (*err) {
         return nullptr;
       }
@@ -238,7 +246,8 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const ch
       return nullptr;
     }
 
-    nlohmann::json j_obj = nlohmann::json::parse(std::string_view(buffer.data(), cfgsz));
+    nlohmann::json j_obj =
+        nlohmann::json::parse(std::string_view(buffer.data(), cfgsz));
     if (root_key) {
       j_obj = j_obj[root_key];
     }
@@ -252,10 +261,9 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const ch
     sect = NULL;
 
     return ret;
-  }
-  catch(const std::exception& e)
-  {
-    fmc_error_set(err, "config error: unable to parse with error '%s'", e.what());
+  } catch (const std::exception &e) {
+    fmc_error_set(err, "config error: unable to parse with error '%s'",
+                  e.what());
   }
 
 do_cleanup:
