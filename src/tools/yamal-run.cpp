@@ -273,10 +273,10 @@ int main(int argc, char **argv) {
     fmc_error_t *err;
     if (json_cfg) {
         cfg = config_ptr(
-            fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+            fmc_cfg_sect_parse_json_file(type, config_file.value, section, &err));
     } else {
         cfg = config_ptr(
-            fmc_cfg_sect_parse_json_file(type, config_file.value, &err));
+            fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
     }
     fmc_runtime_error_unless(!err)
         << "Unable to load configuration file: " << fmc_error_msg(err);

@@ -147,7 +147,7 @@ fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
                             const char *root_key, fmc_error_t **err);
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
-                             fmc_error_t **err);
+                             const char *root_key, fmc_error_t **err);
 FMMODFUNC void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
                                        struct fmc_cfg_sect_item *cfg,
                                        fmc_error_t **err);

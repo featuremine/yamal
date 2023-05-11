@@ -227,7 +227,7 @@ do_cleanup:
 
 
 struct fmc_cfg_sect_item *
-fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_error_t **err) {
+fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, const char *root_key, fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *ret = NULL;
@@ -254,6 +254,9 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_erro
     }
 
     nlohmann::json j_obj = nlohmann::json::parse(std::string_view(buffer.data(), cfgsz));
+    if (root_key) {
+      j_obj = j_obj[root_key];
+    }
 
     sect = parse_section(j_obj, spec, err);
     if (*err) {

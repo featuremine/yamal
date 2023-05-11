@@ -14,7 +14,7 @@
             "inputs": [
                 {
                     "component": "component_one",
-                    "name": "valid output"    
+                    "name": "valid output"
                 }, {
                     "component": "component_one",
                     "index": 0
