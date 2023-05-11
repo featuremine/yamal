@@ -127,6 +127,48 @@ dummy_component_new(struct fmc_cfg_sect_item *cfg,
     _reactor->set_error(ctx, "dummy component does not expect any inputs");
     return NULL;
   }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "booleanval");
+    if (item->node.value.boolean != true) {
+      _reactor->set_error(ctx, "invalid configured value for booleanval");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "float64val");
+    if (item->node.value.float64 > 44.21 + DBL_EPSILON &&
+        item->node.value.float64 < 44.21 - DBL_EPSILON) {
+      _reactor->set_error(ctx, "invalid configured value for float64val");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "int64val");
+    if (item->node.value.int64 != 32) {
+      _reactor->set_error(ctx, "invalid configured value for int64val");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "noneval");
+    if (item->node.type != FMC_CFG_NONE) {
+      _reactor->set_error(ctx, "invalid configured value for noneval");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "stringval");
+    if (strcmp(item->node.value.str, "somestring") != 0) {
+      _reactor->set_error(ctx, "invalid configured value for stringval");
+      return NULL;
+    }
+  }
+
   struct fmc_component *c =
       (struct fmc_component *)calloc(1, sizeof(*c));
   if (!c)
