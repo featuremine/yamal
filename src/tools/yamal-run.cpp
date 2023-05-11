@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
-      "s", "section", "Main section to be used to load the module", true,
+      "s", "section", "Main section to be used to load the module", false,
       "main", "section");
   cmd.add(mainArg);
 
@@ -269,8 +269,13 @@ int main(int argc, char **argv) {
                                const char *section) {
     file_ptr config_file(cfgArg.getValue().c_str());
     fmc_error_t *err;
-    cfg = config_ptr(
-        fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+    if (section) {
+        cfg = config_ptr(
+            fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+    } else {
+        cfg = config_ptr(
+            fmc_cfg_sect_parse_json_file(type, config_file.value, &err));
+    }
     fmc_runtime_error_unless(!err)
         << "Unable to load configuration file: " << fmc_error_msg(err);
   };
@@ -304,13 +309,13 @@ int main(int argc, char **argv) {
 
   if (moduleArg.isSet() && componentArg.isSet()) {
     components.emplace(componentArg.getValue().c_str(),
-                       gen_component(moduleArg.getValue().c_str(),
-                                     componentArg.getValue().c_str(),
-                                     mainArg.getValue().c_str(), nullptr));
+                    gen_component(moduleArg.getValue().c_str(),
+                                    componentArg.getValue().c_str(),
+                                    mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
   } else {
     config_ptr cfg;
 
-    load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
+    load_config(cfg, yamal_run_spec, mainArg.isSet() ? mainArg.getValue().c_str() : nullptr);
 
     auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
     for (auto elem = arr->node.value.arr; elem; elem = elem->next) {
