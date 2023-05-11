@@ -312,9 +312,9 @@ int main(int argc, char **argv) {
 
   if (moduleArg.isSet() && componentArg.isSet()) {
     components.emplace(componentArg.getValue().c_str(),
-                    gen_component(moduleArg.getValue().c_str(),
-                                    componentArg.getValue().c_str(),
-                                    mainArg.getValue().c_str(), nullptr));
+                       gen_component(moduleArg.getValue().c_str(),
+                                     componentArg.getValue().c_str(),
+                                     mainArg.getValue().c_str(), nullptr));
   } else {
     config_ptr cfg;
 
