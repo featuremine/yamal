@@ -22,8 +22,21 @@
                         "index": 0
                     }
                 ]
+            },
+            {
+                "module":"testcomponent",
+                "type":"dummycomponent",
+                "name":"component_three",
+                "config":"component_all_cfg"            
             }
         ]
     },
-    "component_cfg": {}
+    "component_cfg": {},
+    "component_all_cfg": {
+        "booleanval":true,
+        "float64val":44.21,
+        "int64val":32,
+        "noneval":null,
+        "stringval":"somestring"    
+    }
 }
