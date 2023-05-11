@@ -14,7 +14,7 @@
 
 /**
  * @file config.cpp
- * @date 13 Jul 2022
+ * @date 11 May 2023
  * @brief Implementation of the fmc configuration API
  *
  * @see http://www.featuremine.com
@@ -26,7 +26,6 @@
 #include <uthash/utlist.h>
 #include <fmc/string.h>
 #include <set>
-#include <iostream>
 
 #define JSON_PARSER_BUFF_SIZE 8192
 
