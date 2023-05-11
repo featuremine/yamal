@@ -25,35 +25,10 @@
 #include <json/json.hpp>
 #include <uthash/utlist.h>
 #include <fmc/string.h>
+#include <set>
+#include <iostream>
 
 #define JSON_PARSER_BUFF_SIZE 8192
-
-// Same in config.c
-static struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err) {
-  fmc_error_clear(err);
-
-  struct fmc_cfg_arr_item *ret =
-      (struct fmc_cfg_arr_item *)calloc(1, sizeof(struct fmc_cfg_arr_item));
-  if (!ret) {
-    fmc_error_set2(err, FMC_ERROR_MEMORY);
-  }
-  ret->item.type = FMC_CFG_NONE;
-  return ret;
-}
-
-// Same in config.c
-static struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err) {
-  fmc_error_clear(err);
-
-  struct fmc_cfg_sect_item *ret =
-      (struct fmc_cfg_sect_item *)calloc(1, sizeof(struct fmc_cfg_sect_item));
-  if (!ret) {
-    fmc_error_set2(err, FMC_ERROR_MEMORY);
-  }
-  ret->node.type = FMC_CFG_NONE;
-  return ret;
-}
-
 
 static struct fmc_cfg_arr_item *parse_array(nlohmann::json j_obj,
                                             struct fmc_cfg_type *spec,
@@ -189,6 +164,8 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
 
   struct fmc_cfg_sect_item *sect = NULL;
 
+  std::set<std::string> visited;
+
   for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key;
       ++spec_item) {
     auto elemit = j_obj.find(spec_item->key);
@@ -200,6 +177,7 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
       }
       continue;
     }
+    visited.emplace(spec_item->key);
 
     struct fmc_cfg_sect_item *sitem = fmc_cfg_sect_item_new(err);
     if (*err) {
@@ -216,7 +194,15 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
     }
   }
 
-  //TODO: Validate unused fields
+  if (visited.size() != j_obj.size()) {
+    for (auto it = j_obj.begin(); it != j_obj.end(); ++it)
+    {
+      if (visited.find(it.key()) == visited.end()) {
+        fmc_error_set(err, "config error: unknown field %s", it.key().c_str());
+        goto do_cleanup;
+      }
+    }
+  }
 
   return sect;
 

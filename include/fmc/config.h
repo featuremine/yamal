@@ -157,6 +157,10 @@ FMMODFUNC const char *fmc_cfg_type_name(FMC_CFG_TYPE type);
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, const char *key);
 
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err);
+
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err);
+
 #ifdef __cplusplus
 }
 #endif

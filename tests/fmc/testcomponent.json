@@ -1,3 +1,5 @@
 {
-    "teststr": "teststr"
+    "main": {
+        "teststr": "teststr"
+    }
 }

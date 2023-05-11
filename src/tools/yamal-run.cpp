@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
-      "s", "section", "Main section to be used to load the module", false,
+      "s", "section", "Main section to be used to load the module", true,
       "main", "section");
   cmd.add(mainArg);
 
@@ -247,7 +247,12 @@ int main(int argc, char **argv) {
   TCLAP::ValueArg<int> auxArg("x", "auxiliary",
                               "set the CPU affinity of the auxiliary process",
                               false, 0, "cpuid");
+
   cmd.add(auxArg);
+
+  TCLAP::SwitchArg jsonSwitch("j", "json", "Use JSON configuration.", false);
+
+  cmd.add(jsonSwitch);
 
   cmd.parse(argc, argv);
 
@@ -259,19 +264,17 @@ int main(int argc, char **argv) {
       << "Invalid combination of arguments. module and component must either "
          "be provided through args or config.";
 
-  bool json_cfg = !mainArg.isSet();
-
   fmc_reactor_init(&r);
 
   std::unordered_map<std::string, fmc_component *> components;
 
   fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
-  auto load_config = [&cfgArg, &json_cfg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
+  auto load_config = [&cfgArg, &jsonSwitch](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                                const char *section) {
     file_ptr config_file(cfgArg.getValue().c_str());
     fmc_error_t *err;
-    if (json_cfg) {
+    if (jsonSwitch.getValue()) {
         cfg = config_ptr(
             fmc_cfg_sect_parse_json_file(type, config_file.value, section, &err));
     } else {
@@ -313,11 +316,11 @@ int main(int argc, char **argv) {
     components.emplace(componentArg.getValue().c_str(),
                     gen_component(moduleArg.getValue().c_str(),
                                     componentArg.getValue().c_str(),
-                                    mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
+                                    mainArg.getValue().c_str(), nullptr));
   } else {
     config_ptr cfg;
 
-    load_config(cfg, yamal_run_spec, mainArg.isSet() ? mainArg.getValue().c_str() : nullptr);
+    load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
 
     auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
     for (auto elem = arr->node.value.arr; elem; elem = elem->next) {

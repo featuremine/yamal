@@ -187,19 +187,13 @@ if(BUILD_TOOLS)
 
     add_test(
         NAME fmc_yamal-run_json
-        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent.json -m testcomponent -o testcomponentsched
+        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent.json -s main -m testcomponent -o testcomponentsched -j
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     set_property(TEST fmc_yamal-run_json PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
     add_test(
-        NAME fmc_yamal-run_json_only_cfg
-        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent_only_cfg.json
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    set_property(TEST fmc_yamal-run_json_only_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
-    add_test(
         NAME fmc_yamal-run_json_array_cfg
-        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent_array_cfg.json
+        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent_array_cfg.json -s main -j
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     set_property(TEST fmc_yamal-run_json_array_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
