@@ -259,17 +259,19 @@ int main(int argc, char **argv) {
       << "Invalid combination of arguments. module and component must either "
          "be provided through args or config.";
 
+  bool json_cfg = !mainArg.isSet();
+
   fmc_reactor_init(&r);
 
   std::unordered_map<std::string, fmc_component *> components;
 
   fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
-  auto load_config = [&cfgArg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
+  auto load_config = [&cfgArg, &json_cfg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                                const char *section) {
     file_ptr config_file(cfgArg.getValue().c_str());
     fmc_error_t *err;
-    if (section) {
+    if (json_cfg) {
         cfg = config_ptr(
             fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
     } else {

@@ -4,13 +4,13 @@
             "module": "iocomponent",
             "type": "producercomponent",
             "name": "component_one",
-            "config": {}
+            "config": "component_cfg"
         },
         {
             "module": "iocomponent",
             "type": "consumercomponent2",
             "name": "component_two",
-            "config": {},
+            "config": "component_cfg",
             "inputs": [
                 {
                     "component": "component_one",
@@ -21,5 +21,6 @@
                 }
             ]
         }
-    ]
+    ],
+    "component_cfg": {}
 }

@@ -25,7 +25,6 @@
 #include <json/json.hpp>
 #include <uthash/utlist.h>
 #include <fmc/string.h>
-#include <set>
 
 #define JSON_PARSER_BUFF_SIZE 8192
 
@@ -190,7 +189,6 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
 
   struct fmc_cfg_sect_item *sect = NULL;
 
-  std::set<std::string> fields;
   for (struct fmc_cfg_node_spec *spec_item = spec; spec_item->key;
       ++spec_item) {
     auto elemit = j_obj.find(spec_item->key);
@@ -202,7 +200,6 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
       }
       continue;
     }
-    fields.emplace(spec_item->key);
 
     struct fmc_cfg_sect_item *sitem = fmc_cfg_sect_item_new(err);
     if (*err) {
@@ -219,15 +216,7 @@ static struct fmc_cfg_sect_item *parse_section(nlohmann::json j_obj, struct fmc_
     }
   }
 
-  if (fields.size() != j_obj.size()) {
-    for (auto it = j_obj.begin(); it != j_obj.end(); ++it)
-    {
-      if (fields.find(it.key()) == fields.end()) {
-        fmc_error_set(err, "config error: unknown field %s", it.key().c_str());
-        goto do_cleanup;
-      }
-    }
-  }
+  //TODO: Validate unused fields
 
   return sect;
 
@@ -248,17 +237,23 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_erro
   {
     std::string buffer;
     buffer.reserve(JSON_PARSER_BUFF_SIZE);
-    while (fmc_fread(fd, buffer.data() + buffer.size(), JSON_PARSER_BUFF_SIZE, err)) {
+    size_t cfgsz = 0;
+    while (true) {
+      auto sz = fmc_fread(fd, buffer.data() + buffer.size(), JSON_PARSER_BUFF_SIZE, err);
       if (*err) {
         return nullptr;
       }
+      if (sz == 0) {
+        break;
+      }
       buffer.reserve(buffer.size() + JSON_PARSER_BUFF_SIZE);
+      cfgsz += sz;
     }
     if (*err) {
       return nullptr;
     }
 
-    nlohmann::json j_obj = nlohmann::json::parse(buffer);
+    nlohmann::json j_obj = nlohmann::json::parse(std::string_view(buffer.data(), cfgsz));
 
     sect = parse_section(j_obj, spec, err);
     if (*err) {
