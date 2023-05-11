@@ -244,27 +244,36 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_erro
   struct fmc_cfg_sect_item *ret = NULL;
   struct fmc_cfg_sect_item *sect = NULL;
 
-  std::string buffer;
-  buffer.reserve(JSON_PARSER_BUFF_SIZE);
-  while (fmc_fread(fd, buffer.data() + buffer.size(), JSON_PARSER_BUFF_SIZE, err)) {
+  try
+  {
+    std::string buffer;
+    buffer.reserve(JSON_PARSER_BUFF_SIZE);
+    while (fmc_fread(fd, buffer.data() + buffer.size(), JSON_PARSER_BUFF_SIZE, err)) {
+      if (*err) {
+        return nullptr;
+      }
+      buffer.reserve(buffer.size() + JSON_PARSER_BUFF_SIZE);
+    }
     if (*err) {
       return nullptr;
     }
-    buffer.reserve(buffer.size() + JSON_PARSER_BUFF_SIZE);
-  }
-  if (*err) {
-    return nullptr;
-  }
 
-  nlohmann::json j_obj = nlohmann::json::parse(buffer);
+    nlohmann::json j_obj = nlohmann::json::parse(buffer);
 
-  sect = parse_section(j_obj, spec, err);
-  if (*err) {
-    goto do_cleanup;
+    sect = parse_section(j_obj, spec, err);
+    if (*err) {
+      goto do_cleanup;
+    }
+
+    ret = sect;
+    sect = NULL;
+
+    return ret;
   }
-
-  ret = sect;
-  sect = NULL;
+  catch(const std::exception& e)
+  {
+    fmc_error_set(err, "config error: unable to parse with error '%s'", e.what());
+  }
 
 do_cleanup:
   fmc_cfg_sect_del(sect);

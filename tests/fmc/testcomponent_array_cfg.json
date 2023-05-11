@@ -1,0 +1,25 @@
+{
+    "components": [
+        {
+            "module": "iocomponent",
+            "type": "producercomponent",
+            "name": "component_one",
+            "config": {}            
+        },
+        {
+            "module": "iocomponent",
+            "type": "consumercomponent2",
+            "name": "component_two",
+            "config": {},
+            "inputs": [
+                {
+                    "component": "component_one",
+                    "name": "valid output"                    
+                },
+                {
+                    "component": "component_one",
+                    "index": 0                    
+                }
+            ]            
+        }]
+}
