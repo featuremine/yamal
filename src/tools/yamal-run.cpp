@@ -247,11 +247,9 @@ int main(int argc, char **argv) {
   TCLAP::ValueArg<int> auxArg("x", "auxiliary",
                               "set the CPU affinity of the auxiliary process",
                               false, 0, "cpuid");
-
   cmd.add(auxArg);
 
   TCLAP::SwitchArg jsonSwitch("j", "json", "Use JSON configuration.", false);
-
   cmd.add(jsonSwitch);
 
   cmd.parse(argc, argv);
