@@ -262,9 +262,10 @@ int main(int argc, char **argv) {
       << "Invalid combination of arguments. module and component must either "
          "be provided through args or config.";
 
-  fmc_runtime_error_unless ((jsonSwitch.getValue() && !mainArg.isSet()) ||
-                            (!jsonSwitch.getValue() && mainArg.isSet()))
-      << "Invalid combination of arguments. main section argument must be provided only when ini config is used.";
+  fmc_runtime_error_unless((jsonSwitch.getValue() && !mainArg.isSet()) ||
+                           (!jsonSwitch.getValue() && mainArg.isSet()))
+      << "Invalid combination of arguments. main section argument must be "
+         "provided only when ini config is used.";
 
   fmc_reactor_init(&r);
 
@@ -316,14 +317,16 @@ int main(int argc, char **argv) {
   };
 
   if (moduleArg.isSet() && componentArg.isSet()) {
-    components.emplace(componentArg.getValue().c_str(),
-                       gen_component(moduleArg.getValue().c_str(),
-                                     componentArg.getValue().c_str(),
-                                     mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
+    components.emplace(
+        componentArg.getValue().c_str(),
+        gen_component(
+            moduleArg.getValue().c_str(), componentArg.getValue().c_str(),
+            mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
   } else {
     config_ptr cfg;
 
-    load_config(cfg, yamal_run_spec, mainArg.isSet() ? mainArg.getValue().c_str() : nullptr);
+    load_config(cfg, yamal_run_spec,
+                mainArg.isSet() ? mainArg.getValue().c_str() : nullptr);
 
     auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
     for (auto elem = arr->node.value.arr; elem; elem = elem->next) {

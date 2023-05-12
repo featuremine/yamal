@@ -209,7 +209,8 @@ do_cleanup:
 }
 
 struct fmc_cfg_sect_item *
-fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd, fmc_error_t **err) {
+fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
+                             fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *ret = NULL;
