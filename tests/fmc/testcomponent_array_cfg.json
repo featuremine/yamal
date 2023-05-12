@@ -1,0 +1,42 @@
+{
+    "main" : {
+        "components": [
+            {
+                "module": "iocomponent",
+                "type": "producercomponent",
+                "name": "component_one",
+                "config": "component_cfg"
+            },
+            {
+                "module": "iocomponent",
+                "type": "consumercomponent2",
+                "name": "component_two",
+                "config": "component_cfg",
+                "inputs": [
+                    {
+                        "component": "component_one",
+                        "name": "valid output"
+                    },
+                    {
+                        "component": "component_one",
+                        "index": 0
+                    }
+                ]
+            },
+            {
+                "module":"testcomponent",
+                "type":"dummycomponent",
+                "name":"component_three",
+                "config":"component_all_cfg"            
+            }
+        ]
+    },
+    "component_cfg": {},
+    "component_all_cfg": {
+        "booleanval":true,
+        "float64val":44.21,
+        "int64val":32,
+        "noneval":null,
+        "stringval":"somestring"    
+    }
+}

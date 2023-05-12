@@ -86,7 +86,7 @@ inline std::pair<bool, std::string> ends_with_pipe(std::string name) {
   if (ends_with(name, "|")) {
     return {true, name.erase(name.size() - 1, 1)}; // remove '|'
   }
-  return {false, move(name)};
+  return {false, std::move(name)};
 }
 
 inline std::pair<bool, std::string> begins_with_pipe(std::string name) {
@@ -94,7 +94,7 @@ inline std::pair<bool, std::string> begins_with_pipe(std::string name) {
   if (starts_with(name, "|")) {
     return {true, name.erase(0, 1)}; // remove '|'
   }
-  return {false, move(name)};
+  return {false, std::move(name)};
 }
 
 template <class T>

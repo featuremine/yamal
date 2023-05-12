@@ -249,6 +249,9 @@ int main(int argc, char **argv) {
                               false, 0, "cpuid");
   cmd.add(auxArg);
 
+  TCLAP::SwitchArg jsonSwitch("j", "json", "Use JSON configuration.", false);
+  cmd.add(jsonSwitch);
+
   cmd.parse(argc, argv);
 
   sys_ptr sys;
@@ -265,12 +268,18 @@ int main(int argc, char **argv) {
 
   fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
-  auto load_config = [&cfgArg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
-                               const char *section) {
+  auto load_config = [&cfgArg, &jsonSwitch](config_ptr &cfg,
+                                            struct fmc_cfg_node_spec *type,
+                                            const char *section) {
     file_ptr config_file(cfgArg.getValue().c_str());
     fmc_error_t *err;
-    cfg = config_ptr(
-        fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+    if (jsonSwitch.getValue()) {
+      cfg = config_ptr(
+          fmc_cfg_sect_parse_json_file(type, config_file.value, section, &err));
+    } else {
+      cfg = config_ptr(
+          fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+    }
     fmc_runtime_error_unless(!err)
         << "Unable to load configuration file: " << fmc_error_msg(err);
   };

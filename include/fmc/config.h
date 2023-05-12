@@ -145,6 +145,9 @@ fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *, struct fmc_cfg_arr_item *,
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
                             const char *root_key, fmc_error_t **err);
+FMMODFUNC struct fmc_cfg_sect_item *
+fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
+                             const char *root_key, fmc_error_t **err);
 FMMODFUNC void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
                                        struct fmc_cfg_sect_item *cfg,
                                        fmc_error_t **err);
@@ -153,6 +156,10 @@ FMMODFUNC const char *fmc_cfg_type_name(FMC_CFG_TYPE type);
 
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, const char *key);
+
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err);
+
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err);
 
 #ifdef __cplusplus
 }
