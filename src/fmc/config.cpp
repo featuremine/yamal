@@ -53,7 +53,7 @@ static struct fmc_cfg_arr_item *parse_array(nlohmann::json j_obj,
       goto do_cleanup;
     }
     LL_PREPEND(arr, item);
-    parse_value(j_obj[i-1], spec, &item->item, err);
+    parse_value(j_obj[i - 1], spec, &item->item, err);
     if (*err) {
       goto do_cleanup;
     }
