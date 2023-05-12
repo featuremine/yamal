@@ -47,7 +47,7 @@ static struct fmc_cfg_arr_item *parse_array(nlohmann::json j_obj,
     return arr;
   }
 
-  for (auto i = 0; i < j_obj.size(); ++i) {
+  for (auto i = j_obj.size() - 1; i >= 0; --i) {
     struct fmc_cfg_arr_item *item = fmc_cfg_arr_item_new(err);
     if (*err) {
       goto do_cleanup;
@@ -59,16 +59,6 @@ static struct fmc_cfg_arr_item *parse_array(nlohmann::json j_obj,
     }
   }
 
-  if (arr) {
-    struct fmc_cfg_arr_item *prev = NULL;
-    while (arr->next) {
-      struct fmc_cfg_arr_item *next = arr->next;
-      arr->next = prev;
-      prev = arr;
-      arr = next;
-    }
-    arr->next = prev;
-  }
   return arr;
 
 do_cleanup:
@@ -124,8 +114,8 @@ static void parse_value(nlohmann::json j_obj, struct fmc_cfg_type *spec,
   case FMC_CFG_STR: {
     if (j_obj.is_string()) {
       out->type = FMC_CFG_STR;
-      auto str = j_obj.get<std::string>();
-      out->value.str = fmc_cstr_new2(str.c_str(), str.size(), err);
+      auto str = j_obj.get<std::string_view>();
+      out->value.str = fmc_cstr_new2(str.data(), str.size(), err);
     } else {
       fmc_error_set(err, "config error: unable to parse string from '%s'",
                     j_obj.dump().c_str());
