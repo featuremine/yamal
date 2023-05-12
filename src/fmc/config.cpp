@@ -239,8 +239,8 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
       if (sz == 0) {
         break;
       }
-      buffer.reserve(cfgsz + JSON_PARSER_BUFF_SIZE);
       cfgsz += sz;
+      buffer.reserve(cfgsz + JSON_PARSER_BUFF_SIZE);
     }
     if (*err) {
       return nullptr;
