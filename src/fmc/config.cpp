@@ -231,7 +231,7 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
     buffer.reserve(JSON_PARSER_BUFF_SIZE);
     size_t cfgsz = 0;
     while (true) {
-      auto sz = fmc_fread(fd, buffer.data() + buffer.size(),
+      auto sz = fmc_fread(fd, buffer.data() + cfgsz,
                           JSON_PARSER_BUFF_SIZE, err);
       if (*err) {
         return nullptr;
@@ -239,7 +239,7 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
       if (sz == 0) {
         break;
       }
-      buffer.reserve(buffer.size() + JSON_PARSER_BUFF_SIZE);
+      buffer.reserve(cfgsz + JSON_PARSER_BUFF_SIZE);
       cfgsz += sz;
     }
     if (*err) {
