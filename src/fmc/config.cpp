@@ -227,11 +227,11 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
   struct fmc_cfg_sect_item *sect = NULL;
 
   try {
-    std::string buffer;
-    buffer.reserve(JSON_PARSER_BUFF_SIZE);
+    std::vector<char> buffer;
     size_t cfgsz = 0;
     while (true) {
-      auto sz = fmc_fread(fd, buffer.data() + cfgsz,
+      buffer.resize(cfgsz + JSON_PARSER_BUFF_SIZE);
+      auto sz = fmc_fread(fd, &buffer[cfgsz],
                           JSON_PARSER_BUFF_SIZE, err);
       if (*err) {
         return nullptr;
@@ -240,7 +240,6 @@ fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
         break;
       }
       cfgsz += sz;
-      buffer.reserve(cfgsz + JSON_PARSER_BUFF_SIZE);
     }
     if (*err) {
       return nullptr;
