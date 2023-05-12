@@ -187,14 +187,32 @@ if(BUILD_TOOLS)
 
     add_test(
         NAME fmc_yamal-run_json
-        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent.json -s main -m testcomponent -o testcomponentsched -j
+        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent.json -m testcomponent -o testcomponentsched -j
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     set_property(TEST fmc_yamal-run_json PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
     add_test(
         NAME fmc_yamal-run_json_array_cfg
-        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent_array_cfg.json -s main -j
+        COMMAND yamal-run -c ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent_array_cfg.json -j
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     set_property(TEST fmc_yamal-run_json_array_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
+
+    if (BUILD_WHEEL)
+        add_test(
+            NAME fmc_yamal-run.py_json
+            COMMAND ${PYTHON3_BIN} ${WHEEL_yamal_SCRIPTS}/build/scripts/yamal-run.py --config ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent.json --module testcomponent --component testcomponentsched
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        set_property(TEST fmc_yamal-run.py_json PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
+        set_property(TEST fmc_yamal-run.py_json PROPERTY ENVIRONMENT "PATH=${WHEEL_yamal_SCRIPTS}")
+        set_property(TEST fmc_yamal-run.py_json PROPERTY ENVIRONMENT "PYTHONPATH=${WHEEL_yamal_BUILD_DIR}/build/lib")
+        add_test(
+            NAME fmc_yamal-run.py_json_array_cfg
+            COMMAND ${PYTHON3_BIN} ${WHEEL_yamal_SCRIPTS}/build/scripts/yamal-run.py --config ${CMAKE_CURRENT_SOURCE_DIR}/testcomponent_array_cfg.json
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        set_property(TEST fmc_yamal-run.py_json_array_cfg PROPERTY ENVIRONMENT "YAMALCOMPPATH=${CMAKE_CURRENT_BINARY_DIR}")
+        set_property(TEST fmc_yamal-run.py_json_array_cfg PROPERTY ENVIRONMENT "PYTHONPATH=${WHEEL_yamal_BUILD_DIR}/build/lib")
+    endif()
 endif()

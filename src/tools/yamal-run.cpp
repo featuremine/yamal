@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
-      "s", "section", "Main section to be used to load the module", true,
+      "s", "section", "Main section to be used to load the module", false,
       "main", "section");
   cmd.add(mainArg);
 
@@ -262,6 +262,10 @@ int main(int argc, char **argv) {
       << "Invalid combination of arguments. module and component must either "
          "be provided through args or config.";
 
+  fmc_runtime_error_unless ((jsonSwitch.getValue() && !mainArg.isSet()) ||
+                            (!jsonSwitch.getValue() && mainArg.isSet()))
+      << "Invalid combination of arguments. main section argument must be provided only when ini config is used.";
+
   fmc_reactor_init(&r);
 
   std::unordered_map<std::string, fmc_component *> components;
@@ -275,7 +279,7 @@ int main(int argc, char **argv) {
     fmc_error_t *err;
     if (jsonSwitch.getValue()) {
       cfg = config_ptr(
-          fmc_cfg_sect_parse_json_file(type, config_file.value, section, &err));
+          fmc_cfg_sect_parse_json_file(type, config_file.value, &err));
     } else {
       cfg = config_ptr(
           fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
@@ -315,11 +319,11 @@ int main(int argc, char **argv) {
     components.emplace(componentArg.getValue().c_str(),
                        gen_component(moduleArg.getValue().c_str(),
                                      componentArg.getValue().c_str(),
-                                     mainArg.getValue().c_str(), nullptr));
+                                     mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
   } else {
     config_ptr cfg;
 
-    load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
+    load_config(cfg, yamal_run_spec, mainArg.isSet() ? mainArg.getValue().c_str() : nullptr);
 
     auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
     for (auto elem = arr->node.value.arr; elem; elem = elem->next) {
