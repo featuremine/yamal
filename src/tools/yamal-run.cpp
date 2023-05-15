@@ -26,9 +26,9 @@
 #include <ytp/yamal.h>
 
 #include <json/json.hpp>
+#include <set>
 #include <unordered_map>
 #include <vector>
-#include <set>
 
 #define JSON_PARSER_BUFF_SIZE 8192
 
@@ -358,86 +358,91 @@ int main(int argc, char **argv) {
         nlohmann::json::parse(std::string_view(buffer.data(), buffer.size()));
 
     std::set<std::string> component_stack;
-    std::function<void(std::string, nlohmann::json &)> process_component = [&](std::string name, nlohmann::json &val){
-      fmc_runtime_error_unless(component_stack.find(name) == component_stack.end())
-        << "Unable to process provided configuration, cycle found while processing component "
-        << name<< ". Component graph must not contain any cycles.";
-      component_stack.insert(name);
-      auto modulename = val["module"].get<std::string>();
-      auto type = val["component"].get<std::string>();
-      auto inputs = val["inputs"];
-      auto config = val["config"].dump();
+    std::function<void(std::string, nlohmann::json &)> process_component =
+        [&](std::string name, nlohmann::json &val) {
+          fmc_runtime_error_unless(component_stack.find(name) ==
+                                   component_stack.end())
+              << "Unable to process provided configuration, cycle found while "
+                 "processing component "
+              << name << ". Component graph must not contain any cycles.";
+          component_stack.insert(name);
+          auto modulename = val["module"].get<std::string>();
+          auto type = val["component"].get<std::string>();
+          auto inputs = val["inputs"];
+          auto config = val["config"].dump();
 
-      std::vector<struct fmc_component_input> inps;
-      auto inpsit = val.find("inputs");
-      if (inpsit != val.end()) {
-        for (auto &inp : *inpsit) {
-          auto inpcomponent = inp["component"].get<std::string>();
+          std::vector<struct fmc_component_input> inps;
+          auto inpsit = val.find("inputs");
+          if (inpsit != val.end()) {
+            for (auto &inp : *inpsit) {
+              auto inpcomponent = inp["component"].get<std::string>();
 
-          if (components.find(inpcomponent.c_str()) == components.end()) {
-            auto it = j_obj.find(inpcomponent);
-            fmc_runtime_error_unless(it != j_obj.end())
-                << "Unable to find component " << inpcomponent
-                << " in components configuration.";
-            process_component(it.key(), it.value());
+              if (components.find(inpcomponent.c_str()) == components.end()) {
+                auto it = j_obj.find(inpcomponent);
+                fmc_runtime_error_unless(it != j_obj.end())
+                    << "Unable to find component " << inpcomponent
+                    << " in components configuration.";
+                process_component(it.key(), it.value());
+              }
+
+              auto inpout_name_it = inp.find("name");
+              auto inpindex_it = inp.find("index");
+
+              fmc_runtime_error_unless(
+                  (inpout_name_it != inp.end() && inpindex_it == inp.end()) ||
+                  (inpout_name_it == inp.end() && inpindex_it != inp.end()))
+                  << "Invalid combination of arguments for output of component "
+                  << inpcomponent << " please provide name or index.";
+
+              if (inpout_name_it != inp.end()) {
+                size_t idx = fmc_component_out_idx(
+                    components[inpcomponent.c_str()],
+                    inpout_name_it->get<std::string>().c_str(), &err);
+                fmc_runtime_error_unless(!err)
+                    << "Unable to obtain index of component: "
+                    << fmc_error_msg(err);
+                inps.push_back(
+                    fmc_component_input{components[inpcomponent.c_str()], idx});
+              } else {
+                auto index = inpindex_it->get<int64_t>();
+                fmc_runtime_error_unless(
+                    (index >= 0) ||
+                    ((size_t)index <
+                     fmc_component_out_sz(components[inpcomponent.c_str()])))
+                    << "Index out of range for output of component " << name;
+                inps.push_back(fmc_component_input{
+                    components[inpcomponent.c_str()], (size_t)index});
+              }
+            }
           }
 
-          auto inpout_name_it = inp.find("name");
-          auto inpindex_it = inp.find("index");
+          inps.push_back(fmc_component_input{nullptr, 0});
 
-          fmc_runtime_error_unless(
-              (inpout_name_it != inp.end() && inpindex_it == inp.end()) ||
-              (inpout_name_it == inp.end() && inpindex_it != inp.end()))
-              << "Invalid combination of arguments for output of component "
-              << inpcomponent << " please provide name or index.";
+          config_ptr cfg;
+          fmc_error_t *err;
+          module_ptr module(
+              fmc_component_module_get(&sys.value, modulename.c_str(), &err));
+          fmc_runtime_error_unless(!err)
+              << "Unable to load module " << modulename << ": "
+              << fmc_error_msg(err);
 
-          if (inpout_name_it != inp.end()) {
-            size_t idx = fmc_component_out_idx(
-                components[inpcomponent.c_str()],
-                inpout_name_it->get<std::string>().c_str(), &err);
-            fmc_runtime_error_unless(!err)
-                << "Unable to obtain index of component: "
-                << fmc_error_msg(err);
-            inps.push_back(
-                fmc_component_input{components[inpcomponent.c_str()], idx});
-          } else {
-            auto index = inpindex_it->get<int64_t>();
-            fmc_runtime_error_unless(
-                (index >= 0) ||
-                ((size_t)index <
-                 fmc_component_out_sz(components[inpcomponent.c_str()])))
-                << "Index out of range for output of component " << name;
-            inps.push_back(fmc_component_input{components[inpcomponent.c_str()],
-                                               (size_t)index});
-          }
-        }
-      }
+          auto comptype =
+              fmc_component_module_type_get(module, type.c_str(), &err);
+          fmc_runtime_error_unless(!err) << "Unable to get component type "
+                                         << type << ": " << fmc_error_msg(err);
 
-      inps.push_back(fmc_component_input{nullptr, 0});
+          cfg = config_ptr(fmc_cfg_sect_parse_json(
+              comptype->tp_cfgspec, config.data(), config.size(), &err));
 
-      config_ptr cfg;
-      fmc_error_t *err;
-      module_ptr module(
-          fmc_component_module_get(&sys.value, modulename.c_str(), &err));
-      fmc_runtime_error_unless(!err) << "Unable to load module " << modulename
-                                     << ": " << fmc_error_msg(err);
+          fmc_component *component =
+              fmc_component_new(&r, comptype, cfg.get(), &inps[0], &err);
 
-      auto comptype = fmc_component_module_type_get(module, type.c_str(), &err);
-      fmc_runtime_error_unless(!err) << "Unable to get component type " << type
-                                     << ": " << fmc_error_msg(err);
+          fmc_runtime_error_unless(!err) << "Unable to load component " << name
+                                         << ": " << fmc_error_msg(err);
 
-      cfg = config_ptr(fmc_cfg_sect_parse_json(
-          comptype->tp_cfgspec, config.data(), config.size(), &err));
-
-      fmc_component *component =
-          fmc_component_new(&r, comptype, cfg.get(), &inps[0], &err);
-
-      fmc_runtime_error_unless(!err)
-          << "Unable to load component " << name << ": " << fmc_error_msg(err);
-
-      components.emplace(name.c_str(), component);
-      component_stack.erase(name);
-};
+          components.emplace(name.c_str(), component);
+          component_stack.erase(name);
+        };
 
     for (auto it = j_obj.begin(); it != j_obj.end(); ++it) {
       process_component(it.key(), it.value());
