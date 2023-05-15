@@ -360,6 +360,9 @@ int main(int argc, char **argv) {
     std::set<std::string> component_stack;
     std::function<void(std::string, nlohmann::json &)> process_component =
         [&](std::string name, nlohmann::json &val) {
+          if (components.find(name) != components.end()) {
+            return;
+          }
           fmc_runtime_error_unless(component_stack.find(name) ==
                                    component_stack.end())
               << "Unable to process provided configuration, cycle found while "
