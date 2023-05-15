@@ -80,26 +80,6 @@ using schema_ptr = struct fmc_cfg_node_spec *;
 using sys_ptr = scopevar_t<fmc_component_sys, initdestroy_t>;
 using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
 
-std::vector<char> read_file(const char *fpath, fmc_error_t **err) {
-  fmc_error_clear(err);
-  file_ptr config_file(fpath);
-  std::vector<char> buffer;
-  size_t cfgsz = 0;
-  while (true) {
-    buffer.resize(cfgsz + JSON_PARSER_BUFF_SIZE);
-    auto sz = fmc_fread(config_file.value, &buffer[cfgsz],
-                        JSON_PARSER_BUFF_SIZE, err);
-    fmc_runtime_error_unless(!*err)
-        << "Unable to read configuration file: " << fmc_error_msg(*err);
-    if (sz == 0) {
-      break;
-    }
-    cfgsz += sz;
-  }
-  buffer.resize(cfgsz);
-  return buffer;
-}
-
 /*
 [main]
 components=component1sec,component2sec
@@ -296,7 +276,27 @@ int main(int argc, char **argv) {
 
   fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
-  auto load_config = [&cfgArg, &jsonSwitch](config_ptr &cfg,
+  auto read_file = [](const char *fpath, fmc_error_t **err) {
+    fmc_error_clear(err);
+    file_ptr config_file(fpath);
+    std::vector<char> buffer;
+    size_t cfgsz = 0;
+    while (true) {
+      buffer.resize(cfgsz + JSON_PARSER_BUFF_SIZE);
+      auto sz = fmc_fread(config_file.value, &buffer[cfgsz],
+                          JSON_PARSER_BUFF_SIZE, err);
+      fmc_runtime_error_unless(!*err)
+          << "Unable to read configuration file: " << fmc_error_msg(*err);
+      if (sz == 0) {
+        break;
+      }
+      cfgsz += sz;
+    }
+    buffer.resize(cfgsz);
+    return buffer;
+  };
+
+  auto load_config = [&](config_ptr &cfg,
                                             struct fmc_cfg_node_spec *type,
                                             const char *section) {
     fmc_error_t *err;
