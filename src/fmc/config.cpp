@@ -218,8 +218,7 @@ fmc_cfg_sect_parse_json(struct fmc_cfg_node_spec *spec, const char *buffer,
 
   try {
 
-    nlohmann::json j_obj =
-        nlohmann::json::parse(std::string_view(buffer, sz));
+    nlohmann::json j_obj = nlohmann::json::parse(std::string_view(buffer, sz));
 
     sect = parse_section(j_obj, spec, err);
     if (*err) {
