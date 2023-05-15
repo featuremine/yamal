@@ -296,9 +296,8 @@ int main(int argc, char **argv) {
     return buffer;
   };
 
-  auto load_config = [&](config_ptr &cfg,
-                                            struct fmc_cfg_node_spec *type,
-                                            const char *section) {
+  auto load_config = [&](config_ptr &cfg, struct fmc_cfg_node_spec *type,
+                         const char *section) {
     fmc_error_t *err;
     if (jsonSwitch.getValue()) {
       auto buffer = read_file(cfgArg.getValue().c_str(), &err);
