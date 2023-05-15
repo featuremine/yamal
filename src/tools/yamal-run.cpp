@@ -28,6 +28,7 @@
 #include <json/json.hpp>
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 #define JSON_PARSER_BUFF_SIZE 8192
 
@@ -357,12 +358,15 @@ int main(int argc, char **argv) {
     nlohmann::json j_obj =
         nlohmann::json::parse(std::string_view(buffer.data(), buffer.size()));
 
-    for (auto it = j_obj.begin(); it != j_obj.end(); ++it) {
-      auto &val = it.value();
+    std::set<std::string> component_stack;
+    std::function<void(std::string, nlohmann::json &)> process_component = [&](std::string name, nlohmann::json &val){
+      fmc_runtime_error_unless(component_stack.find(name) == component_stack.end())
+        << "Unable to process provided configuration, cycle found while processing component "
+        << name<< ". Component graph must not contain any cycles.";
+      component_stack.insert(name);
       auto modulename = val["module"].get<std::string>();
       auto type = val["component"].get<std::string>();
       auto inputs = val["inputs"];
-      auto name = it.key();
       auto config = val["config"].dump();
 
       std::vector<struct fmc_component_input> inps;
@@ -371,14 +375,16 @@ int main(int argc, char **argv) {
         for (auto &inp : *inpsit) {
           auto inpcomponent = inp["component"].get<std::string>();
 
+          if (components.find(inpcomponent.c_str()) == components.end()) {
+            auto it = j_obj.find(inpcomponent);
+            fmc_runtime_error_unless(it != j_obj.end())
+                << "Unable to find component " << inpcomponent
+                << " in components configuration.";
+            process_component(it.key(), it.value());
+          }
+
           auto inpout_name_it = inp.find("name");
           auto inpindex_it = inp.find("index");
-
-          fmc_runtime_error_unless(components.find(inpcomponent.c_str()) !=
-                                   components.end())
-              << "Unable to find component " << inpcomponent
-              << " component has not been created. Please reorder your "
-                 "components appropriately.";
 
           fmc_runtime_error_unless(
               (inpout_name_it != inp.end() && inpindex_it == inp.end()) ||
@@ -431,6 +437,11 @@ int main(int argc, char **argv) {
           << "Unable to load component " << name << ": " << fmc_error_msg(err);
 
       components.emplace(name.c_str(), component);
+      component_stack.erase(name);
+};
+
+    for (auto it = j_obj.begin(); it != j_obj.end(); ++it) {
+      process_component(it.key(), it.value());
     }
 
   } else {

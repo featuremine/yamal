@@ -1,5 +1,5 @@
 {
-    "component_one" : {
+    "component_wne" : {
         "module": "iocomponent",
         "component": "producercomponent",
         "config": {}
@@ -10,11 +10,11 @@
         "config": {},
         "inputs": [
             {
-                "component": "component_one",
+                "component": "component_wne",
                 "name": "valid output"
             },
             {
-                "component": "component_one",
+                "component": "component_wne",
                 "index": 0
             }
         ]
