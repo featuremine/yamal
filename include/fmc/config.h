@@ -145,6 +145,20 @@ fmc_cfg_arr_item_add_arr(struct fmc_cfg_arr_item *, struct fmc_cfg_arr_item *,
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
                             const char *root_key, fmc_error_t **err);
+
+/**
+ * @brief Creates configuration section item from a json encoded buffer
+ * validating it against the provided spec.
+ *
+ * @param spec node spec used to validate the configuration
+ * @param buffer buffer with json encoded data
+ * @param sz size of buffer
+ * @param err out-parameter for error handling
+ * @return NULL if the function fails, a valid section item otherwise
+ */
+FMMODFUNC struct fmc_cfg_sect_item *
+fmc_cfg_sect_parse_json(struct fmc_cfg_node_spec *spec, const char *buffer,
+                        size_t sz, fmc_error_t **err);
 FMMODFUNC void fmc_cfg_node_spec_check(struct fmc_cfg_node_spec *spec,
                                        struct fmc_cfg_sect_item *cfg,
                                        fmc_error_t **err);
@@ -153,6 +167,22 @@ FMMODFUNC const char *fmc_cfg_type_name(FMC_CFG_TYPE type);
 
 FMMODFUNC struct fmc_cfg_sect_item *
 fmc_cfg_sect_item_get(struct fmc_cfg_sect_item *cfg, const char *key);
+
+/**
+ * @brief Creates new array configuration item.
+ *
+ * @param err out-parameter for error handling
+ * @return NULL if the function fails, a valid array item otherwise
+ */
+FMMODFUNC struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err);
+
+/**
+ * @brief Creates new section configuration item.
+ *
+ * @param err out-parameter for error handling
+ * @return NULL if the function fails, a valid section item otherwise
+ */
+FMMODFUNC struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err);
 
 #ifdef __cplusplus
 }

@@ -13,7 +13,8 @@
 import sys
 from os import path
 
-yamal_version = list(open(path.join(path.dirname(__file__), '..', 'VERSION')))[0].strip()
+with open(path.join(path.dirname(__file__), '..', 'VERSION')) as file:
+    yamal_version = list(file)[0].strip()
 
 if sys.version_info < (3, 6, 0):
     print('Tried to install with an unsupported version of Python. '
