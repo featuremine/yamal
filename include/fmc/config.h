@@ -147,7 +147,8 @@ fmc_cfg_sect_parse_ini_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
                             const char *root_key, fmc_error_t **err);
 
 /**
- * @brief Creates configuration section item from a json encoded buffer validating it against the provided spec.
+ * @brief Creates configuration section item from a json encoded buffer
+ * validating it against the provided spec.
  *
  * @param spec node spec used to validate the configuration
  * @param buffer buffer with json encoded data
