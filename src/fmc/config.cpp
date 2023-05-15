@@ -209,33 +209,17 @@ do_cleanup:
 }
 
 struct fmc_cfg_sect_item *
-fmc_cfg_sect_parse_json_file(struct fmc_cfg_node_spec *spec, fmc_fd fd,
-                             fmc_error_t **err) {
+fmc_cfg_sect_parse_json(struct fmc_cfg_node_spec *spec, const char *buffer,
+                        size_t sz, fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *ret = NULL;
   struct fmc_cfg_sect_item *sect = NULL;
 
   try {
-    std::vector<char> buffer;
-    size_t cfgsz = 0;
-    while (true) {
-      buffer.resize(cfgsz + JSON_PARSER_BUFF_SIZE);
-      auto sz = fmc_fread(fd, &buffer[cfgsz], JSON_PARSER_BUFF_SIZE, err);
-      if (*err) {
-        return nullptr;
-      }
-      if (sz == 0) {
-        break;
-      }
-      cfgsz += sz;
-    }
-    if (*err) {
-      return nullptr;
-    }
 
     nlohmann::json j_obj =
-        nlohmann::json::parse(std::string_view(buffer.data(), cfgsz));
+        nlohmann::json::parse(std::string_view(buffer, sz));
 
     sect = parse_section(j_obj, spec, err);
     if (*err) {
