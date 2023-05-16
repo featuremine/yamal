@@ -32,7 +32,7 @@ jobs:
         submodules: recursive
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+      uses: featuremine/actions/package/build@workflow_fixes
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         cpack: TGZ
@@ -57,7 +57,7 @@ jobs:
       run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+      uses: featuremine/actions/package/build@workflow_fixes
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         docs: false
@@ -74,7 +74,7 @@ jobs:
     
     steps:
     - name: Test ${{ github.event.repository.name }} release
-      uses: featuremine/actions/package/test@main
+      uses: featuremine/actions/package/test@workflow_fixes
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -92,7 +92,7 @@ jobs:
           python-version: ${{ matrix.python_version }}
 
       - name: Test ${{ github.event.repository.name }} release for python version ${{ matrix.python_version }}
-        uses: featuremine/actions/package/test@main
+        uses: featuremine/actions/package/test@workflow_fixes
         with:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           sudo: true
