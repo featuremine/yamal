@@ -198,7 +198,7 @@ struct fmc_component_module {
   fmc_error_t error;                // reports errors for this module
   char *name;                       // module name (e.g. "oms")
   struct fmc_ext_mod_t mod;         // module handle and path
-  struct fmc_component_type   *types; // list of component types
+  struct fmc_component_type *types; // list of component types
   struct fmc_component_module *next, *prev;
 };
 
