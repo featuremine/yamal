@@ -12,7 +12,7 @@ jobs:
     
     steps:
     - name: Publish release
-      uses: featuremine/actions/release@main
+      uses: featuremine/actions/release@workflow_fixes
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         pypi_token: ${{ secrets.PYPI_API_TOKEN }}
