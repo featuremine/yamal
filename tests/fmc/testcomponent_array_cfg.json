@@ -1,0 +1,33 @@
+{
+    "component_wne" : {
+        "module": "iocomponent",
+        "component": "producercomponent",
+        "config": {}
+    },
+    "component_two" : {
+        "module": "iocomponent",
+        "component": "consumercomponent2",
+        "config": {},
+        "inputs": [
+            {
+                "component": "component_wne",
+                "name": "valid output"
+            },
+            {
+                "component": "component_wne",
+                "index": 0
+            }
+        ]
+    },
+    "component_three" : {
+        "module":"testcomponent",
+        "component":"dummycomponent",
+        "config": {
+            "booleanval":true,
+            "float64val":44.21,
+            "int64val":32,
+            "noneval":null,
+            "stringval":"somestring"    
+        }
+    }
+}

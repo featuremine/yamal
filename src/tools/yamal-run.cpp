@@ -25,8 +25,12 @@
 #include <ytp/version.h>
 #include <ytp/yamal.h>
 
+#include <json/json.hpp>
+#include <set>
 #include <unordered_map>
 #include <vector>
+
+#define JSON_PARSER_BUFF_SIZE 8192
 
 struct fmc_reactor r;
 static void sig_handler(int s) { fmc_reactor_stop(&r); }
@@ -214,7 +218,7 @@ int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
   TCLAP::ValueArg<std::string> mainArg(
-      "s", "section", "Main section to be used to load the module", true,
+      "s", "section", "Main section to be used to load the module", false,
       "main", "section");
   cmd.add(mainArg);
 
@@ -249,6 +253,9 @@ int main(int argc, char **argv) {
                               false, 0, "cpuid");
   cmd.add(auxArg);
 
+  TCLAP::SwitchArg jsonSwitch("j", "json", "Use JSON configuration.", false);
+  cmd.add(jsonSwitch);
+
   cmd.parse(argc, argv);
 
   sys_ptr sys;
@@ -259,18 +266,55 @@ int main(int argc, char **argv) {
       << "Invalid combination of arguments. module and component must either "
          "be provided through args or config.";
 
+  fmc_runtime_error_unless((jsonSwitch.getValue() && !mainArg.isSet()) ||
+                           (!jsonSwitch.getValue() && mainArg.isSet()))
+      << "Invalid combination of arguments. main section argument must be "
+         "provided only when ini config is used.";
+
   fmc_reactor_init(&r);
 
   std::unordered_map<std::string, fmc_component *> components;
 
   fmc::scope_end_call destroy_reactor([&]() { fmc_reactor_destroy(&r); });
 
-  auto load_config = [&cfgArg](config_ptr &cfg, struct fmc_cfg_node_spec *type,
-                               const char *section) {
-    file_ptr config_file(cfgArg.getValue().c_str());
+  auto read_file = [](const char *fpath, fmc_error_t **err) {
+    fmc_error_clear(err);
+    file_ptr config_file(fpath);
+    std::vector<char> buffer;
+    size_t cfgsz = 0;
+    while (true) {
+      buffer.resize(cfgsz + JSON_PARSER_BUFF_SIZE);
+      auto sz = fmc_fread(config_file.value, &buffer[cfgsz],
+                          JSON_PARSER_BUFF_SIZE, err);
+      fmc_runtime_error_unless(!*err)
+          << "Unable to read configuration file: " << fmc_error_msg(*err);
+      if (sz == 0) {
+        break;
+      }
+      cfgsz += sz;
+    }
+    buffer.resize(cfgsz);
+    return buffer;
+  };
+
+  auto load_config = [&](config_ptr &cfg, struct fmc_cfg_node_spec *type,
+                         const char *section) {
     fmc_error_t *err;
-    cfg = config_ptr(
-        fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+    if (jsonSwitch.getValue()) {
+      auto buffer = read_file(cfgArg.getValue().c_str(), &err);
+      if (section) {
+        auto sub_buffer = nlohmann::json::parse(buffer)[section].dump();
+        cfg = config_ptr(fmc_cfg_sect_parse_json(type, sub_buffer.data(),
+                                                 sub_buffer.size(), &err));
+      } else {
+        cfg = config_ptr(
+            fmc_cfg_sect_parse_json(type, buffer.data(), buffer.size(), &err));
+      }
+    } else {
+      file_ptr config_file(cfgArg.getValue().c_str());
+      cfg = config_ptr(
+          fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+    }
     fmc_runtime_error_unless(!err)
         << "Unable to load configuration file: " << fmc_error_msg(err);
   };
@@ -303,14 +347,115 @@ int main(int argc, char **argv) {
   };
 
   if (moduleArg.isSet() && componentArg.isSet()) {
-    components.emplace(componentArg.getValue().c_str(),
-                       gen_component(moduleArg.getValue().c_str(),
-                                     componentArg.getValue().c_str(),
-                                     mainArg.getValue().c_str(), nullptr));
+    components.emplace(
+        componentArg.getValue().c_str(),
+        gen_component(
+            moduleArg.getValue().c_str(), componentArg.getValue().c_str(),
+            mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
+  } else if (jsonSwitch.getValue()) {
+    auto buffer = read_file(cfgArg.getValue().c_str(), &err);
+    nlohmann::json j_obj =
+        nlohmann::json::parse(std::string_view(buffer.data(), buffer.size()));
+
+    std::set<std::string> component_stack;
+    std::function<void(std::string, nlohmann::json &)> process_component =
+        [&](std::string name, nlohmann::json &val) {
+          if (components.find(name) != components.end()) {
+            return;
+          }
+          fmc_runtime_error_unless(component_stack.find(name) ==
+                                   component_stack.end())
+              << "Unable to process provided configuration, cycle found while "
+                 "processing component "
+              << name << ". Component graph must not contain any cycles.";
+          component_stack.insert(name);
+          auto modulename = val["module"].get<std::string>();
+          auto type = val["component"].get<std::string>();
+          auto inputs = val["inputs"];
+          auto config = val["config"].dump();
+
+          std::vector<struct fmc_component_input> inps;
+          auto inpsit = val.find("inputs");
+          if (inpsit != val.end()) {
+            for (auto &inp : *inpsit) {
+              auto inpcomponent = inp["component"].get<std::string>();
+
+              if (components.find(inpcomponent.c_str()) == components.end()) {
+                auto it = j_obj.find(inpcomponent);
+                fmc_runtime_error_unless(it != j_obj.end())
+                    << "Unable to find component " << inpcomponent
+                    << " in components configuration.";
+                process_component(it.key(), it.value());
+              }
+
+              auto inpout_name_it = inp.find("name");
+              auto inpindex_it = inp.find("index");
+
+              fmc_runtime_error_unless(
+                  (inpout_name_it != inp.end() && inpindex_it == inp.end()) ||
+                  (inpout_name_it == inp.end() && inpindex_it != inp.end()))
+                  << "Invalid combination of arguments for output of component "
+                  << inpcomponent << " please provide name or index.";
+
+              if (inpout_name_it != inp.end()) {
+                size_t idx = fmc_component_out_idx(
+                    components[inpcomponent.c_str()],
+                    inpout_name_it->get<std::string>().c_str(), &err);
+                fmc_runtime_error_unless(!err)
+                    << "Unable to obtain index of component: "
+                    << fmc_error_msg(err);
+                inps.push_back(
+                    fmc_component_input{components[inpcomponent.c_str()], idx});
+              } else {
+                auto index = inpindex_it->get<int64_t>();
+                fmc_runtime_error_unless(
+                    (index >= 0) ||
+                    ((size_t)index <
+                     fmc_component_out_sz(components[inpcomponent.c_str()])))
+                    << "Index out of range for output of component " << name;
+                inps.push_back(fmc_component_input{
+                    components[inpcomponent.c_str()], (size_t)index});
+              }
+            }
+          }
+
+          inps.push_back(fmc_component_input{nullptr, 0});
+
+          config_ptr cfg;
+          fmc_error_t *err;
+          module_ptr module(
+              fmc_component_module_get(&sys.value, modulename.c_str(), &err));
+          fmc_runtime_error_unless(!err)
+              << "Unable to load module " << modulename << ": "
+              << fmc_error_msg(err);
+
+          auto comptype =
+              fmc_component_module_type_get(module, type.c_str(), &err);
+          fmc_runtime_error_unless(!err) << "Unable to get component type "
+                                         << type << ": " << fmc_error_msg(err);
+
+          cfg = config_ptr(fmc_cfg_sect_parse_json(
+              comptype->tp_cfgspec, config.data(), config.size(), &err));
+
+          fmc_component *component =
+              fmc_component_new(&r, comptype, cfg.get(), &inps[0], &err);
+
+          fmc_runtime_error_unless(!err) << "Unable to load component " << name
+                                         << ": " << fmc_error_msg(err);
+
+          components.emplace(name.c_str(), component);
+          component_stack.erase(name);
+        };
+
+    for (auto it = j_obj.begin(); it != j_obj.end(); ++it) {
+      process_component(it.key(), it.value());
+    }
+
   } else {
     config_ptr cfg;
 
-    load_config(cfg, yamal_run_spec, mainArg.getValue().c_str());
+    load_config(cfg, yamal_run_spec,
+                mainArg.isSet() ? mainArg.getValue().c_str() : nullptr);
 
     auto arr = fmc_cfg_sect_item_get(cfg.get(), "components");
     for (auto elem = arr->node.value.arr; elem; elem = elem->next) {

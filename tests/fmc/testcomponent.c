@@ -118,6 +118,67 @@ cleanup:
   return NULL;
 };
 
+static void generic_component_del(struct fmc_component *comp) { free(comp); };
+
+static struct fmc_component *dummy_component_new(struct fmc_cfg_sect_item *cfg,
+                                                 struct fmc_reactor_ctx *ctx,
+                                                 char **inp_tps) {
+  if (inp_tps && inp_tps[0]) {
+    _reactor->set_error(ctx, "dummy component does not expect any inputs");
+    return NULL;
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "booleanval");
+    if (item->node.value.boolean != true) {
+      _reactor->set_error(ctx, "invalid configured value for booleanval");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "float64val");
+    if (item->node.value.float64 > 44.21 + DBL_EPSILON &&
+        item->node.value.float64 < 44.21 - DBL_EPSILON) {
+      _reactor->set_error(ctx, "invalid configured value for float64val");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "int64val");
+    if (item->node.value.int64 != 32) {
+      _reactor->set_error(ctx, "invalid configured value for int64val");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "noneval");
+    if (item->node.type != FMC_CFG_NONE) {
+      _reactor->set_error(ctx, "invalid configured value for noneval");
+      return NULL;
+    }
+  }
+
+  {
+    struct fmc_cfg_sect_item *item = fmc_cfg_sect_item_get(cfg, "stringval");
+    if (strcmp(item->node.value.str, "somestring") != 0) {
+      _reactor->set_error(ctx, "invalid configured value for stringval");
+      return NULL;
+    }
+  }
+
+  struct fmc_component *c = (struct fmc_component *)calloc(1, sizeof(*c));
+  if (!c) {
+    _reactor->set_error(ctx, NULL, FMC_ERROR_MEMORY);
+    return NULL;
+  }
+
+  memset(c, 0, sizeof(*c));
+  return c;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -125,7 +186,62 @@ extern "C" {
 struct fmc_cfg_node_spec test_component_cfg_spec[] = {
     {"teststr", "Test string", true, {FMC_CFG_STR, {NULL}}}, {NULL}};
 
+struct fmc_cfg_node_spec all_cfg_spec[] = {{
+                                               .key = "booleanval",
+                                               .descr = "boolean value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_BOOLEAN,
+                                                   },
+                                           },
+                                           {
+                                               .key = "float64val",
+                                               .descr = "float64 value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_FLOAT64,
+                                                   },
+                                           },
+                                           {
+                                               .key = "int64val",
+                                               .descr = "int64 value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_INT64,
+                                                   },
+                                           },
+                                           {
+                                               .key = "noneval",
+                                               .descr = "none value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_NONE,
+                                                   },
+                                           },
+                                           {
+                                               .key = "stringval",
+                                               .descr = "string value",
+                                               .required = true,
+                                               .type =
+                                                   {
+                                                       .type = FMC_CFG_STR,
+                                                   },
+                                           },
+                                           {NULL}};
+
 struct fmc_component_def_v1 components[] = {
+    {
+        .tp_name = "dummycomponent",
+        .tp_descr = "Dummy component",
+        .tp_size = sizeof(struct fmc_component),
+        .tp_cfgspec = all_cfg_spec,
+        .tp_new = (fmc_newfunc)&dummy_component_new,
+        .tp_del = &generic_component_del,
+    },
     {
         .tp_name = "testcomponentsched",
         .tp_descr = "Test component scheduled",
