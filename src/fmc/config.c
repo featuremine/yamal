@@ -58,7 +58,7 @@ void fmc_cfg_sect_del(struct fmc_cfg_sect_item *head) {
   }
 }
 
-static struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err) {
+struct fmc_cfg_sect_item *fmc_cfg_sect_item_new(fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_sect_item *ret =
@@ -239,7 +239,7 @@ void fmc_cfg_arr_del(struct fmc_cfg_arr_item *head) {
   }
 }
 
-static struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err) {
+struct fmc_cfg_arr_item *fmc_cfg_arr_item_new(fmc_error_t **err) {
   fmc_error_clear(err);
 
   struct fmc_cfg_arr_item *ret =

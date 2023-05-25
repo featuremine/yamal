@@ -147,7 +147,7 @@ template <class... Args> struct type_list {};
 template <class T> struct typify { using type = T; };
 
 template <class Op> struct scope_end_call {
-  scope_end_call(Op &&op) : op_(forward<Op>(op)) {}
+  scope_end_call(Op &&op) : op_(std::forward<Op>(op)) {}
   ~scope_end_call() { op_(); }
   Op op_;
 };
