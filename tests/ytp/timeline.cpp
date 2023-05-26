@@ -14,7 +14,6 @@
 
 /**
  * @file timeline.cpp
- * @author Federico Ravchina
  * @date 10 Jan 2022
  * @brief File contains tests for YTP timeline API
  *
@@ -24,7 +23,6 @@
 #include <thread>
 
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/timeline.h>
 #include <ytp/yamal.h>
 
@@ -32,7 +30,61 @@
 #include <fmc++/gtestwrap.hpp>
 #include <fmc/files.h>
 
+#include <list>
+
+#include "buildmsg.hpp"
+#include "control.hpp"
+#include "tostr.hpp"
+
 using namespace std;
+
+struct callback_helper {
+  struct closure_wrapper_base {
+    virtual ~closure_wrapper_base() = default;
+  };
+
+  template <typename T> struct closure_wrapper : closure_wrapper_base, T {
+    closure_wrapper(T rhs) : T(std::move(rhs)) {}
+  };
+
+  template <typename F, typename... Args>
+  static void static_cb(void *closure, Args... args) {
+    auto &base = *reinterpret_cast<closure_wrapper_base *>(closure);
+    auto &wrapped = static_cast<closure_wrapper<F> &>(base);
+    F &f = wrapped;
+    f(args...);
+  }
+
+  template <typename F> std::pair<ytp_timeline_peer_cb_t, void *> peercb(F f) {
+    auto *cl =
+        callbacks
+            .emplace_back(std::make_unique<closure_wrapper<F>>(std::move(f)))
+            .get();
+    return {&static_cb<F, ytp_peer_t, size_t, const char *>, cl};
+  }
+
+  template <typename F> std::pair<ytp_timeline_ch_cb_t, void *> chcb(F f) {
+    auto *cl =
+        callbacks
+            .emplace_back(std::make_unique<closure_wrapper<F>>(std::move(f)))
+            .get();
+    return {&static_cb<F, ytp_peer_t, ytp_channel_t, uint64_t, size_t,
+                       const char *>,
+            cl};
+  }
+
+  template <typename F> std::pair<ytp_timeline_data_cb_t, void *> datacb(F f) {
+    auto *cl =
+        callbacks
+            .emplace_back(std::make_unique<closure_wrapper<F>>(std::move(f)))
+            .get();
+    return {&static_cb<F, ytp_peer_t, ytp_channel_t, uint64_t, size_t,
+                       const char *>,
+            cl};
+  }
+
+  std::list<std::unique_ptr<closure_wrapper_base>> callbacks;
+};
 
 TEST(timeline, data_simple_subscription_1) {
   fmc_error_t *error;
@@ -77,8 +129,9 @@ TEST(timeline, data_simple_subscription_1) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -138,8 +191,9 @@ TEST(timeline, data_simple_subscription_2) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -199,8 +253,9 @@ TEST(timeline, data_simple_subscription_rm_1) {
   ytp_control_commit(ctrl, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ytp_timeline_prfx_cb_rm(timeline, 5, "main/", cb, &output, &error);
@@ -212,8 +267,9 @@ TEST(timeline, data_simple_subscription_rm_1) {
   ytp_control_commit(ctrl, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -273,8 +329,9 @@ TEST(timeline, data_simple_subscription_rm_2) {
   ytp_control_commit(ctrl, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ytp_timeline_indx_cb_rm(timeline, channel1, cb, &output, &error);
@@ -286,8 +343,9 @@ TEST(timeline, data_simple_subscription_rm_2) {
   ytp_control_commit(ctrl, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -353,8 +411,9 @@ TEST(timeline, data_multiple_channel_1) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -417,8 +476,9 @@ TEST(timeline, data_multiple_channel_2) {
   ytp_timeline_indx_cb(timeline, channel2, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -481,8 +541,9 @@ TEST(timeline, data_multiple_channel_3) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -545,8 +606,9 @@ TEST(timeline, data_multiple_channel_4) {
   ytp_timeline_indx_cb(timeline, channel2, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -618,8 +680,9 @@ TEST(timeline, data_multiple_producers_1) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 2);
@@ -692,8 +755,9 @@ TEST(timeline, data_multiple_producers_2) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 2);
@@ -775,8 +839,9 @@ TEST(timeline, data_subscription_first_1) {
   ytp_control_commit(ctrl, producer1, channel3, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 2);
@@ -842,8 +907,9 @@ TEST(timeline, data_subscription_first_2) {
   ytp_control_commit(ctrl, producer1, channel2, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -893,15 +959,17 @@ TEST(timeline, peer_simple) {
   ytp_control_peer_name(ctrl, 555, &sz, &name, &error);
   ASSERT_NE(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ytp_timeline_peer_cb_rm(timeline, peer_cb, &output, &error);
 
   (void)ytp_control_peer_decl(ctrl, 9, "producer3", &error);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 2);
   ASSERT_EQ(std::get<0>(output[0]), "producer1");
@@ -973,8 +1041,9 @@ TEST(timeline, idempotence_simple_1) {
   ytp_timeline_indx_cb(timeline, channel1, cb2, &output, &error);
   ytp_timeline_indx_cb(timeline, channel1_2, cb2, &output, &error);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   // consumer2
   (void)ytp_control_peer_decl(ctrl, 9, "consumer2", &error);
@@ -997,8 +1066,9 @@ TEST(timeline, idempotence_simple_1) {
   strcpy(dst, "EFGH");
   ytp_control_commit(ctrl, producer2, channel2, 1000, dst, &error);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 4);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1026,79 +1096,72 @@ TEST(timeline, idempotence_simple_1) {
   ytp_control_del(ctrl, &error);
   ASSERT_EQ(error, nullptr);
 
-  ytp_peer_t peer;
-  ytp_channel_t channel;
-  uint64_t time;
-  size_t sz;
-  const char *data;
   auto *yamal = ytp_yamal_new(fd, &error);
   ASSERT_NE(yamal, nullptr);
 
-  auto *it = ytp_yamal_begin(yamal, &error);
+  ytp_iterator_t it[4];
+  for (size_t i = 0; i < 4; ++i) {
+    it[i] = ytp_yamal_begin(yamal, i, &error);
+    ASSERT_EQ(error, nullptr);
+  }
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+  auto readoneraw = [&](size_t idx) -> std::string_view {
+    if (ytp_yamal_term(it[idx])) {
+      return {};
+    }
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+    uint64_t seqno;
+    size_t sz;
+    const char *data;
+    ytp_yamal_read(yamal, it[idx], &seqno, &sz, &data, &error);
+    EXPECT_EQ(error, nullptr);
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
-  ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+    it[idx] = ytp_yamal_next(yamal, it[idx], &error);
+    EXPECT_EQ(error, nullptr);
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, producer1);
-  ASSERT_EQ(channel, channel1);
-  ASSERT_EQ(std::string_view(data, sz), "ABCD");
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+    return {data, sz};
+  };
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+  std::vector<uint64_t> subs;
+  std::vector<uint64_t> anns;
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+  for (size_t i = 0; i < 8; ++i) {
+    subs.push_back(ytp_yamal_tell(yamal, it[YTP_STREAM_LIST_SUB], &error));
+    readoneraw(YTP_STREAM_LIST_SUB);
+  }
+  ASSERT_TRUE(ytp_yamal_term(it[YTP_STREAM_LIST_SUB]));
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
-  ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[0]}, uint16_t{9}, uint16_t{0}, "consumer1"));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[1]}, uint16_t{9}, uint16_t{0}, "producer1"));
+  anns.push_back(ytp_yamal_tell(yamal, it[YTP_STREAM_LIST_ANN], &error));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[2]}, uint16_t{9}, uint16_t{13}, "consumer1",
+                     "main/channel1"));
+  anns.push_back(ytp_yamal_tell(yamal, it[YTP_STREAM_LIST_ANN], &error));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[3]}, uint16_t{9}, uint16_t{13}, "producer1",
+                     "main/channel1"));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[4]}, uint16_t{9}, uint16_t{0}, "consumer2"));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[5]}, uint16_t{9}, uint16_t{0}, "producer2"));
+  anns.push_back(ytp_yamal_tell(yamal, it[YTP_STREAM_LIST_ANN], &error));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[6]}, uint16_t{9}, uint16_t{13}, "consumer1",
+                     "main/channel2"));
+  anns.push_back(ytp_yamal_tell(yamal, it[YTP_STREAM_LIST_ANN], &error));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN),
+            buildmsg(uint64_t{subs[7]}, uint16_t{9}, uint16_t{13}, "producer2",
+                     "main/channel2"));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_ANN), "");
 
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, producer2);
-  ASSERT_EQ(channel, channel2);
-  ASSERT_EQ(std::string_view(data, sz), "EFGH");
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_TRUE(ytp_yamal_term(it));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_DATA),
+            buildmsg(uint64_t{1000}, anns[1], "ABCD"));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_DATA),
+            buildmsg(uint64_t{1000}, anns[3], "EFGH"));
+  EXPECT_EQ(readoneraw(YTP_STREAM_LIST_DATA), "");
 
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
@@ -1113,8 +1176,20 @@ TEST(timeline, idempotence_simple_2) {
   auto *yamal = ytp_yamal_new(fd, &error);
   ASSERT_EQ(error, nullptr);
 
-  ytp_peer_name(yamal, 5, "peer1", &error);
-  ytp_peer_name(yamal, 5, "peer1", &error);
+  {
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::YTP_SUB_NO_SUBSCRIPTION},
+                         uint16_t{5}, uint16_t{0}, "peer1");
+    auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
+    std::memcpy(ptr, data.data(), data.size());
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
+  }
+  {
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::YTP_SUB_DUPLICATED},
+                         uint16_t{5}, uint16_t{0}, "peer1");
+    auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
+    std::memcpy(ptr, data.data(), data.size());
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
+  }
 
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
@@ -1137,8 +1212,9 @@ TEST(timeline, idempotence_simple_2) {
 
   ytp_timeline_peer_cb(timeline, peer_cb, &output, &error);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "peer1");
@@ -1159,21 +1235,20 @@ TEST(timeline, idempotence_simple_3) {
   auto *yamal = ytp_yamal_new(fd, &error);
   ASSERT_EQ(error, nullptr);
 
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  auto *channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_ANN, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_ANN, 1000,
-                            channel_name, &error),
-            nullptr);
+  {
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::YTP_SUB_NO_SUBSCRIPTION},
+                         uint16_t{5}, uint16_t{8}, "peer1", "channel1");
+    auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
+    std::memcpy(ptr, data.data(), data.size());
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
+  }
+  {
+    auto data = buildmsg(uint64_t{SUBSCRIPTION_STATE::YTP_SUB_DUPLICATED},
+                         uint16_t{5}, uint16_t{8}, "peer1", "channel1");
+    auto *ptr = ytp_yamal_reserve(yamal, data.size(), &error);
+    std::memcpy(ptr, data.data(), data.size());
+    ytp_yamal_commit(yamal, ptr, YTP_STREAM_LIST_ANN, &error);
+  }
 
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
@@ -1194,65 +1269,9 @@ TEST(timeline, idempotence_simple_3) {
 
   ytp_timeline_ch_cb(timeline, ch_cb, &output, &error);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 1);
-  ASSERT_EQ(output[0], "channel1");
-
-  ytp_timeline_del(timeline, &error);
-  ASSERT_EQ(error, nullptr);
-  ytp_control_del(ctrl, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-  ASSERT_EQ(error, nullptr);
-}
-
-TEST(timeline, idempotence_simple_4) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  auto *channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_SUB, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_SUB, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *ctrl = ytp_control_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *timeline = ytp_timeline_new(ctrl, &error);
-  ASSERT_EQ(error, nullptr);
-
-  std::vector<std::string_view> output;
-
-  auto sub_cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                   uint64_t time, size_t sz, const char *data) {
-    auto *output = (std::vector<std::string_view> *)closure;
-    output->emplace_back(std::string_view(data, sz));
-  };
-
-  ytp_timeline_indx_cb(timeline, YTP_CHANNEL_SUB, sub_cb, &output, &error);
-
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(output[0], "channel1");
@@ -1298,8 +1317,9 @@ TEST(timeline, leading_slash_test) {
       nullptr, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   (void)ytp_control_ch_decl(ctrl, consumer1, 0, 9, "/channel2", &error);
@@ -1307,8 +1327,9 @@ TEST(timeline, leading_slash_test) {
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(channel1, 0);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ytp_timeline_del(timeline, &error);
@@ -1458,8 +1479,9 @@ TEST(timeline, data_iter_set_1) {
   ytp_timeline_indx_cb(timeline, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 3);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1484,8 +1506,9 @@ TEST(timeline, data_iter_set_1) {
       ytp_timeline_tell(timeline, ytp_timeline_iter_get(timeline), &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 3);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1506,8 +1529,9 @@ TEST(timeline, data_iter_set_1) {
 
   ytp_timeline_iter_set(timeline, second_iter);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 2);
   ASSERT_EQ(std::get<0>(output[0]), "EFGH");
@@ -1535,8 +1559,9 @@ TEST(timeline, data_iter_set_1) {
   ytp_timeline_seek(timeline, first_off, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 3);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1612,8 +1637,9 @@ TEST(timeline, data_callback_removal_1) {
   ytp_control_commit(ctrl, peer, ch, 1000, ytp_control_reserve(ctrl, 1, &error),
                      &error);
   ASSERT_EQ(error, nullptr);
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   expected = {1, 2, 3};
   EXPECT_EQ(execution, expected);
@@ -1622,8 +1648,9 @@ TEST(timeline, data_callback_removal_1) {
   ytp_control_commit(ctrl, peer, ch, 1000, ytp_control_reserve(ctrl, 1, &error),
                      &error);
   ASSERT_EQ(error, nullptr);
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   expected = {2, 3};
   EXPECT_EQ(execution, expected);
@@ -1634,8 +1661,9 @@ TEST(timeline, data_callback_removal_1) {
   ytp_control_commit(ctrl, peer, ch, 1000, ytp_control_reserve(ctrl, 1, &error),
                      &error);
   ASSERT_EQ(error, nullptr);
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   expected = {3};
   EXPECT_EQ(execution, expected);
@@ -1701,8 +1729,9 @@ TEST(timeline, data_callback_removal_2) {
   ytp_control_commit(ctrl, peer, ch, 1000, ytp_control_reserve(ctrl, 1, &error),
                      &error);
   ASSERT_EQ(error, nullptr);
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   expected = {1, 1, 2, 2};
   EXPECT_EQ(execution, expected);
@@ -1711,8 +1740,9 @@ TEST(timeline, data_callback_removal_2) {
   ytp_control_commit(ctrl, peer, ch, 1000, ytp_control_reserve(ctrl, 1, &error),
                      &error);
   ASSERT_EQ(error, nullptr);
-  while (ytp_timeline_poll(timeline, &error))
-    ;
+  while (ytp_timeline_poll(timeline, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   expected = {1, 2};
   EXPECT_EQ(execution, expected);

@@ -80,12 +80,11 @@ set(
     YTP_SRC
     "${PROJECT_SOURCE_DIR}/src/ytp/api.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/yamal.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/time.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/control.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/sequence.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/timeline.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/stream.cpp"
 )
 
 add_library(
@@ -251,50 +250,50 @@ if(BUILD_TOOLS)
         yamal-run
     )
 
-    add_executable(
-       yamal-latency
-       "src/tools/yamal-latency.cpp"
-    )
-    target_link_libraries(
-       yamal-latency
-       PRIVATE
-       ytp
-       fmc++
-    )
-    install(
-       TARGETS
-       yamal-latency
-    )
+    #add_executable(
+    #   yamal-latency
+    #   "src/tools/yamal-latency.cpp"
+    #)
+    #target_link_libraries(
+    #   yamal-latency
+    #   PRIVATE
+    #   ytp
+    #   fmc++
+    #)
+    #install(
+    #   TARGETS
+    #   yamal-latency
+    #)
 
-    add_executable(
-       yamal-replay
-       "src/tools/yamal-replay.cpp"
-    )
-    target_link_libraries(
-       yamal-replay
-       PRIVATE
-       ytp
-       fmc++
-    )
-    install(
-       TARGETS
-       yamal-replay
-    )
+    #add_executable(
+    #   yamal-replay
+    #   "src/tools/yamal-replay.cpp"
+    #)
+    #target_link_libraries(
+    #   yamal-replay
+    #   PRIVATE
+    #   ytp
+    #   fmc++
+    #)
+    #install(
+    #   TARGETS
+    #   yamal-replay
+    #)
 
-    add_executable(
-       yamal-cp
-       "src/tools/yamal-cp.cpp"
-    )
-    target_link_libraries(
-       yamal-cp
-       PRIVATE
-       ytp
-       fmc++
-    )
-    install(
-       TARGETS
-       yamal-cp
-    )
+    #add_executable(
+    #   yamal-cp
+    #   "src/tools/yamal-cp.cpp"
+    #)
+    #target_link_libraries(
+    #   yamal-cp
+    #   PRIVATE
+    #   ytp
+    #   fmc++
+    #)
+    #install(
+    #   TARGETS
+    #   yamal-cp
+    #)
 
     add_executable(
         yamal-daemon

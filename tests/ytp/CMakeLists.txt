@@ -9,30 +9,11 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME ytp_yamal COMMAND tests_ytp_yamal)
-
-add_executable(
-    tests_ytp_peer
-    "peer.cpp"
+set_tests_properties(
+    ytp_yamal
+    PROPERTIES
+    TIMEOUT 60
 )
-target_link_libraries(
-    tests_ytp_peer
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_peer COMMAND tests_ytp_peer)
-
-add_executable(
-    tests_ytp_channel
-    "channel.cpp"
-)
-target_link_libraries(
-    tests_ytp_channel
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_channel COMMAND tests_ytp_channel)
 
 add_executable(
     tests_ytp_time
@@ -45,18 +26,11 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME ytp_time COMMAND tests_ytp_time)
-
-add_executable(
-    tests_ytp_control
-    "control.cpp"
+set_tests_properties(
+    ytp_time
+    PROPERTIES
+    TIMEOUT 60
 )
-target_link_libraries(
-    tests_ytp_control
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_control COMMAND tests_ytp_control)
 
 add_executable(
     tests_ytp_timeline
@@ -68,7 +42,39 @@ target_link_libraries(
     ytp
     PkgConfig::GTEST
 )
+target_include_directories(
+    tests_ytp_timeline
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/src/ytp"
+)
 add_test(NAME ytp_timeline COMMAND tests_ytp_timeline)
+set_tests_properties(
+    ytp_timeline
+    PROPERTIES
+    TIMEOUT 60
+)
+
+add_executable(
+    tests_ytp_stream
+    "stream.cpp"
+)
+target_link_libraries(
+    tests_ytp_stream
+    PRIVATE
+    ytp
+    PkgConfig::GTEST
+)
+target_include_directories(
+    tests_ytp_stream
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/src/ytp"
+)
+add_test(NAME ytp_stream COMMAND tests_ytp_stream)
+set_tests_properties(
+    ytp_stream
+    PROPERTIES
+    TIMEOUT 60
+)
 
 add_executable(
     tests_ytp_sequence
@@ -81,18 +87,11 @@ target_link_libraries(
     PkgConfig::GTEST
 )
 add_test(NAME ytp_sequence COMMAND tests_ytp_sequence)
-
-add_executable(
-    tests_ytp_containers
-    "containers.cpp"
+set_tests_properties(
+    ytp_sequence
+    PROPERTIES
+    TIMEOUT 60
 )
-target_link_libraries(
-    tests_ytp_containers
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_containers COMMAND tests_ytp_containers)
 
 add_executable(
     tests_ytp_compiles_c
@@ -104,3 +103,8 @@ target_link_libraries(
     ytp
 )
 add_test(NAME ytp_compiles_c COMMAND tests_ytp_compiles_c)
+set_tests_properties(
+    ytp_compiles_c
+    PROPERTIES
+    TIMEOUT 60
+)

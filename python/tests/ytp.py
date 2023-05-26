@@ -55,6 +55,7 @@ class data_simple_subscription(unittest.TestCase):
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 1)
@@ -85,6 +86,7 @@ class data_simple_subscription(unittest.TestCase):
 
         channel1.data_callback(seq_clbck)
 
+        self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
@@ -126,12 +128,14 @@ class data_multiple_channel(unittest.TestCase):
 
         sequence.data_callback("main/", seq_clbck)
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 1)
@@ -168,12 +172,14 @@ class data_multiple_channel(unittest.TestCase):
 
         sequence.data_callback("secondary/", seq_clbck)
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 1)
@@ -210,12 +216,14 @@ class data_multiple_channel(unittest.TestCase):
 
         channel1.data_callback(seq_clbck)
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 1)
@@ -260,14 +268,18 @@ class data_multiple_producers(unittest.TestCase):
 
         sequence.data_callback("main/", seq_clbck)
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Peer producer2
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
-        self.assertTrue(sequence.poll())  # IJKL message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 2)
@@ -316,14 +328,18 @@ class data_multiple_producers(unittest.TestCase):
 
         sequence.data_callback("main/", seq_clbck)
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Peer producer2
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
-        self.assertTrue(sequence.poll())  # IJKL message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 2)
@@ -366,12 +382,14 @@ class data_subscription_first(unittest.TestCase):
         stream1.write(1000, b"ABCD")
         stream2.write(1000, b"EFGH")
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 1)
@@ -409,12 +427,14 @@ class data_subscription_first(unittest.TestCase):
         stream1.write(1000, b"ABCD")
         stream2.write(1000, b"EFGH")
 
-        self.assertTrue(sequence.poll())  # Peer consumer1
-        self.assertTrue(sequence.poll())  # Peer producer1
-        self.assertTrue(sequence.poll())  # Channel main/channel1
-        self.assertTrue(sequence.poll())  # Channel secondary/channel2
-        self.assertTrue(sequence.poll())  # ABCD message
-        self.assertTrue(sequence.poll())  # EFGH message
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 1)
@@ -450,6 +470,9 @@ class channel_simple(unittest.TestCase):
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertFalse(sequence.poll())
 
         self.assertEqual(len(ch_output), 2)
         self.assertEqual(ch_output[0][0].id(), channel1.id())
@@ -481,6 +504,8 @@ class channel_wildcard(unittest.TestCase):
         channel2 = producer1.channel(1002, "secondary/channel2")
         self.assertNotEqual(channel2.id(), 0)
 
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
@@ -621,14 +646,16 @@ class idempotence_simple(unittest.TestCase):
 
         stream2.write(1000, b"EFGH")
 
-        self.assertTrue(sequence.poll())  # consumer1
-        self.assertTrue(sequence.poll())  # producer1
-        self.assertTrue(sequence.poll())  # channel1
-        self.assertTrue(sequence.poll())  # data ABCD
-        self.assertTrue(sequence.poll())  # consumer2
-        self.assertTrue(sequence.poll())  # producer2
-        self.assertTrue(sequence.poll())  # channel2
-        self.assertTrue(sequence.poll())  # data EFGH
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(cb_output), 4)

@@ -17,125 +17,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include <ytp/channel.h>
+#include <fmc++/error.hpp>
+
 #include <ytp/control.h>
-#include <ytp/time.h>
+#include <ytp/stream.h>
 #include <ytp/yamal.h>
 
-#include <cstring>
-#include <fmc/alignment.h>
-
 #include "control.hpp"
+#include "stream.hpp"
 
-static peer_data &process_peer(ytp_control_t *ctrl, std::string_view name) {
-  ytp_channel_t id = ctrl->name_to_peer.size() + YTP_PEER_OFF;
-
-  peer_data *peer;
-  auto it = ctrl->name_to_peer.emplace(name, id);
-
-  if (it.second) {
-    peer = &ctrl->peer_map[id];
-    peer->name = name;
-  } else {
-    peer = &ctrl->peer_map[it.first->second];
-  }
-
-  return *peer;
-}
-
-static channel_data &process_channel(ytp_control *ctrl, ytp_peer_t peer,
-                                     std::string_view name) {
-  ytp_channel_t id = ctrl->name_to_channel.size() + YTP_CHANNEL_OFF;
-
-  channel_data *channel;
-  auto it = ctrl->name_to_channel.emplace(name, id);
-
-  if (it.second) {
-    channel = &ctrl->channel_map[id];
-    channel->name = name;
-  } else {
-    channel = &ctrl->channel_map[it.first->second];
-  }
-
-  return *channel;
-}
-
-static void process_dir(ytp_control *ctrl, ytp_peer_t peer,
-                        std::string_view dir) {}
-
-static sub_data &process_sub(ytp_control *ctrl, ytp_peer_t read_peer,
-                             std::string_view payload) {
-  return ctrl->subs_announced.emplace(payload, sub_data{}).first->second;
-}
-
-static void read_msg(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
-                     ytp_channel_t *channel, uint64_t *time, size_t *sz,
-                     const char **data, fmc_error_t **error) {
-  ytp_time_read(&ctrl->yamal, it, peer, channel, time, sz, data, error);
-  if (!*error) {
-    if (ytp_peer_ann(*peer)) {
-      (void)process_peer(ctrl, std::string_view(*data, *sz));
-    } else {
-      switch (*channel) {
-      case YTP_CHANNEL_ANN: {
-        (void)process_channel(ctrl, *peer, std::string_view(*data, *sz));
-      } break;
-      case YTP_CHANNEL_SUB: {
-        (void)process_sub(ctrl, *peer, std::string_view(*data, *sz));
-      } break;
-      case YTP_CHANNEL_DIR: {
-        process_dir(ctrl, *peer, std::string_view(*data, *sz));
-      } break;
-      }
-    }
-  }
-}
-
-template <typename F>
-static bool process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
-                                 const F &found) {
-  fmc_error_clear(error);
-
-  ytp_peer_t peer;
-  ytp_channel_t channel;
-  uint64_t time;
-  size_t sz;
-  const char *data;
-
-  bool f;
-  while (!(f = found()) && !ytp_yamal_term(ctrl->ctrl)) {
-    read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error);
-    if (*error) {
-      return false;
-    }
-
-    auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
-    if (*error) {
-      return false;
-    }
-
-    ctrl->ctrl = new_it;
-  }
-
-  return f;
-}
-
-template <typename F, typename I>
-static bool lookup_or_insert_ctrl_msg(ytp_control_t *ctrl, fmc_error_t **error,
-                                      const F &found, const I &insert) {
-  fmc_error_clear(error);
-  if (!process_control_msgs(ctrl, error, found)) {
-    if (*error) {
-      return false;
-    }
-    insert();
-    if (*error) {
-      return false;
-    }
-    return process_control_msgs(ctrl, error, found);
-  }
-  return true;
-}
+static const std::string_view default_encoding = "";
 
 ytp_control_t *ytp_control_new(fmc_fd fd, fmc_error_t **error) {
   return ytp_control_new_2(fd, true, error);
@@ -147,229 +38,444 @@ void ytp_control_init(ytp_control_t *ctrl, fmc_fd fd, fmc_error_t **error) {
 
 ytp_control_t *ytp_control_new_2(fmc_fd fd, bool enable_thread,
                                  fmc_error_t **error) {
-  auto *ctrl = new ytp_control_t;
-  ytp_control_init_2(ctrl, fd, enable_thread, error);
-  if (!*error) {
-    return ctrl;
+  auto *control = static_cast<ytp_control_t *>(
+      aligned_alloc(alignof(ytp_control_t), sizeof(ytp_control_t)));
+  if (!control) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return {};
   }
-  delete ctrl;
-  return nullptr;
+
+  ytp_control_init_2(control, fd, enable_thread, error);
+  if (*error) {
+    free(control);
+    return {};
+  }
+
+  return control;
 }
 
 void ytp_control_init_2(ytp_control_t *ctrl, fmc_fd fd, bool enable_thread,
                         fmc_error_t **error) {
-  ytp_yamal_init_2(&ctrl->yamal, fd, enable_thread, error);
-  if (!*error) {
-    ctrl->ctrl = ytp_yamal_begin(&ctrl->yamal, error);
-    if (*error) {
-      std::string err1_msg{fmc_error_msg(*error)};
-      ytp_control_destroy(ctrl, error);
-      if (*error) {
-        fmc_error_set(error, "%s. %s", err1_msg.c_str(), fmc_error_msg(*error));
-      } else {
-        fmc_error_set(error, "%s", err1_msg.c_str());
-      }
-    }
+  try {
+    new (ctrl) ytp_control_t(fd, enable_thread);
+    fmc_error_clear(error);
+  } catch (fmc::error &e) {
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &e);
   }
 }
 
 void ytp_control_del(ytp_control_t *ctrl, fmc_error_t **error) {
-  ytp_yamal_destroy(&ctrl->yamal, error);
-  if (!*error) {
-    delete ctrl;
+  ytp_control_destroy(ctrl, error);
+  if (error) {
+    return;
   }
+
+  free(ctrl);
 }
 
 void ytp_control_destroy(ytp_control_t *ctrl, fmc_error_t **error) {
-  ytp_yamal_destroy(&ctrl->yamal, error);
+  fmc_error_clear(error);
+  ctrl->~ytp_control();
+}
+
+static void data_cb(void *closure, uint64_t seqno, uint64_t msgtime,
+                    ytp_stream_t stream, size_t sz, const char *data) {
+  auto ctrl = (ytp_control_t *)closure;
+  auto &result = ctrl->poll_result;
+  result.last.data.seqno = seqno;
+  result.last.data.msgtime = msgtime;
+  result.last.data.stream = stream;
+  result.last.data.data = {data, sz};
+  result.state = poll_result_t::state_t::DATA;
+}
+
+static void process_ann(ytp_control_t *ctrl, uint64_t seqno,
+                        ytp_stream_t stream, std::string_view peername,
+                        std::string_view chname, std::string_view encoding,
+                        poll_result_t &result) {
+  auto it_peer = ctrl->name_to_peerid.emplace(
+      peername, ctrl->name_to_peerid.size() + YTP_PEER_OFF);
+  if (it_peer.second) {
+    ctrl->peers.emplace_back().name = peername;
+  }
+  auto peerid = it_peer.first->second;
+
+  auto it_ch = ctrl->name_to_channelid.emplace(
+      chname, ctrl->name_to_channelid.size() + YTP_CHANNEL_OFF);
+  if (it_ch.second) {
+    ctrl->channels.emplace_back().name = chname;
+  }
+  auto channelid = it_ch.first->second;
+
+  auto it_stream =
+      ctrl->key_to_streamid.emplace(stream_key(peerid, channelid), stream);
+  if (it_stream.second) {
+    auto &stream_data = ctrl->streams[stream];
+    stream_data.peer = peerid;
+    stream_data.channel = channelid;
+
+    fmc_error_t *error;
+    ytp_cursor_data_cb(&ctrl->data_cursor, stream, data_cb, ctrl, &error);
+  }
+
+  result.last.ann.stream = stream;
+  result.last.ann.peer = peerid;
+  result.last.ann.channel = channelid;
+  result.last.ann.seqno = seqno;
+  result.last.ann.peername = peername;
+  result.last.ann.chname = chname;
+  result.last.ann.encoding = encoding;
+  result.state = peername.empty()
+                     ? (chname.empty() ? poll_result_t::state_t::NONE
+                                       : poll_result_t::state_t::ANN_CH)
+                     : (chname.empty() ? poll_result_t::state_t::ANN_PEER
+                                       : poll_result_t::state_t::ANN_PEERCH);
+}
+
+static void ann_cb(void *closure, ytp_stream_t stream, uint64_t seqno,
+                   size_t peer_sz, const char *peer_name, size_t ch_sz,
+                   const char *ch_name, size_t encoding_sz,
+                   const char *encoding_data) {
+  auto ctrl = (ytp_control_t *)closure;
+  process_ann(ctrl, seqno, stream, {peer_name, peer_sz}, {ch_name, ch_sz},
+              {encoding_data, encoding_sz}, ctrl->poll_result);
+}
+
+ytp_control::ytp_control(fmc_fd fd, bool enable_thread)
+    : yamal(fd, enable_thread, FMC_CLOSABLE::UNCLOSABLE), data_cursor(&yamal),
+      anns(&yamal) {
+  fmc_error_t *error;
+
+  ytp_cursor_ann_cb(&data_cursor, ann_cb, this, &error);
+  if (error) {
+    throw fmc::error(*error);
+  }
+}
+
+template <typename Handler>
+static void process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
+                                 Handler &handler) {
+  fmc_error_clear(error);
+
+  if (handler.found() || ytp_yamal_term(ctrl->anns.it_ann)) {
+    return;
+  }
+
+  ytp_anns_lookup_one(&ctrl->anns, error,
+                      [&](ytp_stream_t stream, std::string_view peer,
+                          std::string_view ch, std::string_view encoding) {
+                        poll_result_t result;
+                        process_ann(ctrl, {}, stream, peer, ch, encoding,
+                                    result);
+                        handler.on_stream(result.last.ann);
+                        return handler.found() || *error;
+                      });
+}
+
+template <typename Handler>
+static void lookup_or_insert_ctrl_msg(ytp_control_t *ctrl, fmc_error_t **error,
+                                      Handler &handler) {
+  fmc_error_clear(error);
+  process_control_msgs(ctrl, error, handler);
+  if (*error) {
+    return;
+  }
+  if (!handler.found()) {
+    handler.insert();
+    if (*error) {
+      return;
+    }
+    process_control_msgs(ctrl, error, handler);
+  }
 }
 
 char *ytp_control_reserve(ytp_control_t *ctrl, size_t size,
                           fmc_error_t **error) {
-  if (auto *msg = ytp_time_reserve(&ctrl->yamal, size, error); msg) {
-    return msg;
-  }
-
-  return nullptr;
+  return ytp_stream_reserve(&ctrl->yamal, size, error);
 }
 
 ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
-                                  ytp_channel_t channel, uint64_t time,
+                                  ytp_channel_t channel, uint64_t msgtime,
                                   void *data, fmc_error_t **error) {
-  return ytp_time_commit(&ctrl->yamal, peer, channel, time, data, error);
+  fmc_error_clear(error);
+  struct handler_t {
+    void on_stream(const ann_info &ann) {
+      if (ann.peer == peer && ann.channel == channel) {
+        found_streamid = ann.stream;
+      }
+    }
+    void insert() {
+      if (peer - YTP_PEER_OFF >= ctrl->peers.size()) {
+        fmc_error_set(error, "peer not found");
+        return;
+      }
+      if (channel - YTP_CHANNEL_OFF >= ctrl->channels.size()) {
+        fmc_error_set(error, "channel not found");
+        return;
+      }
+      auto &peerdata = ctrl->peers[peer - YTP_PEER_OFF];
+      auto &channeldata = ctrl->channels[channel - YTP_CHANNEL_OFF];
+
+      ytp_stream_write_ann(&ctrl->yamal, peerdata.name.size(),
+                           peerdata.name.data(), channeldata.name.size(),
+                           channeldata.name.data(), default_encoding.size(),
+                           default_encoding.data(), error);
+    }
+    bool found() const {
+      return found_streamid != std::numeric_limits<ytp_stream_t>::max();
+    }
+
+    ytp_control_t *ctrl;
+    ytp_peer_t peer;
+    ytp_channel_t channel;
+    uint64_t msgtime;
+    fmc_error_t **error;
+    ytp_stream_t found_streamid;
+  };
+
+  auto it = ctrl->key_to_streamid.find({peer, channel});
+  handler_t handler{
+      .ctrl = ctrl,
+      .peer = peer,
+      .channel = channel,
+      .msgtime = msgtime,
+      .error = error,
+      .found_streamid = it != ctrl->key_to_streamid.end()
+                            ? it->second
+                            : std::numeric_limits<ytp_stream_t>::max(),
+  };
+
+  lookup_or_insert_ctrl_msg(ctrl, error, handler);
+  if (*error) {
+    return {};
+  }
+
+  return ytp_stream_commit(&ctrl->yamal, msgtime, handler.found_streamid, data,
+                           error);
 }
 
 void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, uint64_t time,
                      size_t sz, const char *payload_ptr, fmc_error_t **error) {
-  auto payload = std::string_view(payload_ptr, sz);
-  auto key = subs_key(payload);
-  lookup_or_insert_ctrl_msg(
-      ctrl, error,
-      [ctrl, key]() {
-        return ctrl->subs_announced.find(key) != ctrl->subs_announced.end();
-      },
-      [ctrl, &key, peer, time, error]() {
-        if (auto ptr = ytp_control_reserve(ctrl, key.size(), error); !*error) {
-          std::memcpy(ptr, key.data(), key.size());
-          ytp_channel_t channel = YTP_CHANNEL_SUB;
-          ytp_control_commit(ctrl, peer, channel, time, ptr, error);
-          return true;
-        }
-        return false;
-      });
+  fmc_error_set(error, "not supported");
 }
 
 void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer, uint64_t time,
                      size_t sz, const char *payload, fmc_error_t **error) {
-  if (auto ptr = ytp_control_reserve(ctrl, sz, error); !*error) {
-    std::memcpy(ptr, payload, sz);
-    ytp_channel_t channel = YTP_CHANNEL_DIR;
-    ytp_control_commit(ctrl, peer, channel, time, ptr, error);
-  }
+  fmc_error_set(error, "not supported");
 }
 
 void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,
                          const char **name, fmc_error_t **error) {
-  fmc_error_clear(error);
-  if (auto it = ctrl->channel_map.find(channel);
-      it != ctrl->channel_map.end()) {
-    *name = it->second.name.data();
-    *sz = it->second.name.size();
-  } else {
+  if (channel - YTP_CHANNEL_OFF >= ctrl->channels.size()) {
     fmc_error_set(error, "channel not found");
+    return;
   }
+
+  fmc_error_clear(error);
+  auto &n = ctrl->channels[channel - YTP_CHANNEL_OFF].name;
+  *name = n.data();
+  *sz = n.size();
 }
 
 ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl, ytp_peer_t peer,
-                                  uint64_t time, size_t sz, const char *name,
+                                  uint64_t msgtime, size_t sz, const char *name,
                                   fmc_error_t **error) {
-  std::string_view namestr(name, sz);
+  fmc_error_clear(error);
 
-  bool found = lookup_or_insert_ctrl_msg(
-      ctrl, error,
-      [ctrl, namestr]() {
-        return ctrl->name_to_channel.find(namestr) !=
-               ctrl->name_to_channel.end();
-      },
-      [ctrl, namestr, peer, time, error]() {
-        if (char *dst = ytp_control_reserve(ctrl, namestr.size(), error); dst) {
-          ytp_channel_t channel = YTP_CHANNEL_ANN;
-          std::memcpy(dst, namestr.data(), namestr.size());
-          ytp_control_commit(ctrl, peer, channel, time, dst, error);
-          return true;
-        }
-        return false;
-      });
+  struct handler_t {
+    void on_stream(const ann_info &ann) {
+      if (ann.chname == channel) {
+        found_chid = ann.channel;
+      }
+    }
+    void insert() {
+      if (peer - YTP_PEER_OFF >= ctrl->peers.size()) {
+        fmc_error_set(error, "peer not found");
+        return;
+      }
 
-  if (!found) {
-    return 0;
+      std::string_view peername = ctrl->peers[peer - YTP_PEER_OFF].name;
+
+      ytp_stream_write_ann(&ctrl->yamal, peername.size(), peername.data(),
+                           channel.size(), channel.data(),
+                           default_encoding.size(), default_encoding.data(),
+                           error);
+    }
+    bool found() const {
+      return found_chid != std::numeric_limits<ytp_channel_t>::max();
+    }
+
+    ytp_control_t *ctrl;
+    ytp_peer_t peer;
+    std::string_view channel;
+    fmc_error_t **error;
+    ytp_channel_t found_chid;
+  };
+
+  auto chname = std::string_view(name, sz);
+  auto it = ctrl->name_to_channelid.find(chname);
+  handler_t handler{
+      .ctrl = ctrl,
+      .peer = peer,
+      .channel = chname,
+      .error = error,
+      .found_chid = it != ctrl->name_to_channelid.end()
+                        ? it->second
+                        : std::numeric_limits<ytp_channel_t>::max(),
+  };
+
+  lookup_or_insert_ctrl_msg(ctrl, error, handler);
+  if (*error) {
+    return {};
   }
 
-  return ctrl->name_to_channel.find(namestr)->second;
+  return handler.found_chid;
 }
 
 void ytp_control_peer_name(ytp_control_t *ctrl, ytp_peer_t peer, size_t *sz,
                            const char **name, fmc_error_t **error) {
-  fmc_error_clear(error);
-  if (auto it = ctrl->peer_map.find(peer); it != ctrl->peer_map.end()) {
-    *name = it->second.name.data();
-    *sz = it->second.name.size();
-  } else {
+  if (peer - YTP_PEER_OFF >= ctrl->peers.size()) {
     fmc_error_set(error, "peer not found");
+    return;
   }
+
+  fmc_error_clear(error);
+  auto &n = ctrl->peers[peer - YTP_PEER_OFF].name;
+  *name = n.data();
+  *sz = n.size();
 }
 
 ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
                                  const char *name, fmc_error_t **error) {
-  std::string_view namestr(name, sz);
+  fmc_error_clear(error);
 
-  bool found = lookup_or_insert_ctrl_msg(
-      ctrl, error,
-      [ctrl, namestr]() {
-        return ctrl->name_to_peer.find(namestr) != ctrl->name_to_peer.end();
-      },
-      [ctrl, namestr, &error]() {
-        return ytp_peer_name(&ctrl->yamal, namestr.size(), namestr.data(),
-                             error) != nullptr;
-      });
+  struct handler_t {
+    void on_stream(const ann_info &ann) {
+      if (ann.peername == peer) {
+        found_peerid = ann.peer;
+      }
+    }
+    void insert() {
+      ytp_stream_write_ann(&ctrl->yamal, peer.size(), peer.data(), 0, nullptr,
+                           default_encoding.size(), default_encoding.data(),
+                           error);
+    }
+    bool found() const {
+      return found_peerid != std::numeric_limits<ytp_peer_t>::max();
+    }
 
-  if (!found) {
-    return 0;
+    ytp_control_t *ctrl;
+    std::string_view peer;
+    fmc_error_t **error;
+    ytp_peer_t found_peerid;
+  };
+
+  auto peername = std::string_view(name, sz);
+  auto it = ctrl->name_to_peerid.find(peername);
+  handler_t handler{
+      .ctrl = ctrl,
+      .peer = peername,
+      .error = error,
+      .found_peerid = it != ctrl->name_to_peerid.end()
+                          ? it->second
+                          : std::numeric_limits<ytp_peer_t>::max(),
+  };
+
+  lookup_or_insert_ctrl_msg(ctrl, error, handler);
+  if (*error) {
+    return {};
   }
 
-  return ctrl->name_to_peer.find(namestr)->second;
+  return handler.found_peerid;
 }
 
 ytp_iterator_t ytp_control_next(ytp_control_t *ctrl, ytp_iterator_t iter,
                                 fmc_error_t **error) {
-  auto new_iter = ytp_yamal_next(&ctrl->yamal, iter, error);
-  if (!*error && iter == ctrl->ctrl) {
-    ctrl->ctrl = new_iter;
-  }
-  return new_iter;
+  fmc_error_clear(error);
+  return ctrl->data_cursor.it_data;
 }
 
 void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
-                      ytp_channel_t *channel, uint64_t *time, size_t *sz,
+                      ytp_channel_t *channel, uint64_t *msgtime, size_t *sz,
                       const char **data, fmc_error_t **error) {
-  read_msg(ctrl, it, peer, channel, time, sz, data, error);
+  fmc_error_clear(error);
+
+  if (ctrl->poll_result.state == poll_result_t::state_t::NONE) {
+    ctrl->data_cursor.it_data = it;
+    ytp_cursor_poll(&ctrl->data_cursor, error);
+    if (*error) {
+      return;
+    }
+  }
+
+  if (ctrl->poll_result.state == poll_result_t::state_t::ANN_PEERCH) {
+    ctrl->poll_result.state = poll_result_t::state_t::ANN_CH;
+    *peer = YTP_PEER_ANN;
+    *channel = ytp_channel_t{};
+    *msgtime = {};
+    *data = ctrl->poll_result.last.ann.peername.data();
+    *sz = ctrl->poll_result.last.ann.peername.size();
+    return;
+  }
+
+  if (ctrl->poll_result.state == poll_result_t::state_t::ANN_PEER) {
+    ctrl->poll_result.state = poll_result_t::state_t::NONE;
+    *peer = YTP_PEER_ANN;
+    *channel = ytp_channel_t{};
+    *msgtime = {};
+    *data = ctrl->poll_result.last.ann.peername.data();
+    *sz = ctrl->poll_result.last.ann.peername.size();
+    return;
+  }
+
+  if (ctrl->poll_result.state == poll_result_t::state_t::ANN_CH) {
+    ctrl->poll_result.state = poll_result_t::state_t::NONE;
+    *peer = ctrl->poll_result.last.ann.peer;
+    *channel = YTP_CHANNEL_ANN;
+    *msgtime = {};
+    *data = ctrl->poll_result.last.ann.chname.data();
+    *sz = ctrl->poll_result.last.ann.chname.size();
+    return;
+  }
+
+  if (ctrl->poll_result.state == poll_result_t::state_t::DATA) {
+    ctrl->poll_result.state = poll_result_t::state_t::NONE;
+
+    auto it_stream = ctrl->streams.find(ctrl->poll_result.last.data.stream);
+    if (it_stream == ctrl->streams.end()) {
+      fmc_error_set(error, "referenced stream not found");
+      return;
+    }
+
+    auto &stream = it_stream->second;
+    *peer = stream.peer;
+    *channel = stream.channel;
+    *msgtime = ctrl->poll_result.last.data.msgtime;
+    *sz = ctrl->poll_result.last.data.data.size();
+    *data = ctrl->poll_result.last.data.data.data();
+    return;
+  }
 }
 
 ytp_iterator_t ytp_control_begin(ytp_control_t *ctrl, fmc_error_t **error) {
-  return ytp_yamal_begin(&ctrl->yamal, error);
+  return ytp_yamal_begin(&ctrl->yamal, YTP_STREAM_LIST_DATA, error);
 }
 
 ytp_iterator_t ytp_control_end(ytp_control_t *ctrl, fmc_error_t **error) {
-  auto end = ytp_yamal_end(&ctrl->yamal, error);
-  while (ctrl->ctrl != end) {
-    ytp_peer_t peer;
-    ytp_channel_t channel;
-    uint64_t time;
-    size_t sz;
-    const char *data;
-    read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error);
-    if (!*error) {
-      auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
-      if (!*error) {
-        ctrl->ctrl = new_it;
-      }
-    }
-  }
-  return end;
+  return ytp_yamal_end(&ctrl->yamal, YTP_STREAM_LIST_DATA, error);
 }
 
 bool ytp_control_term(ytp_iterator_t iterator) {
   return ytp_yamal_term(iterator);
 }
 
-ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t ptr,
+ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, uint64_t ptr,
                                 fmc_error_t **error) {
-  auto it = ytp_yamal_seek(&ctrl->yamal, ptr, error);
-  if (*error) {
-    return nullptr;
-  }
-
-  while (ctrl->ctrl != it && !ytp_yamal_term(ctrl->ctrl)) {
-    ytp_peer_t peer;
-    ytp_channel_t channel;
-    uint64_t time;
-    size_t sz;
-    const char *data;
-    read_msg(ctrl, ctrl->ctrl, &peer, &channel, &time, &sz, &data, error);
-    if (*error) {
-      return nullptr;
-    }
-    auto new_it = ytp_control_next(ctrl, ctrl->ctrl, error);
-    if (*error) {
-      return nullptr;
-    }
-    ctrl->ctrl = new_it;
-  }
-
-  return it;
+  return ytp_yamal_seek(&ctrl->yamal, ptr, error);
 }
 
-size_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
-                        fmc_error_t **error) {
+uint64_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
+                          fmc_error_t **error) {
   return ytp_yamal_tell(&ctrl->yamal, iterator, error);
 }

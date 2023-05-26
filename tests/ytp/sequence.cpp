@@ -24,7 +24,6 @@
 #include <thread>
 
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/sequence.h>
 #include <ytp/yamal.h>
 
@@ -74,8 +73,9 @@ TEST(sequence, data_simple_subscription_1) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -130,8 +130,9 @@ TEST(sequence, data_simple_subscription_2) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -186,8 +187,9 @@ TEST(sequence, data_simple_subscription_rm_1) {
   ytp_sequence_commit(seq, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ytp_sequence_prfx_cb_rm(seq, 5, "main/", cb, &output, &error);
@@ -199,8 +201,9 @@ TEST(sequence, data_simple_subscription_rm_1) {
   ytp_sequence_commit(seq, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -255,8 +258,9 @@ TEST(sequence, data_simple_subscription_rm_2) {
   ytp_sequence_commit(seq, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ytp_sequence_indx_cb_rm(seq, channel1, cb, &output, &error);
@@ -268,8 +272,9 @@ TEST(sequence, data_simple_subscription_rm_2) {
   ytp_sequence_commit(seq, producer1, channel1, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -330,8 +335,9 @@ TEST(sequence, data_multiple_channel_1) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -389,8 +395,9 @@ TEST(sequence, data_multiple_channel_2) {
   ytp_sequence_indx_cb(seq, channel2, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -448,8 +455,9 @@ TEST(sequence, data_multiple_channel_3) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -507,8 +515,9 @@ TEST(sequence, data_multiple_channel_4) {
   ytp_sequence_indx_cb(seq, channel2, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -575,8 +584,9 @@ TEST(sequence, data_multiple_producers_1) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 2);
@@ -644,8 +654,9 @@ TEST(sequence, data_multiple_producers_2) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 2);
@@ -722,8 +733,9 @@ TEST(sequence, data_subscription_first_1) {
   ytp_sequence_commit(seq, producer1, channel3, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 2);
@@ -784,8 +796,9 @@ TEST(sequence, data_subscription_first_2) {
   ytp_sequence_commit(seq, producer1, channel2, 1000, dst, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ASSERT_EQ(output.size(), 1);
@@ -830,15 +843,17 @@ TEST(sequence, peer_simple) {
   ytp_sequence_peer_name(seq, 555, &sz, &name, &error);
   ASSERT_NE(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ytp_sequence_peer_cb_rm(seq, peer_cb, &output, &error);
 
   (void)ytp_sequence_peer_decl(seq, 9, "producer3", &error);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 2);
   ASSERT_EQ(std::get<0>(output[0]), "producer1");
@@ -850,334 +865,6 @@ TEST(sequence, peer_simple) {
   ytp_sequence_del(seq, &error);
   ASSERT_EQ(error, nullptr);
   fmc_fclose(fd, &error);
-}
-
-TEST(sequence, idempotence_simple_1) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *seq = ytp_sequence_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto consumer1 = ytp_sequence_peer_decl(seq, 9, "consumer1", &error);
-  auto consumer1_2 = ytp_sequence_peer_decl(seq, 9, "consumer1", &error);
-  auto producer1 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
-  auto producer1_2 = ytp_sequence_peer_decl(seq, 9, "producer1", &error);
-  auto channel1 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
-  auto channel1_2 =
-      ytp_sequence_ch_decl(seq, consumer1, 0, 13, "main/channel1", &error);
-  ASSERT_NE(consumer1, 0);
-  ASSERT_NE(producer1, 0);
-  ASSERT_NE(channel1, 0);
-  ASSERT_EQ(consumer1, consumer1_2);
-  ASSERT_EQ(producer1, producer1_2);
-  ASSERT_EQ(channel1, channel1_2);
-
-  char *dst = ytp_sequence_reserve(seq, 4, &error);
-  strcpy(dst, "ABCD");
-  ytp_sequence_commit(seq, producer1, channel1, 1000, dst, &error);
-
-  std::vector<std::tuple<std::string_view, ytp_peer_t, ytp_channel_t, uint64_t>>
-      output;
-
-  auto cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-               uint64_t time, size_t sz, const char *data) {
-    auto *output = (std::vector<std::tuple<std::string_view, ytp_peer_t,
-                                           ytp_channel_t, uint64_t>> *)closure;
-    output->emplace_back(
-        std::tuple<std::string_view, ytp_peer_t, ytp_channel_t, uint64_t>(
-            std::string_view(data, sz), peer, channel, time));
-  };
-
-  auto cb2 = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                uint64_t time, size_t sz, const char *data) {
-    auto *output = (std::vector<std::tuple<std::string_view, ytp_peer_t,
-                                           ytp_channel_t, uint64_t>> *)closure;
-    output->emplace_back(
-        std::tuple<std::string_view, ytp_peer_t, ytp_channel_t, uint64_t>(
-            std::string_view(data, sz), peer, channel, time));
-  };
-
-  ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
-  ytp_sequence_indx_cb(seq, channel1_2, cb, &output, &error);
-  ytp_sequence_indx_cb(seq, channel1, cb2, &output, &error);
-  ytp_sequence_indx_cb(seq, channel1_2, cb2, &output, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  // consumer_2
-  (void)ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
-  // consumer2_2
-  (void)ytp_sequence_peer_decl(seq, 9, "consumer2", &error);
-  auto producer2 = ytp_sequence_peer_decl(seq, 9, "producer2", &error);
-  // producer2_2
-  (void)ytp_sequence_peer_decl(seq, 9, "producer2", &error);
-  auto channel2 =
-      ytp_sequence_ch_decl(seq, consumer1, 1000, 13, "main/channel2", &error);
-  auto channel2_2 =
-      ytp_sequence_ch_decl(seq, consumer1, 1000, 13, "main/channel2", &error);
-
-  ytp_sequence_indx_cb(seq, channel2, cb, &output, &error);
-  ytp_sequence_indx_cb(seq, channel2_2, cb, &output, &error);
-  ytp_sequence_indx_cb(seq, channel2, cb2, &output, &error);
-  ytp_sequence_indx_cb(seq, channel2_2, cb2, &output, &error);
-
-  dst = ytp_sequence_reserve(seq, 4, &error);
-  strcpy(dst, "EFGH");
-  ytp_sequence_commit(seq, producer2, channel2, 1000, dst, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 4);
-  ASSERT_EQ(std::get<0>(output[0]), "ABCD");
-  ASSERT_EQ(std::get<1>(output[0]), producer1);
-  ASSERT_EQ(std::get<2>(output[0]), channel1);
-  ASSERT_EQ(std::get<3>(output[0]), 1000);
-
-  ASSERT_EQ(std::get<0>(output[1]), "ABCD");
-  ASSERT_EQ(std::get<1>(output[1]), producer1);
-  ASSERT_EQ(std::get<2>(output[1]), channel1);
-  ASSERT_EQ(std::get<3>(output[1]), 1000);
-
-  ASSERT_EQ(std::get<0>(output[2]), "EFGH");
-  ASSERT_EQ(std::get<1>(output[2]), producer2);
-  ASSERT_EQ(std::get<2>(output[2]), channel2);
-  ASSERT_EQ(std::get<3>(output[2]), 1000);
-
-  ASSERT_EQ(std::get<0>(output[3]), "EFGH");
-  ASSERT_EQ(std::get<1>(output[3]), producer2);
-  ASSERT_EQ(std::get<2>(output[3]), channel2);
-  ASSERT_EQ(std::get<3>(output[3]), 1000);
-
-  ytp_sequence_del(seq, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_t peer;
-  ytp_channel_t channel;
-  uint64_t time;
-  size_t sz;
-  const char *data;
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_NE(yamal, nullptr);
-
-  auto *it = ytp_yamal_begin(yamal, &error);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
-  ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, producer1);
-  ASSERT_EQ(channel, channel1);
-  ASSERT_EQ(std::string_view(data, sz), "ABCD");
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, 0);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, consumer1);
-  ASSERT_EQ(channel, YTP_CHANNEL_ANN);
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_FALSE(ytp_yamal_term(it));
-  ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);
-  ASSERT_EQ(error, nullptr);
-  ASSERT_EQ(peer, producer2);
-  ASSERT_EQ(channel, channel2);
-  ASSERT_EQ(std::string_view(data, sz), "EFGH");
-  it = ytp_yamal_next(yamal, it, &error);
-  ASSERT_NE(it, nullptr);
-
-  ASSERT_TRUE(ytp_yamal_term(it));
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-}
-
-TEST(sequence, idempotence_simple_2) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_name(yamal, 5, "peer1", &error);
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *seq = ytp_sequence_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  std::vector<std::tuple<std::string_view, ytp_peer_t>> output;
-
-  auto peer_cb = [](void *closure, ytp_peer_t peer, size_t sz,
-                    const char *name) {
-    auto *output =
-        (std::vector<std::tuple<std::string_view, ytp_peer_t>> *)closure;
-    output->emplace_back(std::tuple<std::string_view, ytp_peer_t>(
-        std::string_view(name, sz), peer));
-  };
-
-  ytp_sequence_peer_cb(seq, peer_cb, &output, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 1);
-  ASSERT_EQ(std::get<0>(output[0]), "peer1");
-
-  ytp_sequence_del(seq, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-  ASSERT_EQ(error, nullptr);
-}
-
-TEST(sequence, idempotence_simple_3) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  auto *channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_ANN, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_ANN, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *seq = ytp_sequence_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  std::vector<std::string_view> output;
-
-  auto ch_cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                  uint64_t time, size_t sz, const char *name) {
-    auto *output = (std::vector<std::string_view> *)closure;
-    output->emplace_back(std::string_view(name, sz));
-  };
-
-  ytp_sequence_ch_cb(seq, ch_cb, &output, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 1);
-  ASSERT_EQ(output[0], "channel1");
-
-  ytp_sequence_del(seq, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-  ASSERT_EQ(error, nullptr);
-}
-
-TEST(sequence, idempotence_simple_4) {
-  fmc_error_t *error;
-  auto fd = fmc_ftemp(&error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *yamal = ytp_yamal_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  ytp_peer_name(yamal, 5, "peer1", &error);
-
-  auto *channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_SUB, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  channel_name = ytp_time_reserve(yamal, 8, &error);
-  ASSERT_NE(channel_name, nullptr);
-  std::memcpy(channel_name, "channel1", 8);
-  ASSERT_NE(ytp_time_commit(yamal, YTP_PEER_OFF, YTP_CHANNEL_SUB, 1000,
-                            channel_name, &error),
-            nullptr);
-
-  ytp_yamal_del(yamal, &error);
-  ASSERT_EQ(error, nullptr);
-
-  auto *seq = ytp_sequence_new(fd, &error);
-  ASSERT_EQ(error, nullptr);
-
-  std::vector<std::string_view> output;
-
-  auto sub_cb = [](void *closure, ytp_peer_t peer, ytp_channel_t channel,
-                   uint64_t time, size_t sz, const char *data) {
-    auto *output = (std::vector<std::string_view> *)closure;
-    output->emplace_back(std::string_view(data, sz));
-  };
-
-  ytp_sequence_indx_cb(seq, YTP_CHANNEL_SUB, sub_cb, &output, &error);
-
-  while (ytp_sequence_poll(seq, &error))
-    ;
-
-  ASSERT_EQ(output.size(), 1);
-  ASSERT_EQ(output[0], "channel1");
-
-  ytp_sequence_del(seq, &error);
-  ASSERT_EQ(error, nullptr);
-  fmc_fclose(fd, &error);
-  ASSERT_EQ(error, nullptr);
 }
 
 TEST(sequence, leading_slash_test) {
@@ -1210,8 +897,9 @@ TEST(sequence, leading_slash_test) {
       nullptr, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   (void)ytp_sequence_ch_decl(seq, consumer1, 0, 9, "/channel2", &error);
@@ -1219,8 +907,9 @@ TEST(sequence, leading_slash_test) {
   ASSERT_NE(consumer1, 0);
   ASSERT_NE(channel1, 0);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
   ASSERT_EQ(error, nullptr);
 
   ytp_sequence_del(seq, &error);
@@ -1354,8 +1043,9 @@ TEST(sequence, data_iter_set_1) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 3);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1379,8 +1069,9 @@ TEST(sequence, data_iter_set_1) {
   auto first_off = ytp_sequence_tell(seq, ytp_sequence_get_it(seq), &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 3);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1401,8 +1092,9 @@ TEST(sequence, data_iter_set_1) {
 
   ytp_sequence_set_it(seq, second_iter);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 2);
   ASSERT_EQ(std::get<0>(output[0]), "EFGH");
@@ -1429,8 +1121,9 @@ TEST(sequence, data_iter_set_1) {
   ytp_sequence_seek(seq, first_off, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 3);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1498,8 +1191,9 @@ TEST(sequence, data_iter_set_2) {
   ytp_sequence_indx_cb(seq, channel1, cb, &output, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1513,8 +1207,9 @@ TEST(sequence, data_iter_set_2) {
   ytp_sequence_seek(seq, first_off, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ASSERT_EQ(output.size(), 1);
   ASSERT_EQ(std::get<0>(output[0]), "ABCD");
@@ -1543,8 +1238,9 @@ TEST(sequence, data_iter_set_3) {
   ytp_sequence_seek(seq, first_off, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ytp_sequence_del(seq, &error);
   ASSERT_EQ(error, nullptr);
@@ -1563,14 +1259,16 @@ TEST(sequence, data_iter_set_4) {
   auto first_off = ytp_sequence_tell(seq, ytp_sequence_get_it(seq), &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ytp_sequence_seek(seq, first_off, &error);
   ASSERT_EQ(error, nullptr);
 
-  while (ytp_sequence_poll(seq, &error))
-    ;
+  while (ytp_sequence_poll(seq, &error)) {
+    ASSERT_EQ(error, nullptr);
+  }
 
   ytp_sequence_del(seq, &error);
   ASSERT_EQ(error, nullptr);

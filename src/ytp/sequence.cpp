@@ -15,26 +15,53 @@
 #include "control.hpp"
 #include "timeline.hpp"
 #include "yamal.hpp"
-#include <algorithm>
-#include <cstring>
-#include <fmc/alignment.h>
-#include <set>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
+
+#include <fmc++/error.hpp>
+
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/sequence.h>
 #include <ytp/yamal.h>
 
 struct ytp_sequence {
+  ytp_sequence(fmc_fd fd, bool enable_thread);
   ytp_control_t ctrl;
   ytp_timeline_t timeline;
 };
 
+struct initdestroy_t {
+  void init(fmc_fd &fd, const char *path, fmc_fmode mode) {
+    fmc_error_t *error;
+    fd = fmc_fopen(path, mode, &error);
+    if (error) {
+      throw fmc::error(*error);
+    }
+  }
+  void destroy(fmc_fd fd) {
+    if (fd != -1) {
+      fmc_error_t *error;
+      fmc_fclose(fd, &error);
+      if (error) {
+        throw fmc::error(*error);
+      }
+    }
+  }
+};
+
+template <typename T, typename InitDestroy> struct scopevar_t {
+  template <typename... Args> scopevar_t(Args &&...args) {
+    InitDestroy().init(value, std::forward<Args>(args)...);
+  }
+  ~scopevar_t() { InitDestroy().destroy(value); }
+  scopevar_t(const scopevar_t &) = delete;
+  T value;
+};
+
+using file_ptr = scopevar_t<fmc_fd, initdestroy_t>;
+
 struct ytp_sequence_shared {
+  ytp_sequence_shared(const char *filename, fmc_fmode mode);
   uint64_t ref_counter = 1;
-  fmc_fd fd;
+  file_ptr file;
   ytp_sequence_t seq;
 };
 
@@ -48,43 +75,48 @@ void ytp_sequence_init(ytp_sequence_t *seq, fmc_fd fd, fmc_error_t **error) {
 
 ytp_sequence_t *ytp_sequence_new_2(fmc_fd fd, bool enable_thread,
                                    fmc_error_t **error) {
-  auto *seq = new ytp_sequence_t;
-  ytp_sequence_init_2(seq, fd, enable_thread, error);
-  if (*error) {
-    delete seq;
-    return nullptr;
+  auto *sequence = static_cast<ytp_sequence_t *>(
+      aligned_alloc(alignof(ytp_sequence_t), sizeof(ytp_sequence_t)));
+  if (!sequence) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return {};
   }
 
-  return seq;
+  ytp_sequence_init_2(sequence, fd, enable_thread, error);
+  if (*error) {
+    free(sequence);
+    return {};
+  }
+
+  return sequence;
 }
 
 void ytp_sequence_init_2(ytp_sequence_t *seq, fmc_fd fd, bool enable_thread,
                          fmc_error_t **error) {
-  ytp_control_init_2(&seq->ctrl, fd, enable_thread, error);
-  if (*error) {
-    return;
-  }
-
-  ytp_timeline_init(&seq->timeline, &seq->ctrl, error);
-  if (*error) {
-    std::string err1_msg{fmc_error_msg(*error)};
-    ytp_control_destroy(&seq->ctrl, error);
-    if (*error) {
-      fmc_error_set(error, "%s. %s", err1_msg.c_str(), fmc_error_msg(*error));
-    } else {
-      fmc_error_set(error, "%s", err1_msg.c_str());
-    }
+  try {
+    new (seq) ytp_sequence(fd, enable_thread);
+    fmc_error_clear(error);
+  } catch (fmc::error &e) {
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &e);
   }
 }
+
+ytp_sequence::ytp_sequence(fmc_fd fd, bool enable_thread)
+    : ctrl(fd, enable_thread), timeline(&ctrl) {}
 
 void ytp_sequence_del(ytp_sequence_t *seq, fmc_error_t **error) {
   ytp_sequence_destroy(seq, error);
-  delete seq;
+  if (error) {
+    return;
+  }
+
+  free(seq);
 }
 
 void ytp_sequence_destroy(ytp_sequence_t *seq, fmc_error_t **error) {
-  ytp_timeline_destroy(&seq->timeline, error);
-  ytp_control_destroy(&seq->ctrl, error);
+  fmc_error_clear(error);
+  seq->~ytp_sequence();
 }
 
 void ytp_sequence_peer_name(ytp_sequence_t *seq, ytp_peer_t peer, size_t *sz,
@@ -201,38 +233,33 @@ void ytp_sequence_cb_rm(ytp_sequence_t *seq) {
   ytp_timeline_cb_rm(&seq->timeline);
 }
 
-ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, size_t off,
+ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, uint64_t offset,
                                  fmc_error_t **error) {
-  return ytp_timeline_seek(&seq->timeline, off, error);
+  return ytp_timeline_seek(&seq->timeline, offset, error);
 }
 
-size_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
-                         fmc_error_t **error) {
+uint64_t ytp_sequence_tell(ytp_sequence_t *seq, ytp_iterator_t iterator,
+                           fmc_error_t **error) {
   return ytp_timeline_tell(&seq->timeline, iterator, error);
 }
+
+ytp_sequence_shared::ytp_sequence_shared(const char *filename, fmc_fmode mode)
+    : file(filename, mode), seq(file.value, true) {}
 
 ytp_sequence_shared_t *ytp_sequence_shared_new(const char *filename,
                                                fmc_fmode mode,
                                                fmc_error_t **error) {
-  fmc_error_clear(error);
-
-  auto fd = fmc_fopen(filename, mode, error);
-  if (*error) {
-    return nullptr;
+  try {
+    auto *seq = static_cast<ytp_sequence_shared *>(aligned_alloc(
+        alignof(ytp_sequence_shared), sizeof(ytp_sequence_shared)));
+    new (seq) ytp_sequence_shared(filename, mode);
+    fmc_error_clear(error);
+    return seq;
+  } catch (fmc::error &e) {
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &e);
+    return {};
   }
-
-  auto *shared_seq = new ytp_sequence_shared_t;
-  ytp_sequence_init(&shared_seq->seq, fd, error);
-  if (*error) {
-    delete shared_seq;
-    std::string tmp_error = fmc_error_msg(*error);
-    fmc_fclose(fd, error);
-    FMC_ERROR_REPORT(error, tmp_error.c_str());
-    return nullptr;
-  }
-
-  shared_seq->fd = fd;
-  return shared_seq;
 }
 
 void ytp_sequence_shared_inc(ytp_sequence_shared_t *shared_seq) {
@@ -243,9 +270,8 @@ void ytp_sequence_shared_dec(ytp_sequence_shared_t *shared_seq,
                              fmc_error_t **error) {
   fmc_error_clear(error);
   if (--shared_seq->ref_counter == 0) {
-    ytp_sequence_destroy(&shared_seq->seq, error);
-    fmc_fclose(shared_seq->fd, error);
-    delete shared_seq;
+    shared_seq->~ytp_sequence_shared();
+    free(shared_seq);
   }
 }
 

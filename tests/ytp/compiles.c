@@ -12,11 +12,12 @@
 
 *****************************************************************************/
 
-#include <ytp/channel.h>
+#include <ytp/api.h>
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/sequence.h>
+#include <ytp/stream.h>
 #include <ytp/time.h>
+#include <ytp/timeline.h>
 #include <ytp/version.h>
 #include <ytp/yamal.h>
 

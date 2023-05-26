@@ -13,8 +13,7 @@
  *****************************************************************************/
 
 /**
- * @file mmlist.h
- * @author Federico Ravchina
+ * @file yamal.hpp
  * @date 29 Apr 2021
  * @brief File contains C declaration of the mmlist
  *
@@ -22,22 +21,22 @@
  * @see http://www.featuremine.com
  */
 
-#ifndef __FM_MMLISTDEF_H__
-#define __FM_MMLISTDEF_H__
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
+#include <fmc/endianness.h>
 #include <fmc/files.h>
 #include <mutex>
 #include <thread>
 #include <ytp/yamal.h>
 
-typedef struct mmnode fm_mmnode_t;
-
 static const size_t fm_mmlist_page_count = 1024 * 64 * 8;
 
 struct ytp_yamal {
-  fm_mmnode_t *header(fmc_error_t **err);
+  ytp_yamal(int fd, bool enable_thread, FMC_CLOSABLE closable);
+  ~ytp_yamal();
+  struct yamal_hdr_t *header(fmc_error_t **err);
   fmc_fd fd;
   std::condition_variable cv_;
   std::mutex m_;
@@ -48,4 +47,20 @@ struct ytp_yamal {
   fmc_fview pages[fm_mmlist_page_count] = {{0}};
 };
 
-#endif // __FM_MMLISTDEF_H__
+#if !defined(YTP_USE_BIG_ENDIAN)
+#define ye64toh(x) fmc_le64toh(x)
+#define htoye64(x) fmc_htole64(x)
+#define ye16toh(x) fmc_le16toh(x)
+#define htoye16(x) fmc_htole16(x)
+#if FMC_BYTE_ORDER == FMC_LITTLE_ENDIAN
+#define DIRECT_BYTE_ORDER
+#endif
+#else
+#define ye64toh(x) fmc_be64toh(x)
+#define htoye64(x) fmc_htobe64(x)
+#define ye16toh(x) fmc_be16toh(x)
+#define htoye16(x) fmc_htobe16(x)
+#if FMC_BYTE_ORDER == FMC_BIG_ENDIAN
+#define DIRECT_BYTE_ORDER
+#endif
+#endif

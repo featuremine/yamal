@@ -21,8 +21,7 @@
  * @see http://www.featuremine.com
  */
 
-#ifndef __FM_YTP_VERSION_H__
-#define __FM_YTP_VERSION_H__
+#pragma once
 
 /**
  * @brief Major YTP version
@@ -52,5 +51,3 @@
  * YTP version encoded string "MAJOR.MINOR.PATCH"
  */
 #define YTP_VERSION @YTP_VERSION@
-
-#endif // __FM_YTP_VERSION_H__
