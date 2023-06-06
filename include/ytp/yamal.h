@@ -286,8 +286,9 @@ FMMODFUNC ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, ytp_mmnode_offs ptr,
  * @param[out] error
  * @return serializable
  */
-FMMODFUNC ytp_mmnode_offs ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                                fmc_error_t **error);
+FMMODFUNC ytp_mmnode_offs ytp_yamal_tell(ytp_yamal_t *yamal,
+                                         ytp_iterator_t iterator,
+                                         fmc_error_t **error);
 
 /**
  * @brief Closes the yamal lists
@@ -296,7 +297,8 @@ FMMODFUNC ytp_mmnode_offs ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iter
  * @param[in] lstidx
  * @param[out] error
  */
-FMMODFUNC void ytp_yamal_close(ytp_yamal_t *yamal, size_t lstidx, fmc_error_t **error);
+FMMODFUNC void ytp_yamal_close(ytp_yamal_t *yamal, size_t lstidx,
+                               fmc_error_t **error);
 
 /**
  * @brief Determines if a list is closed

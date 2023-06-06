@@ -655,7 +655,7 @@ cleanup:
   return ret;
 }
 
-ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
+ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, ytp_mmnode_offs ptr,
                               fmc_error_t **error) {
   struct ytp_mmnode *node = mmnode_from_offset(yamal, htoye64(ptr), error);
   if (*error) {
@@ -665,8 +665,8 @@ ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
   return &node->next;
 }
 
-size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                      fmc_error_t **error) {
+ytp_mmnode_offs ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
+                               fmc_error_t **error) {
   struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
   if (*error) {
     return 0;
@@ -692,7 +692,7 @@ size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
   return ye64toh(atomic_load_cast(&node->next));
 }
 
-void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
+void ytp_yamal_close(ytp_yamal_t *yamal, size_t lstidx, fmc_error_t **error) {
   fmc_error_clear(error);
 
   // Validate file is not read only
@@ -711,32 +711,28 @@ void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
     return;
   }
 
-  for (size_t lstidx = 0; lstidx < YTP_YAMAL_LISTS; ++lstidx) {
-    // Find end and close sequence
-    const ytp_mmnode_offs closed =
-        htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
-    ytp_mmnode_offs last = hdr->hdr[lstidx].prev;
-    ytp_mmnode_offs next_ptr = last;
-    struct ytp_mmnode *node = NULL;
-    do {
-      node = mmnode_from_offset(yamal, next_ptr, error);
+  // Find end and close sequence
+  const ytp_mmnode_offs closed =
+      htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
+  ytp_mmnode_offs last = hdr->hdr[lstidx].prev;
+  ytp_mmnode_offs next_ptr = last;
+  struct ytp_mmnode *node = NULL;
+  do {
+    node = mmnode_from_offset(yamal, next_ptr, error);
+    if (*error) {
+      return;
+    }
+    while ((next_ptr = atomic_load_cast(&node->next)) != 0) {
+      last = next_ptr;
+      if (last == closed) {
+        return;
+      }
+      node = mmnode_from_offset(yamal, last, error);
       if (*error) {
         return;
       }
-      while ((next_ptr = atomic_load_cast(&node->next)) != 0) {
-        last = next_ptr;
-        if (last == closed) {
-          goto next_one;
-        }
-        node = mmnode_from_offset(yamal, last, error);
-        if (*error) {
-          return;
-        }
-      }
-    } while (
-        !atomic_compare_exchange_weak_check(&node->next, &next_ptr, closed));
-  next_one:;
-  }
+    }
+  } while (!atomic_compare_exchange_weak_check(&node->next, &next_ptr, closed));
 }
 
 bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx, fmc_error_t **error) {

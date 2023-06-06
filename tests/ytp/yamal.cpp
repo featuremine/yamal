@@ -244,7 +244,7 @@ static void seektell(bool enable_thread, bool close_file) {
   ASSERT_NE(oneit, nullptr);
 
   if (close_file) {
-    ytp_yamal_close(yamal, &error);
+    ytp_yamal_close(yamal, 0, &error);
     ASSERT_EQ(error, nullptr);
   }
 
@@ -405,7 +405,7 @@ TEST(yamal, allocate_closable) {
   ASSERT_NE(yamal, nullptr);
 
   // Validate that we cannot close an unclosable sequence
-  ytp_yamal_close(yamal, &error);
+  ytp_yamal_close(yamal, 0, &error);
   ASSERT_NE(error, nullptr);
 
   // Validate that we cannot open a unclosable sequence as closable
@@ -446,17 +446,19 @@ TEST(yamal, closable_empty_list) {
   ASSERT_FALSE(ytp_yamal_closed(yamal, 3, &error));
   ASSERT_EQ(error, nullptr);
 
-  ytp_yamal_close(yamal, &error);
+  ytp_yamal_close(yamal, 0, &error);
+  ytp_yamal_close(yamal, 1, &error);
+  ytp_yamal_close(yamal, 2, &error);
   ASSERT_EQ(error, nullptr);
 
   ASSERT_TRUE(ytp_yamal_closed(yamal, 0, &error));
   ASSERT_TRUE(ytp_yamal_closed(yamal, 1, &error));
   ASSERT_TRUE(ytp_yamal_closed(yamal, 2, &error));
-  ASSERT_TRUE(ytp_yamal_closed(yamal, 3, &error));
+  ASSERT_FALSE(ytp_yamal_closed(yamal, 3, &error));
   ASSERT_EQ(error, nullptr);
 
   // try to close more than once
-  ytp_yamal_close(yamal, &error);
+  ytp_yamal_close(yamal, 0, &error);
   ASSERT_EQ(error, nullptr);
 
   ytp_yamal_del(yamal, &error);
@@ -496,7 +498,10 @@ TEST(yamal, closable_write) {
   ASSERT_NE(msg, nullptr);
   msg2->index = 2;
 
-  ytp_yamal_close(yamal, &error);
+  ytp_yamal_close(yamal, 0, &error);
+  ytp_yamal_close(yamal, 1, &error);
+  ytp_yamal_close(yamal, 2, &error);
+  ytp_yamal_close(yamal, 3, &error);
   ASSERT_EQ(error, nullptr);
 
   ASSERT_TRUE(ytp_yamal_closed(yamal, 0, &error));
