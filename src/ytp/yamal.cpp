@@ -12,97 +12,71 @@
 
 *****************************************************************************/
 
+#include "endianess.h"
+
 #include <fmc/alignment.h>
-#include <fmc/endianness.h>
 #include <fmc/error.h>
 #include <fmc/process.h>
 #include <ytp/yamal.h>
 
-#include <atomic>
-#include <chrono>
-#include <condition_variable>
-#include <cstring>
-#include <thread>
+#include <errno.h>
+#include <pthread.h>
+#include <stdatomic.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "yamal.hpp"
+#define atomic_load_cast(a) atomic_load((_Atomic typeof(*(a)) *)(a))
+#define atomic_fetch_add_cast(a, b)                                            \
+  atomic_fetch_add((_Atomic typeof(*(a)) *)(a), (b))
 
-#if !defined(YTP_USE_BIG_ENDIAN)
-#define ye64toh(x) fmc_le64toh(x)
-#define htoye64(x) fmc_htole64(x)
-#if FMC_BYTE_ORDER == FMC_LITTLE_ENDIAN
-#define DIRECT_BYTE_ORDER
-#endif
-#else
-#define ye64toh(x) fmc_be64toh(x)
-#define htoye64(x) fmc_htobe64(x)
-#if FMC_BYTE_ORDER == FMC_BIG_ENDIAN
-#define DIRECT_BYTE_ORDER
-#endif
-#endif
+#define atomic_compare_exchange_weak_check(a, e, d)                            \
+  ({                                                                           \
+    atomic_compare_exchange_weak(((_Atomic typeof(*(a)) *)a), (e), (d))        \
+        ? true                                                                 \
+        : *(e) == (d);                                                         \
+  })
 
-using namespace std::chrono_literals;
+#define atomic_expect_or_init(a, d)                                            \
+  ({                                                                           \
+    typeof(*(a)) desired = (d);                                                \
+    typeof(*(a)) expected = 0;                                                 \
+    atomic_compare_exchange_weak_check((a), &expected, desired);               \
+  })
 
-typedef size_t mmnode_offs;
-typedef struct fm_mmlist fm_mmlist_t;
-
-struct mmnode {
-  mmnode(size_t sz) : size(htoye64(sz)) {}
-  std::atomic<size_t> size;
-  std::atomic<mmnode_offs> next = 0;
-  std::atomic<mmnode_offs> prev = 0;
-  char data[];
-};
-
-static_assert(sizeof(mmnode) == YTP_MMNODE_HEADER_SIZE);
-
-static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '0'};
-
-static_assert(sizeof(fm_mmnode_t) + sizeof(magic_number) ==
-              YTP_YAMAL_HEADER_SIZE);
-
-static const size_t fm_mmlist_page_sz = YTP_MMLIST_PAGE_SIZE;
-
-template <typename T>
-static bool atomic_expect_or_init(std::atomic<T> &data, T desired) {
-  T expected = 0;
-  if (!atomic_compare_exchange_weak(&data, &expected, desired)) {
-    return expected == desired;
-  }
-  return true;
-}
+static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
 static void *allocate_page(ytp_yamal_t *yamal, size_t page,
                            fmc_error_t **error) {
   fmc_error_clear(error);
-  auto *mem_page = &yamal->pages[page];
-  auto *page_ptr = fmc_fview_data(mem_page);
+  struct fmc_fview *mem_page = &yamal->pages_[page];
+  void *page_ptr = fmc_fview_data(mem_page);
 
   if (!page_ptr) {
-    size_t f_offset = page * fm_mmlist_page_sz;
+    size_t f_offset = page * YTP_MMLIST_PAGE_SIZE;
     if (!yamal->readonly_) {
-      fmc_falloc(yamal->fd, f_offset + fm_mmlist_page_sz, error);
+      fmc_falloc(yamal->fd_, f_offset + YTP_MMLIST_PAGE_SIZE, error);
       if (*error) {
-        return nullptr;
+        return NULL;
       }
     } else {
-      auto size = fmc_fsize(yamal->fd, error);
+      size_t size = fmc_fsize(yamal->fd_, error);
       if (*error) {
-        return nullptr;
+        return NULL;
       }
-      if (size < f_offset + fm_mmlist_page_sz) {
+      if (size < f_offset + YTP_MMLIST_PAGE_SIZE) {
         FMC_ERROR_REPORT(error, "unexpected EOF");
-        return nullptr;
+        return NULL;
       }
     }
 
-    fmc_fview_init(mem_page, fm_mmlist_page_sz, yamal->fd, f_offset, error);
+    fmc_fview_init(mem_page, YTP_MMLIST_PAGE_SIZE, yamal->fd_, f_offset, error);
     if (*error) {
-      return nullptr;
+      return NULL;
     }
     page_ptr = fmc_fview_data(mem_page);
     if (!page_ptr) {
       FMC_ERROR_REPORT(error, "mmap failed");
-      return nullptr;
+      return NULL;
     }
   }
   return page_ptr;
@@ -110,91 +84,108 @@ static void *allocate_page(ytp_yamal_t *yamal, size_t page,
 
 void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
                              fmc_error_t **error) {
-  if (page >= fm_mmlist_page_count) {
+  if (page >= YTP_MMLIST_PAGE_COUNT_MAX) {
     FMC_ERROR_REPORT(error, "page index out of range");
     return;
   }
   allocate_page(yamal, page, error);
 }
 
-size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal, fmc_error_t **error) {
-  auto *hdr = yamal->header(error);
-  if (*error) {
-    return 0;
-  }
-
-  return ye64toh(hdr->size.load());
-}
-
-static void *get_mapped_memory(ytp_yamal_t *yamal, mmnode_offs offs,
+static void *get_mapped_memory(ytp_yamal_t *yamal, ytp_mmnode_offs offs,
                                fmc_error_t **error) {
   fmc_error_clear(error);
   size_t loffs = ye64toh(offs);
-  size_t page = loffs / fm_mmlist_page_sz;
-  size_t mem_offset = loffs % fm_mmlist_page_sz;
-  void *page_ptr = fmc_fview_data(&yamal->pages[page]);
+  size_t page = loffs / YTP_MMLIST_PAGE_SIZE;
+  size_t mem_offset = loffs % YTP_MMLIST_PAGE_SIZE;
+  void *page_ptr = fmc_fview_data(&yamal->pages_[page]);
   if (!page_ptr) {
-    std::lock_guard<std::mutex> lock(yamal->pa_mutex_);
+    if (pthread_mutex_lock(&yamal->pa_mutex_) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
+      return NULL;
+    }
     page_ptr = allocate_page(yamal, page, error);
+    if (pthread_mutex_unlock(&yamal->pa_mutex_) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
+      return NULL;
+    }
     if (*error) {
-      return nullptr;
+      return NULL;
     }
   }
   return (char *)page_ptr + mem_offset;
 }
 
-static fm_mmnode_t *mmnode_get1(ytp_yamal_t *yamal, mmnode_offs offs,
-                                fmc_error_t **error) {
-  return (fm_mmnode_t *)get_mapped_memory(yamal, offs, error);
+static struct ytp_hdr *ytp_yamal_header(ytp_yamal_t *yamal, fmc_error_t **err) {
+  return (struct ytp_hdr *)get_mapped_memory(yamal, 0, err);
 }
 
-static std::atomic<mmnode_offs> *mmnode_it_back(ytp_yamal_t *yamal) {
-  fmc_error_t *error;
-  return &yamal->header(&error)->prev;
+size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal, fmc_error_t **error) {
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
+  if (*error) {
+    return 0;
+  }
+
+  return ye64toh(atomic_load_cast(&hdr->size));
 }
 
-static fm_mmnode_t *mmnode_next1(ytp_yamal_t *yamal, fm_mmnode_t *node,
-                                 fmc_error_t **error) {
+static struct ytp_mmnode *mmnode_from_offset(ytp_yamal_t *yamal,
+                                             ytp_mmnode_offs offs,
+                                             fmc_error_t **error) {
+  return (struct ytp_mmnode *)get_mapped_memory(yamal, offs, error);
+}
+
+static struct ytp_mmnode *mmnode_from_data(void *data) {
+  return (struct ytp_mmnode *)(((char *)data) -
+                               offsetof(struct ytp_mmnode, data));
+}
+
+static struct ytp_mmnode *
+mmnode_next(ytp_yamal_t *yamal, struct ytp_mmnode *node, fmc_error_t **error) {
   fmc_error_clear(error);
   if (!node->next)
-    return nullptr;
-  return mmnode_get1(yamal, node->next, error);
+    return NULL;
+  return mmnode_from_offset(yamal, node->next, error);
 }
 
-static fm_mmnode_t *mmnode_node_from_data(void *data) {
-  return (fm_mmnode_t *)(((char *)data) - offsetof(fm_mmnode_t, data));
-}
-
-static bool mmlist_pages_allocation1(ytp_yamal_t *yamal, fmc_error_t **error) {
+static void mmlist_pages_allocation(ytp_yamal_t *yamal, fmc_error_t **error) {
   fmc_error_clear(error);
-  auto last_node_off = mmnode_it_back(yamal)->load();
-  auto node = mmnode_get1(yamal, last_node_off, error);
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
   if (*error) {
-    return false;
+    return;
   }
-  auto yamal_size = ye64toh(last_node_off) + ye64toh(node->size.load());
-  auto pred_yamal_size = yamal_size + YTP_MMLIST_PREALLOC_SIZE;
-  auto pred_page_idx = pred_yamal_size / fm_mmlist_page_sz;
 
-  if (!fmc_fview_data(&yamal->pages[pred_page_idx])) {
-    std::lock_guard<std::mutex> lock(yamal->pa_mutex_);
-    auto page_idx = pred_page_idx;
-    for (; !fmc_fview_data(&yamal->pages[page_idx]); page_idx--)
+  size_t yamal_size = ye64toh(atomic_load_cast(&hdr->size));
+  size_t pred_yamal_size = yamal_size + YTP_MMLIST_PREALLOC_SIZE;
+  size_t pred_page_idx = pred_yamal_size / YTP_MMLIST_PAGE_SIZE;
+
+  if (!fmc_fview_data(&yamal->pages_[pred_page_idx])) {
+    if (pthread_mutex_lock(&yamal->pa_mutex_) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
+      return;
+    }
+    size_t page_idx = pred_page_idx;
+    for (; !fmc_fview_data(&yamal->pages_[page_idx]); page_idx--)
       ;
     for (++page_idx; page_idx <= pred_page_idx; page_idx++) {
-      if (allocate_page(yamal, page_idx, error); *error) {
-        return false;
+      allocate_page(yamal, page_idx, error);
+      if (*error) {
+        goto cleanup;
       }
     }
+
+  cleanup:
+    if (pthread_mutex_unlock(&yamal->pa_mutex_) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
+      return;
+    }
   }
-  return true;
 }
 
 static bool mmlist_sync1(ytp_yamal_t *yamal, fmc_error_t **err) {
   fmc_error_clear(err);
-  for (unsigned long int i = 0; i < fm_mmlist_page_count; ++i) {
-    if (fmc_fview_data(&yamal->pages[i])) {
-      fmc_fview_sync(&yamal->pages[i], fm_mmlist_page_sz, err);
+  for (size_t i = 0; i < YTP_MMLIST_PAGE_COUNT_MAX; ++i) {
+    if (fmc_fview_data(&yamal->pages_[i])) {
+      fmc_fview_sync(&yamal->pages_[i], YTP_MMLIST_PAGE_SIZE, err);
       if (*err) {
         return false;
       }
@@ -203,16 +194,11 @@ static bool mmlist_sync1(ytp_yamal_t *yamal, fmc_error_t **err) {
   return true;
 }
 
-fm_mmnode_t *ytp_yamal_t::header(fmc_error_t **err) {
-  return mmnode_get1(this, 0, err);
+static ytp_mmnode_offs *offset_from_iterator(ytp_iterator_t iterator) {
+  return (ytp_mmnode_offs *)iterator;
 }
 
-static std::atomic<mmnode_offs> &cast_iterator(ytp_iterator_t iterator) {
-  auto &it = *(std::atomic<mmnode_offs> *)iterator;
-  return it;
-}
-
-static int *_set_yamal_aux_thread_affinity(int *cpuid, bool toset) {
+static int *set_yamal_aux_thread_affinity(const int *cpuid, bool toset) {
   static int _id = 0;
   static int *_set = NULL;
   if (toset) {
@@ -227,12 +213,12 @@ static int *_set_yamal_aux_thread_affinity(int *cpuid, bool toset) {
 }
 
 void ytp_yamal_clear_aux_thread_affinity() {
-  _set_yamal_aux_thread_affinity(NULL, true);
+  set_yamal_aux_thread_affinity(NULL, true);
 }
 
 void ytp_yamal_set_aux_thread_affinity(int cpuid) {
   int value = cpuid;
-  _set_yamal_aux_thread_affinity(&value, true);
+  set_yamal_aux_thread_affinity(&value, true);
 }
 
 void ytp_yamal_init(ytp_yamal_t *yamal, int fd, fmc_error_t **error) {
@@ -245,286 +231,535 @@ ytp_yamal_t *ytp_yamal_new(int fd, fmc_error_t **error) {
 
 void ytp_yamal_init_2(ytp_yamal_t *yamal, int fd, bool enable_thread,
                       fmc_error_t **error) {
-  fmc_error_clear(error);
-  yamal->fd = fd;
-  yamal->done_ = false;
-  yamal->readonly_ = fmc_freadonly(fd);
-  auto *hdr = yamal->header(error);
-  if (*error) {
-    fmc_error_t save_error;
-    fmc_error_init_mov(&save_error, *error);
-    ytp_yamal_destroy(yamal, error);
-    *error = fmc_error_inst();
-    fmc_error_mov(*error, &save_error);
-    return;
-  }
-  auto hdr_sz = sizeof(fm_mmnode_t) + sizeof(magic_number);
-  auto &data_ptr = *(std::atomic<size_t> *)(&hdr->data);
-  if (yamal->readonly_) {
-    if (data_ptr.load() != *(uint64_t *)magic_number) {
-      ytp_yamal_destroy(yamal, error);
-      FMC_ERROR_REPORT(error, "invalid yamal file format");
-      return;
-    }
-  } else {
-    atomic_expect_or_init<size_t>(hdr->size, htoye64(hdr_sz));
-    if (!atomic_expect_or_init<size_t>(data_ptr, *(uint64_t *)magic_number)) {
-      ytp_yamal_destroy(yamal, error);
-      FMC_ERROR_REPORT(error, "invalid yamal file format");
-      return;
-    }
-    mmlist_pages_allocation1(yamal, error);
-    if (enable_thread) {
-      yamal->thread_ = std::thread([yamal]() {
-        fmc_error_t *err;
-        int *cpuid = _set_yamal_aux_thread_affinity(NULL, false);
-        if (cpuid) {
-          fmc_set_cur_affinity(*cpuid, &err);
-        }
-        while (!yamal->done_) {
-          std::unique_lock<std::mutex> sl_(yamal->m_);
-          if (yamal->cv_.wait_for(sl_, 10ms) != std::cv_status::timeout)
-            break;
-
-          mmlist_pages_allocation1(yamal, &err);
-          mmlist_sync1(yamal, &err);
-        }
-      });
-    }
-  }
+  ytp_yamal_init_3(yamal, fd, enable_thread, YTP_UNCLOSABLE, error);
 }
 
 ytp_yamal_t *ytp_yamal_new_2(int fd, bool enable_thread, fmc_error_t **error) {
-  auto *yamal = new ytp_yamal_t;
-  ytp_yamal_init_2(yamal, fd, enable_thread, error);
-  if (!*error) {
-    return yamal;
-  } else {
-    delete yamal;
-    return nullptr;
-  }
+  return ytp_yamal_new_3(fd, enable_thread, YTP_UNCLOSABLE, error);
 }
 
-fmc_fd ytp_yamal_fd(ytp_yamal_t *yamal) { return yamal->fd; }
+static void *ytp_aux_thread(void *closure) {
+  ytp_yamal_t *yamal = (ytp_yamal_t *)closure;
+  fmc_error_t *error;
+  int *cpuid = set_yamal_aux_thread_affinity(NULL, false);
+  if (cpuid) {
+    fmc_set_cur_affinity(*cpuid, &error);
+  }
+
+  if (pthread_mutex_lock(&yamal->m_) != 0) {
+    FMC_ERROR_REPORT(&error, "pthread_mutex_lock failed");
+    return NULL;
+  }
+  while (!yamal->done_) {
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    uint64_t ns = 10ull * 1000ll * 1000 + spec.tv_nsec;
+    spec.tv_nsec += ns % (1000ull * 1000ull * 1000ull);
+    spec.tv_sec += ns >= (1000ull * 1000ull * 1000ull);
+    if (pthread_cond_timedwait(&yamal->cv_, &yamal->m_, &spec) == ETIMEDOUT) {
+      break;
+    }
+    mmlist_pages_allocation(yamal, &error);
+    mmlist_sync1(yamal, &error);
+  }
+  if (pthread_mutex_unlock(&yamal->m_) != 0) {
+    FMC_ERROR_REPORT(&error, "pthread_mutex_unlock failed");
+    return NULL;
+  }
+
+  return NULL;
+}
+
+void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
+                      YTP_CLOSABLE_MODE closable, fmc_error_t **error) {
+  fmc_error_clear(error);
+  if (pthread_mutex_init(&yamal->m_, NULL) != 0) {
+    goto cleanup_0;
+  }
+
+  if (pthread_mutex_init(&yamal->pa_mutex_, NULL) != 0) {
+    goto cleanup_1;
+  }
+
+  if (pthread_cond_init(&yamal->cv_, NULL) != 0) {
+    goto cleanup_2;
+  }
+
+  memset(yamal->pages_, 0, sizeof(yamal->pages_));
+  yamal->fd_ = fd;
+  yamal->done_ = false;
+  yamal->readonly_ = fmc_freadonly(fd);
+  yamal->thread_created_ = false;
+
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
+  if (*error) {
+    goto cleanup_3;
+  }
+  size_t hdr_sz = sizeof(struct ytp_hdr);
+  if (yamal->readonly_) {
+    if (atomic_load_cast(&hdr->magic_number) != *(uint64_t *)magic_number) {
+      FMC_ERROR_REPORT(error, "invalid yamal file format");
+      goto cleanup_4;
+    }
+    return;
+  }
+
+  if (!atomic_expect_or_init(&hdr->magic_number, *(uint64_t *)magic_number)) {
+    FMC_ERROR_REPORT(error, "invalid yamal file format");
+    goto cleanup_4;
+  }
+
+  atomic_expect_or_init(&hdr->size, htoye64(hdr_sz));
+
+  for (size_t lstidx = 0; lstidx < YTP_YAMAL_LISTS; ++lstidx) {
+    const uint64_t hdrnode =
+        htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
+    atomic_expect_or_init(&hdr->hdr[lstidx].prev, hdrnode);
+  }
+
+  if (!atomic_expect_or_init(&hdr->closable, closable)) {
+    char errormsg[128];
+    snprintf(
+        errormsg, sizeof(errormsg),
+        "configured closable type '%s' differs from file closable type in file",
+        (closable == YTP_CLOSABLE) ? "closable" : "unclosable");
+    FMC_ERROR_REPORT(error, errormsg);
+    goto cleanup_4;
+  }
+
+  mmlist_pages_allocation(yamal, error);
+  if (*error) {
+    goto cleanup_4;
+  }
+
+  if (enable_thread) {
+    if (pthread_create(&yamal->thread_, NULL, ytp_aux_thread, yamal) != 0) {
+      FMC_ERROR_REPORT(error, "unable to create yamal auxiliary thread");
+      goto cleanup_4;
+    }
+    yamal->thread_created_ = true;
+  }
+  return;
+
+cleanup_4 : {
+  struct fmc_error saved_error;
+  if (*error) {
+    fmc_error_init_mov(&saved_error, *error);
+  } else {
+    fmc_error_init_none(&saved_error);
+  }
+  ytp_yamal_destroy(yamal, error);
+  if (fmc_error_has(&saved_error)) {
+    *error = fmc_error_inst();
+    fmc_error_mov(*error, &saved_error);
+    fmc_error_destroy(&saved_error);
+  }
+  return;
+}
+
+cleanup_3:
+  pthread_cond_destroy(&yamal->cv_);
+
+cleanup_2:
+  pthread_mutex_destroy(&yamal->pa_mutex_);
+
+cleanup_1:
+  pthread_mutex_destroy(&yamal->m_);
+
+cleanup_0:
+  return;
+}
+
+ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread,
+                             YTP_CLOSABLE_MODE closable, fmc_error_t **error) {
+  ytp_yamal_t *yamal =
+      (ytp_yamal_t *)aligned_alloc(_Alignof(ytp_yamal_t), sizeof(ytp_yamal_t));
+  if (!yamal) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return NULL;
+  }
+
+  ytp_yamal_init_3(yamal, fd, enable_thread, closable, error);
+  if (*error) {
+    free(yamal);
+    return NULL;
+  }
+
+  return yamal;
+}
+
+fmc_fd ytp_yamal_fd(ytp_yamal_t *yamal) { return yamal->fd_; }
 
 char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
   fmc_error_clear(error);
   if (sz == 0) {
     FMC_ERROR_REPORT(error, "size is zero");
-    return nullptr;
+    return NULL;
   }
   if (yamal->readonly_) {
     FMC_ERROR_REPORT(error,
                      "unable to reserve using a readonly file descriptor");
-    return nullptr;
+    return NULL;
   }
-  auto node_size = fmc_wordceil(sizeof(mmnode) + sz);
-  auto *hdr = yamal->header(error);
+  size_t node_size = fmc_wordceil(sizeof(struct ytp_mmnode) + sz);
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
   if (*error) {
-    return nullptr;
+    return NULL;
   }
-  size_t old_reserve = 0;
+  size_t old_reserve;
   do {
 #ifdef DIRECT_BYTE_ORDER
-    old_reserve = atomic_fetch_add(&hdr->size, node_size);
+    old_reserve = atomic_fetch_add_cast(&hdr->size, node_size);
 #else
     size_t val;
-    size_t expected = hdr->size.load();
+    size_t expected = atomic_load_cast(&hdr->size);
     do {
       old_reserve = ye64toh(expected);
       val = old_reserve + node_size;
-    } while (
-        !atomic_compare_exchange_weak(&hdr->size, &expected, htoye64(val)));
+    } while (!atomic_compare_exchange_weak_check(&hdr->size, &expected,
+                                                 htoye64(val)));
 #endif
-  } while (old_reserve % fm_mmlist_page_sz + node_size > fm_mmlist_page_sz);
+  } while (old_reserve % YTP_MMLIST_PAGE_SIZE + node_size >
+           YTP_MMLIST_PAGE_SIZE);
 
-  mmnode_offs ptr = htoye64(old_reserve);
-  if (auto *node_mem = mmnode_get1(yamal, ptr, error); node_mem) {
-    auto *mem = new (node_mem) fm_mmnode_t(sz);
-    std::memset(mem->data, 0, sz);
-    mem->prev = ptr;
-    return mem->data;
+  ytp_mmnode_offs ptr = htoye64(old_reserve);
+  struct ytp_mmnode *node_mem = mmnode_from_offset(yamal, ptr, error);
+  if (*error) {
+    FMC_ERROR_REPORT(error, "unable to initialize node in reserved memory");
+    return NULL;
   }
-  FMC_ERROR_REPORT(error, "unable to initialize node in reserved memory");
-  return nullptr;
+
+  memset(node_mem->data, 0, sz);
+  node_mem->size = htoye64(sz);
+  node_mem->prev = ptr;
+  return node_mem->data;
 }
 
-ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
+ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data, size_t lstidx,
                                 fmc_error_t **error) {
-  auto *node = mmnode_node_from_data(data);
-  auto offs = node->prev.load();
+  struct ytp_mmnode *node = mmnode_from_data(data);
+  ytp_mmnode_offs offs = atomic_load_cast(&node->prev);
 
-  auto *mem = mmnode_get1(yamal, offs, error);
+  struct ytp_mmnode *mem = mmnode_from_offset(yamal, offs, error);
   if (*error)
-    return nullptr;
-  auto *hdr = yamal->header(error);
+    return NULL;
+  struct ytp_hdr *ytp_hdr = ytp_yamal_header(yamal, error);
   if (*error)
-    return nullptr;
-  mmnode_offs last = hdr->prev;
-  mmnode_offs next_ptr = last;
+    return NULL;
+  struct ytp_mmnode *hdr = &ytp_hdr->hdr[lstidx];
+  ytp_mmnode_offs closed =
+      htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
+  ytp_mmnode_offs last = atomic_load_cast(&hdr->prev);
+  ytp_mmnode_offs next_ptr = last;
   do {
-    node = mmnode_get1(yamal, next_ptr, error);
+    node = mmnode_from_offset(yamal, next_ptr, error);
     if (*error)
-      return nullptr;
-    while (node->next) {
-      last = node->next;
-      node = mmnode_get1(yamal, last, error);
+      return NULL;
+    while ((next_ptr = atomic_load_cast(&node->next)) != 0) {
+      if (next_ptr == closed) {
+        fmc_error_set2(error, FMC_ERROR_CLOSED);
+        return NULL;
+      }
+      last = next_ptr;
+      node = mmnode_from_offset(yamal, last, error);
       if (*error)
-        return nullptr;
+        return NULL;
     }
     mem->prev = last;
-    next_ptr = 0;
-  } while (!atomic_compare_exchange_weak(&node->next, &next_ptr, offs));
+    mem->seqno = htoye64(ye64toh(node->seqno) + 1);
+  } while (!atomic_compare_exchange_weak_check(&node->next, &next_ptr, offs));
   hdr->prev = offs;
   return &node->next;
 }
 
-void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *size,
-                    const char **data, fmc_error_t **error) {
-  auto offset = cast_iterator(iterator).load();
+void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
+                    uint64_t *seqno, size_t *size, const char **data,
+                    fmc_error_t **error) {
+  ytp_mmnode_offs offset = atomic_load_cast(offset_from_iterator(iterator));
 
-  if (auto *mmnode = mmnode_get1(yamal, offset, error); !*error) {
-    *data = (const char *)mmnode->data;
-    *size = ye64toh(mmnode->size);
+  struct ytp_mmnode *node = mmnode_from_offset(yamal, offset, error);
+  if (*error) {
+    return;
   }
+
+  *data = (const char *)node->data;
+  *size = ye64toh(node->size);
+  *seqno = ye64toh(node->seqno);
 }
 
 void ytp_yamal_destroy(ytp_yamal_t *yamal, fmc_error_t **error) {
   fmc_error_clear(error);
-  {
-    std::lock_guard<std::mutex> sl_(yamal->m_);
+  if (yamal->thread_created_) {
+    if (pthread_mutex_lock(&yamal->m_) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
+      return;
+    }
     yamal->done_ = true;
-  }
-  if (yamal->thread_.joinable()) {
-    yamal->cv_.notify_all();
-    yamal->thread_.join();
-  }
-  for (unsigned long int i = 0; i < fm_mmlist_page_count; ++i) {
-    if (fmc_fview_data(&yamal->pages[i])) {
-      fmc_fview_destroy(&yamal->pages[i], fm_mmlist_page_sz, error);
+    if (pthread_mutex_unlock(&yamal->m_) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
+      return;
+    }
+
+    pthread_cond_signal(&yamal->cv_);
+    if (pthread_join(yamal->thread_, NULL) != 0) {
+      FMC_ERROR_REPORT(error, "pthread_join failed");
+      return;
     }
   }
+
+  for (unsigned long int i = 0; i < YTP_MMLIST_PAGE_COUNT_MAX; ++i) {
+    if (fmc_fview_data(&yamal->pages_[i])) {
+      fmc_fview_destroy(&yamal->pages_[i], YTP_MMLIST_PAGE_SIZE, error);
+      if (*error) {
+        return;
+      }
+    }
+  }
+
+  pthread_cond_destroy(&yamal->cv_);
+  pthread_mutex_destroy(&yamal->m_);
+  pthread_mutex_destroy(&yamal->pa_mutex_);
 }
 
 void ytp_yamal_del(ytp_yamal_t *yamal, fmc_error_t **error) {
   ytp_yamal_destroy(yamal, error);
-  delete yamal;
+  free(yamal);
 }
 
-ytp_iterator_t ytp_yamal_begin(ytp_yamal_t *yamal, fmc_error_t **error) {
+ytp_iterator_t ytp_yamal_begin(ytp_yamal_t *yamal, size_t lstidx,
+                               fmc_error_t **error) {
   fmc_error_clear(error);
   fmc_error_t *err_in;
-  return (ytp_iterator_t)&yamal->header(&err_in)->next;
+  return (ytp_iterator_t)&ytp_yamal_header(yamal, &err_in)->hdr[lstidx].next;
 }
 
-ytp_iterator_t ytp_yamal_end(ytp_yamal_t *yamal, fmc_error_t **error) {
+ytp_iterator_t ytp_yamal_end(ytp_yamal_t *yamal, size_t lstidx,
+                             fmc_error_t **error) {
   fmc_error_clear(error);
-  if (auto &mmit = yamal->header(error)->prev; !*error) {
-    if (auto *node = mmnode_get1(yamal, mmit, error); !*error) {
-      return (ytp_iterator_t)&node->next;
-    }
+  ytp_mmnode_offs offset =
+      atomic_load_cast(&ytp_yamal_header(yamal, error)->hdr[lstidx].prev);
+
+  struct ytp_mmnode *node = mmnode_from_offset(yamal, offset, error);
+
+  if (*error) {
+    return NULL;
   }
 
-  return nullptr;
+  return (ytp_iterator_t)&node->next;
 }
 
 bool ytp_yamal_term(ytp_iterator_t iterator) {
-  return cast_iterator(iterator) == 0;
+  return ye64toh(atomic_load_cast(offset_from_iterator(iterator))) <
+         sizeof(struct ytp_hdr);
 }
 
 ytp_iterator_t ytp_yamal_next(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                               fmc_error_t **error) {
-  if (auto *node = mmnode_get1(yamal, cast_iterator(iterator), error);
-      !*error) {
-    return &node->next;
+  ytp_mmnode_offs offset = atomic_load_cast(offset_from_iterator(iterator));
+  struct ytp_mmnode *node = mmnode_from_offset(yamal, offset, error);
+  if (*error) {
+    return NULL;
   }
-  return nullptr;
+
+  return &node->next;
 }
 
 ytp_iterator_t ytp_yamal_prev(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                               fmc_error_t **error) {
-  auto &it = cast_iterator(iterator);
-  constexpr size_t diff = offsetof(mmnode, prev) - offsetof(mmnode, next);
-  auto &prev_it = *(std::atomic<mmnode_offs> *)((char *)&it + diff);
-  if (auto *prev = mmnode_get1(yamal, prev_it.load(), error); !*error) {
-    return &prev->next;
+  ytp_mmnode_offs *it = offset_from_iterator(iterator);
+  const size_t diff =
+      offsetof(struct ytp_mmnode, prev) - offsetof(struct ytp_mmnode, next);
+  ytp_mmnode_offs *prev_it = (ytp_mmnode_offs *)((char *)it + diff);
+
+  struct ytp_mmnode *prev =
+      mmnode_from_offset(yamal, atomic_load_cast(prev_it), error);
+  if (*error) {
+    return NULL;
   }
-  return nullptr;
+
+  return &prev->next;
 }
 
 ytp_iterator_t ytp_yamal_remove(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                                 fmc_error_t **error) {
-  auto c_off = cast_iterator(iterator).load();
-
   fmc_error_clear(error);
-  std::unique_lock<std::mutex> sl_(yamal->m_);
+
+  ytp_iterator_t ret = NULL;
+  ytp_mmnode_offs c_off = atomic_load_cast(offset_from_iterator(iterator));
 
   if (!c_off) {
     FMC_ERROR_REPORT(error, "invalid offset argument");
-    return nullptr;
+    return NULL;
   }
 
   if (yamal->readonly_) {
     FMC_ERROR_REPORT(error,
                      "unable to remove using a readonly file descriptor");
-    return nullptr;
+    return NULL;
   }
 
-  auto *curr = mmnode_get1(yamal, c_off, error);
+  struct ytp_mmnode *curr = mmnode_from_offset(yamal, c_off, error);
   if (!curr) {
     FMC_ERROR_REPORT(error, "unable to get node in provided offset");
-    return nullptr;
+    return NULL;
+  }
+
+  if (pthread_mutex_lock(&yamal->m_) != 0) {
+    FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
+    return NULL;
   }
 
   // Note: fm_mmnode_prev does not work because previous can be header
-  // If previous is header, fm_mmnode_prev returns nullptr
-  auto prev_off = curr->prev.load();
-  auto *prev = mmnode_get1(yamal, prev_off, error);
+  // If previous is header, fm_mmnode_prev returns NULL
+  ytp_mmnode_offs prev_off = atomic_load_cast(&curr->prev);
+  struct ytp_mmnode *prev = mmnode_from_offset(yamal, prev_off, error);
   if (!prev) {
     FMC_ERROR_REPORT(error,
                      "unable to get previous node to node in provided offset");
-    return nullptr;
+    goto cleanup;
   }
 
   // if we fail to do the exchange, something else deleted me:
-  if (!atomic_compare_exchange_weak(&prev->next, &c_off, curr->next.load())) {
-    FMC_ERROR_REPORT(error, "mmnode already deleted");
-    return nullptr;
+  if (!atomic_compare_exchange_weak_check(&prev->next, &c_off,
+                                          atomic_load_cast(&curr->next))) {
+    FMC_ERROR_REPORT(error, "ytp_mmnode already deleted");
+    goto cleanup;
   }
 
-  mmnode_offs end = 0UL;
+  ytp_mmnode_offs end = 0UL;
   // if we fail to do the exchange, additional nodes where added to next
-  if (atomic_compare_exchange_weak(&curr->next, &end, curr->prev.load())) {
-    atomic_compare_exchange_weak(&yamal->header(error)->prev, &c_off,
-                                 curr->prev.load());
+  if (atomic_compare_exchange_weak_check(&curr->next, &end,
+                                         atomic_load_cast(&curr->prev))) {
+    /*atomic_compare_exchange_weak_check(&ytp_yamal_header(yamal,
+       error)->hdr[lstidx].prev, &c_off, atomic_load_cast(&curr->prev));*/
   } else {
-    prev->next = curr->next.load();
-    fm_mmnode_t *next = mmnode_next1(yamal, curr, error);
+    prev->next = atomic_load_cast(&curr->next);
+    struct ytp_mmnode *next = mmnode_next(yamal, curr, error);
     if (*error) {
       FMC_ERROR_REPORT(error,
                        "unable to get next node to node in provided offset");
-      return nullptr;
+      goto cleanup;
     }
-    atomic_compare_exchange_weak(&next->prev, &c_off, curr->prev.load());
+    atomic_compare_exchange_weak_check(&next->prev, &c_off,
+                                       atomic_load_cast(&curr->prev));
   }
 
-  return (ytp_iterator_t)&prev->next;
+  ret = (ytp_iterator_t)&prev->next;
+
+cleanup:
+  if (pthread_mutex_unlock(&yamal->m_) != 0) {
+    FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
+    return NULL;
+  }
+
+  return ret;
 }
 
 ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, size_t ptr,
                               fmc_error_t **error) {
-  if (auto *node = mmnode_get1(yamal, htoye64(ptr), error); !*error) {
-    return &node->next;
+  struct ytp_mmnode *node = mmnode_from_offset(yamal, htoye64(ptr), error);
+  if (*error) {
+    return NULL;
   }
 
-  return nullptr;
+  return &node->next;
 }
 
 size_t ytp_yamal_tell(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                       fmc_error_t **error) {
-  if (auto *node = mmnode_get1(yamal, cast_iterator(iterator).load(), error);
-      !*error) {
-    return ye64toh(node->prev.load());
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
+  if (*error) {
+    return 0;
   }
-  return 0;
+
+  char *hdr_base = (char *)hdr;
+  char *it_addr = (char *)iterator;
+  char *hdrs_begin = (char *)&hdr->hdr[0];
+  char *hdrs_end = (char *)&hdr->hdr[YTP_YAMAL_LISTS];
+  if (hdrs_begin <= it_addr && it_addr < hdrs_end) {
+    return (it_addr - offsetof(struct ytp_mmnode, next)) - hdr_base;
+  }
+
+  const size_t diff =
+      offsetof(struct ytp_mmnode, prev) - offsetof(struct ytp_mmnode, next);
+  ytp_mmnode_offs prev_it =
+      atomic_load_cast(offset_from_iterator(it_addr + diff));
+  struct ytp_mmnode *node = mmnode_from_offset(yamal, prev_it, error);
+  if (*error) {
+    return 0;
+  }
+
+  return ye64toh(atomic_load_cast(&node->next));
+}
+
+void ytp_yamal_close(ytp_yamal_t *yamal, fmc_error_t **error) {
+  fmc_error_clear(error);
+
+  // Validate file is not read only
+  if (yamal->readonly_) {
+    FMC_ERROR_REPORT(error, "unable to close using a readonly file descriptor");
+    return;
+  }
+
+  // Validate that sequence is closable
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
+  if (*error) {
+    return;
+  }
+  if (atomic_load_cast(&hdr->closable) != YTP_CLOSABLE) {
+    FMC_ERROR_REPORT(error, "unable to close a non closable sequence");
+    return;
+  }
+
+  for (size_t lstidx = 0; lstidx < YTP_YAMAL_LISTS; ++lstidx) {
+    // Find end and close sequence
+    const ytp_mmnode_offs closed =
+        htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
+    ytp_mmnode_offs last = hdr->hdr[lstidx].prev;
+    ytp_mmnode_offs next_ptr = last;
+    struct ytp_mmnode *node = NULL;
+    do {
+      node = mmnode_from_offset(yamal, next_ptr, error);
+      if (*error) {
+        return;
+      }
+      while ((next_ptr = atomic_load_cast(&node->next)) != 0) {
+        last = next_ptr;
+        if (last == closed) {
+          goto next_one;
+        }
+        node = mmnode_from_offset(yamal, last, error);
+        if (*error) {
+          return;
+        }
+      }
+    } while (
+        !atomic_compare_exchange_weak_check(&node->next, &next_ptr, closed));
+  next_one:;
+  }
+}
+
+bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx, fmc_error_t **error) {
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
+  if (*error)
+    return false;
+  ytp_mmnode_offs last = hdr->hdr[lstidx].prev;
+  struct ytp_mmnode *node = NULL;
+  node = mmnode_from_offset(yamal, last, error);
+  if (*error)
+    return false;
+  const ytp_mmnode_offs closed =
+      htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
+  ytp_mmnode_offs next_ptr;
+  while ((next_ptr = atomic_load_cast(&node->next)) != 0) {
+    last = next_ptr;
+    if (last == closed) {
+      return true;
+    }
+    node = mmnode_from_offset(yamal, last, error);
+    if (*error) {
+      return false;
+    }
+  }
+  return false;
 }

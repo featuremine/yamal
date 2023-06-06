@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
   dest_yml = ytp_yamal_new(dest_fd, &error);
   CHECK(error);
 
-  it = ytp_yamal_begin(src_yml, &error);
+  it = ytp_yamal_begin(src_yml, 0, &error);
   CHECK(error);
   for (; !ytp_yamal_term(it); it = ytp_yamal_next(src_yml, it, &error)) {
     CHECK(error);

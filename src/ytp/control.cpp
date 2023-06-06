@@ -13,6 +13,7 @@
 *****************************************************************************/
 
 #include <set>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -160,7 +161,7 @@ void ytp_control_init_2(ytp_control_t *ctrl, fmc_fd fd, bool enable_thread,
                         fmc_error_t **error) {
   ytp_yamal_init_2(&ctrl->yamal, fd, enable_thread, error);
   if (!*error) {
-    ctrl->ctrl = ytp_yamal_begin(&ctrl->yamal, error);
+    ctrl->ctrl = ytp_yamal_begin(&ctrl->yamal, 0, error);
     if (*error) {
       std::string err1_msg{fmc_error_msg(*error)};
       ytp_control_destroy(ctrl, error);
@@ -316,11 +317,11 @@ void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
 }
 
 ytp_iterator_t ytp_control_begin(ytp_control_t *ctrl, fmc_error_t **error) {
-  return ytp_yamal_begin(&ctrl->yamal, error);
+  return ytp_yamal_begin(&ctrl->yamal, 0, error);
 }
 
 ytp_iterator_t ytp_control_end(ytp_control_t *ctrl, fmc_error_t **error) {
-  auto end = ytp_yamal_end(&ctrl->yamal, error);
+  auto end = ytp_yamal_end(&ctrl->yamal, 0, error);
   while (ctrl->ctrl != end) {
     ytp_peer_t peer;
     ytp_channel_t channel;

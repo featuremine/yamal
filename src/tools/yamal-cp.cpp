@@ -80,13 +80,14 @@ int main(int argc, char **argv) {
   dest_yml = ytp_yamal_new(dest_fd, &error);
   CHECK(error);
 
-  it = ytp_yamal_begin(src_yml, &error);
+  it = ytp_yamal_begin(src_yml, 0, &error);
   CHECK(error);
   for (; !ytp_yamal_term(it); it = ytp_yamal_next(src_yml, it, &error)) {
     CHECK(error);
     size_t sz;
     char *src;
-    ytp_yamal_read(src_yml, it, &sz, (const char **)&src, &error);
+    uint64_t seqno;
+    ytp_yamal_read(src_yml, it, &seqno, &sz, (const char **)&src, &error);
     CHECK(error);
     ++count;
     size += sz + YTP_MMNODE_HEADER_SIZE;
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
     char *dest = ytp_yamal_reserve(dest_yml, sz, &error);
     CHECK(error);
     memcpy(dest, src, sz);
-    ytp_yamal_commit(dest_yml, dest, &error);
+    ytp_yamal_commit(dest_yml, dest, 0, &error);
     CHECK(error);
   }
 

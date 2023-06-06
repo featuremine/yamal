@@ -41,7 +41,7 @@ ytp_iterator_t ytp_peer_commit(ytp_yamal_t *yamal, ytp_peer_t peer, void *data,
                                fmc_error_t **error) {
   auto *peer_msg = (ytp_peer_msg *)((char *)data - sizeof(ytp_peer_hdr));
   peer_msg->hdr.id = fmc_htobe64(peer);
-  return ytp_yamal_commit(yamal, peer_msg, error);
+  return ytp_yamal_commit(yamal, peer_msg, 0, error);
 }
 
 ytp_iterator_t ytp_peer_name(ytp_yamal_t *yamal, size_t sz, const char *name,
@@ -58,7 +58,9 @@ void ytp_peer_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                    ytp_peer_t *peer, size_t *size, const char **data,
                    fmc_error_t **error) {
   const ytp_peer_msg *peer_msg;
-  ytp_yamal_read(yamal, iterator, size, (const char **)&peer_msg, error);
+  uint64_t seqno;
+  ytp_yamal_read(yamal, iterator, &seqno, size, (const char **)&peer_msg,
+                 error);
   if (!*error) {
     *peer = fmc_be64toh(peer_msg->hdr.id);
     *data = peer_msg->data;

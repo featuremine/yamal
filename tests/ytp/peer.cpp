@@ -62,7 +62,7 @@ TEST(peer, sequential) {
     ASSERT_NE(yamal, nullptr);
     unsigned count = 1;
     unsigned last_idx = 0;
-    auto iter = ytp_yamal_begin(yamal, &error);
+    auto iter = ytp_yamal_begin(yamal, 0, &error);
     ASSERT_NE(iter, nullptr);
     for (; !ytp_yamal_term(iter); iter = ytp_yamal_next(yamal, iter, &error)) {
       ytp_peer_t peer;
@@ -98,9 +98,10 @@ TEST(peer, name) {
   {
     auto *yamal = ytp_yamal_new(fd, &error);
     ASSERT_NE(yamal, nullptr);
-    auto iter = ytp_yamal_begin(yamal, &error);
+    auto iter = ytp_yamal_begin(yamal, 0, &error);
     ASSERT_NE(iter, nullptr);
-    ASSERT_NE(ytp_yamal_begin(yamal, &error), ytp_yamal_end(yamal, &error));
+    ASSERT_NE(ytp_yamal_begin(yamal, 0, &error),
+              ytp_yamal_end(yamal, 0, &error));
     ytp_peer_t peer;
     size_t sz;
     const char *name;

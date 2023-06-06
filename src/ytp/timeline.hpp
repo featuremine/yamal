@@ -21,8 +21,11 @@
 #include <ytp/timeline.h>
 #include <ytp/yamal.h>
 
+#include <fmc++/mpl.hpp>
+
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>

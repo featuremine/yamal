@@ -61,18 +61,18 @@ extern "C" {
 
 #define FMC_BLOCKMASK (FMC_BLOCKSIZE - 1)
 
-inline size_t fmc_hash_combine(size_t seed, size_t hash) {
+static inline size_t fmc_hash_combine(size_t seed, size_t hash) {
   seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   return seed;
 }
 
-inline size_t fmc_wordceil(size_t s) {
+static inline size_t fmc_wordceil(size_t s) {
   const size_t wordmask = FMC_WORDMASK;
   const size_t wordsize = FMC_WORDSIZE;
   return (s & ~wordmask) + wordsize * !!(s & wordmask);
 }
 
-inline size_t fmc_blockceil(size_t s) {
+static inline size_t fmc_blockceil(size_t s) {
   const size_t blockmask = FMC_BLOCKMASK;
   const size_t blocksize = FMC_BLOCKSIZE;
   return (s & ~blockmask) + blocksize * !!(s & blockmask);

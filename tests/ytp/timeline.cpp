@@ -1034,7 +1034,7 @@ TEST(timeline, idempotence_simple_1) {
   auto *yamal = ytp_yamal_new(fd, &error);
   ASSERT_NE(yamal, nullptr);
 
-  auto *it = ytp_yamal_begin(yamal, &error);
+  auto *it = ytp_yamal_begin(yamal, 0, &error);
 
   ASSERT_FALSE(ytp_yamal_term(it));
   ytp_time_read(yamal, it, &peer, &channel, &time, &sz, &data, &error);

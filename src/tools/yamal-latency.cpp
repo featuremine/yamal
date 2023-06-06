@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
   src_yml = ytp_yamal_new(src_fd, &error);
   CHECK(error);
 
-  it = ytp_yamal_end(src_yml, &error);
+  it = ytp_yamal_end(src_yml, 0, &error);
   CHECK(error);
   while (true) {
     if (ytp_yamal_term(it))

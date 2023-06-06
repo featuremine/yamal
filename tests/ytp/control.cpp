@@ -131,7 +131,7 @@ TEST(time, control_msg) {
 
     auto *yamal = ytp_yamal_new(fd, &error);
     ASSERT_NE(yamal, nullptr);
-    auto iter = ytp_yamal_begin(yamal, &error);
+    auto iter = ytp_yamal_begin(yamal, 0, &error);
     ASSERT_NE(iter, nullptr);
 
     ytp_time_read(yamal, iter, &peer, &channel, &time, &sz, &data, &error);
@@ -185,10 +185,11 @@ TEST(time, peer_name) {
     auto *yamal = ytp_yamal_new(fd, &error);
     ASSERT_NE(yamal, nullptr);
     ASSERT_EQ(error, nullptr);
-    auto iter = ytp_yamal_begin(yamal, &error);
+    auto iter = ytp_yamal_begin(yamal, 0, &error);
     ASSERT_NE(iter, nullptr);
     ASSERT_EQ(error, nullptr);
-    ASSERT_NE(ytp_yamal_begin(yamal, &error), ytp_yamal_end(yamal, &error));
+    ASSERT_NE(ytp_yamal_begin(yamal, 0, &error),
+              ytp_yamal_end(yamal, 0, &error));
     ASSERT_EQ(error, nullptr);
     ytp_peer_t peer;
     ytp_channel_t channel;

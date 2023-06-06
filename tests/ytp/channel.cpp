@@ -65,8 +65,8 @@ TEST(channel, sequential) {
     ASSERT_NE(yamal, nullptr);
     unsigned count = 1;
     unsigned last_idx = 0;
-    auto iter = ytp_yamal_begin(yamal, &error);
-    auto end = ytp_yamal_end(yamal, &error);
+    auto iter = ytp_yamal_begin(yamal, 0, &error);
+    auto end = ytp_yamal_end(yamal, 0, &error);
     ASSERT_NE(iter, nullptr);
     ASSERT_NE(end, nullptr);
     for (; !ytp_yamal_term(iter); iter = ytp_yamal_next(yamal, iter, &error)) {
@@ -106,9 +106,10 @@ TEST(channel, peer_name) {
   {
     auto *yamal = ytp_yamal_new(fd, &error);
     ASSERT_NE(yamal, nullptr);
-    auto iter = ytp_yamal_begin(yamal, &error);
+    auto iter = ytp_yamal_begin(yamal, 0, &error);
     ASSERT_NE(iter, nullptr);
-    ASSERT_NE(ytp_yamal_begin(yamal, &error), ytp_yamal_end(yamal, &error));
+    ASSERT_NE(ytp_yamal_begin(yamal, 0, &error),
+              ytp_yamal_end(yamal, 0, &error));
     ytp_peer_t peer;
     ytp_channel_t channel;
     size_t sz;
