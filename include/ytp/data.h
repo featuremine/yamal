@@ -83,6 +83,7 @@ FMMODFUNC void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
  */
 #define ytp_data_begin(yamal, error) ytp_yamal_begin(yamal, YTP_STREAM_LIST_DATA, error)
 
+
 /**
  * @brief Returns an iterator to the end of the list
  *
@@ -90,7 +91,7 @@ FMMODFUNC void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
  * @param[out] error
  * @return ytp_iterator_t
  */
-#define ytp_data_end(yamal, YTP_STREAM_LIST_DATA, error)
+#define ytp_data_end(yamal, error) ytp_yamal_end(yamal, YTP_STREAM_LIST_DATA, error)
 
 /**
  * @brief Returns the reserved size
