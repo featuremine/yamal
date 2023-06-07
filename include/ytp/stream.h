@@ -36,9 +36,12 @@ extern "C" {
 #endif
 
 #define YTP_STREAM_LIST_DATA 0
-#define YTP_STREAM_LIST_ANNS 0
-#define YTP_STREAM_LIST_SUBS 0
-#define YTP_STREAM_LIST_INDX 0
+#define YTP_STREAM_LIST_ANNS 1
+#define YTP_STREAM_LIST_SUBS 2
+#define YTP_STREAM_LIST_INDX 3
+
+#define YTP_STREAM_LIST_MIN 0
+#define YTP_STREAM_LIST_MAX 3
 
 /**
  * @brief Closes all stream level lists

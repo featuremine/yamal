@@ -93,6 +93,8 @@ set(
     "${PROJECT_SOURCE_DIR}/src/ytp/control.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/sequence.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/timeline.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/announcement.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/stream.c"
 )
 
 add_library(

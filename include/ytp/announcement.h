@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <ytp/api.h>
 #include <ytp/yamal.h>
 #include <ytp/stream.h>
 
@@ -49,9 +48,9 @@ extern "C" {
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal,
-                                                size_t psz, char *peer,
-                                                size_t csz, char *channel,
-                                                size_t esz, char *encoding,
+                                                size_t psz, const char *peer,
+                                                size_t csz, const char *channel,
+                                                size_t esz, const char *encoding,
                                                 fmc_error_t **error);
 
 /**
@@ -70,14 +69,7 @@ FMMODFUNC ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal,
  * @param[out] subscribed offset of the first subscribe message
  * @param[out] error
  */
-FMMODFUNC void ytp_announcement_read(ytp_yamal_t *announcement, ytp_iterator_t iterator,
-                                     uint64_t *seqno,
-                                     size_t *psz, char **peer,
-                                     size_t *csz, char **channel,
-                                     size_t *esz, char **encoding,
-                                     ytp_mmnode_offs **original,
-                                     ytp_mmnode_offs **subscribed,
-                                     fmc_error_t **error);
+FMMODFUNC void ytp_announcement_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno, size_t *psz, const char **peer, size_t *csz, const char **channel, size_t *esz, const char **encoding, ytp_mmnode_offs **original, ytp_mmnode_offs **subscribed, fmc_error_t **error);
 
 /**
  * @brief Look up an announcement message
@@ -95,11 +87,11 @@ FMMODFUNC void ytp_announcement_read(ytp_yamal_t *announcement, ytp_iterator_t i
  * @param[out] subscribed offset of the first subscribe message
  * @param[out] error
  */
-FMMODFUNC void ytp_announcement_lookup(ytp_yamal_t *announcement, ytp_mmnode_offs stream,
+FMMODFUNC void ytp_announcement_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs stream,
                                        uint64_t *seqno,
-                                       size_t *psz, char **peer,
-                                       size_t *csz, char **channel,
-                                       size_t *esz, char **encoding,
+                                       size_t *psz, const char **peer,
+                                       size_t *csz, const char **channel,
+                                       size_t *esz, const char **encoding,
                                        ytp_mmnode_offs **original,
                                        ytp_mmnode_offs **subscribed,
                                        fmc_error_t **error);
@@ -119,7 +111,7 @@ FMMODFUNC ytp_iterator_t ytp_announcement_begin(ytp_yamal_t *yamal, fmc_error_t 
  * @param[in] iterator
  * @return true if there are no more announcement messages, false otherwise
  */
-FMMODFUNC bool ytp_announcement_term(ytp_iterator_t iterator);
+FMMODFUNC bool ytp_announcement_term(ytp_yamal_t *yamal, ytp_iterator_t iterator, fmc_error_t **error);
 
 /**
  * @brief Returns iterator for the next announcement messages
