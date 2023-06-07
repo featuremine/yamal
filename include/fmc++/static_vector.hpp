@@ -177,9 +177,9 @@ template <typename T, std::size_t N> struct static_vector {
 
   constexpr const_reference front() const noexcept { return *begin(); }
 
-  constexpr reference back() noexcept { return *end(); }
+  constexpr reference back() noexcept { return *rend(); }
 
-  constexpr const_reference back() const noexcept { return *end(); }
+  constexpr const_reference back() const noexcept { return *rend(); }
 
   constexpr pointer data() noexcept { return &*begin(); }
 

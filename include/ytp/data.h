@@ -51,11 +51,12 @@ FMMODFUNC char *ytp_data_reserve(ytp_yamal_t *yamal, size_t sz,
  * @brief Commits the data to the memory mapped list
  *
  * @param[in] yamal
+ * @param[in] ts
  * @param[in] data the value returned by ytp_data_reserve
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, void *data,
+FMMODFUNC ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts, void *data,
                                          fmc_error_t **error);
 
 /**
@@ -92,15 +93,6 @@ FMMODFUNC void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
  * @return ytp_iterator_t
  */
 #define ytp_data_end(yamal, error) ytp_yamal_end(yamal, YTP_STREAM_LIST_DATA, error)
-
-/**
- * @brief Returns the reserved size
- *
- * @param[in] yamal
- * @param[out] error
- * @return data size
- */
-FMMODFUNC size_t ytp_data_reserved_size(ytp_yamal_t *yamal, fmc_error_t **error);
 
 #ifdef __cplusplus
 }

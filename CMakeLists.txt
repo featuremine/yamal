@@ -87,8 +87,6 @@ set(
     YTP_SRC
     "${PROJECT_SOURCE_DIR}/src/ytp/api.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/yamal.c"
-    "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/time.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/control.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/sequence.cpp"
