@@ -12,6 +12,7 @@
 
 *****************************************************************************/
 
+#include "atomic.h"
 #include "endianess.h"
 
 #include <fmc/alignment.h>
@@ -21,27 +22,8 @@
 
 #include <errno.h>
 #include <pthread.h>
-#include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define atomic_load_cast(a) atomic_load((_Atomic typeof(*(a)) *)(a))
-#define atomic_fetch_add_cast(a, b)                                            \
-  atomic_fetch_add((_Atomic typeof(*(a)) *)(a), (b))
-
-#define atomic_compare_exchange_weak_check(a, e, d)                            \
-  ({                                                                           \
-    atomic_compare_exchange_weak(((_Atomic typeof(*(a)) *)a), (e), (d))        \
-        ? true                                                                 \
-        : *(e) == (d);                                                         \
-  })
-
-#define atomic_expect_or_init(a, d)                                            \
-  ({                                                                           \
-    typeof(*(a)) desired = (d);                                                \
-    typeof(*(a)) expected = 0;                                                 \
-    atomic_compare_exchange_weak_check((a), &expected, desired);               \
-  })
 
 static const char magic_number[8] = {'Y', 'A', 'M', 'A', 'L', '0', '0', '1'};
 
