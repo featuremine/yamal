@@ -17,7 +17,6 @@
 
 #include <ytp/streams.h>
 
-#include <stdatomic.h>
 #include <stdlib.h>
 
 #include <uthash/uthash.h>
@@ -98,6 +97,13 @@ static void ytp_streams_init(ytp_streams_t *streams, ytp_yamal_t *yamal, fmc_err
 
 static void ytp_streams_destroy(ytp_streams_t *streams, fmc_error_t **error) {
   fmc_error_clear(error);
+
+  struct ytp_streams_reverse_map_t *item;
+  struct ytp_streams_reverse_map_t *tmp;
+  HASH_ITER(hh, streams->reverse_map, item, tmp) {
+    HASH_DEL(streams->reverse_map, item);
+    free(item);
+  }
 }
 
 ytp_streams_t *ytp_streams_new(ytp_yamal_t *yamal, fmc_error_t **error) {
@@ -122,6 +128,48 @@ void ytp_streams_del(ytp_streams_t *streams, fmc_error_t **error) {
   free(streams);
 }
 
+static struct ytp_streams_reverse_map_t *lookup_msg(ytp_streams_t *streams, size_t psz, const char *peer, size_t csz, const char *channel, fmc_error_t **error) {
+  fmc_error_clear(error);
+
+  while (!ytp_yamal_term(streams->iterator)) {
+    uint64_t seqno;
+    size_t read_psz;
+    const char *read_peer;
+    size_t read_csz;
+    const char *read_channel;
+    size_t read_esz;
+    const char *read_encoding;
+    ytp_mmnode_offs *original;
+    ytp_mmnode_offs *subscribed;
+
+    ytp_announcement_read(streams->yamal, streams->iterator, &seqno, &read_psz, &read_peer, &read_csz, &read_channel, &read_esz, &read_encoding, &original, &subscribed, error);
+    if (*error) {
+      return NULL;
+    }
+
+    ytp_mmnode_offs stream = ytp_yamal_tell(streams->yamal, streams->iterator, error);
+    if (*error) {
+      return NULL;
+    }
+
+    struct ytp_streams_reverse_map_t *item = hashmap_emplace(&streams->reverse_map, read_psz, read_peer, read_csz, read_channel, read_esz, read_encoding, stream);
+    if (*original != item->stream) {
+      *original = item->stream;
+    }
+
+    ytp_iterator_t next = ytp_yamal_next(streams->yamal, streams->iterator, error);
+    if (*error) {
+      return NULL;
+    }
+    streams->iterator = next;
+
+    if (psz == read_psz && csz == read_csz && memcmp(peer, read_peer, psz) == 0 && memcmp(channel, read_channel, csz) == 0) {
+      return item;
+    }
+  }
+  return NULL;
+}
+
 ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams,
                                      size_t psz, const char *peer,
                                      size_t csz, const char *channel,
@@ -140,53 +188,54 @@ ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams,
     return item->stream;
   }
 
-  while (!ytp_yamal_term(streams->iterator)) {
-    uint64_t seqno;
-    size_t read_psz;
-    const char *read_peer;
-    size_t read_csz;
-    const char *read_channel;
-    size_t read_esz;
-    const char *read_encoding;
-    ytp_mmnode_offs *original;
-    ytp_mmnode_offs *subscribed;
-
-    ytp_announcement_read(streams->yamal, streams->iterator, &seqno, &read_psz, &read_peer, &read_csz, &read_channel, &read_esz, &read_encoding, &original, &subscribed, error);
-    if (*error) {
-      return 0;
-    }
-
-    ytp_mmnode_offs stream = ytp_yamal_tell(streams->yamal, streams->iterator, error);
-    if (*error) {
-      return 0;
-    }
-
-    atomic_compare_exchange_weak_check((a), &expected, desired);               \
-
-    ytp_iterator_t next = ytp_yamal_next(streams->yamal, streams->iterator, error);
-    if (*error) {
-      return 0;
-    }
-    streams->iterator = next;
-  }
-
-  uint64_t seqno;
-  size_t sz;
-  const char *data;
-  ytp_yamal_read(streams->yamal, streams->iterator, &seqno, &sz, &data, error);
+  item = lookup_msg(streams, psz, peer, csz, channel, error);
   if (*error) {
     return 0;
   }
+  if (item == NULL) {
+    ytp_announcement_write(streams->yamal, psz, peer, csz, channel, esz, encoding, error);
+    if (*error) {
+      return 0;
+    }
 
-  ytp_yamal_next(streams->yamal, streams->iterator, error);
-  if (*error) {
+    item = lookup_msg(streams, psz, peer, csz, channel, error);
+    if (*error) {
+      return 0;
+    }
+  }
+
+  if (item->esz != esz || memcmp(item->encoding, encoding, esz) != 0) {
+    fmc_error_set(error, "encoding doesn't match");
     return 0;
   }
+
+  return item->stream;
 }
 
 ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams,
-                                   size_t psz, char *peer,
-                                   size_t csz, char *channel,
-                                   size_t *esz, char **encoding,
+                                   size_t psz, const char *peer,
+                                   size_t csz, const char *channel,
+                                   size_t *esz, const char **encoding,
                                    fmc_error_t **error) {
+  fmc_error_clear(error);
+
+  struct ytp_streams_reverse_map_key_t key = {psz, peer, csz, channel};
+  struct ytp_streams_reverse_map_t *item = hashmap_get(streams->reverse_map, &key);
+  if (item != NULL) {
+    *esz = item->esz;
+    *encoding = item->encoding;
+    return item->stream;
+  }
+
+  item = lookup_msg(streams, psz, peer, csz, channel, error);
+  if (*error) {
+    return 0;
+  }
+  if (item == NULL) {
+    fmc_error_set(error, "stream not found");
+    return 0;
+  }
+  *esz = item->esz;
+  *encoding = item->encoding;
+  return item->stream;
 }
