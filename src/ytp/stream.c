@@ -19,7 +19,8 @@
 void ytp_stream_close(ytp_yamal_t *yamal, fmc_error_t **error) {
   fmc_error_clear(error);
 
-  for (size_t lstidx = YTP_STREAM_LIST_MIN; lstidx <= YTP_STREAM_LIST_MAX; ++lstidx) {
+  for (size_t lstidx = YTP_STREAM_LIST_MIN; lstidx <= YTP_STREAM_LIST_MAX;
+       ++lstidx) {
     ytp_yamal_close(yamal, lstidx, error);
   }
 }

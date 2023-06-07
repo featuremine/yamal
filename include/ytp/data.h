@@ -24,8 +24,8 @@
 #pragma once
 
 #include <ytp/api.h>
-#include <ytp/yamal.h>
 #include <ytp/stream.h>
+#include <ytp/yamal.h>
 
 #include <fmc/error.h>
 
@@ -45,7 +45,7 @@ extern "C" {
  * @return a writable pointer for data
  */
 FMMODFUNC char *ytp_data_reserve(ytp_yamal_t *yamal, size_t sz,
-                                  fmc_error_t **error);
+                                 fmc_error_t **error);
 
 /**
  * @brief Commits the data to the memory mapped list
@@ -56,8 +56,8 @@ FMMODFUNC char *ytp_data_reserve(ytp_yamal_t *yamal, size_t sz,
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts, void *data,
-                                         fmc_error_t **error);
+FMMODFUNC ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts,
+                                         void *data, fmc_error_t **error);
 
 /**
  * @brief Reads a message on data level
@@ -72,8 +72,9 @@ FMMODFUNC ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts, void *d
  * @param[out] error
  */
 FMMODFUNC void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                             uint64_t *seqno, int64_t *ts, ytp_mmnode_offs *stream,
-                             size_t *sz, const char **data, fmc_error_t **error);
+                             uint64_t *seqno, int64_t *ts,
+                             ytp_mmnode_offs *stream, size_t *sz,
+                             const char **data, fmc_error_t **error);
 
 /**
  * @brief Returns an iterator to the beginning of the list
@@ -82,8 +83,8 @@ FMMODFUNC void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
  * @param[out] error
  * @return ytp_iterator_t
  */
-#define ytp_data_begin(yamal, error) ytp_yamal_begin(yamal, YTP_STREAM_LIST_DATA, error)
-
+#define ytp_data_begin(yamal, error)                                           \
+  ytp_yamal_begin(yamal, YTP_STREAM_LIST_DATA, error)
 
 /**
  * @brief Returns an iterator to the end of the list
@@ -92,7 +93,8 @@ FMMODFUNC void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
  * @param[out] error
  * @return ytp_iterator_t
  */
-#define ytp_data_end(yamal, error) ytp_yamal_end(yamal, YTP_STREAM_LIST_DATA, error)
+#define ytp_data_end(yamal, error)                                             \
+  ytp_yamal_end(yamal, YTP_STREAM_LIST_DATA, error)
 
 #ifdef __cplusplus
 }

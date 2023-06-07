@@ -14,8 +14,8 @@
 
 #include "endianess.h"
 
-#include <ytp/announcement.h>
 #include <fmc/error.h>
+#include <ytp/announcement.h>
 
 #include <string.h>
 
@@ -27,8 +27,13 @@ struct ann_msg_t {
   char payload[];
 };
 
-ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal, size_t psz, const char *peer, size_t csz, const char *channel, size_t esz, const char *encoding, fmc_error_t **error) {
-  struct ann_msg_t *msg = (struct ann_msg_t *)ytp_yamal_reserve(yamal, psz + csz + esz + sizeof(struct ann_msg_t), error);
+ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal, size_t psz,
+                                      const char *peer, size_t csz,
+                                      const char *channel, size_t esz,
+                                      const char *encoding,
+                                      fmc_error_t **error) {
+  struct ann_msg_t *msg = (struct ann_msg_t *)ytp_yamal_reserve(
+      yamal, psz + csz + esz + sizeof(struct ann_msg_t), error);
   if (*error) {
     return NULL;
   }
@@ -41,7 +46,11 @@ ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal, size_t psz, const char
   return ytp_yamal_commit(yamal, (char *)msg, YTP_STREAM_LIST_ANNS, error);
 }
 
-void ytp_announcement_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno, size_t *psz, const char **peer, size_t *csz, const char **channel, size_t *esz, const char **encoding, ytp_mmnode_offs **original, ytp_mmnode_offs **subscribed, fmc_error_t **error) {
+void ytp_announcement_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
+                           uint64_t *seqno, size_t *psz, const char **peer,
+                           size_t *csz, const char **channel, size_t *esz,
+                           const char **encoding, ytp_mmnode_offs **original,
+                           ytp_mmnode_offs **subscribed, fmc_error_t **error) {
   size_t sz;
   struct ann_msg_t *msg;
   ytp_yamal_read(yamal, iterator, seqno, &sz, (const char **)&msg, error);
@@ -66,20 +75,27 @@ void ytp_announcement_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t
   *subscribed = &msg->subscribed;
 }
 
-void ytp_announcement_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs stream, uint64_t *seqno, size_t *psz, const char **peer, size_t *csz, const char **channel, size_t *esz, const char **encoding, ytp_mmnode_offs **original, ytp_mmnode_offs **subscribed, fmc_error_t **error) {
+void ytp_announcement_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs stream,
+                             uint64_t *seqno, size_t *psz, const char **peer,
+                             size_t *csz, const char **channel, size_t *esz,
+                             const char **encoding, ytp_mmnode_offs **original,
+                             ytp_mmnode_offs **subscribed,
+                             fmc_error_t **error) {
   ytp_iterator_t iterator = ytp_yamal_seek(yamal, stream, error);
   if (*error) {
     return;
   }
 
-  ytp_announcement_read(yamal, iterator, seqno, psz, peer, csz, channel, esz, encoding, original, subscribed, error);
+  ytp_announcement_read(yamal, iterator, seqno, psz, peer, csz, channel, esz,
+                        encoding, original, subscribed, error);
 }
 
 ytp_iterator_t ytp_announcement_begin(ytp_yamal_t *yamal, fmc_error_t **error) {
   return ytp_yamal_begin(yamal, YTP_STREAM_LIST_ANNS, error);
 }
 
-bool ytp_announcement_term(ytp_yamal_t *yamal, ytp_iterator_t iterator, fmc_error_t **error) {
+bool ytp_announcement_term(ytp_yamal_t *yamal, ytp_iterator_t iterator,
+                           fmc_error_t **error) {
   fmc_error_clear(error);
   while (true) {
     if (ytp_yamal_term(iterator)) {
@@ -101,7 +117,8 @@ bool ytp_announcement_term(ytp_yamal_t *yamal, ytp_iterator_t iterator, fmc_erro
 
     ytp_mmnode_offs *original;
     ytp_mmnode_offs *subscribed;
-    ytp_announcement_read(yamal, iterator, &seqno, &psz, &peer, &csz, &channel, &esz, &encoding, &original, &subscribed, error);
+    ytp_announcement_read(yamal, iterator, &seqno, &psz, &peer, &csz, &channel,
+                          &esz, &encoding, &original, &subscribed, error);
     if (*error || *original == 0) {
       return true;
     }
@@ -142,7 +159,8 @@ ytp_iterator_t ytp_announcement_next(ytp_yamal_t *yamal,
 
     ytp_mmnode_offs *original;
     ytp_mmnode_offs *subscribed;
-    ytp_announcement_read(yamal, iterator, &seqno, &psz, &peer, &csz, &channel, &esz, &encoding, &original, &subscribed, error);
+    ytp_announcement_read(yamal, iterator, &seqno, &psz, &peer, &csz, &channel,
+                          &esz, &encoding, &original, &subscribed, error);
     if (*error || *original == 0) {
       return NULL;
     }

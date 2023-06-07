@@ -17,15 +17,16 @@
  * @date 6 Jun 2023
  * @brief File contains C declaration of streams API
  *
- *  This file contains C declaration of streams API of stream protocol level of YTP.
+ *  This file contains C declaration of streams API of stream protocol level of
+ * YTP.
  * @see http://www.featuremine.com
  */
 
 #pragma once
 
-#include <ytp/yamal.h>
-#include <ytp/stream.h>
 #include <ytp/announcement.h>
+#include <ytp/stream.h>
+#include <ytp/yamal.h>
 
 #include <fmc/error.h>
 
@@ -44,7 +45,8 @@ typedef struct ytp_streams ytp_streams_t;
  * @param[out] error
  * @return ytp_streams_t object
  */
-FMMODFUNC ytp_streams_t *ytp_streams_new(ytp_yamal_t *yamal, fmc_error_t **error);
+FMMODFUNC ytp_streams_t *ytp_streams_new(ytp_yamal_t *yamal,
+                                         fmc_error_t **error);
 
 /**
  * @brief Destroys and deallocate a ytp_streams_t object
@@ -86,10 +88,10 @@ FMMODFUNC ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams,
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams,
-                                             size_t psz, const char *peer,
-                                             size_t csz, const char *channel,
-                                             size_t *esz, const char **encoding,
+FMMODFUNC ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams, size_t psz,
+                                             const char *peer, size_t csz,
+                                             const char *channel, size_t *esz,
+                                             const char **encoding,
                                              fmc_error_t **error);
 
 #ifdef __cplusplus
