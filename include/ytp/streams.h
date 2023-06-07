@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <ytp/api.h>
 #include <ytp/yamal.h>
 #include <ytp/stream.h>
 #include <ytp/announcement.h>
@@ -68,10 +67,10 @@ FMMODFUNC void ytp_streams_del(ytp_streams_t *streams, fmc_error_t **error);
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_mmlist_offs ytp_streams_announce(ytp_streams_t *streams,
-                                               size_t psz, char *peer,
-                                               size_t csz, char *channel,
-                                               size_t esz, char *encoding,
+FMMODFUNC ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams,
+                                               size_t psz, const char *peer,
+                                               size_t csz, const char *channel,
+                                               size_t esz, const char *encoding,
                                                fmc_error_t **error);
 
 /**
@@ -87,10 +86,10 @@ FMMODFUNC ytp_mmlist_offs ytp_streams_announce(ytp_streams_t *streams,
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
-FMMODFUNC ytp_mmlist_offs ytp_streams_lookup(ytp_streams_t *streams,
-                                             size_t psz, char *peer,
-                                             size_t csz, char *channel,
-                                             size_t *esz, char **encoding,
+FMMODFUNC ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams,
+                                             size_t psz, const char *peer,
+                                             size_t csz, const char *channel,
+                                             size_t *esz, const char **encoding,
                                              fmc_error_t **error);
 
 #ifdef __cplusplus
