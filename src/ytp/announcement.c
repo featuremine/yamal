@@ -22,8 +22,8 @@
 struct ann_msg_t {
   ytp_mmnode_offs original;
   ytp_mmnode_offs subscribed;
-  uint16_t peer_name_sz;
-  uint16_t channel_name_sz;
+  uint32_t peer_name_sz;
+  uint32_t channel_name_sz;
   char payload[];
 };
 
@@ -32,6 +32,16 @@ ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal, size_t psz,
                                       const char *channel, size_t esz,
                                       const char *encoding,
                                       fmc_error_t **error) {
+  if (psz > INT32_MAX) {
+    fmc_error_set(error, "peer name is too long");
+    return NULL;
+  }
+
+  if (csz > INT32_MAX) {
+    fmc_error_set(error, "channel name is too long");
+    return NULL;
+  }
+
   struct ann_msg_t *msg = (struct ann_msg_t *)ytp_yamal_reserve(
       yamal, psz + csz + esz + sizeof(struct ann_msg_t), error);
   if (*error) {
