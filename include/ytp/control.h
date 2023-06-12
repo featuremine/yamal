@@ -178,9 +178,8 @@ FMMODFUNC char *ytp_control_reserve(ytp_control_t *ctrl, size_t sz,
  */
 FMMODFUNC ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl,
                                             ytp_peer_t peer,
-                                            ytp_channel_t channel,
-                                            uint64_t ts, void *data,
-                                            fmc_error_t **error);
+                                            ytp_channel_t channel, uint64_t ts,
+                                            void *data, fmc_error_t **error);
 
 /**
  * @brief Publishes a subscription message
@@ -341,7 +340,8 @@ FMMODFUNC bool ytp_control_term(ytp_iterator_t iterator);
  * @param[out] error out-parameter for error handling
  * @return the iterator of the serializable ptr
  */
-FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, ytp_mmnode_offs off,
+FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl,
+                                          ytp_mmnode_offs off,
                                           fmc_error_t **error);
 
 /**
@@ -353,8 +353,8 @@ FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, ytp_mmnode_offs o
  * @return the serializable ptr offset
  */
 FMMODFUNC ytp_mmnode_offs ytp_control_tell(ytp_control_t *ctrl,
-                                    ytp_iterator_t iterator,
-                                    fmc_error_t **error);
+                                           ytp_iterator_t iterator,
+                                           fmc_error_t **error);
 
 #ifdef __cplusplus
 }

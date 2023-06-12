@@ -57,8 +57,8 @@ FMMODFUNC char *ytp_data_reserve(ytp_yamal_t *yamal, size_t sz,
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts,
-                                         ytp_mmnode_offs stream,
-                                         void *data, fmc_error_t **error);
+                                         ytp_mmnode_offs stream, void *data,
+                                         fmc_error_t **error);
 
 /**
  * @brief Reads a message on data level
