@@ -272,7 +272,6 @@ FMMODFUNC ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
                                            const char *name,
                                            fmc_error_t **error);
 
-
 /* the rest goes away */
 /**
  * @brief Finds next message on control level, moves iterator forward if there
