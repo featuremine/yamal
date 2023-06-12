@@ -21,6 +21,8 @@
 
 #include <uthash/uthash.h>
 
+/* TODO: add error handling for uthash */
+
 struct ytp_streams_reverse_map_key_t {
   size_t psz;
   const char *peer;
@@ -197,6 +199,7 @@ lookup_msg(ytp_streams_t *streams, size_t psz, const char *peer, size_t csz,
   return NULL;
 }
 
+/* TODO: announce and lookup share code, can be refactored */
 ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams, size_t psz,
                                      const char *peer, size_t csz,
                                      const char *channel, size_t esz,
