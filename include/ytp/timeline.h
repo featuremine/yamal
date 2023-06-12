@@ -27,9 +27,7 @@
 #include <stdint.h>
 
 #include <fmc/error.h>
-#include <ytp/channel.h>
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/yamal.h>
 
 #ifdef __cplusplus

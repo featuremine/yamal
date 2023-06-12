@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <vector>
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/sequence.h>
 #include <ytp/yamal.h>
 

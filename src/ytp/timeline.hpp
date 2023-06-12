@@ -15,9 +15,7 @@
 #pragma once
 
 #include "yamal.hpp"
-#include <ytp/channel.h>
 #include <ytp/control.h>
-#include <ytp/peer.h>
 #include <ytp/timeline.h>
 #include <ytp/yamal.h>
 
