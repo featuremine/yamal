@@ -87,12 +87,15 @@ set(
     YTP_SRC
     "${PROJECT_SOURCE_DIR}/src/ytp/api.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/yamal.c"
-    "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/time.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/control.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/sequence.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/timeline.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/announcement.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/stream.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/streams.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/data.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/cursor.c"
 )
 
 add_library(

@@ -534,8 +534,3 @@ TEST(static_vector, copy_assign_2) {
     EXPECT_EQ(c.constructed + c.copied_to + c.moved_to, c.destroyed);
   }
 }
-
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

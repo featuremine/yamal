@@ -12,30 +12,23 @@
 
  *****************************************************************************/
 
-/**
- * @file yamal.cpp
- * @author Federico Ravchina
- * @date 28 Apr 2021
- * @brief File contains tests for YTP yamal layer
- *
- * @see http://www.featuremine.com
- */
+#pragma once
 
-#include <thread>
-
-#include <ytp/streams.h>
 #include <ytp/yamal.h>
 
-#include <fmc++/fs.hpp>
-#include <fmc++/gtestwrap.hpp>
-#include <fmc/files.h>
+#include <uthash/utarray.h>
+#include <uthash/uthash.h>
 
-TEST(yamal, sequential) {
-  fmc_error_t *error;
-  ytp_streams_new(NULL, &error);
-}
+#include <stddef.h>
 
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+struct ytp_cursor {
+  ytp_yamal_t *yamal;
+  ytp_iterator_t it_data;
+  ytp_iterator_t it_ann;
+  uint64_t ann_processed;
+
+  struct ytp_cursor_streams_data_item_t *cb_data;
+
+  UT_array *cb_ann;
+  int cb_ann_locked;
+};

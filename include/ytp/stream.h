@@ -13,41 +13,44 @@
  *****************************************************************************/
 
 /**
- * @file version.h
- * @date 23 Apr 2021
- * @brief File contains C declaration of version API of YTP
+ * @file stream.h
+ * @date 6 Jun 2023
+ * @brief File contains C declaration of stream layer of YTP
  *
- * This file contains C declaration of version API of YTP.
+ * This file contains C declaration of stream layer of YTP.
  * @see http://www.featuremine.com
  */
 
 #pragma once
 
-/**
- * @brief Major YTP version
- * 
- * Major version change represents a change to protocol
- */
-#define YTP_VERSION_MAJOR @YTP_VERSION_MAJOR@
+#include <ytp/api.h>
+#include <ytp/yamal.h>
+
+#include <fmc/error.h>
+
+#include <stdbool.h>
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define YTP_STREAM_LIST_DATA 0
+#define YTP_STREAM_LIST_ANNS 1
+#define YTP_STREAM_LIST_SUBS 2
+#define YTP_STREAM_LIST_INDX 3
+
+#define YTP_STREAM_LIST_MIN 0
+#define YTP_STREAM_LIST_MAX 3
 
 /**
- * @brief Minor YTP version
- * 
- * Minor version change represents a change to an API
- */
-#define YTP_VERSION_MINOR @YTP_VERSION_MINOR@
-
-/**
- * @brief Patch YTP version
- * 
- * Patch version represents fixes and additons that are
- * backwards compatible with previous API
- */
-#define YTP_VERSION_PATCH @YTP_VERSION_PATCH@
-
-/**
- * @brief YTP version string
+ * @brief Closes all stream level lists
  *
- * YTP version encoded string "MAJOR.MINOR.PATCH"
+ * @param[in] yamal
+ * @param[out] error
  */
-#define YTP_VERSION @YTP_VERSION@
+FMMODFUNC void ytp_stream_close(ytp_yamal_t *yamal, fmc_error_t **error);
+
+#ifdef __cplusplus
+}
+#endif
