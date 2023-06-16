@@ -48,10 +48,10 @@ typedef struct ytp_timeline ytp_timeline_t;
 typedef void (*ytp_timeline_peer_cb_t)(void *closure, ytp_peer_t peer,
                                        size_t sz, const char *name);
 typedef void (*ytp_timeline_ch_cb_t)(void *closure, ytp_peer_t peer,
-                                     ytp_channel_t channel, uint64_t time,
+                                     ytp_channel_t channel, uint64_t ts,
                                      size_t sz, const char *name);
 typedef void (*ytp_timeline_data_cb_t)(void *closure, ytp_peer_t peer,
-                                       ytp_channel_t channel, uint64_t time,
+                                       ytp_channel_t channel, uint64_t ts,
                                        size_t sz, const char *data);
 typedef void (*ytp_timeline_idle_cb_t)(void *closure);
 
@@ -59,7 +59,7 @@ typedef void (*ytp_timeline_idle_cb_t)(void *closure);
  * @brief Allocates and initializes a ytp_timeline object
  *
  * @param[in] timeline
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_timeline_t object
  */
 FMMODFUNC ytp_timeline_t *ytp_timeline_new(ytp_control_t *ctrl,
@@ -69,7 +69,7 @@ FMMODFUNC ytp_timeline_t *ytp_timeline_new(ytp_control_t *ctrl,
  * @brief Initializes a ytp_timeline object
  *
  * @param[in] timeline
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_timeline_t object
  */
 FMMODFUNC void ytp_timeline_init(ytp_timeline_t *timeline, ytp_control_t *ctrl,
@@ -79,7 +79,7 @@ FMMODFUNC void ytp_timeline_init(ytp_timeline_t *timeline, ytp_control_t *ctrl,
  * @brief Destroys and deallocate a ytp_timeline_t object
  *
  * @param[in] timeline
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_del(ytp_timeline_t *timeline, fmc_error_t **error);
 
@@ -87,7 +87,7 @@ FMMODFUNC void ytp_timeline_del(ytp_timeline_t *timeline, fmc_error_t **error);
  * @brief Destroys a ytp_timeline_t object
  *
  * @param[in] timeline the ytp_timeline_t object
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_destroy(ytp_timeline_t *timeline,
                                     fmc_error_t **error);
@@ -100,7 +100,7 @@ FMMODFUNC void ytp_timeline_destroy(ytp_timeline_t *timeline,
  * @param[in] timeline
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_ch_cb(ytp_timeline_t *timeline,
                                   ytp_timeline_ch_cb_t cb, void *closure,
@@ -114,7 +114,7 @@ FMMODFUNC void ytp_timeline_ch_cb(ytp_timeline_t *timeline,
  * @param[in] timeline
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_ch_cb_rm(ytp_timeline_t *timeline,
                                      ytp_timeline_ch_cb_t cb, void *closure,
@@ -128,7 +128,7 @@ FMMODFUNC void ytp_timeline_ch_cb_rm(ytp_timeline_t *timeline,
  * @param[in] timeline
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_peer_cb(ytp_timeline_t *timeline,
                                     ytp_timeline_peer_cb_t cb, void *closure,
@@ -142,7 +142,7 @@ FMMODFUNC void ytp_timeline_peer_cb(ytp_timeline_t *timeline,
  * @param[in] timeline
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_peer_cb_rm(ytp_timeline_t *timeline,
                                        ytp_timeline_peer_cb_t cb, void *closure,
@@ -161,7 +161,7 @@ FMMODFUNC void ytp_timeline_peer_cb_rm(ytp_timeline_t *timeline,
  * @param[in] prfx
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_prfx_cb(ytp_timeline_t *timeline, size_t sz,
                                     const char *prfx, ytp_timeline_data_cb_t cb,
@@ -176,7 +176,7 @@ FMMODFUNC void ytp_timeline_prfx_cb(ytp_timeline_t *timeline, size_t sz,
  * @param[in] prfx
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_prfx_cb_rm(ytp_timeline_t *timeline, size_t sz,
                                        const char *prfx,
@@ -191,7 +191,7 @@ FMMODFUNC void ytp_timeline_prfx_cb_rm(ytp_timeline_t *timeline, size_t sz,
  * @param[in] channel
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_indx_cb(ytp_timeline_t *timeline,
                                     ytp_channel_t channel,
@@ -207,7 +207,7 @@ FMMODFUNC void ytp_timeline_indx_cb(ytp_timeline_t *timeline,
  * @param[in] channel
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline,
                                        ytp_channel_t channel,
@@ -245,7 +245,7 @@ FMMODFUNC void ytp_timeline_iter_set(ytp_timeline_t *timeline,
  * @brief Reads one message and executes the callbacks that applies.
  *
  * @param[in] timeline
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return true if a message was processed, false otherwise
  */
 FMMODFUNC bool ytp_timeline_poll(ytp_timeline_t *timeline, fmc_error_t **error);
@@ -274,23 +274,23 @@ FMMODFUNC void ytp_timeline_cb_rm(ytp_timeline_t *timeline);
  * Moves control pointer to catch up with iterator.
  * @param[in] timeline
  * @param[in] off
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t
  */
-FMMODFUNC ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline, size_t off,
-                                           fmc_error_t **error);
+FMMODFUNC ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline,
+                                           uint64_t off, fmc_error_t **error);
 
 /**
  * @brief Returns serializable offset given an iterator
  *
  * @param[in] timeline
  * @param[in] iterator
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return serializable
  */
-FMMODFUNC size_t ytp_timeline_tell(ytp_timeline_t *timeline,
-                                   ytp_iterator_t iterator,
-                                   fmc_error_t **error);
+FMMODFUNC uint64_t ytp_timeline_tell(ytp_timeline_t *timeline,
+                                     ytp_iterator_t iterator,
+                                     fmc_error_t **error);
 
 /**
  * @brief Registers an idle callback
@@ -298,7 +298,7 @@ FMMODFUNC size_t ytp_timeline_tell(ytp_timeline_t *timeline,
  * @param[in] timeline
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_idle_cb(ytp_timeline_t *timeline,
                                     ytp_timeline_idle_cb_t cb, void *closure,
@@ -310,7 +310,7 @@ FMMODFUNC void ytp_timeline_idle_cb(ytp_timeline_t *timeline,
  * @param[in] timeline
  * @param[in] cb
  * @param[in] closure
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_timeline_idle_cb_rm(ytp_timeline_t *timeline,
                                        ytp_timeline_idle_cb_t cb, void *closure,

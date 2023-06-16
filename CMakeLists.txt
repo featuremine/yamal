@@ -95,6 +95,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/ytp/stream.c"
     "${PROJECT_SOURCE_DIR}/src/ytp/streams.c"
     "${PROJECT_SOURCE_DIR}/src/ytp/data.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/cursor.c"
 )
 
 add_library(

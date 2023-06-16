@@ -94,6 +94,31 @@ FMMODFUNC ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams, size_t psz,
                                              const char **encoding,
                                              fmc_error_t **error);
 
+struct ytp_streams_anndata_t {
+  uint64_t seqno;
+  size_t psz;
+  const char *peer;
+  size_t csz;
+  const char *channel;
+  size_t esz;
+  const char *encoding;
+  ytp_mmnode_offs stream;
+  ytp_mmnode_offs *original;
+  ytp_mmnode_offs *subscribed;
+};
+
+enum ytp_streams_pred_result {
+  YTP_STREAMS_PRED_CONTINUE,
+  YTP_STREAMS_PRED_DONE,
+  YTP_STREAMS_PRED_ROLLBACK,
+};
+
+FMMODFUNC void ytp_streams_search_ann(
+    ytp_yamal_t *yamal, ytp_iterator_t *iterator,
+    enum ytp_streams_pred_result (*predicate)(
+        void *closure, const struct ytp_streams_anndata_t *ann),
+    void *closure, fmc_error_t **error);
+
 #ifdef __cplusplus
 }
 #endif

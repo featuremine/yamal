@@ -21,6 +21,8 @@
 
 #include <uthash/uthash.h>
 
+#include "atomic.h"
+
 /* TODO: add error handling for uthash */
 
 struct ytp_streams_reverse_map_key_t {
@@ -44,17 +46,25 @@ struct ytp_streams {
   struct ytp_streams_reverse_map_t *reverse_map;
 };
 
+static bool key_equal(size_t psz1, const char *peer1, size_t csz1,
+                      const char *channel1, size_t psz2, const char *peer2,
+                      size_t csz2, const char *channel2) {
+  if (psz1 != psz2 || csz1 != csz2) {
+    return false;
+  }
+  if (memcmp(peer1, peer2, psz1) != 0) {
+    return false;
+  }
+  return memcmp(channel1, channel2, csz1) == 0;
+}
+
 #undef HASH_KEYCMP
 #define HASH_KEYCMP(a, b, n) hashmap_cmp(a, b)
 static int hashmap_cmp(const struct ytp_streams_reverse_map_key_t *a,
                        const struct ytp_streams_reverse_map_key_t *b) {
-  if (a->psz != b->psz || a->csz != b->csz) {
-    return -1;
-  }
-  if (memcmp(a->peer, b->peer, a->psz) != 0) {
-    return -1;
-  }
-  return memcmp(a->channel, b->channel, a->csz);
+  return key_equal(a->psz, a->peer, a->csz, a->channel, b->psz, b->peer, b->csz,
+                   b->channel) -
+         1;
 }
 
 static unsigned hashmap_hash(const struct ytp_streams_reverse_map_key_t *key) {
@@ -67,12 +77,10 @@ static unsigned hashmap_hash(const struct ytp_streams_reverse_map_key_t *key) {
 
 static struct ytp_streams_reverse_map_t *
 hashmap_add(struct ytp_streams_reverse_map_t **m,
-            const struct ytp_streams_reverse_map_key_t *key,
-            struct ytp_streams_reverse_map_t *item_arg) {
+            const struct ytp_streams_reverse_map_key_t *key) {
   struct ytp_streams_reverse_map_t *item =
       aligned_alloc(_Alignof(struct ytp_streams_reverse_map_t),
                     sizeof(struct ytp_streams_reverse_map_t));
-  memcpy(item, item_arg, sizeof(struct ytp_streams_reverse_map_t));
   unsigned hash = hashmap_hash(key);
   HASH_ADD_KEYPTR_BYHASHVALUE(
       hh, (*m), key, sizeof(struct ytp_streams_reverse_map_key_t), hash, item);
@@ -96,13 +104,10 @@ hashmap_emplace(struct ytp_streams_reverse_map_t **m, size_t psz,
   struct ytp_streams_reverse_map_key_t key = {psz, peer, csz, channel};
   struct ytp_streams_reverse_map_t *item = hashmap_get(*m, &key);
   if (item == NULL) {
-    struct ytp_streams_reverse_map_t item_arg = {
-        {},
-        esz,
-        encoding,
-        stream,
-    };
-    hashmap_add(m, &key, &item_arg);
+    item = hashmap_add(m, &key);
+    item->esz = esz;
+    item->encoding = encoding;
+    item->stream = stream;
   }
   return item;
 }
@@ -147,56 +152,83 @@ void ytp_streams_del(ytp_streams_t *streams, fmc_error_t **error) {
   free(streams);
 }
 
-static struct ytp_streams_reverse_map_t *
-lookup_msg(ytp_streams_t *streams, size_t psz, const char *peer, size_t csz,
-           const char *channel, fmc_error_t **error) {
+void ytp_streams_search_ann(ytp_yamal_t *yamal, ytp_iterator_t *iterator,
+                            enum ytp_streams_pred_result (*predicate)(
+                                void *closure,
+                                const struct ytp_streams_anndata_t *ann),
+                            void *closure, fmc_error_t **error) {
   fmc_error_clear(error);
 
-  while (!ytp_yamal_term(streams->iterator)) {
-    uint64_t seqno;
-    size_t read_psz;
-    const char *read_peer;
-    size_t read_csz;
-    const char *read_channel;
-    size_t read_esz;
-    const char *read_encoding;
-    ytp_mmnode_offs *original;
-    ytp_mmnode_offs *subscribed;
-
-    ytp_announcement_read(streams->yamal, streams->iterator, &seqno, &read_psz,
-                          &read_peer, &read_csz, &read_channel, &read_esz,
-                          &read_encoding, &original, &subscribed, error);
+  while (!ytp_yamal_term(*iterator)) {
+    struct ytp_streams_anndata_t ann;
+    ytp_announcement_read(yamal, *iterator, &ann.seqno, &ann.psz, &ann.peer,
+                          &ann.csz, &ann.channel, &ann.esz, &ann.encoding,
+                          &ann.original, &ann.subscribed, error);
     if (*error) {
-      return NULL;
+      return;
     }
 
-    ytp_mmnode_offs stream =
-        ytp_yamal_tell(streams->yamal, streams->iterator, error);
+    ann.stream = ytp_yamal_tell(yamal, *iterator, error);
     if (*error) {
-      return NULL;
+      return;
     }
 
-    struct ytp_streams_reverse_map_t *item =
-        hashmap_emplace(&streams->reverse_map, read_psz, read_peer, read_csz,
-                        read_channel, read_esz, read_encoding, stream);
-    if (*original != item->stream) {
-      *original = item->stream;
+    enum ytp_streams_pred_result res = predicate(closure, &ann);
+
+    if (res == YTP_STREAMS_PRED_ROLLBACK) {
+      return;
     }
 
-    ytp_iterator_t next =
-        ytp_yamal_next(streams->yamal, streams->iterator, error);
+    ytp_iterator_t next = ytp_yamal_next(yamal, *iterator, error);
     if (*error) {
-      return NULL;
+      return;
     }
-    streams->iterator = next;
+    *iterator = next;
 
-    if (psz == read_psz && csz == read_csz &&
-        memcmp(peer, read_peer, psz) == 0 &&
-        memcmp(channel, read_channel, csz) == 0) {
-      return item;
+    if (res == YTP_STREAMS_PRED_DONE) {
+      return;
     }
   }
-  return NULL;
+}
+
+struct ytp_streams_pred_cl_t {
+  ytp_streams_t *streams;
+  size_t psz;
+  const char *peer;
+  size_t csz;
+  const char *channel;
+  size_t esz;
+  const char *encoding;
+  struct ytp_streams_reverse_map_t *item;
+};
+
+static enum ytp_streams_pred_result
+ytp_streams_pred(void *closure, const struct ytp_streams_anndata_t *ann) {
+  struct ytp_streams_pred_cl_t *cl = (struct ytp_streams_pred_cl_t *)closure;
+
+  struct ytp_streams_reverse_map_t *item =
+      hashmap_emplace(&cl->streams->reverse_map, ann->psz, ann->peer, ann->csz,
+                      ann->channel, ann->esz, ann->encoding, ann->stream);
+  ytp_mmnode_offs original = atomic_load_cast(ann->original);
+  if (original != item->stream) {
+    if (original != 0) {
+      return YTP_STREAMS_PRED_CONTINUE;
+    }
+    if (cl->streams->yamal->readonly_) {
+      return YTP_STREAMS_PRED_ROLLBACK;
+    }
+    *ann->original = item->stream;
+  }
+
+  if (key_equal(ann->psz, ann->peer, ann->csz, ann->channel, cl->psz, cl->peer,
+                cl->csz, cl->channel)) {
+    cl->item = item;
+    cl->esz = ann->esz;
+    cl->encoding = ann->encoding;
+    return YTP_STREAMS_PRED_DONE;
+  }
+
+  return YTP_STREAMS_PRED_CONTINUE;
 }
 
 /* TODO: announce and lookup share code, can be refactored */
@@ -205,43 +237,44 @@ ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams, size_t psz,
                                      const char *channel, size_t esz,
                                      const char *encoding,
                                      fmc_error_t **error) {
-  fmc_error_clear(error);
+  struct ytp_streams_pred_cl_t cl = {streams, psz, peer, csz,
+                                     channel, 0,   NULL, NULL};
 
-  struct ytp_streams_reverse_map_key_t key = {psz, peer, csz, channel};
-  struct ytp_streams_reverse_map_t *item =
-      hashmap_get(streams->reverse_map, &key);
-  if (item != NULL) {
-    if (item->esz != esz || memcmp(item->encoding, encoding, esz) != 0) {
-      fmc_error_set(error, "encoding doesn't match");
-      return 0;
-    }
-
-    return item->stream;
-  }
-
-  item = lookup_msg(streams, psz, peer, csz, channel, error);
+  ytp_mmnode_offs stream = ytp_streams_lookup(streams, psz, peer, csz, channel,
+                                              &cl.esz, &cl.encoding, error);
   if (*error) {
     return 0;
   }
-  if (item == NULL) {
-    ytp_announcement_write(streams->yamal, psz, peer, csz, channel, esz,
-                           encoding, error);
-    if (*error) {
+  if (stream != 0) {
+    if (cl.item->esz != esz || memcmp(cl.item->encoding, encoding, esz) != 0) {
+      fmc_error_set(error, "encoding doesn't match");
       return 0;
     }
-
-    item = lookup_msg(streams, psz, peer, csz, channel, error);
-    if (*error) {
-      return 0;
-    }
+    return stream;
   }
 
-  if (item->esz != esz || memcmp(item->encoding, encoding, esz) != 0) {
+  if (streams->yamal->readonly_) {
+    fmc_error_set(error, "unable to announce stream when the file is readonly");
+    return 0;
+  }
+  ytp_announcement_write(streams->yamal, psz, peer, csz, channel, esz, encoding,
+                         error);
+  if (*error) {
+    return 0;
+  }
+
+  ytp_streams_search_ann(streams->yamal, &streams->iterator, ytp_streams_pred,
+                         (void *)&cl, error);
+  if (*error) {
+    return 0;
+  }
+
+  if (cl.item->esz != esz || memcmp(cl.item->encoding, encoding, esz) != 0) {
     fmc_error_set(error, "encoding doesn't match");
     return 0;
   }
 
-  return item->stream;
+  return cl.item->stream;
 }
 
 ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams, size_t psz,
@@ -259,15 +292,20 @@ ytp_mmnode_offs ytp_streams_lookup(ytp_streams_t *streams, size_t psz,
     return item->stream;
   }
 
-  item = lookup_msg(streams, psz, peer, csz, channel, error);
+  struct ytp_streams_pred_cl_t cl = {streams, psz, peer, csz,
+                                     channel, 0,   NULL, NULL};
+  ytp_streams_search_ann(streams->yamal, &streams->iterator, ytp_streams_pred,
+                         (void *)&cl, error);
   if (*error) {
     return 0;
   }
-  if (item == NULL) {
-    fmc_error_set(error, "stream not found");
+  if (*error) {
     return 0;
   }
-  *esz = item->esz;
-  *encoding = item->encoding;
-  return item->stream;
+  if (cl.item == NULL) {
+    return 0;
+  }
+  *esz = cl.item->esz;
+  *encoding = cl.item->encoding;
+  return cl.item->stream;
 }

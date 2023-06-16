@@ -26,15 +26,18 @@ struct data_msg_t {
 };
 
 char *ytp_data_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
-  return ytp_time_reserve(yamal, sz + sizeof(struct data_msg_t), error);
+  struct data_msg_t *msg = (struct data_msg_t *)ytp_time_reserve(
+      yamal, sz + sizeof(struct data_msg_t), error);
+  return msg->data;
 }
 
 ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts,
                                ytp_mmnode_offs stream, void *data,
                                fmc_error_t **error) {
-  struct data_msg_t *msg = (struct data_msg_t *)data;
+  struct data_msg_t *msg =
+      (struct data_msg_t *)((char *)data - sizeof(struct data_msg_t));
   msg->stream = htoye64(stream);
-  return ytp_time_commit(yamal, ts, data, YTP_STREAM_LIST_DATA, error);
+  return ytp_time_commit(yamal, ts, (char *)msg, YTP_STREAM_LIST_DATA, error);
 }
 
 void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno,

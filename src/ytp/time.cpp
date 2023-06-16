@@ -17,19 +17,15 @@
 #include <ytp/time.h>
 #include <ytp/yamal.h>
 
-struct ytp_time_hdr {
-  int64_t ts;
-};
-
 struct ytp_time_msg {
-  ytp_time_hdr hdr;
+  int64_t ts;
   char data[];
 };
 
 char *ytp_time_reserve(ytp_yamal_t *yamal, size_t size, fmc_error_t **error) {
   fmc_error_clear(error);
-  auto *time_msg = (ytp_time_msg *)ytp_yamal_reserve(
-      yamal, size + sizeof(ytp_time_hdr), error);
+  struct ytp_time_msg *time_msg = (struct ytp_time_msg *)ytp_yamal_reserve(
+      yamal, size + sizeof(struct ytp_time_msg), error);
   if (*error) {
     return nullptr;
   }
@@ -39,8 +35,9 @@ char *ytp_time_reserve(ytp_yamal_t *yamal, size_t size, fmc_error_t **error) {
 
 ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, int64_t ts, void *data,
                                size_t listidx, fmc_error_t **error) {
-  auto *time_msg = (ytp_time_msg *)((char *)data - sizeof(ytp_time_hdr));
-  time_msg->hdr.ts = htoye64(ts);
+  struct ytp_time_msg *time_msg =
+      (struct ytp_time_msg *)((char *)data - sizeof(struct ytp_time_msg));
+  time_msg->ts = htoye64(ts);
   return ytp_yamal_commit(yamal, time_msg, listidx, error);
 }
 
@@ -53,7 +50,7 @@ void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno,
     return;
   }
 
-  *ts = ye64toh(time_msg->hdr.ts);
+  *ts = ye64toh(time_msg->ts);
   *data = time_msg->data;
-  *size -= sizeof(ytp_time_hdr);
+  *size -= sizeof(struct ytp_time_msg);
 }

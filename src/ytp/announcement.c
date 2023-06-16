@@ -48,8 +48,8 @@ ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal, size_t psz,
     return NULL;
   }
 
-  msg->peer_name_sz = htoye16(psz);
-  msg->channel_name_sz = htobe16(csz);
+  msg->peer_name_sz = htoye32(psz);
+  msg->channel_name_sz = htoye32(csz);
   memcpy(msg->payload, peer, psz);
   memcpy(msg->payload + psz, channel, csz);
   memcpy(msg->payload + psz + csz, encoding, esz);
@@ -68,8 +68,8 @@ void ytp_announcement_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
     return;
   }
 
-  *psz = ye16toh(msg->peer_name_sz);
-  *csz = ye16toh(msg->channel_name_sz);
+  *psz = ye32toh(msg->peer_name_sz);
+  *csz = ye32toh(msg->channel_name_sz);
 
   if (*psz + *csz > sz) {
     fmc_error_set(error, "invalid announcement message");
@@ -175,7 +175,7 @@ ytp_iterator_t ytp_announcement_next(ytp_yamal_t *yamal,
       return NULL;
     }
 
-    if (*original == stream) {
+    if (*original == stream || ytp_yamal_term(iterator)) {
       return iterator;
     }
   }

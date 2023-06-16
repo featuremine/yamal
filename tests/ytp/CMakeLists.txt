@@ -3,6 +3,11 @@ function(add_ytp_test NAME)
         tests_ytp_${NAME}
         "${NAME}.cpp"
     )
+    target_include_directories(
+        tests_ytp_${NAME}
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/src/ytp"
+    )
     target_link_libraries(
         tests_ytp_${NAME}
         PUBLIC
@@ -14,6 +19,11 @@ function(add_ytp_test NAME)
     add_executable(
         tests_ytp_inv_${NAME}
         "${NAME}.cpp"
+    )
+    target_include_directories(
+        tests_ytp_inv_${NAME}
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/src/ytp"
     )
     target_link_libraries(
         tests_ytp_inv_${NAME}

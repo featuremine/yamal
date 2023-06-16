@@ -178,36 +178,8 @@ FMMODFUNC char *ytp_control_reserve(ytp_control_t *ctrl, size_t sz,
  */
 FMMODFUNC ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl,
                                             ytp_peer_t peer,
-                                            ytp_channel_t channel, uint64_t ts,
+                                            ytp_channel_t channel, int64_t ts,
                                             void *data, fmc_error_t **error);
-/* TODO: remove sub and dir*/
-/**
- * @brief Publishes a subscription message
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[in] peer the peer that publishes the subscription message
- * @param[in] ts the time to publish the subscription message
- * @param[in] sz size of the payload
- * @param[in] payload a prefix or channel name
- * @param[out] error out-parameter for error handling
- */
-FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer,
-                               uint64_t time, size_t sz, const char *payload,
-                               fmc_error_t **error);
-
-/**
- * @brief Publishes a directory message
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[in] peer the peer that publishes the directory message
- * @param[in] ts the time to publish the directory message
- * @param[in] sz size of the payload
- * @param[in] payload a SCDP encoded string
- * @param[out] error out-parameter for error handling
- */
-FMMODFUNC void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer,
-                               uint64_t time, size_t sz, const char *payload,
-                               fmc_error_t **error);
 
 /**
  * @brief Returns the name of the channel, given the channel reference
@@ -238,7 +210,7 @@ FMMODFUNC void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel,
  * @return channel id
  */
 FMMODFUNC ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl,
-                                            ytp_peer_t peer, uint64_t ts,
+                                            ytp_peer_t peer, int64_t ts,
                                             size_t sz, const char *name,
                                             fmc_error_t **error);
 
@@ -272,90 +244,8 @@ FMMODFUNC ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
                                            const char *name,
                                            fmc_error_t **error);
 
-/* the rest goes away */
-/**
- * @brief Finds next message on control level, moves iterator forward if there
- * is a next message.
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[in] iter input iterator
- * @param[out] error out-parameter for error handling
- * @return the iterator of the next element
- */
-FMMODFUNC ytp_iterator_t ytp_control_next(ytp_control_t *ctrl,
-                                          ytp_iterator_t iter,
-                                          fmc_error_t **error);
-
-/**
- * @brief Reads a message on control level
- *
- * Reads a message on a control level indicating in the case of peer
- * and channel announcement whether announcements are duplicated.
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[in] iter iterator that points to the message node to read from
- * @param[out] peer peer associated of the read message
- * @param[out] channel channel associated of the read message
- * @param[out] time time associated of the read message
- * @param[out] sz size of the read message data
- * @param[out] data pointer to the read message data
- * @param[out] error out-parameter for error handling
- */
-FMMODFUNC void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t iter,
-                                ytp_peer_t *peer, ytp_channel_t *channel,
-                                uint64_t *time, size_t *sz, const char **data,
-                                fmc_error_t **error);
-
-/**
- * @brief Returns the iterator to the beginning of the list, the first node.
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[out] error out-parameter for error handling
- * @return iterator to the beginning of the list
- */
-FMMODFUNC ytp_iterator_t ytp_control_begin(ytp_control_t *ctrl,
-                                           fmc_error_t **error);
-
-/**
- * @brief Returns the iterator to the end of the list, the last node.
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[out] error out-parameter for error handling
- * @return iterator to the end of the list
- */
-FMMODFUNC ytp_iterator_t ytp_control_end(ytp_control_t *ctrl,
-                                         fmc_error_t **error);
-/**
- * @brief Checks if there are not more messages
- *
- * @param[in] iterator iterator to test
- * @return true if there are not more messages, false otherwise
- */
-FMMODFUNC bool ytp_control_term(ytp_iterator_t iterator);
-
-/**
- * @brief Returns an iterator given a serializable ptr.
- *
- * @param[in] ctrl ytp_control_t object
- * @param[in] off the serializable ptr offset
- * @param[out] error out-parameter for error handling
- * @return the iterator of the serializable ptr
- */
-FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl,
-                                          ytp_mmnode_offs off,
-                                          fmc_error_t **error);
-
-/**
- * @brief Returns serializable offset given an iterator
- *
- * @param[in] ctrl ytp_control_t object
- * @param[in] iterator the iterator of the serializable ptr
- * @param[out] error out-parameter for error handling
- * @return the serializable ptr offset
- */
-FMMODFUNC ytp_mmnode_offs ytp_control_tell(ytp_control_t *ctrl,
-                                           ytp_iterator_t iterator,
-                                           fmc_error_t **error);
+FMMODFUNC void ytp_control_poll_until(ytp_control_t *ctrl, uint64_t seqno,
+                                      fmc_error_t **error);
 
 #ifdef __cplusplus
 }

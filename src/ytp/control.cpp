@@ -12,6 +12,7 @@
 
 *****************************************************************************/
 
+#include <atomic>
 #include <set>
 #include <string>
 #include <string_view>
@@ -28,7 +29,7 @@
 
 #include "control.hpp"
 
-static const std::string_view default_encoding = "";
+static const std::string_view default_encoding;
 
 ytp_control_t *ytp_control_new(fmc_fd fd, fmc_error_t **error) {
   return ytp_control_new_2(fd, true, error);
@@ -69,7 +70,7 @@ void ytp_control_init_2(ytp_control_t *ctrl, fmc_fd fd, bool enable_thread,
 
 void ytp_control_del(ytp_control_t *ctrl, fmc_error_t **error) {
   ytp_control_destroy(ctrl, error);
-  if (error) {
+  if (*error) {
     return;
   }
 
@@ -85,15 +86,20 @@ ytp_control::ytp_control(fmc_fd fd, bool enable_thread)
     : yamal(fd, enable_thread, YTP_UNCLOSABLE) {
   fmc_error_t *error;
   anns = ytp_yamal_begin(&yamal, YTP_STREAM_LIST_ANNS, &error);
+  ann_processed = 0;
   if (error) {
     throw fmc::error(*error);
   }
 }
 
 template <typename Handler>
-static ytp_mmnode_offs process_ann(ytp_control_t *ctrl, ytp_mmnode_offs stream,
-                                   std::string_view peername,
-                                   std::string_view chname, Handler &handler) {
+static ytp_mmnode_offs process_ann(ytp_control_t *ctrl,
+                                   const struct ytp_streams_anndata_t *ann,
+                                   Handler &handler) {
+  std::string_view peername{ann->peer, ann->psz};
+  std::string_view chname{ann->channel, ann->csz};
+  ytp_mmnode_offs stream = ann->stream;
+
   auto it_peer = ctrl->name_to_peerid.emplace(
       peername, ctrl->name_to_peerid.size() + YTP_PEER_OFF);
   if (it_peer.second) {
@@ -120,46 +126,51 @@ static ytp_mmnode_offs process_ann(ytp_control_t *ctrl, ytp_mmnode_offs stream,
   return it_stream.first->second;
 }
 
+template <typename Handler> struct process_control_msgs_cl_t {
+  ytp_control_t *ctrl;
+  Handler &handler;
+};
 template <typename Handler>
 static void process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
                                  Handler &handler) {
   fmc_error_clear(error);
-
-  while (!handler.found() && !ytp_yamal_term(ctrl->anns)) {
-    uint64_t seqno;
-    size_t read_psz;
-    const char *read_peer;
-    size_t read_csz;
-    const char *read_channel;
-    size_t read_esz;
-    const char *read_encoding;
-    ytp_mmnode_offs *original;
-    ytp_mmnode_offs *subscribed;
-
-    ytp_announcement_read(&ctrl->yamal, ctrl->anns, &seqno, &read_psz,
-                          &read_peer, &read_csz, &read_channel, &read_esz,
-                          &read_encoding, &original, &subscribed, error);
-    if (*error) {
-      return;
-    }
-
-    ytp_mmnode_offs stream = ytp_yamal_tell(&ctrl->yamal, ctrl->anns, error);
-    if (*error) {
-      return;
-    }
-
-    ytp_mmnode_offs o = process_ann(ctrl, stream, {read_peer, read_psz},
-                                    {read_channel, read_csz}, handler);
-    if (*original != o) {
-      *original = o;
-    }
-
-    ytp_iterator_t next = ytp_yamal_next(&ctrl->yamal, ctrl->anns, error);
-    if (*error) {
-      return;
-    }
-    ctrl->anns = next;
+  if (handler.found()) {
+    return;
   }
+
+  using closure_t = process_control_msgs_cl_t<Handler>;
+  closure_t cl{
+      .ctrl = ctrl,
+      .handler = handler,
+  };
+
+  ytp_streams_search_ann(
+      &ctrl->yamal, &ctrl->anns,
+      [](void *closure, const struct ytp_streams_anndata_t *ann)
+          -> enum ytp_streams_pred_result {
+        auto &cl = *(closure_t *)closure;
+
+        cl.ctrl->ann_processed = ann->seqno;
+
+        auto proc_original = process_ann(cl.ctrl, ann, cl.handler);
+
+        auto &ann_original =
+            *reinterpret_cast<std::atomic<uint64_t> *>(ann->original);
+        auto ann_original_val = ann_original.load();
+        if (ann_original_val != proc_original) {
+          if (ann_original_val != 0) {
+            return YTP_STREAMS_PRED_CONTINUE;
+          }
+          if (cl.ctrl->yamal.readonly_) {
+            return YTP_STREAMS_PRED_ROLLBACK;
+          }
+          ann_original = proc_original;
+        }
+
+        return cl.handler.found() ? YTP_STREAMS_PRED_DONE
+                                  : YTP_STREAMS_PRED_CONTINUE;
+      },
+      &cl, error);
 }
 
 template <typename Handler>
@@ -185,7 +196,7 @@ char *ytp_control_reserve(ytp_control_t *ctrl, size_t size,
 }
 
 ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
-                                  ytp_channel_t channel, uint64_t msgtime,
+                                  ytp_channel_t channel, int64_t msgtime,
                                   void *data, fmc_error_t **error) {
   fmc_error_clear(error);
   struct handler_t {
@@ -220,7 +231,7 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
     ytp_control_t *ctrl;
     ytp_peer_t peer;
     ytp_channel_t channel;
-    uint64_t msgtime;
+    int64_t msgtime;
     fmc_error_t **error;
     ytp_mmnode_offs found_streamid;
   };
@@ -246,16 +257,6 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
                          error);
 }
 
-void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, uint64_t time,
-                     size_t sz, const char *payload_ptr, fmc_error_t **error) {
-  fmc_error_set(error, "not supported");
-}
-
-void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer, uint64_t time,
-                     size_t sz, const char *payload, fmc_error_t **error) {
-  fmc_error_set(error, "not supported");
-}
-
 void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,
                          const char **name, fmc_error_t **error) {
   if (channel - YTP_CHANNEL_OFF >= ctrl->channels.size()) {
@@ -270,7 +271,7 @@ void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,
 }
 
 ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl, ytp_peer_t peer,
-                                  uint64_t msgtime, size_t sz, const char *name,
+                                  int64_t msgtime, size_t sz, const char *name,
                                   fmc_error_t **error) {
   fmc_error_clear(error);
 
@@ -385,37 +386,19 @@ ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
   return handler.found_peerid;
 }
 
-ytp_iterator_t ytp_control_next(ytp_control_t *ctrl, ytp_iterator_t iter,
-                                fmc_error_t **error) {
-  auto new_iter = ytp_yamal_next(&ctrl->yamal, iter, error);
-  if (!*error && iter == ctrl->anns) {
-    ctrl->anns = new_iter;
-  }
-  return new_iter;
-}
+FMMODFUNC void ytp_control_poll_until(ytp_control_t *ctrl, uint64_t seqno,
+                                      fmc_error_t **error) {
+  struct {
+    void on_stream(ytp_mmnode_offs stream, ytp_peer_t peerid,
+                   ytp_channel_t channelid, std::string_view peername,
+                   std::string_view chname) {}
+    bool found() const { return ctrl->ann_processed >= seqno; }
 
-void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t it, ytp_peer_t *peer,
-                      ytp_channel_t *channel, uint64_t *time, size_t *sz,
-                      const char **data, fmc_error_t **error) {}
-
-ytp_iterator_t ytp_control_begin(ytp_control_t *ctrl, fmc_error_t **error) {
-  return ytp_yamal_begin(&ctrl->yamal, YTP_STREAM_LIST_DATA, error);
-}
-
-ytp_iterator_t ytp_control_end(ytp_control_t *ctrl, fmc_error_t **error) {
-  return ytp_yamal_end(&ctrl->yamal, YTP_STREAM_LIST_DATA, error);
-}
-
-bool ytp_control_term(ytp_iterator_t iterator) {
-  return ytp_yamal_term(iterator);
-}
-
-ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, uint64_t ptr,
-                                fmc_error_t **error) {
-  return ytp_yamal_seek(&ctrl->yamal, ptr, error);
-}
-
-uint64_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
-                          fmc_error_t **error) {
-  return ytp_yamal_tell(&ctrl->yamal, iterator, error);
+    ytp_control_t *ctrl;
+    uint64_t seqno;
+  } handler{
+      .ctrl = ctrl,
+      .seqno = seqno,
+  };
+  process_control_msgs(ctrl, error, handler);
 }
