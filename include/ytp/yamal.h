@@ -124,6 +124,23 @@ FMMODFUNC ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                           fmc_error_t **error);
 
 /**
+ * @brief Commits a new data node to an existing sublist that is not in the main
+ * memory mapped list
+ *
+ * @param[in] yamal
+ * @param[in] last_ptr the value returned by ytp_yamal_reserve for the current
+ * last node of the sublist
+ * @param[in] new_ptr the value returned by ytp_yamal_reserve for the node that
+ * is intended to insert
+ * @param[out] error
+ * @return ytp_iterator_t for the first node of the sublist inserted the main
+ * list
+ */
+FMMODFUNC ytp_iterator_t ytp_yamal_sublist_commit(ytp_yamal_t *yamal,
+                                                  void *last_ptr, void *new_ptr,
+                                                  fmc_error_t **error);
+
+/**
  * @brief Reads a message on yamal level
  *
  * @param[in] yamal
