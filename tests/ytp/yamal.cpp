@@ -21,6 +21,8 @@
  * @see http://www.featuremine.com
  */
 
+#include <condition_variable>
+#include <mutex>
 #include <random>
 #include <thread>
 
@@ -423,12 +425,12 @@ TEST(yamal, commit_sublist) {
   ASSERT_EQ(error, nullptr);
 
   std::atomic<int> pending_producers;
-
+  std::atomic<size_t> total_messages = 0;
   auto producer = [&]() {
     std::random_device rd;
     std::mt19937 mt_rand(rd());
     std::uniform_int_distribution<unsigned> batch_rng(1, 1000);
-    std::uniform_int_distribution<int> case_rng(0, 2);
+    std::uniform_int_distribution<int> case_rng(0, 1);
     std::uniform_int_distribution<size_t> sleep_rng(0, 1000);
 
     auto *yamal = ytp_yamal_new_2(fd, false, &error);
@@ -446,6 +448,7 @@ TEST(yamal, commit_sublist) {
           strncpy(msg->check, "end", sizeof(msg->check));
           ytp_yamal_commit(yamal, msg, &error);
           ASSERT_EQ(error, nullptr);
+          ++total_messages;
         }
       } break;
       case 1: {
@@ -460,37 +463,10 @@ TEST(yamal, commit_sublist) {
               (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
           ASSERT_EQ(error, nullptr);
           msg->index = j;
-          if (last_node != nullptr) {
-            ytp_yamal_sublist_commit(yamal, last_node, msg, &error);
-            ASSERT_EQ(error, nullptr);
-          } else {
-            first_node = msg;
-          }
-          last_node = msg;
-        }
-        strncpy(last_node->check, "end", sizeof(last_node->check));
-        ytp_yamal_commit(yamal, first_node, &error);
-        ASSERT_EQ(error, nullptr);
-      } break;
-      case 2: {
-        test_msg *first_node = nullptr;
-        test_msg *last_node = nullptr;
-        auto batch_sz = batch_rng(mt_rand);
-        for (unsigned j = 0; j < batch_sz; ++j) {
-          if (sleep_rng(mt_rand) == 0) {
-            this_thread::sleep_for(std::chrono::milliseconds(10));
-          }
-          auto *msg =
-              (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+          ytp_yamal_sublist_commit(yamal, (void **)&first_node,
+                                   (void **)&last_node, msg, &error);
           ASSERT_EQ(error, nullptr);
-          msg->index = j;
-          if (last_node != nullptr) {
-            ytp_yamal_sublist_commit(yamal, first_node, msg, &error);
-            ASSERT_EQ(error, nullptr);
-          } else {
-            first_node = msg;
-          }
-          last_node = msg;
+          ++total_messages;
         }
         strncpy(last_node->check, "end", sizeof(last_node->check));
         ytp_yamal_commit(yamal, first_node, &error);
@@ -511,8 +487,11 @@ TEST(yamal, commit_sublist) {
     auto it = ytp_yamal_begin(yamal, &error);
     ASSERT_EQ(error, nullptr);
 
-    while (pending_producers.load() != 0) {
+    while (true) {
       if (ytp_yamal_term(it)) {
+        if (pending_producers.load() == 0) {
+          break;
+        }
         continue;
       }
 
@@ -540,17 +519,94 @@ TEST(yamal, commit_sublist) {
   };
 
   pending_producers = 2;
-  thread t3(consumer);
   thread t1(producer);
   thread t2(producer);
-
-  t3.join();
-  t1.join();
+  consumer();
   t2.join();
+  t1.join();
 
   fmc_fclose(fd, &error);
 
-  ASSERT_GE(total_processed, batch_count);
+  ASSERT_EQ(total_processed, total_messages);
+}
+
+TEST(yamal, commit_sublist_multithread) {
+  constexpr std::size_t num_threads = 3;
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+
+  for (unsigned i = 0; i < batch_count; ++i) {
+    std::atomic<test_msg *> first_node = nullptr;
+    std::atomic<test_msg *> last_node = nullptr;
+
+    std::array<std::thread, num_threads> ths;
+    for (std::size_t thi = 0; thi < num_threads; ++thi) {
+      ths[thi] = std::thread([&, thi]() {
+        std::random_device rd;
+        std::mt19937 mt_rand(rd());
+        std::uniform_int_distribution<size_t> sleep_rng(0, batch_count);
+
+        for (unsigned j = 0; j < batch_count; ++j) {
+          if (sleep_rng(mt_rand) == 0) {
+            this_thread::sleep_for(std::chrono::milliseconds(10));
+          }
+
+          auto *msg =
+              (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+          ASSERT_EQ(error, nullptr);
+
+          msg->index = j;
+          snprintf(msg->check, sizeof(msg->check), "%c", 'A' + (char)thi);
+
+          ytp_yamal_sublist_commit(yamal, (void **)&first_node,
+                                   (void **)&last_node, msg, &error);
+          ASSERT_EQ(error, nullptr);
+        }
+      });
+    }
+
+    for (auto &th : ths) {
+      th.join();
+    }
+
+    ytp_yamal_commit(yamal, first_node.load(), &error);
+    ASSERT_EQ(error, nullptr);
+  }
+
+  auto it = ytp_yamal_begin(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  for (unsigned i = 0; i < batch_count; ++i) {
+    std::array<unsigned, num_threads> last_index = {0};
+    for (unsigned j = 0; j < batch_count * num_threads; ++j) {
+      ASSERT_FALSE(ytp_yamal_term(it));
+
+      size_t sz;
+      test_msg *data;
+
+      ytp_yamal_read(yamal, it, &sz, (const char **)&data, &error);
+      ASSERT_EQ(error, nullptr);
+      it = ytp_yamal_next(yamal, it, &error);
+      ASSERT_EQ(error, nullptr);
+
+      ASSERT_GE(data->check[0], 'A');
+      ASSERT_LT(data->check[0], ('A' + num_threads));
+
+      std::size_t thi = data->check[0] - 'A';
+      ASSERT_EQ(data->index, last_index[thi]);
+      ++last_index[thi];
+    }
+  }
+
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc_fclose(fd, &error);
 }
 
 GTEST_API_ int main(int argc, char **argv) {

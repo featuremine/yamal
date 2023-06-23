@@ -40,6 +40,17 @@ ytp_iterator_t ytp_sequence_shared_commit(shared_sequence *sh_seq,
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
   return ytp_sequence_commit(seq, peer, channel, time, data, error);
 }
+// Commits the multiple data messages to the memory mapped list
+void ytp_sequence_shared_sublist_commit(shared_sequence *sh_seq,
+                                        ytp_peer_t peer, ytp_channel_t channel,
+                                        uint64_t time, void **first_ptr,
+                                        void **last_ptr, void *new_ptr,
+                                        fmc_error_t **error) {
+  ytp_sequence_t *seq =
+      ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
+  ytp_sequence_sublist_commit(seq, peer, channel, time, first_ptr, last_ptr,
+                              new_ptr, error);
+}
 // Publishes a subscription message
 void ytp_sequence_shared_sub(shared_sequence *sh_seq, ytp_peer_t peer,
                              uint64_t time, size_t sz, const char *payload,
@@ -224,6 +235,27 @@ static struct ytp_sequence_api_v1 api_v1 {
       (sharedseqfunc_dec)ytp_sequence_shared_dec
 };
 
+static struct ytp_sequence_api_v2 api_v2 {
+  ytp_sequence_shared_reserve, ytp_sequence_shared_commit,
+      ytp_sequence_shared_sublist_commit, ytp_sequence_shared_sub,
+      ytp_sequence_shared_dir, ytp_sequence_shared_ch_name,
+      ytp_sequence_shared_ch_decl, ytp_sequence_shared_ch_cb,
+      ytp_sequence_shared_ch_cb_rm, ytp_sequence_shared_peer_name,
+      ytp_sequence_shared_peer_decl, ytp_sequence_shared_peer_cb,
+      ytp_sequence_shared_peer_cb_rm, ytp_sequence_shared_prfx_cb,
+      ytp_sequence_shared_prfx_cb_rm, ytp_sequence_shared_indx_cb,
+      ytp_sequence_shared_indx_cb_rm, ytp_sequence_shared_poll,
+      ytp_sequence_shared_term, ytp_sequence_shared_end,
+      ytp_sequence_shared_cur, ytp_sequence_shared_get_it,
+      ytp_sequence_shared_set_it, ytp_sequence_shared_seek,
+      ytp_sequence_shared_tell, (sharedseqfunc_inc)ytp_sequence_shared_inc,
+      (sharedseqfunc_dec)ytp_sequence_shared_dec
+};
+
 struct ytp_sequence_api_v1 *ytp_sequence_api_v1_get() {
   return &api_v1;
+}
+
+struct ytp_sequence_api_v2 *ytp_sequence_api_v2_get() {
+  return &api_v2;
 }

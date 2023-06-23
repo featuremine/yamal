@@ -199,6 +199,14 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer,
   return ytp_time_commit(&ctrl->yamal, peer, channel, time, data, error);
 }
 
+void ytp_control_sublist_commit(ytp_control_t *ctrl, ytp_peer_t peer,
+                                ytp_channel_t channel, uint64_t time,
+                                void **first_ptr, void **last_ptr,
+                                void *new_ptr, fmc_error_t **error) {
+  ytp_time_sublist_commit(&ctrl->yamal, peer, channel, time, first_ptr,
+                          last_ptr, new_ptr, error);
+}
+
 void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, uint64_t time,
                      size_t sz, const char *payload_ptr, fmc_error_t **error) {
   auto payload = std::string_view(payload_ptr, sz);

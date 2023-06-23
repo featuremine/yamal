@@ -173,6 +173,14 @@ ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq, ytp_peer_t peer,
   return ytp_control_commit(&seq->ctrl, peer, channel, time, data, error);
 }
 
+void ytp_sequence_sublist_commit(ytp_sequence_t *seq, ytp_peer_t peer,
+                                 ytp_channel_t channel, uint64_t time,
+                                 void **first_ptr, void **last_ptr,
+                                 void *new_ptr, fmc_error_t **error) {
+  ytp_control_sublist_commit(&seq->ctrl, peer, channel, time, first_ptr,
+                             last_ptr, new_ptr, error);
+}
+
 bool ytp_sequence_poll(ytp_sequence_t *seq, fmc_error_t **error) {
   return ytp_timeline_poll(&seq->timeline, error);
 }
