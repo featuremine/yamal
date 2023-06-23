@@ -236,20 +236,18 @@ static struct ytp_sequence_api_v1 api_v1 {
 };
 
 static struct ytp_sequence_api_v2 api_v2 {
-  ytp_sequence_shared_reserve, ytp_sequence_shared_commit,
-      ytp_sequence_shared_sublist_commit, ytp_sequence_shared_sub,
-      ytp_sequence_shared_dir, ytp_sequence_shared_ch_name,
-      ytp_sequence_shared_ch_decl, ytp_sequence_shared_ch_cb,
-      ytp_sequence_shared_ch_cb_rm, ytp_sequence_shared_peer_name,
-      ytp_sequence_shared_peer_decl, ytp_sequence_shared_peer_cb,
-      ytp_sequence_shared_peer_cb_rm, ytp_sequence_shared_prfx_cb,
-      ytp_sequence_shared_prfx_cb_rm, ytp_sequence_shared_indx_cb,
-      ytp_sequence_shared_indx_cb_rm, ytp_sequence_shared_poll,
-      ytp_sequence_shared_term, ytp_sequence_shared_end,
-      ytp_sequence_shared_cur, ytp_sequence_shared_get_it,
-      ytp_sequence_shared_set_it, ytp_sequence_shared_seek,
-      ytp_sequence_shared_tell, (sharedseqfunc_inc)ytp_sequence_shared_inc,
-      (sharedseqfunc_dec)ytp_sequence_shared_dec
+  api_v1.sequence_reserve, api_v1.sequence_commit,
+      ytp_sequence_shared_sublist_commit, api_v1.sequence_sub,
+      api_v1.sequence_dir, api_v1.sequence_ch_name, api_v1.sequence_ch_decl,
+      api_v1.sequence_ch_cb, api_v1.sequence_ch_cb_rm,
+      api_v1.sequence_peer_name, api_v1.sequence_peer_decl,
+      api_v1.sequence_peer_cb, api_v1.sequence_peer_cb_rm,
+      api_v1.sequence_prfx_cb, api_v1.sequence_prfx_cb_rm,
+      api_v1.sequence_indx_cb, api_v1.sequence_indx_cb_rm, api_v1.sequence_poll,
+      api_v1.sequence_term, api_v1.sequence_end, api_v1.sequence_cur,
+      api_v1.sequence_get_it, api_v1.sequence_set_it, api_v1.sequence_seek,
+      api_v1.sequence_tell, api_v1.sequence_shared_inc,
+      api_v1.sequence_shared_dec,
 };
 
 struct ytp_sequence_api_v1 *ytp_sequence_api_v1_get() {

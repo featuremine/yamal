@@ -21,8 +21,6 @@
  * @see http://www.featuremine.com
  */
 
-#include <condition_variable>
-#include <mutex>
 #include <random>
 #include <thread>
 
