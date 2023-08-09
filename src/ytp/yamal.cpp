@@ -392,20 +392,21 @@ void ytp_yamal_sublist_commit(ytp_yamal_t *yamal, void **first_ptr,
   }
 
   void *old_last = *last_ptr;
-  *last_ptr = new_ptr;
 
   auto *last_node = mmnode_node_from_data(old_last);
-  auto *prevlast_node = mmnode_get1(yamal, last_node->prev.load(), error);
+  auto *maybelast_node = mmnode_get1(yamal, last_node->prev.load(), error);
   if (*error) {
     return;
   }
 
-  auto last = prevlast_node->next.load();
+  auto last = (maybelast_node == last_node) ? maybelast_node->prev.load()
+                                            : maybelast_node->next.load();
 
   auto *new_node = mmnode_node_from_data(new_ptr);
   auto new_off = new_node->prev.load();
   new_node->prev = last;
   last_node->next = new_off;
+  *last_ptr = new_ptr;
 }
 
 void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *size,
