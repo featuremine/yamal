@@ -351,36 +351,31 @@ char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
 
 ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                 fmc_error_t **error) {
-  auto *mem = mmnode_node_from_data(data);
-  auto offs = mem->prev.load();
+  auto *node = mmnode_node_from_data(data);
+  auto offs = node->prev.load();
 
+  auto *mem = mmnode_get1(yamal, offs, error);
+  if (*error)
+    return nullptr;
   auto *hdr = yamal->header(error);
   if (*error)
     return nullptr;
-
-  mmnode_offs data_last_off = offs;
-  mmnode_offs next_ptr;
-  mmnode *data_last_node = mem;
-  while ((next_ptr = data_last_node->next.load()) != 0) {
-    data_last_node = mmnode_get1(yamal, next_ptr, error);
+  mmnode_offs last = hdr->prev;
+  mmnode_offs next_ptr = last;
+  do {
+    node = mmnode_get1(yamal, next_ptr, error);
     if (*error)
       return nullptr;
-    data_last_off = next_ptr;
-  }
-
-  mmnode *node;
-  next_ptr = hdr->prev.load();
-  do {
-    mmnode_offs last;
-    do {
-      last = next_ptr;
-      node = mmnode_get1(yamal, next_ptr, error);
+    while (node->next) {
+      last = node->next;
+      node = mmnode_get1(yamal, last, error);
       if (*error)
         return nullptr;
-    } while ((next_ptr = node->next.load()) != 0);
+    }
     mem->prev = last;
+    next_ptr = 0;
   } while (!atomic_compare_exchange_weak(&node->next, &next_ptr, offs));
-  hdr->prev = data_last_off;
+  hdr->prev = offs;
   return &node->next;
 }
 
@@ -400,25 +395,15 @@ void ytp_yamal_sublist_commit(ytp_yamal_t *yamal, void **first_ptr,
   *last_ptr = new_ptr;
 
   auto *last_node = mmnode_node_from_data(old_last);
-  auto *new_node = mmnode_node_from_data(new_ptr);
-  auto new_off = new_node->prev.load();
-
-  auto *maybelast_node = mmnode_get1(yamal, last_node->prev.load(), error);
+  auto *prevlast_node = mmnode_get1(yamal, last_node->prev.load(), error);
   if (*error) {
     return;
   }
 
-  auto last = (maybelast_node == last_node) ? maybelast_node->prev.load()
-                                            : maybelast_node->next.load();
+  auto last = prevlast_node->next.load();
 
-  for (mmnode_offs next_ptr; (next_ptr = last_node->next.load()) != 0;) {
-    last = next_ptr;
-    last_node = mmnode_get1(yamal, last, error);
-    if (*error) {
-      return;
-    }
-  }
-
+  auto *new_node = mmnode_node_from_data(new_ptr);
+  auto new_off = new_node->prev.load();
   new_node->prev = last;
   last_node->next = new_off;
 }
