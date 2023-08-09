@@ -204,6 +204,18 @@ FMMODFUNC void ytp_control_sublist_commit(ytp_control_t *ctrl, ytp_peer_t peer,
                                           void *new_ptr, fmc_error_t **error);
 
 /**
+ * @brief Commits a sublist to the memory mapped list on the control level.
+ *
+ * @param[in] ctrl the ytp_control_t object
+ * @param[in] first_ptr the first node of the sublist
+ * @param[out] error
+ * @return ytp_iterator_t for the message
+ */
+FMMODFUNC ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl,
+                                                      void *first_ptr,
+                                                      fmc_error_t **error);
+
+/**
  * @brief Publishes a subscription message
  *
  * Complexity: Constant on average, worst case linear in the size of the list.

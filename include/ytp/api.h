@@ -53,6 +53,9 @@ typedef void (*sharedseqfunc_sublist_commit)(shared_sequence *, ytp_peer_t peer,
                                              uint64_t time, void **first_ptr,
                                              void **last_ptr, void *new_ptr,
                                              fmc_error_t **error);
+typedef ytp_iterator_t (*sharedseqfunc_sublist_finalize)(shared_sequence *,
+                                                         void *first_ptr,
+                                                         fmc_error_t **error);
 typedef void (*sharedseqfunc_sub)(shared_sequence *, ytp_peer_t, uint64_t,
                                   size_t, const char *, fmc_error_t **);
 typedef void (*sharedseqfunc_dir)(shared_sequence *, ytp_peer_t, uint64_t,
@@ -162,6 +165,8 @@ struct ytp_sequence_api_v2 {
   sharedseqfunc_commit sequence_commit;
   // Commits the multiple data messages to the memory mapped list
   sharedseqfunc_sublist_commit sequence_sublist_commit;
+  // Commits the multiple data messages to the memory mapped list
+  sharedseqfunc_sublist_finalize sequence_sublist_finalize;
   // Publishes a subscription message
   sharedseqfunc_sub sequence_sub;
   // Publishes a directory message

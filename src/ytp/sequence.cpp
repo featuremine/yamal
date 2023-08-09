@@ -181,6 +181,12 @@ void ytp_sequence_sublist_commit(ytp_sequence_t *seq, ytp_peer_t peer,
                              last_ptr, new_ptr, error);
 }
 
+ytp_iterator_t ytp_sequence_sublist_finalize(ytp_sequence_t *seq,
+                                             void *first_ptr,
+                                             fmc_error_t **error) {
+  return ytp_control_sublist_finalize(&seq->ctrl, first_ptr, error);
+}
+
 bool ytp_sequence_poll(ytp_sequence_t *seq, fmc_error_t **error) {
   return ytp_timeline_poll(&seq->timeline, error);
 }

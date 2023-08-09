@@ -168,6 +168,17 @@ FMMODFUNC void ytp_sequence_sublist_commit(ytp_sequence_t *seq, ytp_peer_t peer,
                                            void *new_ptr, fmc_error_t **error);
 
 /**
+ * @brief Commits the sublist to the memory mapped list on the sequence level.
+ *
+ * @param[in] seq
+ * @param[in] first_ptr the first node of the sublist
+ * @param[out] error
+ */
+FMMODFUNC ytp_iterator_t ytp_sequence_sublist_finalize(ytp_sequence_t *seq,
+                                                       void *first_ptr,
+                                                       fmc_error_t **error);
+
+/**
  * @brief Publishes a subscription message
  *
  * Publishes a subscription message if it is not already published.

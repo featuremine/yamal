@@ -389,21 +389,15 @@ void ytp_yamal_sublist_commit(ytp_yamal_t *yamal, void **first_ptr,
                               fmc_error_t **error) {
   fmc_error_clear(error);
 
-  auto &first_atomic = *(std::atomic<void *> *)first_ptr;
-  auto &last_atomic = *(std::atomic<void *> *)last_ptr;
-
-  void *old_first = nullptr;
-  if (atomic_compare_exchange_weak(&first_atomic, &old_first, new_ptr)) {
-    last_atomic = new_ptr;
+  void *old_first = *first_ptr;
+  if (old_first == nullptr) {
+    *first_ptr = new_ptr;
+    *last_ptr = new_ptr;
     return;
   }
 
-  void *old_last = last_atomic.load();
-  last_atomic = new_ptr;
-
-  if (old_last == nullptr) {
-    old_last = old_first;
-  }
+  void *old_last = *last_ptr;
+  *last_ptr = new_ptr;
 
   auto *last_node = mmnode_node_from_data(old_last);
   auto *new_node = mmnode_node_from_data(new_ptr);
@@ -417,18 +411,16 @@ void ytp_yamal_sublist_commit(ytp_yamal_t *yamal, void **first_ptr,
   auto last = (maybelast_node == last_node) ? maybelast_node->prev.load()
                                             : maybelast_node->next.load();
 
-  mmnode_offs next_ptr = 0;
-  new_node->prev = last;
-  while (!atomic_compare_exchange_weak(&last_node->next, &next_ptr, new_off)) {
-    do {
-      last = next_ptr;
-      last_node = mmnode_get1(yamal, last, error);
-      if (*error) {
-        return;
-      }
-    } while ((next_ptr = last_node->next.load()) != 0);
-    new_node->prev = last;
+  for (mmnode_offs next_ptr; (next_ptr = last_node->next.load()) != 0;) {
+    last = next_ptr;
+    last_node = mmnode_get1(yamal, last, error);
+    if (*error) {
+      return;
+    }
   }
+
+  new_node->prev = last;
+  last_node->next = new_off;
 }
 
 void ytp_yamal_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, size_t *size,

@@ -207,6 +207,12 @@ void ytp_control_sublist_commit(ytp_control_t *ctrl, ytp_peer_t peer,
                           last_ptr, new_ptr, error);
 }
 
+ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl,
+                                            void *first_ptr,
+                                            fmc_error_t **error) {
+  return ytp_yamal_commit(&ctrl->yamal, first_ptr, error);
+}
+
 void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, uint64_t time,
                      size_t sz, const char *payload_ptr, fmc_error_t **error) {
   auto payload = std::string_view(payload_ptr, sz);
