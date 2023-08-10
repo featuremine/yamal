@@ -46,6 +46,16 @@ ytp_iterator_t ytp_channel_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
   return ytp_peer_commit(yamal, peer, channel_msg, error);
 }
 
+void ytp_channel_sublist_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
+                                ytp_channel_t channel, void **first_ptr,
+                                void **last_ptr, void *new_ptr,
+                                fmc_error_t **error) {
+  auto *channel_msg =
+      (ytp_channel_msg *)((char *)new_ptr - sizeof(ytp_channel_hdr));
+  channel_msg->hdr.id = fmc_htobe64(channel);
+  ytp_peer_sublist_commit(yamal, peer, first_ptr, last_ptr, channel_msg, error);
+}
+
 void ytp_channel_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                       ytp_peer_t *peer, ytp_channel_t *channel, size_t *size,
                       const char **data, fmc_error_t **error) {

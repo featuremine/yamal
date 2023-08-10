@@ -48,6 +48,14 @@ typedef char *(*sharedseqfunc_reserve)(shared_sequence *, size_t,
 typedef ytp_iterator_t (*sharedseqfunc_commit)(shared_sequence *, ytp_peer_t,
                                                ytp_channel_t, uint64_t, void *,
                                                fmc_error_t **);
+typedef void (*sharedseqfunc_sublist_commit)(shared_sequence *, ytp_peer_t peer,
+                                             ytp_channel_t channel,
+                                             uint64_t time, void **first_ptr,
+                                             void **last_ptr, void *new_ptr,
+                                             fmc_error_t **error);
+typedef ytp_iterator_t (*sharedseqfunc_sublist_finalize)(shared_sequence *,
+                                                         void *first_ptr,
+                                                         fmc_error_t **error);
 typedef void (*sharedseqfunc_sub)(shared_sequence *, ytp_peer_t, uint64_t,
                                   size_t, const char *, fmc_error_t **);
 typedef void (*sharedseqfunc_dir)(shared_sequence *, ytp_peer_t, uint64_t,
@@ -150,9 +158,72 @@ struct ytp_sequence_api_v1 {
   sharedseqfunc_dec sequence_shared_dec;
 };
 
+struct ytp_sequence_api_v2 {
+  // Reserves memory for data in the memory mapped list
+  sharedseqfunc_reserve sequence_reserve;
+  // Commits the data to the memory mapped list
+  sharedseqfunc_commit sequence_commit;
+  // Commits the multiple data messages to the memory mapped list
+  sharedseqfunc_sublist_commit sequence_sublist_commit;
+  // Commits the multiple data messages to the memory mapped list
+  sharedseqfunc_sublist_finalize sequence_sublist_finalize;
+  // Publishes a subscription message
+  sharedseqfunc_sub sequence_sub;
+  // Publishes a directory message
+  sharedseqfunc_dir sequence_dir;
+  // Returns the name of the channel, given the channel reference
+  sharedseqfunc_ch_name sequence_ch_name;
+  // Declares an existing/new channel
+  sharedseqfunc_ch_decl sequence_ch_decl;
+  // Registers a channel announcement callback
+  sharedseqfunc_ch_cb sequence_ch_cb;
+  // Unregisters a channel announcement callback
+  sharedseqfunc_ch_cb_rm sequence_ch_cb_rm;
+  // Returns the name of the peer, given the peer reference
+  sharedseqfunc_peer_name sequence_peer_name;
+  // Declares an existing/new peer
+  sharedseqfunc_peer_decl sequence_peer_decl;
+  // Registers a peer announcement callback
+  sharedseqfunc_peer_cb sequence_peer_cb;
+  // Unregisters a peer announcement callback
+  sharedseqfunc_peer_cb_rm sequence_peer_cb_rm;
+  // Registers a channel data callback by channel name or prefix
+  sharedseqfunc_prfx_cb sequence_prfx_cb;
+  // Unregisters a channel data callback by channel name or prefix
+  sharedseqfunc_prfx_cb_rm sequence_prfx_cb_rm;
+  // Registers a channel data callback by channel handler
+  sharedseqfunc_indx_cb sequence_indx_cb;
+  // Unregisters a channel data callback by channel handler
+  sharedseqfunc_indx_cb_rm sequence_indx_cb_rm;
+  // Reads one message and executes the callbacks that applies.
+  sharedseqfunc_poll sequence_poll;
+  // Checks if there are not more messages
+  sharedseqfunc_term sequence_term;
+  // Returns the iterator to the end of yamal
+  sharedseqfunc_end sequence_end;
+  // Returns the current data iterator
+  sharedseqfunc_cur sequence_cur;
+  // Returns the current data iterator
+  sharedseqfunc_get_it sequence_get_it;
+  // Sets the current data iterator
+  sharedseqfunc_set_it sequence_set_it;
+  // Returns an iterator given a serializable offset
+  sharedseqfunc_seek sequence_seek;
+  // Returns serializable offset given an iterator
+  sharedseqfunc_tell sequence_tell;
+  // Increases the reference counter
+  sharedseqfunc_inc sequence_shared_inc;
+  // Decreases the reference counter and call ytp_sequence_del the sequence
+  sharedseqfunc_dec sequence_shared_dec;
+};
+
 // function that you can call to return the actual sequence api structure
 // pointer
 struct ytp_sequence_api_v1 *ytp_sequence_api_v1_get();
+
+// function that you can call to return the actual sequence api structure
+// pointer
+struct ytp_sequence_api_v2 *ytp_sequence_api_v2_get();
 
 #ifdef __cplusplus
 }

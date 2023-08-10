@@ -45,6 +45,16 @@ ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
   return ytp_channel_commit(yamal, peer, channel, time_msg, error);
 }
 
+void ytp_time_sublist_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
+                             ytp_channel_t channel, uint64_t time,
+                             void **first_ptr, void **last_ptr, void *new_ptr,
+                             fmc_error_t **error) {
+  auto *time_msg = (ytp_time_msg *)((char *)new_ptr - sizeof(ytp_time_hdr));
+  time_msg->hdr.time = fmc_htobe64(time);
+  ytp_channel_sublist_commit(yamal, peer, channel, first_ptr, last_ptr,
+                             time_msg, error);
+}
+
 void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
                    ytp_peer_t *peer, ytp_channel_t *channel, uint64_t *time,
                    size_t *size, const char **data, fmc_error_t **error) {

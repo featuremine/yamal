@@ -21,6 +21,7 @@
  * @see http://www.featuremine.com
  */
 
+#include <random>
 #include <thread>
 
 #include <ytp/yamal.h>
@@ -28,6 +29,8 @@
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 #include <fmc/files.h>
+#include <fmc/time.h>
+
 using namespace std;
 
 struct test_msg {
@@ -411,6 +414,124 @@ static void allocate_out_of_range_page(bool enable_thread) {
 TEST(yamal, allocate_out_of_range_page) {
   allocate_out_of_range_page(true);
   allocate_out_of_range_page(false);
+}
+
+TEST(yamal, commit_sublist) {
+  fmc_error_t *error;
+
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  std::atomic<int> pending_producers;
+  std::atomic<size_t> total_messages = 0;
+  auto producer = [&]() {
+    std::random_device rd;
+    std::mt19937 mt_rand(rd());
+    std::uniform_int_distribution<unsigned> batch_rng(1, 1000);
+    std::uniform_int_distribution<int> case_rng(0, 1);
+    std::uniform_int_distribution<size_t> sleep_rng(0, 1000);
+
+    auto *yamal = ytp_yamal_new_2(fd, false, &error);
+    ASSERT_EQ(error, nullptr);
+
+    for (unsigned i = 0; i < batch_count; ++i) {
+      switch (case_rng(mt_rand)) {
+      case 0: {
+        auto batch_sz = batch_rng(mt_rand);
+        for (unsigned j = 0; j < batch_sz; ++j) {
+          auto *msg =
+              (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+          ASSERT_EQ(error, nullptr);
+          msg->index = 0;
+          strncpy(msg->check, "end", sizeof(msg->check));
+          ytp_yamal_commit(yamal, msg, &error);
+          ASSERT_EQ(error, nullptr);
+          ++total_messages;
+        }
+      } break;
+      case 1: {
+        test_msg *first_node = nullptr;
+        test_msg *last_node = nullptr;
+        auto batch_sz = batch_rng(mt_rand);
+        for (unsigned j = 0; j < batch_sz; ++j) {
+          if (sleep_rng(mt_rand) == 0) {
+            this_thread::sleep_for(std::chrono::milliseconds(10));
+          }
+          auto *msg =
+              (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+          ASSERT_EQ(error, nullptr);
+          msg->index = j;
+          ytp_yamal_sublist_commit(yamal, (void **)&first_node,
+                                   (void **)&last_node, msg, &error);
+          ASSERT_EQ(error, nullptr);
+          ++total_messages;
+        }
+        strncpy(last_node->check, "end", sizeof(last_node->check));
+        ytp_yamal_commit(yamal, first_node, &error);
+        ASSERT_EQ(error, nullptr);
+      } break;
+      }
+    }
+    ytp_yamal_del(yamal, &error);
+    ASSERT_EQ(error, nullptr);
+    --pending_producers;
+  };
+
+  size_t total_processed = 0;
+  auto consumer = [&]() {
+    auto *yamal = ytp_yamal_new_2(fd, false, &error);
+    ASSERT_EQ(error, nullptr);
+
+    auto it = ytp_yamal_begin(yamal, &error);
+    ASSERT_EQ(error, nullptr);
+
+    while (true) {
+      if (ytp_yamal_term(it)) {
+        if (pending_producers.load() == 0) {
+          break;
+        }
+        continue;
+      }
+
+      for (unsigned expected_idx = 0;; ++expected_idx) {
+        ++total_processed;
+
+        size_t sz;
+        test_msg *data;
+
+        ytp_yamal_read(yamal, it, &sz, (const char **)&data, &error);
+        ASSERT_EQ(error, nullptr);
+
+        auto expected_prev = it;
+        it = ytp_yamal_next(yamal, it, &error);
+        ASSERT_EQ(error, nullptr);
+
+        auto prev = ytp_yamal_prev(yamal, it, &error);
+        ASSERT_EQ(error, nullptr);
+        ASSERT_EQ(prev, expected_prev);
+
+        ASSERT_EQ(data->index, expected_idx);
+        if (strcmp(data->check, "end") == 0) {
+          break;
+        }
+
+        ASSERT_FALSE(ytp_yamal_term(it));
+      }
+    }
+    ytp_yamal_del(yamal, &error);
+    ASSERT_EQ(error, nullptr);
+  };
+
+  pending_producers = 2;
+  thread t1(producer);
+  thread t2(producer);
+  consumer();
+  t2.join();
+  t1.join();
+
+  fmc_fclose(fd, &error);
+
+  ASSERT_EQ(total_processed, total_messages);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
