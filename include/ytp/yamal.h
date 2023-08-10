@@ -116,12 +116,30 @@ FMMODFUNC char *ytp_yamal_reserve(ytp_yamal_t *yamal, size_t sz,
  * @brief Commits the data to the memory mapped list
  *
  * @param[in] yamal
- * @param[in] data the value returned by ytp_yamal_reserve
+ * @param[in] data the value returned by ytp_yamal_reserve if the node is not a
+ * sublist. Otherwise the first_ptr returned by ytp_yamal_sublist_commit
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
                                           fmc_error_t **error);
+
+/**
+ * @brief Commits a new data node to an existing sublist (first_ptr, last_ptr)
+ * that is not in the main memory mapped list
+ *
+ * @param[in] yamal
+ * @param[in, out] first_ptr an zero initialized atomic pointer for the first
+ * node of the sublist
+ * @param[in, out] last_ptr an zero initialized atomic pointer for the last node
+ * of the sublist
+ * @param[in] new_ptr the value returned by ytp_yamal_reserve for the node that
+ * is intended to insert
+ * @param[out] error
+ */
+FMMODFUNC void ytp_yamal_sublist_commit(ytp_yamal_t *yamal, void **first_ptr,
+                                        void **last_ptr, void *new_ptr,
+                                        fmc_error_t **error);
 
 /**
  * @brief Reads a message on yamal level

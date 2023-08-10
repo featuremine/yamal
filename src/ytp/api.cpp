@@ -40,6 +40,25 @@ ytp_iterator_t ytp_sequence_shared_commit(shared_sequence *sh_seq,
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
   return ytp_sequence_commit(seq, peer, channel, time, data, error);
 }
+// Commits the multiple data messages to the memory mapped list
+void ytp_sequence_shared_sublist_commit(shared_sequence *sh_seq,
+                                        ytp_peer_t peer, ytp_channel_t channel,
+                                        uint64_t time, void **first_ptr,
+                                        void **last_ptr, void *new_ptr,
+                                        fmc_error_t **error) {
+  ytp_sequence_t *seq =
+      ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
+  ytp_sequence_sublist_commit(seq, peer, channel, time, first_ptr, last_ptr,
+                              new_ptr, error);
+}
+// Commits the multiple data messages to the memory mapped list
+ytp_iterator_t ytp_sequence_shared_sublist_finalize(shared_sequence *sh_seq,
+                                                    void *first_ptr,
+                                                    fmc_error_t **error) {
+  ytp_sequence_t *seq =
+      ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
+  return ytp_sequence_sublist_finalize(seq, first_ptr, error);
+}
 // Publishes a subscription message
 void ytp_sequence_shared_sub(shared_sequence *sh_seq, ytp_peer_t peer,
                              uint64_t time, size_t sz, const char *payload,
@@ -224,6 +243,25 @@ static struct ytp_sequence_api_v1 api_v1 {
       (sharedseqfunc_dec)ytp_sequence_shared_dec
 };
 
+static struct ytp_sequence_api_v2 api_v2 {
+  api_v1.sequence_reserve, api_v1.sequence_commit,
+      ytp_sequence_shared_sublist_commit, ytp_sequence_shared_sublist_finalize,
+      api_v1.sequence_sub, api_v1.sequence_dir, api_v1.sequence_ch_name,
+      api_v1.sequence_ch_decl, api_v1.sequence_ch_cb, api_v1.sequence_ch_cb_rm,
+      api_v1.sequence_peer_name, api_v1.sequence_peer_decl,
+      api_v1.sequence_peer_cb, api_v1.sequence_peer_cb_rm,
+      api_v1.sequence_prfx_cb, api_v1.sequence_prfx_cb_rm,
+      api_v1.sequence_indx_cb, api_v1.sequence_indx_cb_rm, api_v1.sequence_poll,
+      api_v1.sequence_term, api_v1.sequence_end, api_v1.sequence_cur,
+      api_v1.sequence_get_it, api_v1.sequence_set_it, api_v1.sequence_seek,
+      api_v1.sequence_tell, api_v1.sequence_shared_inc,
+      api_v1.sequence_shared_dec,
+};
+
 struct ytp_sequence_api_v1 *ytp_sequence_api_v1_get() {
   return &api_v1;
+}
+
+struct ytp_sequence_api_v2 *ytp_sequence_api_v2_get() {
+  return &api_v2;
 }
