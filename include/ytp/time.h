@@ -57,19 +57,41 @@ FMMODFUNC char *ytp_time_reserve(ytp_yamal_t *yamal, size_t sz,
                                  fmc_error_t **error);
 
 /**
- * @brief Commits the data to the memory mapped list
+ * @brief Commits the data to the memory mapped list on the time level.
  *
  * @param[in] yamal
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
  * @param[in] time
- * @param[in] data the value returned by ytp_time_reserve
+ * @param[in] data the value returned by ytp_peer_reserve if the node is not a
+ * sublist. Otherwise the first_ptr returned by ytp_peer_sublist_commit
  * @param[out] error
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
                                          ytp_channel_t channel, uint64_t time,
                                          void *data, fmc_error_t **error);
+
+/**
+ * @brief Commits a new data node to an existing sublist (first_ptr, last_ptr)
+ * that is not in the main memory mapped list
+ *
+ * @param[in] yamal
+ * @param[in] peer the peer that publishes the data
+ * @param[in] channel the channel to publish the data
+ * @param[in] time
+ * @param[in, out] first_ptr an zero initialized atomic pointer for the first
+ * node of the sublist
+ * @param[in, out] last_ptr an zero initialized atomic pointer for the last node
+ * of the sublist
+ * @param[in] new_ptr the value returned by ytp_peer_reserve for the node that
+ * is intended to insert
+ * @param[out] error
+ */
+FMMODFUNC void ytp_time_sublist_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
+                                       ytp_channel_t channel, uint64_t time,
+                                       void **first_ptr, void **last_ptr,
+                                       void *new_ptr, fmc_error_t **error);
 
 /**
  * @brief Reads a message on channel level
