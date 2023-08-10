@@ -354,15 +354,14 @@ ytp_iterator_t ytp_yamal_commit(ytp_yamal_t *yamal, void *data,
   auto *node = mmnode_node_from_data(data);
   auto offs = node->prev.load();
 
-  auto *mem = mmnode_get1(yamal, offs, error);
-  if (*error)
-    return nullptr;
+  auto *mem = node;
   auto *hdr = yamal->header(error);
   if (*error)
     return nullptr;
   mmnode_offs last = hdr->prev;
   mmnode_offs next_ptr = last;
   do {
+    last = next_ptr;
     node = mmnode_get1(yamal, next_ptr, error);
     if (*error)
       return nullptr;

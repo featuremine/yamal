@@ -501,8 +501,14 @@ TEST(yamal, commit_sublist) {
 
         ytp_yamal_read(yamal, it, &sz, (const char **)&data, &error);
         ASSERT_EQ(error, nullptr);
+
+        auto expected_prev = it;
         it = ytp_yamal_next(yamal, it, &error);
         ASSERT_EQ(error, nullptr);
+
+        auto prev = ytp_yamal_prev(yamal, it, &error);
+        ASSERT_EQ(error, nullptr);
+        ASSERT_EQ(prev, expected_prev);
 
         ASSERT_EQ(data->index, expected_idx);
         if (strcmp(data->check, "end") == 0) {
