@@ -72,6 +72,8 @@ public:
   bool external = true;
 };
 
+class string;
+
 class object {
 public:
   object() = default;
@@ -106,6 +108,16 @@ public:
     return object::from_new(attr);
   }
   object operator[](const char *attr_name) const { return get_attr(attr_name); }
+  object operator[](const std::string &name) const {
+    return get_attr(name.c_str());
+  }
+  object operator[](string &name);
+  object operator[](int pos) const {
+    if (obj_ == nullptr)
+      return object::from_new(nullptr);
+    auto obj = PyTuple_GetItem(obj_, pos);
+    return object::from_borrowed(obj);
+  }
   template <class... Args> object operator()(Args &&...args) const {
     const size_t n = std::tuple_size<std::tuple<Args...>>::value;
     auto *obj = PyTuple_New(n);
@@ -139,6 +151,8 @@ public:
     }
     return object::from_new(obj);
   }
+  object iter() { return object::from_new(PyObject_GetIter(obj_)); }
+  object next() { return object::from_new(PyIter_Next(obj_)); }
   PyObject *get_ref() const { return obj_; }
   PyObject *steal_ref() {
     auto *ret = obj_;
@@ -148,18 +162,17 @@ public:
   std::string str() const {
     if (!obj_)
       return "";
-    auto *tmp = PyObject_Str(obj_);
+    auto tmp = object(PyObject_Str(obj_));
     if (!tmp)
       return "";
-    string ret = PyUnicode_AsUTF8(tmp);
-    Py_XDECREF(tmp);
-    return ret;
+    return PyUnicode_AsUTF8(tmp.get_ref());
   }
   static object from_borrowed(PyObject *obj) {
     Py_XINCREF(obj);
     return object(obj);
   }
   static object from_new(PyObject *obj) { return object(obj); }
+  object type() { return object::from_new(PyObject_Type(obj_)); }
 
 private:
   object(PyObject *obj) : obj_(obj) {}
@@ -205,6 +218,10 @@ public:
 };
 template <> struct _py_object_t<const char *> { using type = string; };
 template <> struct _py_object_t<std::string> { using type = string; };
+
+object object::operator[](string &name) {
+  return (*this)[(std::string)name];
+}
 
 class py_int : public object {
 public:
@@ -320,6 +337,11 @@ public:
     if (get_ref() == nullptr)
       raise_python_error();
   }
+  explicit module(const char *name)
+      : object(object::from_new(PyImport_ImportModule(name))) {
+    if (get_ref() == nullptr)
+      raise_python_error();
+  }
 };
 
 class timedelta : public object {
@@ -378,6 +400,63 @@ public:
   }
 };
 template <> struct _py_object_t<time> { using type = timedelta; };
+
+class datetime : public object {
+public:
+  datetime(object &&obj) : object(obj) {}
+  operator fmc_time64_t() {
+    using namespace std::chrono;
+    if (fmc::python::datetime::is_timedelta_type(get_ref())) {
+      auto h = 24 * PyLong_AsLong(PyObject_GetAttrString(get_ref(), "days"));
+      auto sec = PyLong_AsLong(PyObject_GetAttrString(get_ref(), "seconds"));
+      auto us =
+          PyLong_AsLong(PyObject_GetAttrString(get_ref(), "microseconds"));
+      return fmc_time64_from_nanos(us * 1000) +
+             fmc_time64_from_seconds(h * 3600 + sec);
+    } else if (PyFloat_Check(get_ref())) {
+      auto fdur = duration<double>(PyFloat_AsDouble(get_ref()));
+      auto nanos = duration_cast<nanoseconds>(fdur);
+      return fmc_time64_from_nanos(nanos.count());
+    } else if (PyLong_Check(get_ref()))
+      return fmc_time64_from_nanos(PyLong_AsLongLong(get_ref()));
+    else if (is_pandas_timestamp_type(get_ref())) {
+      return fmc_time64_from_nanos(
+          PyLong_AsLongLong((*this)["value"].get_ref()));
+    }
+    PyErr_SetString(PyExc_RuntimeError, "unsupported datetime type");
+    return fmc_time64_from_nanos(0);
+  }
+
+  static bool is_pandas_timestamp_type(PyObject *obj) {
+    return strcmp(Py_TYPE(obj)->tp_name, "Timestamp") == 0;
+  }
+
+  static object get_pandas_dttz_type() {
+    static auto datetime =
+        module("pandas")["core"]["dtypes"]["dtypes"]["DatetimeTZDtype"];
+    return datetime;
+  }
+  static object get_timedelta_type() {
+    static auto datetime = module("datetime")["timedelta"];
+    return datetime;
+  }
+  static bool is_timedelta_type(PyObject *obj) {
+    return PyObject_IsInstance(obj, get_timedelta_type().get_ref());
+  }
+  static object timedelta(int64_t days, int64_t seconds, int64_t microseconds) {
+    auto args = fmc::python::object::from_new(PyTuple_New(0));
+    auto kwargs = fmc::python::object::from_new(PyDict_New());
+    auto d = fmc::python::object::from_new(PyLong_FromLongLong(days));
+    PyDict_SetItemString(kwargs.get_ref(), "days", d.get_ref());
+    auto s = fmc::python::object::from_new(PyLong_FromLongLong(seconds));
+    PyDict_SetItemString(kwargs.get_ref(), "seconds", s.get_ref());
+    auto m = fmc::python::object::from_new(PyLong_FromLongLong(microseconds));
+    PyDict_SetItemString(kwargs.get_ref(), "microseconds", m.get_ref());
+    return object::from_new(
+        PyObject_Call(fmc::python::datetime::get_timedelta_type().get_ref(),
+                      args.get_ref(), kwargs.get_ref()));
+  }
+};
 
 class tuple : public object {
 public:

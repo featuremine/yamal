@@ -266,6 +266,148 @@ bool name_in_typelist(string_view name, type_list<Ts...>) {
   return result;
 }
 
+template <class> struct typify_tuple_;
+template <class... Args> struct typify_tuple_<tuple<Args...>> {
+  using type = tuple<typify<Args>...>;
+};
+
+template <class T> using typify_tuple = typename typify_tuple_<T>::type;
+
+template <typename Tuple, typename F, std::size_t... Indices>
+void for_each_impl(Tuple &&tuple, F &&f, std::index_sequence<Indices...>) {
+  (f(std::get<Indices>(std::forward<Tuple>(tuple))), ...);
+}
+
+template <typename Tuple, typename F>
+void for_each_in_tuple(F &&f, Tuple &&tuple) {
+  constexpr std::size_t N =
+      std::tuple_size<std::remove_reference_t<Tuple>>::value;
+  for_each_impl(std::forward<Tuple>(tuple), std::forward<F>(f),
+                std::make_index_sequence<N>{});
+}
+
+template <class Func, class... Ts, class... Args>
+void for_each_type(Func &&f, type_list<Ts...>, Args &&... args) {
+  for_each([&](auto t) { f(t, forward<Args>(args)...); }, typify<Ts>()...);
+}
+
+template <class Tup> struct tuple_to_type_list;
+
+template <class... Args> struct tuple_to_type_list<tuple<Args...>> {
+  using type = type_list<Args...>;
+};
+
+template <class T>
+using tuple_to_type_list_t = typename tuple_to_type_list<T>::type;
+
+template <template <class> class Obj, class Tup> struct tuple_unpack;
+template <template <class> class Obj, class... Ts>
+struct tuple_unpack<Obj, tuple<Ts...>> {
+  using type = Obj<Ts...>;
+};
+
+template <template <class> class Obj, class Tup>
+using tuple_unpack_t = typename tuple_unpack<Obj, Tup>::type;
+
+template <class Op, class Func, class... Args>
+decltype(auto) apply_for_each(Op &&op, Func &&f, Args &&... args) {
+  tuple<decltype(f(std::forward<Args>(args)))...> tup = {
+      f(std::forward<Args>(args))...};
+  return apply(forward<Op>(op), move(tup));
+}
+
+template <class Op, class Func, class... Ts, class... Args>
+decltype(auto) apply_for_each_type(Op &&op, Func &&f, type_list<Ts...>,
+                                   Args &&... args) {
+  return apply_for_each(forward<Op>(op),
+                        [&](auto t) { return f(t, forward<Args>(args)...); },
+                        typify<Ts>()...);
+}
+
+template <class... Args> std::string type_names() {
+  string res;
+  bool first = true;
+  for_each(
+      [&](string s) {
+        if (!first)
+          res += " ";
+        first = false;
+        res += s;
+      },
+      type_name<Args>()...);
+  return res;
+}
+
+template <class T> struct repeated_tuple;
+template <class... TElements> struct repeated_tuple<std::tuple<TElements...>> {
+
+  template <class Obj> repeated_tuple(Obj &obj) : tuple(TElements{obj}...) {}
+  std::tuple<TElements...> tuple;
+};
+
+template <template <class> class M, class T> struct tuple_wrap;
+template <template <class> class M, class... Ts>
+struct tuple_wrap<M, tuple<Ts...>> {
+  using type = tuple<M<Ts>...>;
+};
+template <template <class> class M, class... Ts>
+struct tuple_wrap<M, type_list<Ts...>> {
+  using type = tuple<M<Ts>...>;
+};
+template <template <class> class M, class T>
+using tuple_wrap_t = typename tuple_wrap<M, T>::type;
+
+template <template <class> class M, class T> struct type_list_wrap;
+template <template <class> class M, class... Ts>
+struct type_list_wrap<M, tuple<Ts...>> {
+  using type = type_list<M<Ts>...>;
+};
+template <template <class> class M, class... Ts>
+struct type_list_wrap<M, type_list<Ts...>> {
+  using type = type_list<M<Ts>...>;
+};
+template <template <class> class M, class T>
+using type_list_wrap_t = typename type_list_wrap<M, T>::type;
+
+template <class M, class K, class T, class = void> struct is_map {
+  static constexpr bool value = false;
+};
+
+template <class M, class K>
+using _map_return = decltype(declval<M>()[declval<decay_t<K>>()]);
+
+template <class M, class K, class T>
+struct is_map<M, K, T, enable_if_t<is_convertible_v<_map_return<M, K>, T>>> {
+  static constexpr bool value = true;
+};
+
+template <class M, class K, class T>
+inline constexpr bool is_map_v = is_map<M, K, T>::value;
+
+template <class Tup, class... Ts>
+tuple<Ts...> _subtuple(Tup from, typify<tuple<Ts...>>) {
+  return tuple<Ts...>(get<Ts>(from)...);
+}
+
+template <class Ret, class Tup> Ret subtuple(Tup from) {
+  return _subtuple(from, typify<Ret>());
+}
+
+template <class Tuple, class T, int curridx = tuple_size_v<Tuple> - 1>
+constexpr int tuple_index() {
+  static_assert(curridx > -1, "Unable to find specified type in tuple.");
+  if constexpr (is_same_v<tuple_element_t<curridx, Tuple>, T>)
+    return curridx;
+  else
+    return tuple_index<Tuple, T, curridx - 1>();
+}
+
+template <typename T, typename Tuple> struct has_type;
+
+template <typename T, typename... Us>
+struct has_type<T, std::tuple<Us...>>
+    : std::disjunction<std::is_same<T, Us>...> {};
+
 } // namespace fmc
 #if defined(FMC_SYS_WIN)
 #define __builtin_expect(a, b) a
