@@ -10,13 +10,43 @@ pkg_search_module(PYTHON IMPORTED_TARGET python3-embed python3)
 set(YAMAL_PYTHON_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 add_library(
+    py_yamal_obj
+    OBJECT
+    "src/fmc++/python/config.cpp"
+)
+target_include_directories(
+    py_yamal_obj
+    PUBLIC
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+target_link_libraries(
+    py_yamal_obj
+    PRIVATE
+    fmc++
+    Python::Python
+)
+
+add_library(
     py_yamal_dep
-    INTERFACE IMPORTED GLOBAL
+    INTERFACE
 )
 target_include_directories(
     py_yamal_dep
     INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+add_library(
+    py_yamal
+    STATIC
+    $<TARGET_OBJECTS:py_yamal_obj>
+)
+target_link_libraries(
+    py_yamal
+
+    PUBLIC
+    py_yamal_dep
 )
 
 add_library(

@@ -219,7 +219,7 @@ public:
 template <> struct _py_object_t<const char *> { using type = string; };
 template <> struct _py_object_t<std::string> { using type = string; };
 
-object object::operator[](string &name) {
+inline object object::operator[](string &name) {
   return (*this)[(std::string)name];
 }
 
