@@ -15,13 +15,12 @@
 #include <fmc++/counters.hpp>
 #include <fmc++/time.hpp>
 #include <fmc/process.h>
-#include <fmc/signals.h>
 #include <tclap/CmdLine.h>
 #include <ytp/control.h>
+#include <ytp/data.h>
 #include <ytp/sequence.h>
 #include <ytp/version.h>
 
-#include <cstring>
 #include <iostream>
 
 #define CHECK(E)                                                               \
@@ -79,12 +78,12 @@ int main(int argc, char **argv) {
   }
 
   auto src_name = srcArg.getValue();
-  auto period = 1000000000ULL * periodArg.getValue();
+  auto period = 1000000000LL * periodArg.getValue();
 
   fmc_error_t *error;
   fmc_fd src_fd = -1;
-  ytp_yamal_t *src_yml = NULL;
-  ytp_iterator_t it = NULL;
+  ytp_yamal_t *src_yml = nullptr;
+  ytp_iterator_t it = nullptr;
   int64_t last = fmc_cur_time_ns();
 
   fmc::counter::log_bucket buckets_;
@@ -100,7 +99,7 @@ int main(int argc, char **argv) {
   src_yml = ytp_yamal_new(src_fd, &error);
   CHECK(error);
 
-  it = ytp_yamal_end(src_yml, &error);
+  it = ytp_data_end(src_yml, &error);
   CHECK(error);
   while (true) {
     if (ytp_yamal_term(it))
@@ -108,14 +107,12 @@ int main(int argc, char **argv) {
     CHECK(error);
     size_t sz;
     char *src;
-    ytp_peer_t peer;
-    ytp_channel_t ch;
-    uint64_t time;
-    ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src,
-                  &error);
+    uint64_t seqno;
+    int64_t ts;
+    ytp_time_read(src_yml, it, &seqno, &ts, &sz, (const char **)&src, &error);
     CHECK(error);
     auto now = fmc_cur_time_ns();
-    buckets_.sample(now - time);
+    buckets_.sample(now - ts);
     ++count;
     it = ytp_yamal_next(src_yml, it, &error);
 

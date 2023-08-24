@@ -12,20 +12,15 @@
 
 *****************************************************************************/
 
-#include <ytp/announcement.h>
-#include <ytp/api.h>
-#include <ytp/control.h>
-#include <ytp/cursor.h>
-#include <ytp/data.h>
-#include <ytp/glob.h>
-#include <ytp/index.h>
-#include <ytp/sequence.h>
-#include <ytp/stream.h>
-#include <ytp/streams.h>
-#include <ytp/subscription.h>
-#include <ytp/time.h>
-#include <ytp/timeline.h>
-#include <ytp/version.h>
-#include <ytp/yamal.h>
+#include <fmc/error.h>
 
-int main() { return 0; }
+#include <ytp/stream.h>
+
+void ytp_stream_close(ytp_yamal_t *yamal, fmc_error_t **error) {
+  fmc_error_clear(error);
+
+  for (size_t lstidx = YTP_STREAM_LIST_MIN; lstidx <= YTP_STREAM_LIST_MAX;
+       ++lstidx) {
+    ytp_yamal_close(yamal, lstidx, error);
+  }
+}

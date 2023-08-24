@@ -262,8 +262,3 @@ TEST(var_config, bad_ini) {
       fmc::configs::serialize::variant_map_load_ini(fd, &error);
   ASSERT_NE(error, nullptr);
 }
-
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

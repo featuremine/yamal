@@ -13,8 +13,7 @@
  *****************************************************************************/
 
 /**
- * @file mmlist.h
- * @author Federico Ravchina
+ * @file yamal.hpp
  * @date 29 Apr 2021
  * @brief File contains C declaration of the mmlist
  *
@@ -22,30 +21,32 @@
  * @see http://www.featuremine.com
  */
 
-#ifndef __FM_MMLISTDEF_H__
-#define __FM_MMLISTDEF_H__
+#pragma once
 
-#include <atomic>
-#include <condition_variable>
-#include <fmc/files.h>
-#include <mutex>
-#include <thread>
 #include <ytp/yamal.h>
 
-typedef struct mmnode fm_mmnode_t;
+#include <fmc++/error.hpp>
 
-static const size_t fm_mmlist_page_count = 1024 * 64 * 8;
+struct ytp_yamal_wrap : ytp_yamal_t {
+  ytp_yamal_wrap(int fd, bool enable_thread, YTP_CLOSABLE_MODE closable);
+  ~ytp_yamal_wrap();
 
-struct ytp_yamal {
-  fm_mmnode_t *header(fmc_error_t **err);
-  fmc_fd fd;
-  std::condition_variable cv_;
-  std::mutex m_;
-  std::mutex pa_mutex_;
-  std::thread thread_;
-  bool done_ = false;
-  bool readonly_ = false;
-  fmc_fview pages[fm_mmlist_page_count] = {{0}};
+  ytp_yamal_wrap(const ytp_yamal_wrap &) = delete;
+  ytp_yamal_wrap &operator=(const ytp_yamal_wrap &) = delete;
 };
 
-#endif // __FM_MMLISTDEF_H__
+inline ytp_yamal_wrap::ytp_yamal_wrap(int fd, bool enable_thread,
+                                      YTP_CLOSABLE_MODE closable) {
+  ytp_yamal_t *yamal = this;
+  fmc_error_t *error;
+  ytp_yamal_init_3(yamal, fd, enable_thread, closable, &error);
+  if (error) {
+    throw fmc::error(*error);
+  }
+}
+
+inline ytp_yamal_wrap::~ytp_yamal_wrap() {
+  ytp_yamal_t *yamal = this;
+  fmc_error_t *error;
+  ytp_yamal_destroy(yamal, &error);
+}

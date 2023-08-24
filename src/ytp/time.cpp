@@ -12,63 +12,53 @@
 
 *****************************************************************************/
 
-#include <fmc/endianness.h>
-#include <ytp/channel.h>
+#include "endianess.h"
+
 #include <ytp/time.h>
 #include <ytp/yamal.h>
 
-struct ytp_time_hdr {
-  uint64_t time;
-};
-
 struct ytp_time_msg {
-  ytp_time_hdr hdr;
+  int64_t ts;
   char data[];
 };
 
 char *ytp_time_reserve(ytp_yamal_t *yamal, size_t size, fmc_error_t **error) {
   fmc_error_clear(error);
-  if (auto *time_msg = (ytp_time_msg *)ytp_channel_reserve(
-          yamal, size + sizeof(ytp_time_hdr), error);
-      time_msg) {
-    return time_msg->data;
+  struct ytp_time_msg *time_msg = (struct ytp_time_msg *)ytp_yamal_reserve(
+      yamal, size + sizeof(struct ytp_time_msg), error);
+  if (*error) {
+    return nullptr;
   }
 
-  return nullptr;
+  return time_msg->data;
 }
 
-ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
-                               ytp_channel_t channel, uint64_t time, void *data,
-                               fmc_error_t **error) {
-  auto *time_msg = (ytp_time_msg *)((char *)data - sizeof(ytp_time_hdr));
-  time_msg->hdr.time = fmc_htobe64(time);
-  return ytp_channel_commit(yamal, peer, channel, time_msg, error);
+ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, int64_t ts, void *data,
+                               size_t listidx, fmc_error_t **error) {
+  struct ytp_time_msg *time_msg =
+      (struct ytp_time_msg *)((char *)data - sizeof(struct ytp_time_msg));
+  time_msg->ts = htoye64(ts);
+  return ytp_yamal_commit(yamal, time_msg, listidx, error);
 }
 
-void ytp_time_sublist_commit(ytp_yamal_t *yamal, ytp_peer_t peer,
-                             ytp_channel_t channel, uint64_t time,
-                             void **first_ptr, void **last_ptr, void *new_ptr,
+void ytp_time_sublist_commit(ytp_yamal_t *yamal, int64_t ts, void **first_ptr,
+                             void **last_ptr, void *new_ptr,
                              fmc_error_t **error) {
-  auto *time_msg = (ytp_time_msg *)((char *)new_ptr - sizeof(ytp_time_hdr));
-  time_msg->hdr.time = fmc_htobe64(time);
-  ytp_channel_sublist_commit(yamal, peer, channel, first_ptr, last_ptr,
-                             time_msg, error);
+  auto *time_msg = (ytp_time_msg *)((char *)new_ptr - sizeof(ytp_time_msg));
+  time_msg->ts = htoye64(ts);
+  return ytp_yamal_sublist_commit(yamal, first_ptr, last_ptr, time_msg, error);
 }
 
-void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                   ytp_peer_t *peer, ytp_channel_t *channel, uint64_t *time,
-                   size_t *size, const char **data, fmc_error_t **error) {
+void ytp_time_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno,
+                   int64_t *ts, size_t *size, const char **data,
+                   fmc_error_t **error) {
   const ytp_time_msg *time_msg;
-  ytp_channel_read(yamal, iterator, peer, channel, size,
-                   (const char **)&time_msg, error);
-  if (!*error) {
-    if (*peer == 0) {
-      *time = 0;
-      *data = (const char *)time_msg;
-    } else {
-      *time = fmc_be64toh(time_msg->hdr.time);
-      *data = time_msg->data;
-      *size -= sizeof(ytp_time_hdr);
-    }
+  ytp_yamal_read(yamal, iterator, seqno, size, (const char **)&time_msg, error);
+  if (*error) {
+    return;
   }
+
+  *ts = ye64toh(time_msg->ts);
+  *data = time_msg->data;
+  *size -= sizeof(struct ytp_time_msg);
 }

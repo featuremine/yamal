@@ -48,6 +48,13 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+        fmc++
+        PRIVATE
+        stdc++fs
+    )
+endif()
 
 set(
     FMC_SRC
@@ -79,19 +86,42 @@ set(
 set(
     YTP_SRC
     "${PROJECT_SOURCE_DIR}/src/ytp/api.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/yamal.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/peer.cpp"
-    "${PROJECT_SOURCE_DIR}/src/ytp/channel.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/yamal.c"
     "${PROJECT_SOURCE_DIR}/src/ytp/time.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/control.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/sequence.cpp"
     "${PROJECT_SOURCE_DIR}/src/ytp/timeline.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ytp/announcement.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/subscription.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/index.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/stream.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/streams.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/data.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/cursor.c"
+    "${PROJECT_SOURCE_DIR}/src/ytp/glob.cpp"
+)
+
+add_library(
+    fmc_obj
+    OBJECT
+    ${FMC_SRC}
+)
+target_include_directories(
+    fmc_obj
+    PUBLIC
+    "${PROJECT_SOURCE_DIR}/include"
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/include/libdecnumber"
+)
+target_link_libraries(
+    fmc_obj
+    PRIVATE
+    fmc++
 )
 
 add_library(
     ytp_obj
     OBJECT
-    ${FMC_SRC}
     ${YTP_SRC}
 )
 target_include_directories(
@@ -99,8 +129,6 @@ target_include_directories(
     PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
-    PRIVATE
-    "${PROJECT_SOURCE_DIR}/include/libdecnumber"
 )
 target_link_libraries(
     ytp_obj
@@ -109,6 +137,18 @@ target_link_libraries(
 )
 
 add_library(
+    ytp_obj-inv-endianess
+    OBJECT
+    ${YTP_SRC}
+)
+target_include_directories(
+    ytp_obj-inv-endianess
+    PUBLIC
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}/include"
+)
+
+add_library(
     ytp_dep
     INTERFACE
 )
@@ -118,9 +158,11 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
+
 add_library(
     ytp
     STATIC
+    $<TARGET_OBJECTS:fmc_obj>
     $<TARGET_OBJECTS:ytp_obj>
 )
 target_link_libraries(
@@ -132,36 +174,69 @@ target_link_libraries(
     PUBLIC
     ytp_dep
 )
-if (BUILD_SHARED_LIBS)
-    add_library(
-        ytp-shared
-        SHARED
-        $<TARGET_OBJECTS:ytp_obj>
+
+add_library(
+    ytp-inv-endianess
+    STATIC
+    $<TARGET_OBJECTS:fmc_obj>
+    $<TARGET_OBJECTS:ytp_obj-inv-endianess>
+)
+target_link_libraries(
+    ytp-inv-endianess
+
+    PRIVATE
+    fmc++
+
+    PUBLIC
+    ytp_dep
+)
+set_target_properties(
+    ytp-inv-endianess
+    PROPERTIES
+    EXCLUDE_FROM_ALL ON
+)
+
+add_library(
+    ytp-shared
+    SHARED
+    $<TARGET_OBJECTS:fmc_obj>
+    $<TARGET_OBJECTS:ytp_obj>
+)
+target_link_libraries(
+    ytp-shared
+    PUBLIC
+    ytp_dep
+)
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+        ytp
+        PRIVATE
+        ${DL_LIB}
+        ${PTHREAD_LIB}
     )
     target_link_libraries(
         ytp-shared
-        PUBLIC
-        ytp_dep
+        PRIVATE
+        ${DL_LIB}
+        ${PTHREAD_LIB}
     )
-    if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        target_link_libraries(
-            ytp-shared
-            PRIVATE
-            stdc++fs
-            ${DL_LIB}
-            ${PTHREAD_LIB}
-        )
-    endif()
-    set_target_properties(
-        ytp-shared
-        PROPERTIES
-        OUTPUT_NAME "ytp"
-    )
+endif()
+set_target_properties(
+    ytp-shared
+    PROPERTIES
+    OUTPUT_NAME "ytp"
+)
+if (BUILD_SHARED_LIBS)
     install(
         TARGETS
         ytp-shared
     )
-else()
+else ()
+    set_target_properties(
+        ytp-shared
+        PROPERTIES
+        EXCLUDE_FROM_ALL ON
+    )
     if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         string(APPEND YTP_PRIVATE_LIBS " -lstdc++fs -ldl -lpthread")
     endif()
@@ -170,15 +245,6 @@ else()
         ytp
     )
 endif ()
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_link_libraries(
-        ytp
-        PRIVATE
-        stdc++fs
-        ${DL_LIB}
-        ${PTHREAD_LIB}
-    )
-endif()
 
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/cmp"

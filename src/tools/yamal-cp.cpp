@@ -12,21 +12,11 @@
 
 *****************************************************************************/
 
+#include "yamal-common.hpp"
+
 #include <tclap/CmdLine.h>
 
-#include <fmc++/time.hpp>
-#include <fmc/signals.h>
-#include <ytp/control.h>
-#include <ytp/sequence.h>
 #include <ytp/version.h>
-
-#include <cstring>
-#include <iostream>
-
-#define CHECK(E)                                                               \
-  if (E) {                                                                     \
-    goto error;                                                                \
-  }
 
 int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("yamal copy tool", ' ', YTP_VERSION);
@@ -39,78 +29,62 @@ int main(int argc, char **argv) {
       "dest", "destination yamal path", true, "dest", "string");
   cmd.add(destArg);
 
-  TCLAP::ValueArg<size_t> countArg("n", "count", "number of messages to copy",
-                                   false, -1, "unsigned");
+  TCLAP::ValueArg<ssize_t> countArg("n", "count", "number of messages to copy",
+                                    false, -1, "unsigned");
   cmd.add(countArg);
 
-  TCLAP::ValueArg<size_t> sizeArg("s", "size", "maximum amount of data to copy",
-                                  false, -1, "megabytes");
+  TCLAP::ValueArg<ssize_t> sizeArg(
+      "s", "size", "maximum amount of data to copy", false, -1, "megabytes");
   cmd.add(sizeArg);
+
+  TCLAP::SwitchArg fArg("f", "follow", "copy data as the file grows;");
+  cmd.add(fArg);
 
   cmd.parse(argc, argv);
 
-  auto src_name = srcArg.getValue();
-  auto dest_name = destArg.getValue();
+  auto &src_name = srcArg.getValue();
+  auto &dest_name = destArg.getValue();
   auto max_count = countArg.getValue();
-  auto max_size = 1024 * 1024 * sizeArg.getValue();
+  auto max_size = 1024ll * 1024ll * sizeArg.getValue();
 
-  fmc_error_t *error;
-  fmc_fd src_fd = -1;
-  fmc_fd dest_fd = -1;
-  ytp_yamal_t *src_yml = NULL;
-  ytp_yamal_t *dest_yml = NULL;
-  ytp_iterator_t it = NULL;
-  size_t count = 0;
-  size_t size = YTP_YAMAL_HEADER_SIZE;
+  struct handler_t {
+    bool on_message(ytp_yamal_t *yamal, int64_t ts, size_t sz,
+                    fmc_error_t **error) {
+      if (max_count >= 0) {
+        stop = stop || max_count-- > 0;
+      }
+      if (max_size >= 0) {
+        stop = stop ||
+               (size_t)max_size >= ytp_yamal_reserved_size(yamal, error) + sz;
+      }
+      return !stop;
+    }
 
-  src_fd = fmc_fopen(src_name.c_str(), fmc_fmode::READ, &error);
-  if (!fmc_fvalid(src_fd)) {
-    std::cerr << "Unable to open file " << src_name << std::endl;
-    goto error;
-  }
+    void on_error(fmc_error_t *error) {
+      stop = true;
+      ret = 1;
+      std::cerr << fmc_error_msg(error) << std::endl;
+    }
 
-  dest_fd = fmc_fopen(dest_name.c_str(), fmc_fmode::READWRITE, &error);
-  if (!fmc_fvalid(dest_fd)) {
-    std::cerr << "Unable to open file " << dest_name << std::endl;
-    goto error;
-  }
+    ssize_t max_count;
+    ssize_t max_size;
+    int ret = 0;
+    bool stop = false;
+  } handler{max_count, max_size};
 
-  src_yml = ytp_yamal_new(src_fd, &error);
-  CHECK(error);
-  dest_yml = ytp_yamal_new(dest_fd, &error);
-  CHECK(error);
-
-  it = ytp_yamal_begin(src_yml, &error);
-  CHECK(error);
-  for (; !ytp_yamal_term(it); it = ytp_yamal_next(src_yml, it, &error)) {
-    CHECK(error);
-    size_t sz;
-    char *src;
-    ytp_yamal_read(src_yml, it, &sz, (const char **)&src, &error);
-    CHECK(error);
-    ++count;
-    size += sz + YTP_MMNODE_HEADER_SIZE;
-    if (size > max_size || count > max_count)
+  ann_cl_t ann_cl(handler);
+  ann_cl.init(src_name.c_str(), dest_name.c_str());
+  while (!handler.stop) {
+    fmc_error_t *error;
+    auto polled = ytp_cursor_poll(ann_cl.cursor, &error);
+    if (error) {
+      handler.on_error(error);
+      return handler.ret;
+    }
+    if (!polled && !fArg.getValue()) {
       break;
-    char *dest = ytp_yamal_reserve(dest_yml, sz, &error);
-    CHECK(error);
-    memcpy(dest, src, sz);
-    ytp_yamal_commit(dest_yml, dest, &error);
-    CHECK(error);
+    }
   }
 
-  return 0;
-
-error:
-  std::cerr << fmc_error_msg(error) << std::endl;
-  if (src_yml)
-    ytp_yamal_del(src_yml, &error);
-  if (dest_yml)
-    ytp_yamal_del(dest_yml, &error);
-  if (src_fd != -1)
-    fmc_fclose(src_fd, &error);
-  if (dest_fd != -1)
-    fmc_fclose(dest_fd, &error);
-
-  return -1;
+  return handler.ret;
 }

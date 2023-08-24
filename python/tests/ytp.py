@@ -268,6 +268,7 @@ class data_multiple_producers(unittest.TestCase):
         self.assertTrue(sequence.poll())  # ABCD message
         self.assertTrue(sequence.poll())  # EFGH message
         self.assertTrue(sequence.poll())  # IJKL message
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 2)
@@ -324,6 +325,7 @@ class data_multiple_producers(unittest.TestCase):
         self.assertTrue(sequence.poll())  # ABCD message
         self.assertTrue(sequence.poll())  # EFGH message
         self.assertTrue(sequence.poll())  # IJKL message
+        self.assertTrue(sequence.poll())
         self.assertFalse(sequence.poll())
 
         self.assertEqual(len(output), 2)
@@ -450,6 +452,7 @@ class channel_simple(unittest.TestCase):
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
+        self.assertFalse(sequence.poll())
 
         self.assertEqual(len(ch_output), 2)
         self.assertEqual(ch_output[0][0].id(), channel1.id())
@@ -553,6 +556,7 @@ class peer_simple(unittest.TestCase):
 
         self.assertTrue(sequence.poll())
         self.assertTrue(sequence.poll())
+        self.assertFalse(sequence.poll())
 
         self.assertEqual(len(peer_output), 2)
         self.assertEqual(peer_output[0][0].id(), producer1.id())
