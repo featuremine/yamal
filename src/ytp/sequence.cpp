@@ -255,11 +255,9 @@ ytp_sequence_shared_t *ytp_sequence_shared_new(const char *filename,
                                                fmc_fmode mode,
                                                fmc_error_t **error) {
   try {
-    auto *seq = static_cast<ytp_sequence_shared *>(aligned_alloc(
-        alignof(ytp_sequence_shared), sizeof(ytp_sequence_shared)));
-    new (seq) ytp_sequence_shared(filename, mode);
+    auto seq = std::make_unique<ytp_sequence_shared>(filename, mode);
     fmc_error_clear(error);
-    return seq;
+    return seq.release();
   } catch (fmc::error &e) {
     *error = fmc_error_inst();
     fmc_error_mov(*error, &e);

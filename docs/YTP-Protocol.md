@@ -139,7 +139,7 @@ A peer announces a stream.
 
 The peer needs to avoid publishing duplicated stream announcements messages for the same stream. The first stream announcement supersedes following announcements.
 
-The ID of a stream is the offset in the file of the first message.
+The ID of a stream is the offset in the file of the first announcement of the stream.
 
 Stream encoding is specified using [Channel Metadata Protocol](#channel-metadata-protocol) (see bellow).
 

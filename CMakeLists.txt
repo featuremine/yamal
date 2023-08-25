@@ -51,7 +51,7 @@ target_include_directories(
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(
         fmc++
-        PRIVATE
+        PUBLIC
         stdc++fs
     )
 endif()
@@ -147,6 +147,11 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
 )
+target_compile_definitions(
+    ytp_obj-inv-endianess
+    PRIVATE
+    YTP_USE_BIG_ENDIAN
+)
 
 add_library(
     ytp_dep
@@ -173,27 +178,6 @@ target_link_libraries(
 
     PUBLIC
     ytp_dep
-)
-
-add_library(
-    ytp-inv-endianess
-    STATIC
-    $<TARGET_OBJECTS:fmc_obj>
-    $<TARGET_OBJECTS:ytp_obj-inv-endianess>
-)
-target_link_libraries(
-    ytp-inv-endianess
-
-    PRIVATE
-    fmc++
-
-    PUBLIC
-    ytp_dep
-)
-set_target_properties(
-    ytp-inv-endianess
-    PROPERTIES
-    EXCLUDE_FROM_ALL ON
 )
 
 add_library(

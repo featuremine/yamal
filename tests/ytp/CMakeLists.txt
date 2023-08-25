@@ -15,28 +15,12 @@ function(add_ytp_test NAME)
         PkgConfig::GTEST
     )
     add_test(NAME ytp_${NAME} COMMAND tests_ytp_${NAME})
-
-    add_executable(
-        tests_ytp_inv_${NAME}
-        "${NAME}.cpp"
-    )
-    target_include_directories(
-        tests_ytp_inv_${NAME}
-        PRIVATE
-        "${PROJECT_SOURCE_DIR}/src/ytp"
-    )
-    target_link_libraries(
-        tests_ytp_inv_${NAME}
-        PUBLIC
-        ytp-inv-endianess
-        PkgConfig::GTEST
-    )
-    add_test(NAME ytp_inv_${NAME} COMMAND tests_ytp_inv_${NAME})
 endfunction()
 
 add_ytp_test("yamal")
 add_ytp_test("time")
 add_ytp_test("timeline")
+add_ytp_test("sequence")
 add_ytp_test("stream")
 
 add_executable(

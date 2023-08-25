@@ -303,12 +303,6 @@ bool was_announced(std::unordered_set<std::string_view> &announced_set,
 
 static bool ytp_timeline_poll_ann(ytp_timeline_t *timeline,
                                   fmc_error_t **error) {
-  auto ann_term =
-      ytp_announcement_term(&timeline->ctrl->yamal, timeline->it_ann, error);
-  if (ann_term || *error) {
-    return false;
-  }
-
   uint64_t seqno;
   ytp_mmnode_offs stream;
   size_t psz;
@@ -319,10 +313,10 @@ static bool ytp_timeline_poll_ann(ytp_timeline_t *timeline,
   const char *encoding;
   ytp_mmnode_offs *original;
   ytp_mmnode_offs *subscribed;
-  ytp_announcement_next(&timeline->ctrl->yamal, &timeline->it_ann, &seqno,
-                        &stream, &psz, &peer, &csz, &channel, &esz, &encoding,
-                        &original, &subscribed, error);
-  if (*error) {
+  auto has_ann = ytp_announcement_next(
+      &timeline->ctrl->yamal, &timeline->it_ann, &seqno, &stream, &psz, &peer,
+      &csz, &channel, &esz, &encoding, &original, &subscribed, error);
+  if (!has_ann || *error) {
     return false;
   }
 
