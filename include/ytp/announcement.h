@@ -115,7 +115,9 @@ FMMODFUNC ytp_iterator_t ytp_announcement_begin(ytp_yamal_t *yamal,
 /**
  * @brief Checks if there are no more announcement messages
  *
+ * @param[in] yamal
  * @param[in] iterator
+ * @param[out] error out-parameter for error handling
  * @return true if there are no more announcement messages, false otherwise
  */
 FMMODFUNC bool ytp_announcement_term(ytp_yamal_t *yamal,
@@ -123,12 +125,22 @@ FMMODFUNC bool ytp_announcement_term(ytp_yamal_t *yamal,
                                      fmc_error_t **error);
 
 /**
- * @brief Returns iterator for the next announcement messages
+ * @brief Returns iterator for the next announcement message
  *
  * @param[in] yamal
- * @param[in] iterator
+ * @param[in, out] iterator
+ * @param[out] seqno
+ * @param[out] psz peer size
+ * @param[out] peer peer name
+ * @param[out] csz channel size
+ * @param[out] channel channel name
+ * @param[out] esz encoding size
+ * @param[out] encoding encoding metadata
+ * @param[out] original offset of the original announcement, zero if
+ * uninitialized
+ * @param[out] subscribed offset of the first subscribe message
  * @param[out] error out-parameter for error handling
- * @return ytp_iterator_t
+ * @return true if an announcement has been read, false otherwise
  */
 FMMODFUNC bool
 ytp_announcement_next(ytp_yamal_t *yamal, ytp_iterator_t *iterator,

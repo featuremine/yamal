@@ -172,6 +172,38 @@ FMMODFUNC ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl,
                                                       fmc_error_t **error);
 
 /**
+ * @brief Publishes a subscription message
+ *
+ * Complexity: Constant on average, worst case linear in the size of the list.
+ *
+ * @param[in] ctrl the ytp_control_t object
+ * @param[in] peer the peer that publishes the subscription message
+ * @param[in] ts the time to publish the subscription message
+ * @param[in] sz size of the payload
+ * @param[in] payload a prefix or channel name
+ * @param[out] error out-parameter for error handling
+ */
+FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts,
+                               size_t sz, const char *payload,
+                               fmc_error_t **error);
+
+/**
+ * @brief Publishes a directory message
+ *
+ * Complexity: Constant on average, worst case linear in the size of the list.
+ *
+ * @param[in] ctrl the ytp_control_t object
+ * @param[in] peer the peer that publishes the directory message
+ * @param[in] ts the time to publish the directory message
+ * @param[in] sz size of the payload
+ * @param[in] payload a SCDP encoded string
+ * @param[out] error out-parameter for error handling
+ */
+FMMODFUNC void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts,
+                               size_t sz, const char *payload,
+                               fmc_error_t **error);
+
+/**
  * @brief Returns the name of the channel, given the channel reference
  *
  * Complexity: Constant on average, worst case linear in the number of channels.

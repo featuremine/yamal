@@ -157,7 +157,7 @@ static void process_control_msgs(ytp_control_t *ctrl, fmc_error_t **error,
         auto proc_original = process_ann(cl.ctrl, ann, cl.handler);
 
         auto &ann_original =
-            *reinterpret_cast<std::atomic<uint64_t> *>(ann->original);
+            *reinterpret_cast<std::atomic<ytp_mmnode_offs> *>(ann->original);
         auto ann_original_val = ann_original.load();
         if (ann_original_val != proc_original) {
           if (ann_original_val != 0) {
@@ -296,6 +296,16 @@ ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl,
                                             void *first_ptr,
                                             fmc_error_t **error) {
   return ytp_data_sublist_finalize(&ctrl->yamal, first_ptr, error);
+}
+
+void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts,
+                     size_t sz, const char *payload_ptr, fmc_error_t **error) {
+  fmc_error_set(error, "ytp_control_sub not supported");
+}
+
+void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts,
+                     size_t sz, const char *payload, fmc_error_t **error) {
+  fmc_error_set(error, "ytp_control_dir not supported");
 }
 
 void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,

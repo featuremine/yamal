@@ -161,6 +161,16 @@ void ytp_sequence_ch_cb_rm(ytp_sequence_t *seq, ytp_sequence_ch_cb_t cb,
   ytp_timeline_ch_cb_rm(&seq->timeline, cb, closure, error);
 }
 
+void ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer, int64_t ts,
+                      size_t sz, const char *payload, fmc_error_t **error) {
+  ytp_control_sub(&seq->ctrl, peer, ts, sz, payload, error);
+}
+
+void ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer, int64_t ts,
+                      size_t sz, const char *payload, fmc_error_t **error) {
+  ytp_control_dir(&seq->ctrl, peer, ts, sz, payload, error);
+}
+
 void ytp_sequence_prfx_cb(ytp_sequence_t *seq, size_t sz, const char *prfx,
                           ytp_sequence_data_cb_t cb, void *closure,
                           fmc_error_t **error) {
@@ -197,11 +207,11 @@ ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq, ytp_peer_t peer,
 }
 
 void ytp_sequence_sublist_commit(ytp_sequence_t *seq, ytp_peer_t peer,
-                                 ytp_channel_t channel, uint64_t time,
+                                 ytp_channel_t channel, int64_t ts,
                                  void **first_ptr, void **last_ptr,
                                  void *new_ptr, fmc_error_t **error) {
-  ytp_control_sublist_commit(&seq->ctrl, peer, channel, time, first_ptr,
-                             last_ptr, new_ptr, error);
+  ytp_control_sublist_commit(&seq->ctrl, peer, channel, ts, first_ptr, last_ptr,
+                             new_ptr, error);
 }
 
 ytp_iterator_t ytp_sequence_sublist_finalize(ytp_sequence_t *seq,

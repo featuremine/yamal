@@ -110,23 +110,15 @@ size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal, fmc_error_t **error) {
   return ye64toh(atomic_load_cast(&hdr->size));
 }
 
-static struct ytp_mmnode *mmnode_from_offset(ytp_yamal_t *yamal,
-                                             ytp_mmnode_offs offs,
-                                             fmc_error_t **error) {
+inline static struct ytp_mmnode *mmnode_from_offset(ytp_yamal_t *yamal,
+                                                    ytp_mmnode_offs offs,
+                                                    fmc_error_t **error) {
   return (struct ytp_mmnode *)get_mapped_memory(yamal, offs, error);
 }
 
-static struct ytp_mmnode *mmnode_from_data(void *data) {
+inline static struct ytp_mmnode *mmnode_from_data(void *data) {
   return (struct ytp_mmnode *)(((char *)data) -
                                offsetof(struct ytp_mmnode, data));
-}
-
-static struct ytp_mmnode *
-mmnode_next(ytp_yamal_t *yamal, struct ytp_mmnode *node, fmc_error_t **error) {
-  fmc_error_clear(error);
-  if (!node->next)
-    return NULL;
-  return mmnode_from_offset(yamal, node->next, error);
 }
 
 static void mmlist_pages_allocation(ytp_yamal_t *yamal, fmc_error_t **error) {
@@ -176,7 +168,7 @@ static bool mmlist_sync1(ytp_yamal_t *yamal, fmc_error_t **err) {
   return true;
 }
 
-static ytp_mmnode_offs *offset_from_iterator(ytp_iterator_t iterator) {
+inline static ytp_mmnode_offs *offset_from_iterator(ytp_iterator_t iterator) {
   return (ytp_mmnode_offs *)iterator;
 }
 
@@ -294,7 +286,7 @@ void ytp_yamal_init_3(ytp_yamal_t *yamal, int fd, bool enable_thread,
   atomic_expect_or_init(&hdr->size, htoye64(hdr_sz));
 
   for (size_t lstidx = 0; lstidx < YTP_YAMAL_LISTS; ++lstidx) {
-    const uint64_t hdrnode =
+    const ytp_mmnode_offs hdrnode =
         htoye64((ytp_mmnode_offs) & ((struct ytp_hdr *)0)->hdr[lstidx]);
     atomic_expect_or_init(&hdr->hdr[lstidx].prev, hdrnode);
   }
@@ -602,81 +594,6 @@ ytp_iterator_t ytp_yamal_prev(ytp_yamal_t *yamal, ytp_iterator_t iterator,
   }
 
   return &prev->next;
-}
-
-ytp_iterator_t ytp_yamal_remove(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                                fmc_error_t **error) {
-  fmc_error_clear(error);
-
-  ytp_iterator_t ret = NULL;
-  ytp_mmnode_offs c_off = atomic_load_cast(offset_from_iterator(iterator));
-
-  if (!c_off) {
-    FMC_ERROR_REPORT(error, "invalid offset argument");
-    return NULL;
-  }
-
-  if (yamal->readonly_) {
-    FMC_ERROR_REPORT(error,
-                     "unable to remove using a readonly file descriptor");
-    return NULL;
-  }
-
-  struct ytp_mmnode *curr = mmnode_from_offset(yamal, c_off, error);
-  if (!curr) {
-    FMC_ERROR_REPORT(error, "unable to get node in provided offset");
-    return NULL;
-  }
-
-  if (pthread_mutex_lock(&yamal->m_) != 0) {
-    FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
-    return NULL;
-  }
-
-  // Note: fm_mmnode_prev does not work because previous can be header
-  // If previous is header, fm_mmnode_prev returns NULL
-  ytp_mmnode_offs prev_off = atomic_load_cast(&curr->prev);
-  struct ytp_mmnode *prev = mmnode_from_offset(yamal, prev_off, error);
-  if (!prev) {
-    FMC_ERROR_REPORT(error,
-                     "unable to get previous node to node in provided offset");
-    goto cleanup;
-  }
-
-  // if we fail to do the exchange, something else deleted me:
-  if (!atomic_compare_exchange_weak_check(&prev->next, &c_off,
-                                          atomic_load_cast(&curr->next))) {
-    FMC_ERROR_REPORT(error, "ytp_mmnode already deleted");
-    goto cleanup;
-  }
-
-  ytp_mmnode_offs end = 0UL;
-  // if we fail to do the exchange, additional nodes where added to next
-  if (atomic_compare_exchange_weak_check(&curr->next, &end,
-                                         atomic_load_cast(&curr->prev))) {
-    /*atomic_compare_exchange_weak_check(&ytp_yamal_header(yamal,
-       error)->hdr[lstidx].prev, &c_off, atomic_load_cast(&curr->prev));*/
-  } else {
-    prev->next = atomic_load_cast(&curr->next);
-    struct ytp_mmnode *next = mmnode_next(yamal, curr, error);
-    if (*error) {
-      FMC_ERROR_REPORT(error,
-                       "unable to get next node to node in provided offset");
-      goto cleanup;
-    }
-    atomic_compare_exchange_weak_check(&next->prev, &c_off,
-                                       atomic_load_cast(&curr->prev));
-  }
-
-  ret = (ytp_iterator_t)&prev->next;
-
-cleanup:
-  if (pthread_mutex_unlock(&yamal->m_) != 0) {
-    FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
-    return NULL;
-  }
-
-  return ret;
 }
 
 ytp_iterator_t ytp_yamal_seek(ytp_yamal_t *yamal, ytp_mmnode_offs ptr,

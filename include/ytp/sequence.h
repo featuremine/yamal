@@ -150,7 +150,7 @@ FMMODFUNC ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq,
  * @param[in] seq
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
- * @param[in] time
+ * @param[in] ts
  * @param[in, out] first_ptr an zero initialized atomic pointer for the first
  * node of the sublist
  * @param[in, out] last_ptr an zero initialized atomic pointer for the last node
@@ -160,7 +160,7 @@ FMMODFUNC ytp_iterator_t ytp_sequence_commit(ytp_sequence_t *seq,
  * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_sequence_sublist_commit(ytp_sequence_t *seq, ytp_peer_t peer,
-                                           ytp_channel_t channel, uint64_t time,
+                                           ytp_channel_t channel, int64_t ts,
                                            void **first_ptr, void **last_ptr,
                                            void *new_ptr, fmc_error_t **error);
 
@@ -174,6 +174,42 @@ FMMODFUNC void ytp_sequence_sublist_commit(ytp_sequence_t *seq, ytp_peer_t peer,
 FMMODFUNC ytp_iterator_t ytp_sequence_sublist_finalize(ytp_sequence_t *seq,
                                                        void *first_ptr,
                                                        fmc_error_t **error);
+
+/**
+ * @brief Publishes a subscription message
+ *
+ * Publishes a subscription message if it is not already published.
+ *
+ * Complexity: Constant on average, worst case linear in the size of the list.
+ *
+ * @param[in] seq
+ * @param[in] peer the peer that publishes the subscription
+ * @param[in] ts
+ * @param[in] sz
+ * @param[in] payload
+ * @param[out] error
+ */
+FMMODFUNC void ytp_sequence_sub(ytp_sequence_t *seq, ytp_peer_t peer,
+                                int64_t ts, size_t sz, const char *payload,
+                                fmc_error_t **error);
+
+/**
+ * @brief Publishes a directory message
+ *
+ * Publishes a directory message if it is not already published.
+ *
+ * Complexity: Constant on average, worst case linear in the size of the list.
+ *
+ * @param[in] seq
+ * @param[in] peer the peer that publishes the message
+ * @param[in] ts
+ * @param[in] sz
+ * @param[in] payload
+ * @param[out] error
+ */
+FMMODFUNC void ytp_sequence_dir(ytp_sequence_t *seq, ytp_peer_t peer,
+                                int64_t ts, size_t sz, const char *payload,
+                                fmc_error_t **error);
 
 /**
  * @brief Returns the name of the channel, given the channel reference
@@ -434,7 +470,8 @@ FMMODFUNC void ytp_sequence_cb_rm(ytp_sequence_t *seq);
  * beginning up to the offset are guarantied do have been processed
  * and the callbacks to be called.
  */
-FMMODFUNC ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, uint64_t offset,
+FMMODFUNC ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq,
+                                           ytp_mmnode_offs offset,
                                            fmc_error_t **error);
 
 /**
@@ -445,9 +482,9 @@ FMMODFUNC ytp_iterator_t ytp_sequence_seek(ytp_sequence_t *seq, uint64_t offset,
  * @param[out] error out-parameter for error handling
  * @return offset from the head of yamal
  */
-FMMODFUNC uint64_t ytp_sequence_tell(ytp_sequence_t *seq,
-                                     ytp_iterator_t iterator,
-                                     fmc_error_t **error);
+FMMODFUNC ytp_mmnode_offs ytp_sequence_tell(ytp_sequence_t *seq,
+                                            ytp_iterator_t iterator,
+                                            fmc_error_t **error);
 
 /**
  * @brief Allocates and initializes a ytp_sequence_shared object with a

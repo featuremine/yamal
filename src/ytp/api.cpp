@@ -60,6 +60,22 @@ ytp_iterator_t ytp_sequence_shared_sublist_finalize(shared_sequence *sh_seq,
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
   return ytp_sequence_sublist_finalize(seq, first_ptr, error);
 }
+// Publishes a subscription message
+void ytp_sequence_shared_sub(shared_sequence *sh_seq, ytp_peer_t peer,
+                             uint64_t time, size_t sz, const char *payload,
+                             fmc_error_t **error) {
+  ytp_sequence_t *seq =
+      ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
+  ytp_sequence_sub(seq, peer, time, sz, payload, error);
+}
+// Publishes a directory message
+void ytp_sequence_shared_dir(shared_sequence *sh_seq, ytp_peer_t peer,
+                             uint64_t time, size_t sz, const char *payload,
+                             fmc_error_t **error) {
+  ytp_sequence_t *seq =
+      ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
+  ytp_sequence_dir(seq, peer, time, sz, payload, error);
+}
 // Returns the name of the channel, given the channel reference
 void ytp_sequence_shared_ch_name(shared_sequence *sh_seq, ytp_channel_t channel,
                                  size_t *sz, const char **name,
@@ -212,7 +228,8 @@ size_t ytp_sequence_shared_tell(shared_sequence *sh_seq,
 }
 
 static struct ytp_sequence_api_v1 api_v1 {
-  ytp_sequence_shared_reserve, ytp_sequence_shared_commit, NULL, NULL,
+  ytp_sequence_shared_reserve, ytp_sequence_shared_commit,
+      ytp_sequence_shared_sub, ytp_sequence_shared_dir,
       ytp_sequence_shared_ch_name, ytp_sequence_shared_ch_decl,
       ytp_sequence_shared_ch_cb, ytp_sequence_shared_ch_cb_rm,
       ytp_sequence_shared_peer_name, ytp_sequence_shared_peer_decl,

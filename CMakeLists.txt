@@ -137,23 +137,6 @@ target_link_libraries(
 )
 
 add_library(
-    ytp_obj-inv-endianess
-    OBJECT
-    ${YTP_SRC}
-)
-target_include_directories(
-    ytp_obj-inv-endianess
-    PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
-    "${PROJECT_BINARY_DIR}/include"
-)
-target_compile_definitions(
-    ytp_obj-inv-endianess
-    PRIVATE
-    YTP_USE_BIG_ENDIAN
-)
-
-add_library(
     ytp_dep
     INTERFACE
 )

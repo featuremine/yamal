@@ -291,7 +291,8 @@ FMMODFUNC void ytp_timeline_cb_rm(ytp_timeline_t *timeline);
  * @return ytp_iterator_t
  */
 FMMODFUNC ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline,
-                                           uint64_t off, fmc_error_t **error);
+                                           ytp_mmnode_offs off,
+                                           fmc_error_t **error);
 
 /**
  * @brief Returns serializable offset given an iterator
@@ -301,9 +302,9 @@ FMMODFUNC ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline,
  * @param[out] error out-parameter for error handling
  * @return serializable
  */
-FMMODFUNC uint64_t ytp_timeline_tell(ytp_timeline_t *timeline,
-                                     ytp_iterator_t iterator,
-                                     fmc_error_t **error);
+FMMODFUNC ytp_mmnode_offs ytp_timeline_tell(ytp_timeline_t *timeline,
+                                            ytp_iterator_t iterator,
+                                            fmc_error_t **error);
 
 /**
  * @brief Registers an idle callback
