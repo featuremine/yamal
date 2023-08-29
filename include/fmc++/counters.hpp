@@ -198,7 +198,7 @@ private:
 class samples {
 private:
   samples(const samples &) = delete;
-  using map_t = unordered_map<string, sample *>;
+  using map_t = unordered_map<std::string, sample *>;
   using iterator =
       iterator_mapper<typename map_t::iterator, dereference_second>;
   using const_iterator =
@@ -212,7 +212,7 @@ public:
     }
   }
   template <class T> T &get(string_view raw_key) {
-    string key(raw_key);
+    std::string key(raw_key);
     auto where = map_.find(key);
     if (where != map_.end()) {
       auto *sampl = dynamic_cast<T *>(where->second);
@@ -228,13 +228,13 @@ public:
   iterator begin() { return map_.begin(); };
   iterator end() { return map_.end(); };
   iterator find(string_view raw_key) {
-    string key(raw_key);
+    std::string key(raw_key);
     return map_.find(key);
   };
   const_iterator begin() const { return map_.begin(); };
   const_iterator end() const { return map_.end(); };
   const_iterator find(string_view raw_key) const {
-    string key(raw_key);
+    std::string key(raw_key);
     return map_.find(key);
   }
 
