@@ -224,10 +224,6 @@ bool ytp_sequence_poll(ytp_sequence_t *seq, fmc_error_t **error) {
   return ytp_timeline_poll(&seq->timeline, error);
 }
 
-bool ytp_sequence_term(ytp_sequence_t *seq) {
-  return ytp_timeline_term(&seq->timeline);
-}
-
 ytp_iterator_t ytp_sequence_end(ytp_sequence_t *seq, fmc_error_t **error) {
   return ytp_yamal_end(&seq->ctrl.yamal, YTP_STREAM_LIST_DATA, error);
 }

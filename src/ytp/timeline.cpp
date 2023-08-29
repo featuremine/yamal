@@ -226,17 +226,6 @@ void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel,
   }
 }
 
-bool ytp_timeline_term(ytp_timeline_t *timeline) {
-  if (!ytp_yamal_term(timeline->it_data)) {
-    return false;
-  }
-
-  fmc_error_t *error;
-  auto ann_term =
-      ytp_announcement_term(&timeline->ctrl->yamal, timeline->it_data, &error);
-  return ann_term || error;
-}
-
 ytp_iterator_t ytp_timeline_iter_get(ytp_timeline_t *timeline) {
   return timeline->it_data;
 }

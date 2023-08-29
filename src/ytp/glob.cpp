@@ -24,6 +24,8 @@
 
 #include "cursor.h"
 
+// TODO: properly handle exceptions
+
 struct ytp_glob {
   ytp_cursor_t *cursor;
   std::unordered_map<std::string, fmc::lazy_rem_vector<ytp_cursor_data_cb_cl_t>>

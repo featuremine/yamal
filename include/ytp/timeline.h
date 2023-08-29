@@ -215,16 +215,6 @@ FMMODFUNC void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline,
                                        fmc_error_t **error);
 
 /**
- * @brief Checks if there are not more messages
- *
- * Complexity: Constant.
- *
- * @param[in] timeline
- * @return true if there are not more messages, false otherwise
- */
-FMMODFUNC bool ytp_timeline_term(ytp_timeline_t *timeline);
-
-/**
  * @brief Returns the current data iterator
  *
  * @param[in] timeline

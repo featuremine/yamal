@@ -445,7 +445,7 @@ bool ytp_control_term(ytp_iterator_t iterator) {
   return ytp_yamal_term(iterator);
 }
 
-ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t ptr,
+ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, ytp_mmnode_offs ptr,
                                 fmc_error_t **error) {
   auto it = ytp_yamal_seek(&ctrl->yamal, ptr, error);
   if (*error) {
@@ -453,6 +453,11 @@ ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t ptr,
   }
 
   return it;
+}
+
+ytp_mmnode_offs ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
+                                 fmc_error_t **error) {
+  return ytp_yamal_tell(&ctrl->yamal, iterator, error);
 }
 
 void ytp_control_poll_until(ytp_control_t *ctrl, uint64_t seqno,

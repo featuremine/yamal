@@ -404,16 +404,6 @@ FMMODFUNC void ytp_sequence_indx_cb_rm(ytp_sequence_t *seq,
 FMMODFUNC bool ytp_sequence_poll(ytp_sequence_t *seq, fmc_error_t **error);
 
 /**
- * @brief Checks if there are not more messages
- *
- * Complexity: Constant.
- *
- * @param[in] seq the ytp_sequence_t object
- * @return true if there are not more messages, false otherwise
- */
-FMMODFUNC bool ytp_sequence_term(ytp_sequence_t *seq);
-
-/**
  * @brief Returns the iterator to the end of yamal
  *
  * Complexity: Constant.

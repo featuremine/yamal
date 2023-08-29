@@ -267,7 +267,7 @@ FMMODFUNC ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
                                            fmc_error_t **error);
 
 /**
- * @brief Process control messages until the specified seqno
+ * @brief Process announcement messages until the specified seqno
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] seqno seqno
@@ -303,7 +303,8 @@ FMMODFUNC bool ytp_control_term(ytp_iterator_t iterator);
  * @param[out] error out-parameter for error handling
  * @return the iterator of the serializable ptr
  */
-FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t off,
+FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl,
+                                          ytp_mmnode_offs off,
                                           fmc_error_t **error);
 
 /**
@@ -314,8 +315,9 @@ FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t off,
  * @param[out] error out-parameter for error handling
  * @return the serializable ptr offset
  */
-FMMODFUNC size_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
-                                  fmc_error_t **error);
+FMMODFUNC ytp_mmnode_offs ytp_control_tell(ytp_control_t *ctrl,
+                                           ytp_iterator_t iterator,
+                                           fmc_error_t **error);
 
 #ifdef __cplusplus
 }

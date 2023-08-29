@@ -105,47 +105,6 @@ ytp_iterator_t ytp_announcement_begin(ytp_yamal_t *yamal, fmc_error_t **error) {
   return ytp_yamal_begin(yamal, YTP_STREAM_LIST_ANNS, error);
 }
 
-bool ytp_announcement_term(ytp_yamal_t *yamal, ytp_iterator_t iterator,
-                           fmc_error_t **error) {
-  fmc_error_clear(error);
-  while (!ytp_yamal_term(iterator)) {
-    uint64_t seqno;
-    size_t psz;
-    const char *peer;
-    size_t csz;
-    const char *channel;
-    size_t esz;
-    const char *encoding;
-    ytp_mmnode_offs *original;
-    ytp_mmnode_offs *subscribed;
-    ytp_announcement_read(yamal, iterator, &seqno, &psz, &peer, &csz, &channel,
-                          &esz, &encoding, &original, &subscribed, error);
-    if (*error) {
-      return true;
-    }
-
-    ytp_mmnode_offs original_val = atomic_load_cast(original);
-    if (original_val == 0) {
-      return true;
-    }
-
-    ytp_mmnode_offs stream = ytp_yamal_tell(yamal, iterator, error);
-    if (*error) {
-      return true;
-    }
-
-    iterator = ytp_yamal_next(yamal, iterator, error);
-    if (*error) {
-      return true;
-    }
-
-    if (original_val == stream) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool ytp_announcement_next(ytp_yamal_t *yamal, ytp_iterator_t *iterator,
                            uint64_t *seqno, ytp_mmnode_offs *stream,
                            size_t *psz, const char **peer, size_t *csz,

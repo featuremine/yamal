@@ -180,12 +180,6 @@ bool ytp_sequence_shared_poll(shared_sequence *sh_seq, fmc_error_t **error) {
       ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
   return ytp_sequence_poll(seq, error);
 }
-// Checks if there are not more messages
-bool ytp_sequence_shared_term(shared_sequence *sh_seq) {
-  ytp_sequence_t *seq =
-      ytp_sequence_shared_get((ytp_sequence_shared_t *)sh_seq);
-  return ytp_sequence_term(seq);
-}
 // Returns the iterator to the end of yamal
 ytp_iterator_t ytp_sequence_shared_end(shared_sequence *sh_seq,
                                        fmc_error_t **error) {
@@ -236,11 +230,10 @@ static struct ytp_sequence_api_v1 api_v1 {
       ytp_sequence_shared_peer_cb, ytp_sequence_shared_peer_cb_rm,
       ytp_sequence_shared_prfx_cb, ytp_sequence_shared_prfx_cb_rm,
       ytp_sequence_shared_indx_cb, ytp_sequence_shared_indx_cb_rm,
-      ytp_sequence_shared_poll, ytp_sequence_shared_term,
-      ytp_sequence_shared_end, ytp_sequence_shared_cur,
-      ytp_sequence_shared_get_it, ytp_sequence_shared_set_it,
-      ytp_sequence_shared_seek, ytp_sequence_shared_tell,
-      (sharedseqfunc_inc)ytp_sequence_shared_inc,
+      ytp_sequence_shared_poll, nullptr, ytp_sequence_shared_end,
+      ytp_sequence_shared_cur, ytp_sequence_shared_get_it,
+      ytp_sequence_shared_set_it, ytp_sequence_shared_seek,
+      ytp_sequence_shared_tell, (sharedseqfunc_inc)ytp_sequence_shared_inc,
       (sharedseqfunc_dec)ytp_sequence_shared_dec
 };
 

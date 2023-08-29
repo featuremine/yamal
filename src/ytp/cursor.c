@@ -289,11 +289,6 @@ void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor, ytp_mmnode_offs stream,
   }
 }
 
-bool ytp_cursor_term(ytp_cursor_t *cursor, fmc_error_t **error) {
-  return ytp_yamal_term(cursor->it_data) &&
-         ytp_announcement_term(cursor->yamal, cursor->it_ann, error);
-}
-
 static bool ytp_cursor_poll_ann(ytp_cursor_t *cursor, fmc_error_t **error) {
   uint64_t seqno;
   ytp_mmnode_offs stream;

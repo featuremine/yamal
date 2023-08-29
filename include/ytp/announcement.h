@@ -113,18 +113,6 @@ FMMODFUNC ytp_iterator_t ytp_announcement_begin(ytp_yamal_t *yamal,
                                                 fmc_error_t **error);
 
 /**
- * @brief Checks if there are no more announcement messages
- *
- * @param[in] yamal
- * @param[in] iterator
- * @param[out] error out-parameter for error handling
- * @return true if there are no more announcement messages, false otherwise
- */
-FMMODFUNC bool ytp_announcement_term(ytp_yamal_t *yamal,
-                                     ytp_iterator_t iterator,
-                                     fmc_error_t **error);
-
-/**
  * @brief Returns iterator for the next announcement message
  *
  * @param[in] yamal

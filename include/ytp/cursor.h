@@ -142,15 +142,6 @@ FMMODFUNC void ytp_cursor_data_cb_rm(ytp_cursor_t *cursor,
                                      fmc_error_t **error);
 
 /**
- * @brief Checks if there are not more messages
- *
- * @param[in] cursor the ytp_cursor_t object
- * @param[out] error out-parameter for error handling
- * @return true if there are not more messages, false otherwise
- */
-FMMODFUNC bool ytp_cursor_term(ytp_cursor_t *cursor, fmc_error_t **error);
-
-/**
  * @brief Reads one message and executes the callbacks that applies.
  *
  * @param[in] cursor the ytp_cursor_t object
@@ -158,6 +149,8 @@ FMMODFUNC bool ytp_cursor_term(ytp_cursor_t *cursor, fmc_error_t **error);
  * @return true if a message was processed, false otherwise
  */
 FMMODFUNC bool ytp_cursor_poll(ytp_cursor_t *cursor, fmc_error_t **error);
+
+// TODO: add ytp_cursor_poll_until
 
 /**
  * @brief Moves all of the callbacks of the source cursor into destination if
