@@ -287,7 +287,7 @@ void for_each_in_tuple(F &&f, Tuple &&tuple) {
 }
 
 template <class Func, class... Ts, class... Args>
-void for_each_type(Func &&f, type_list<Ts...>, Args &&... args) {
+void for_each_type(Func &&f, type_list<Ts...>, Args &&...args) {
   for_each([&](auto t) { f(t, forward<Args>(args)...); }, typify<Ts>()...);
 }
 
@@ -310,7 +310,7 @@ template <template <class> class Obj, class Tup>
 using tuple_unpack_t = typename tuple_unpack<Obj, Tup>::type;
 
 template <class Op, class Func, class... Args>
-decltype(auto) apply_for_each(Op &&op, Func &&f, Args &&... args) {
+decltype(auto) apply_for_each(Op &&op, Func &&f, Args &&...args) {
   tuple<decltype(f(std::forward<Args>(args)))...> tup = {
       f(std::forward<Args>(args))...};
   return apply(forward<Op>(op), move(tup));
@@ -318,10 +318,10 @@ decltype(auto) apply_for_each(Op &&op, Func &&f, Args &&... args) {
 
 template <class Op, class Func, class... Ts, class... Args>
 decltype(auto) apply_for_each_type(Op &&op, Func &&f, type_list<Ts...>,
-                                   Args &&... args) {
-  return apply_for_each(forward<Op>(op),
-                        [&](auto t) { return f(t, forward<Args>(args)...); },
-                        typify<Ts>()...);
+                                   Args &&...args) {
+  return apply_for_each(
+      forward<Op>(op), [&](auto t) { return f(t, forward<Args>(args)...); },
+      typify<Ts>()...);
 }
 
 template <class... Args> std::string type_names() {
