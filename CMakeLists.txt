@@ -35,15 +35,11 @@ endif ()
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
 include(GNUInstallDirs)
-find_library(DW_LIB dw)
-find_library(UNWIND_LIB unwind)
-find_library(UNWIND_SYS_LIB unwind-${CMAKE_SYSTEM_PROCESSOR})
 
 add_library(
     fmc++
     STATIC
     "${PROJECT_SOURCE_DIR}/src/fmc++/config.cpp"
-    "${PROJECT_SOURCE_DIR}/src/fmc++/stackdump.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc++/websocket.cpp"
 )
 target_include_directories(
@@ -51,13 +47,6 @@ target_include_directories(
     PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_BINARY_DIR}/include"
-)
-target_link_libraries(
-    fmc++
-    PRIVATE
-    ${DW_LIB}
-    ${UNWIND_LIB}
-    ${UNWIND_SYS_LIB}
 )
 
 set(
