@@ -25,7 +25,7 @@ target_link_libraries(
     py_yamal_obj
     PRIVATE
     fmc++
-    Python::Python
+    PkgConfig::PYTHON
 )
 
 add_library(
