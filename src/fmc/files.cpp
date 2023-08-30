@@ -338,7 +338,7 @@ void fmc_falloc(fmc_fd fd, long long sz, fmc_error_t **error) {
 #if defined(FMC_SYS_LINUX)
   auto err = posix_fallocate(fd, 0, sz);
   if (err != 0) {
-    FMC_ERROR_REPORT(error, fmc_syserror_msg());
+    FMC_ERROR_REPORT(error, strerror(err));
   }
 #elif defined(FMC_SYS_WIN)
   bool result = true;

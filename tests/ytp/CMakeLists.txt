@@ -1,98 +1,27 @@
-add_executable(
-    tests_ytp_yamal
-    "yamal.cpp"
-)
-target_link_libraries(
-    tests_ytp_yamal
-    PUBLIC
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_yamal COMMAND tests_ytp_yamal)
+function(add_ytp_test NAME)
+    add_executable(
+        tests_ytp_${NAME}
+        "${NAME}.cpp"
+    )
+    target_include_directories(
+        tests_ytp_${NAME}
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/src/ytp"
+    )
+    target_link_libraries(
+        tests_ytp_${NAME}
+        PUBLIC
+        ytp
+        PkgConfig::GTEST
+    )
+    add_test(NAME ytp_${NAME} COMMAND tests_ytp_${NAME})
+endfunction()
 
-add_executable(
-    tests_ytp_peer
-    "peer.cpp"
-)
-target_link_libraries(
-    tests_ytp_peer
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_peer COMMAND tests_ytp_peer)
-
-add_executable(
-    tests_ytp_channel
-    "channel.cpp"
-)
-target_link_libraries(
-    tests_ytp_channel
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_channel COMMAND tests_ytp_channel)
-
-add_executable(
-    tests_ytp_time
-    "time.cpp"
-)
-target_link_libraries(
-    tests_ytp_time
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_time COMMAND tests_ytp_time)
-
-add_executable(
-    tests_ytp_control
-    "control.cpp"
-)
-target_link_libraries(
-    tests_ytp_control
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_control COMMAND tests_ytp_control)
-
-add_executable(
-    tests_ytp_timeline
-    "timeline.cpp"
-)
-target_link_libraries(
-    tests_ytp_timeline
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_timeline COMMAND tests_ytp_timeline)
-
-add_executable(
-    tests_ytp_sequence
-    "sequence.cpp"
-)
-target_link_libraries(
-    tests_ytp_sequence
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_sequence COMMAND tests_ytp_sequence)
-
-add_executable(
-    tests_ytp_containers
-    "containers.cpp"
-)
-target_link_libraries(
-    tests_ytp_containers
-    PRIVATE
-    ytp
-    PkgConfig::GTEST
-)
-add_test(NAME ytp_containers COMMAND tests_ytp_containers)
+add_ytp_test("yamal")
+add_ytp_test("time")
+add_ytp_test("timeline")
+add_ytp_test("sequence")
+add_ytp_test("stream")
 
 add_executable(
     tests_ytp_compiles_c

@@ -28,6 +28,7 @@
 #include <windows.h>
 #endif
 
+#include <fmc++/error.hpp>
 #include <fmc/error.h>
 
 #include <cerrno>
@@ -137,15 +138,9 @@ bool fmc_error_has(const fmc_error_t *err) {
   return err->code != FMC_ERROR_NONE;
 }
 
-struct fmc_error_wrap {
-  fmc_error_wrap() { fmc_error_init_none(&error); }
-  ~fmc_error_wrap() { fmc_error_destroy(&error); }
-  fmc_error error;
-};
-
 fmc_error_t *fmc_error_inst() {
-  static thread_local fmc_error_wrap wrap;
-  return &wrap.error;
+  static thread_local fmc::error e;
+  return &e;
 }
 
 const char *fmc_syserror_msg() {

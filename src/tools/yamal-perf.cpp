@@ -36,6 +36,12 @@ using namespace std::chrono_literals;
 static std::atomic<bool> run = true;
 static void sig_handler(int s) { run = false; }
 
+struct data_msg {
+  uint64_t seqno;
+  int64_t ts;
+  char payload[];
+};
+
 int main(int argc, char **argv) {
   fmc_set_signal_handler(sig_handler);
 
@@ -58,8 +64,11 @@ int main(int argc, char **argv) {
                                        true, "", "path");
 
   TCLAP::ValueArg<std::string> channelName(
-      "c", "channel", "name of the channel to use", false,
+      "c", "channel", "name of the channel prefix to use", false,
       "performance_test_channel", "string");
+
+  TCLAP::ValueArg<size_t> channelCount(
+      "k", "count", "number of channels to use", false, 2000, "integer");
 
   TCLAP::ValueArg<size_t> messagesArg("m", "messages",
                                       "number of messages to publish", false,
@@ -129,14 +138,24 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  std::vector<ytp_channel_t> out_channels;
   std::string_view channelname = channelName.getValue();
-  auto channel =
-      ytp_sequence_ch_decl(seq, peer, fmc_cur_time_ns(), channelname.size(),
-                           channelname.data(), &error);
-  if (error) {
-    std::cerr << "Unable to declare the ytp peer: " << fmc_error_msg(error)
-              << std::endl;
-    return -1;
+
+  if (is_source) {
+    for (size_t i = 0; i < channelCount.getValue(); ++i) {
+      std::string name;
+      name += channelname;
+      name += '/';
+      name += std::to_string(i);
+      out_channels.push_back(ytp_sequence_ch_decl(
+          seq, peer, fmc_cur_time_ns(), name.size(), name.data(), &error));
+
+      if (error) {
+        std::cerr << "Unable to declare the ytp channel: "
+                  << fmc_error_msg(error) << std::endl;
+        return -1;
+      }
+    }
   }
 
   if (affinityArg.isSet()) {
@@ -190,13 +209,13 @@ int main(int argc, char **argv) {
     }
 
     size_t msg_count = 0;
-    auto msg_size = std::max(sizeArg.getValue(), sizeof(size_t));
-    std::string payload(msg_size - sizeof(size_t), '.');
+    auto msg_size = std::max(sizeArg.getValue(), sizeof(data_msg));
+    std::string payload(msg_size - sizeof(data_msg), '.');
 
     size_t prev_messages_count = 0;
     int64_t next_timer = fmc_cur_time_ns();
 
-    size_t curr_seqnum = 0;
+    uint64_t curr_seqnum = 0;
     for (ssize_t i = messagesArg.getValue();
          (!messagesArg.isSet() || --i >= 0) && run;) {
       std::this_thread::sleep_for(sleep_ms);
@@ -207,12 +226,15 @@ int main(int argc, char **argv) {
         return -1;
       }
 
-      auto &msg_seqnum = *reinterpret_cast<size_t *>(ptr);
-      msg_seqnum = fmc_htobe64(curr_seqnum++);
-      memcpy(ptr + sizeof(size_t), payload.data(), payload.size());
+      auto &msg = *reinterpret_cast<data_msg *>(ptr);
+      msg.seqno = fmc_htobe64(curr_seqnum++);
+      memcpy(msg.payload, payload.data(), payload.size());
 
       auto now = fmc_cur_time_ns();
-      ytp_sequence_commit(seq, peer, channel, now, ptr, &error);
+      msg.ts = fmc_htobe64(now);
+      ytp_sequence_commit(seq, peer,
+                          out_channels[msg_count % out_channels.size()], now,
+                          ptr, &error);
       ++msg_count;
       if (error) {
         std::cerr << "Unable to commit: " << fmc_error_msg(error) << std::endl;
@@ -237,7 +259,6 @@ int main(int argc, char **argv) {
   } else if (is_sink) {
 
     struct stats_t {
-      std::string_view peer_name;
       ytp_sequence_t *seq;
       size_t messages_count_;
       int64_t first_message_;
@@ -250,10 +271,6 @@ int main(int argc, char **argv) {
 
       stats_t() { reset(); }
 
-      void set_peer_name(std::string_view peer_name) {
-        this->peer_name = peer_name;
-      }
-
       void reset() {
         messages_count_ = 0;
         first_message_ = 0;
@@ -263,25 +280,30 @@ int main(int argc, char **argv) {
         buckets_.clear();
       }
 
-      void sample(const char *data_ptr, size_t data_sz, uint64_t msg_time) {
-        size_t msg_seqnum =
-            fmc_be64toh(*reinterpret_cast<const size_t *>(data_ptr));
+      void sample(const char *data_ptr, size_t data_sz, int64_t msg_time) {
+        if (data_sz < sizeof(data_msg)) {
+          return;
+        }
+
         auto now = fmc_cur_time_ns();
+        auto &msg = *reinterpret_cast<const data_msg *>(data_ptr);
         // now - time = how long it took from writing to receiving the message
-        uint64_t time_write_read = now - msg_time;
+        int64_t msgseqno = fmc_be64toh(msg.seqno);
+        int64_t msgts = fmc_be64toh(msg.ts);
+        int64_t time_write_read = now - msgts;
 
         if (first_message_ == 0) {
-          first_message_ = now;
+          first_message_ = msgts;
         }
         messages_count_ += 1;
-        last_message_ = now;
+        last_message_ = msgts;
         total_size_ += data_sz;
         total_time_ += time_write_read;
 
-        if (msg_seqnum == 0) {
+        if (msgseqno == 0) {
           seqnum_ = 0;
         }
-        if (msg_seqnum != seqnum_++) {
+        if (msgseqno != seqnum_++) {
           ++out_of_sequence_count_;
         }
 
@@ -311,6 +333,8 @@ int main(int argc, char **argv) {
         } else if (total_time_us.count() < 10) {
           std::cout << "Time difference between the first message and the last "
                        "one was too small\n";
+        } else if (experiment_time_us.count() < 1) {
+          std::cout << "Experiment time was too small\n";
         } else {
           std::cout << "Total: " << messages_count_ << " messages, "
                     << ((double)total_size_) / 1024.0 / 1024.0
@@ -355,7 +379,11 @@ int main(int argc, char **argv) {
           stats.sample(data_ptr, data_sz, msg_time);
         };
 
-    ytp_sequence_indx_cb(seq, channel, on_message, &closure, &error);
+    std::string name;
+    name += channelname;
+    name += '/';
+    ytp_sequence_prfx_cb(seq, name.size(), name.data(), on_message, &closure,
+                         &error);
     if (error) {
       std::cerr << "Unable to register callback: " << fmc_error_msg(error)
                 << std::endl;

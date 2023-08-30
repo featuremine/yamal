@@ -12,22 +12,12 @@
 
 *****************************************************************************/
 
+#include "yamal-common.hpp"
+
 #include <tclap/CmdLine.h>
 
-#include <fmc++/time.hpp>
 #include <fmc/process.h>
-#include <fmc/signals.h>
-#include <ytp/control.h>
-#include <ytp/sequence.h>
 #include <ytp/version.h>
-
-#include <cstring>
-#include <iostream>
-
-#define CHECK(E)                                                               \
-  if (E) {                                                                     \
-    goto error;                                                                \
-  }
 
 int main(int argc, char **argv) {
   TCLAP::CmdLine cmd("yamal copy tool", ' ', YTP_VERSION);
@@ -78,71 +68,47 @@ int main(int argc, char **argv) {
     }
   }
 
-  auto src_name = srcArg.getValue();
-  auto dest_name = destArg.getValue();
+  auto &src_name = srcArg.getValue();
+  auto &dest_name = destArg.getValue();
 
-  fmc_error_t *error;
-  fmc_fd src_fd = -1;
-  fmc_fd dest_fd = -1;
-  ytp_yamal_t *src_yml = NULL;
-  ytp_yamal_t *dest_yml = NULL;
-  ytp_iterator_t it = NULL;
-  int64_t delta = 0;
-
-  src_fd = fmc_fopen(src_name.c_str(), fmc_fmode::READ, &error);
-  if (!fmc_fvalid(src_fd)) {
-    std::cerr << "Unable to open file " << src_name << std::endl;
-    goto error;
-  }
-
-  dest_fd = fmc_fopen(dest_name.c_str(), fmc_fmode::READWRITE, &error);
-  if (!fmc_fvalid(dest_fd)) {
-    std::cerr << "Unable to open file " << dest_name << std::endl;
-    goto error;
-  }
-
-  src_yml = ytp_yamal_new(src_fd, &error);
-  CHECK(error);
-  dest_yml = ytp_yamal_new(dest_fd, &error);
-  CHECK(error);
-
-  it = ytp_yamal_begin(src_yml, &error);
-  CHECK(error);
-  for (; !ytp_yamal_term(it); it = ytp_yamal_next(src_yml, it, &error)) {
-    CHECK(error);
-    size_t sz;
-    char *src;
-    ytp_peer_t peer;
-    ytp_channel_t ch;
-    uint64_t time;
-    ytp_time_read(src_yml, it, &peer, &ch, &time, &sz, (const char **)&src,
-                  &error);
-    CHECK(error);
-    if (!delta && time) {
-      delta = fmc_cur_time_ns() - time;
+  struct handler_t {
+    bool on_message(ytp_yamal_t *yamal, int64_t ts, size_t sz,
+                    fmc_error_t **error) {
+      if (shift != 0) {
+        auto wait_until = ts + shift;
+        while (fmc_cur_time_ns() < wait_until)
+          ;
+      } else {
+        shift = fmc_cur_time_ns() - ts;
+      }
+      fmc_error_clear(error);
+      return true;
     }
-    while (time + delta > fmc_cur_time_ns())
-      ;
-    time = fmc_cur_time_ns();
-    char *dest = ytp_time_reserve(dest_yml, sz, &error);
-    CHECK(error);
-    memcpy(dest, src, sz);
-    ytp_time_commit(dest_yml, peer, ch, time, dest, &error);
-    CHECK(error);
+
+    void on_error(fmc_error_t *error) {
+      stop = true;
+      ret = 1;
+      std::cerr << fmc_error_msg(error) << std::endl;
+    }
+
+    int64_t shift = 0;
+    int ret = 0;
+    bool stop = false;
+  } handler;
+
+  ann_cl_t ann_cl(handler);
+  ann_cl.init(src_name.c_str(), dest_name.c_str());
+  while (!handler.stop) {
+    fmc_error_t *error;
+    auto polled = ytp_cursor_poll(ann_cl.cursor, &error);
+    if (error) {
+      handler.on_error(error);
+      break;
+    }
+    if (!polled) {
+      break;
+    }
   }
 
-  return 0;
-
-error:
-  std::cerr << fmc_error_msg(error) << std::endl;
-  if (src_yml)
-    ytp_yamal_del(src_yml, &error);
-  if (dest_yml)
-    ytp_yamal_del(dest_yml, &error);
-  if (src_fd != -1)
-    fmc_fclose(src_fd, &error);
-  if (dest_fd != -1)
-    fmc_fclose(dest_fd, &error);
-
-  return -1;
+  return handler.ret;
 }
