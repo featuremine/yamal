@@ -6,7 +6,7 @@ target_link_libraries(
     tests_ytp_yamal
     PUBLIC
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_yamal COMMAND tests_ytp_yamal)
 
@@ -18,7 +18,7 @@ target_link_libraries(
     tests_ytp_peer
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_peer COMMAND tests_ytp_peer)
 
@@ -30,7 +30,7 @@ target_link_libraries(
     tests_ytp_channel
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_channel COMMAND tests_ytp_channel)
 
@@ -42,7 +42,7 @@ target_link_libraries(
     tests_ytp_time
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_time COMMAND tests_ytp_time)
 
@@ -54,7 +54,7 @@ target_link_libraries(
     tests_ytp_control
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_control COMMAND tests_ytp_control)
 
@@ -66,7 +66,7 @@ target_link_libraries(
     tests_ytp_timeline
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_timeline COMMAND tests_ytp_timeline)
 
@@ -78,7 +78,7 @@ target_link_libraries(
     tests_ytp_sequence
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_sequence COMMAND tests_ytp_sequence)
 
@@ -90,7 +90,7 @@ target_link_libraries(
     tests_ytp_containers
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME ytp_containers COMMAND tests_ytp_containers)
 

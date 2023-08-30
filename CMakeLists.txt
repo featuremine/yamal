@@ -17,6 +17,16 @@ option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentatio
 option (BUILD_WHEEL "Enable build of the python package." ON)
 option (TEST_EXTENSIONS "Enable testing the extensions." ON)
 
+set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Subproject REQUIRED)
+
+add_subproject(
+    NAME libgtest
+    GIT_REVISION "v1.14.0"
+    GIT_URL "https://github.com/google/googletest.git"
+    TARGETS gtest
+)
+
 set(YAMAL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(YAMAL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(YAMAL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/bin")

@@ -7,7 +7,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_config COMMAND tests_fmc_config)
 
@@ -19,7 +19,7 @@ target_link_libraries(
     tests_fmc_shared_map
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_shared_map COMMAND tests_fmc_shared_map)
 
@@ -31,7 +31,7 @@ target_link_libraries(
     tests_fmc_threaded
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_threaded COMMAND tests_fmc_threaded)
 
@@ -44,7 +44,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_variant_map COMMAND tests_fmc_variant_map)
 
@@ -57,7 +57,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_strings COMMAND tests_fmc_strings)
 
@@ -70,7 +70,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_decimal128 COMMAND tests_fmc_decimal128)
 
@@ -83,7 +83,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_errorpp COMMAND tests_fmc_errorpp)
 
@@ -96,7 +96,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_rprice COMMAND tests_fmc_rprice)
 
@@ -109,7 +109,7 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_rational64 COMMAND tests_fmc_rational64)
 
@@ -122,6 +122,6 @@ target_link_libraries(
     PRIVATE
     ytp
     fmc++
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_static_vector COMMAND tests_fmc_static_vector)
