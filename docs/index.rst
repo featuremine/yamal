@@ -30,30 +30,55 @@ Indices and tables
 Docs
 ====
 
-yamal.h
+announcement.h
 -------------
 
-.. doxygenfile:: ytp/yamal.h
+.. doxygenfile:: ytp/announcement.h
 
 control.h
 -------------
 
 .. doxygenfile:: ytp/control.h
 
+cursor.h
+-------------
+
+.. doxygenfile:: ytp/cursor.h
+
+data.h
+-------------
+
+.. doxygenfile:: ytp/data.h
+
+glob.h
+-------------
+
+.. doxygenfile:: ytp/glob.h
+
+index.h
+-------------
+
+.. doxygenfile:: ytp/index.h
+
 sequence.h
 -------------
 
 .. doxygenfile:: ytp/sequence.h
 
-peer.h
+stream.h
 -------------
 
-.. doxygenfile:: ytp/peer.h
+.. doxygenfile:: ytp/stream.h
 
-channel.h
+streams.h
 -------------
 
-.. doxygenfile:: ytp/channel.h
+.. doxygenfile:: ytp/streams.h
+
+subscription.h
+-------------
+
+.. doxygenfile:: ytp/subscription.h
 
 time.h
 -------------
@@ -64,3 +89,8 @@ timeline.h
 -------------
 
 .. doxygenfile:: ytp/timeline.h
+
+yamal.h
+-------------
+
+.. doxygenfile:: ytp/yamal.h

@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+
+import xml.etree.ElementTree as ET
+import argparse
+import os
+import subprocess
+
+
+def node_to_text(n: ET.Element):
+    text = ''
+    if n is not None:
+        kind = n.attrib.get('kind', '')
+        if kind == 'param':
+            for i in n.findall('parameteritem'):
+                name = i.find('parameternamelist/parametername').text
+                desc = i.find('parameterdescription/para').text
+                if desc:
+                    text = text + f'\n- {name}: {desc}'
+                else:
+                    text = text + f'\n- {name}'
+            text = text + '\n'
+        elif kind == 'return':
+            desc = n.find('para').text
+            if desc is not None:
+                text = text + f'\n- **return value**: {desc}'
+        else:
+            if n.text is not None:
+                text = text + n.text
+            for i in list(n):
+                text = text + node_to_text(i)
+            if n.tail is not None:
+                text = text + n.tail
+    return text
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--doxygen', required=True)
+    parser.add_argument('-d', '--directory', required=True)
+    parser.add_argument('-i', '--include', required=True)
+    parser.add_argument('-f', '--headers', required=True)
+    parser.add_argument('-o', '--output', required=True)
+    args = parser.parse_args()
+
+    proc = subprocess.Popen([args.doxygen, '-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=args.directory)
+
+    with open(os.path.join(os.path.dirname(__file__), 'update-docs.in')) as f:
+        proc.stdin.write(bytes(f.read() + f'\nINPUT = {args.headers}\n', 'utf-8'))
+        proc.stdin.close()
+
+    proc.wait()
+    proc.poll()
+    assert proc.returncode == 0, (proc.returncode, proc.stderr.read())
+
+    in_root = ET.parse(os.path.join(args.directory, 'xml', 'index.xml')).getroot()
+
+    text = ''
+
+    files = dict()
+    for type_tag in in_root.findall('compound'):
+        if type_tag.attrib['kind'] == 'file':
+            api = ET.parse(os.path.join(args.directory, 'xml', type_tag.attrib['refid'] + '.xml')).getroot()
+            file = api.find('compounddef/location').attrib['file']
+
+            for mdef in api.findall('compounddef/sectiondef/memberdef'):
+                if mdef.attrib['kind'] == 'function':
+                    briefnode = mdef.find('briefdescription')
+                    if briefnode:
+                        if not file in files:
+                            basename = os.path.basename(file)
+                            fd = open(os.path.join(args.output, f'{os.path.splitext(basename)[0].capitalize()}-C-API.md'), 'w')
+
+                            desc = node_to_text(api.find('compounddef/briefdescription/para')).strip()
+
+                            fd.write(f'# {basename}\n\n{desc}\n\n')
+                            if file.startswith(args.include):
+                                fd.write(f'```c\n#include <{file[len(args.include):]}>\n```\n\n')
+                            files[file] = fd
+
+                        brief = briefnode.find('para').text
+                        returnv = node_to_text(mdef.find('type')).strip()
+                        name = mdef.find('name').text
+                        fargs = mdef.find('argsstring').text
+                        detdesc = mdef.find('detaileddescription')
+
+                        signature = returnv.replace('FMMODFUNC ', '') + ' ' + name + fargs
+                        files[file].write(f"""## {name}
+
+{brief}
+{node_to_text(detdesc).strip()}
+
+```c
+{signature}
+```
+
+""")
+
+    for path, f in files.items():
+        f.close()
