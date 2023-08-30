@@ -12,7 +12,7 @@ function(add_ytp_test NAME)
         tests_ytp_${NAME}
         PUBLIC
         ytp
-        PkgConfig::GTEST
+        gtest
     )
     add_test(NAME ytp_${NAME} COMMAND tests_ytp_${NAME})
 endfunction()

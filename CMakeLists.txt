@@ -9,6 +9,16 @@ project(
     HOMEPAGE_URL "https://www.featuremine.com"
 )
 
+set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Subproject REQUIRED)
+
+add_subproject(
+    NAME libgtest
+    GIT_REVISION "v1.14.0"
+    GIT_URL "https://github.com/google/googletest.git"
+    TARGETS gtest
+)
+
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
