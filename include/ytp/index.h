@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ytp/api.h>
+#include <ytp/stream.h>
 #include <ytp/yamal.h>
 
 #include <fmc/error.h>
@@ -92,8 +93,10 @@ FMMODFUNC void ytp_index_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs offset,
  * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t
  */
-#define ytp_index_begin(yamal, error)                                          \
-  ytp_yamal_begin(yamal, YTP_STREAM_LIST_INDX, error)
+static inline ytp_iterator_t ytp_index_begin(ytp_yamal_t *yamal,
+                                             fmc_error_t **error) {
+  return ytp_yamal_begin(yamal, YTP_STREAM_LIST_INDX, error);
+}
 
 /**
  * @brief Returns an iterator to the end of the list
@@ -102,8 +105,10 @@ FMMODFUNC void ytp_index_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs offset,
  * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t
  */
-#define ytp_index_end(yamal, error)                                            \
-  ytp_yamal_end(yamal, YTP_STREAM_LIST_INDX, error)
+static inline ytp_iterator_t ytp_index_end(ytp_yamal_t *yamal,
+                                           fmc_error_t **error) {
+  return ytp_yamal_end(yamal, YTP_STREAM_LIST_INDX, error);
+}
 
 #ifdef __cplusplus
 }

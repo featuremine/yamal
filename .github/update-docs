@@ -15,14 +15,14 @@ def node_to_text(n: ET.Element):
                 name = i.find('parameternamelist/parametername').text
                 desc = i.find('parameterdescription/para').text
                 if desc:
-                    text = text + f'\n- {name}: {desc}'
+                    text = text + f'\n- {name.strip()}: {desc.strip()}'
                 else:
-                    text = text + f'\n- {name}'
+                    text = text + f'\n- {name.strip()}'
             text = text + '\n'
         elif kind == 'return':
             desc = n.find('para').text
             if desc is not None:
-                text = text + f'\n- **return value**: {desc}'
+                text = text + f'\n**return value**: {desc.strip()}'
         else:
             if n.text is not None:
                 text = text + n.text

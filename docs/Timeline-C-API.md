@@ -10,9 +10,9 @@ File contains C declaration of timeline API of YTP.
 
 Allocates and initializes a ytp_timeline object. 
 - timeline
-- error: out-parameter for error handling 
+- error: out-parameter for error handling
 
-- **return value**: ytp_timeline_t object
+**return value**: ytp_timeline_t object
 
 ```c
 ytp_timeline_t * ytp_timeline_new(ytp_control_t *ctrl, fmc_error_t **error)
@@ -22,9 +22,9 @@ ytp_timeline_t * ytp_timeline_new(ytp_control_t *ctrl, fmc_error_t **error)
 
 Initializes a ytp_timeline object. 
 - timeline
-- error: out-parameter for error handling 
+- error: out-parameter for error handling
 
-- **return value**: ytp_timeline_t object
+**return value**: ytp_timeline_t object
 
 ```c
 void ytp_timeline_init(ytp_timeline_t *timeline, ytp_control_t *ctrl, fmc_error_t **error)
@@ -43,7 +43,7 @@ void ytp_timeline_del(ytp_timeline_t *timeline, fmc_error_t **error)
 ## ytp_timeline_destroy
 
 Destroys a ytp_timeline_t object. 
-- timeline: the ytp_timeline_t object 
+- timeline: the ytp_timeline_t object
 - error: out-parameter for error handling
 
 ```c
@@ -174,7 +174,7 @@ void ytp_timeline_indx_cb_rm(ytp_timeline_t *timeline, ytp_channel_t channel, yt
 Returns the current data iterator. 
 - timeline
 
-- **return value**: ytp_iterator_t
+**return value**: ytp_iterator_t
 
 ```c
 ytp_iterator_t ytp_timeline_iter_get(ytp_timeline_t *timeline)
@@ -194,9 +194,9 @@ void ytp_timeline_iter_set(ytp_timeline_t *timeline, ytp_iterator_t iterator)
 
 Reads one message and executes the callbacks that applies. 
 - timeline
-- error: out-parameter for error handling 
+- error: out-parameter for error handling
 
-- **return value**: true if a message was processed, false otherwise
+**return value**: true if a message was processed, false otherwise
 
 ```c
 bool ytp_timeline_poll(ytp_timeline_t *timeline, fmc_error_t **error)
@@ -207,9 +207,9 @@ bool ytp_timeline_poll(ytp_timeline_t *timeline, fmc_error_t **error)
 Reads one message and executes the callbacks that applies if timeline is behind src_timeline. 
 - timeline
 - src_timeline
-- error: out-parameter for error handling 
+- error: out-parameter for error handling
 
-- **return value**: true if a message was processed, false otherwise
+**return value**: true if a message was processed, false otherwise
 
 ```c
 bool ytp_timeline_poll_until(ytp_timeline_t *timeline, const ytp_timeline_t *src_timeline, fmc_error_t **error)
@@ -221,7 +221,7 @@ Moves all of the callbacks of the source timeline into destination if both timel
 - dest
 - src
 
-- **return value**: true if both timelines have the same iterator and all the callbacks were moved, false otherwise.
+**return value**: true if both timelines have the same iterator and all the callbacks were moved, false otherwise.
 
 ```c
 bool ytp_timeline_consume(ytp_timeline_t *dest, ytp_timeline_t *src)
@@ -242,9 +242,9 @@ Returns an iterator given a serializable offset.
 Moves control pointer to catch up with iterator. 
 - timeline
 - off
-- error: out-parameter for error handling 
+- error: out-parameter for error handling
 
-- **return value**: ytp_iterator_t
+**return value**: ytp_iterator_t
 
 ```c
 ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline, ytp_mmnode_offs off, fmc_error_t **error)
@@ -255,9 +255,9 @@ ytp_iterator_t ytp_timeline_seek(ytp_timeline_t *timeline, ytp_mmnode_offs off, 
 Returns serializable offset given an iterator. 
 - timeline
 - iterator
-- error: out-parameter for error handling 
+- error: out-parameter for error handling
 
-- **return value**: serializable
+**return value**: serializable
 
 ```c
 ytp_mmnode_offs ytp_timeline_tell(ytp_timeline_t *timeline, ytp_iterator_t iterator, fmc_error_t **error)

@@ -95,7 +95,7 @@ FMMODFUNC void ytp_subscription_lookup(ytp_yamal_t *yamal,
  * @brief Lookups a raw stream subscription message
  *
  * @param[in] yamal
- * @param[in/out] iterator
+ * @param[in, out] iterator
  * @param[out] stream
  * @param[out] error out-parameter for error handling
  * @return bool true if a message was read, false otherwise
@@ -112,8 +112,10 @@ FMMODFUNC bool ytp_subscription_next(ytp_yamal_t *yamal,
  * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t
  */
-#define ytp_subscription_begin(yamal, error)                                   \
-  ytp_yamal_begin(yamal, YTP_STREAM_LIST_SUBS, error)
+static inline ytp_iterator_t ytp_subscription_begin(ytp_yamal_t *yamal,
+                                                    fmc_error_t **error) {
+  return ytp_yamal_begin(yamal, YTP_STREAM_LIST_SUBS, error);
+}
 
 /**
  * @brief Returns an iterator to the end of the list
@@ -122,8 +124,10 @@ FMMODFUNC bool ytp_subscription_next(ytp_yamal_t *yamal,
  * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t
  */
-#define ytp_subscription_end(yamal, error)                                     \
-  ytp_yamal_end(yamal, YTP_STREAM_LIST_SUBS, error)
+static inline ytp_iterator_t ytp_subscription_end(ytp_yamal_t *yamal,
+                                                  fmc_error_t **error) {
+  return ytp_yamal_end(yamal, YTP_STREAM_LIST_SUBS, error);
+}
 
 #ifdef __cplusplus
 }

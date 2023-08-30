@@ -76,7 +76,7 @@ FMMODFUNC ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams,
                                                fmc_error_t **error);
 
 /**
- * @brief Announces a stream in adherence to stream protocol
+ * @brief Lookups a stream in adherence to stream protocol
  *
  * @param[in] yamal
  * @param[in] psz peer size
