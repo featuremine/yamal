@@ -12,13 +12,6 @@ project(
 set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(Subproject REQUIRED)
 
-add_subproject(
-    NAME libgtest
-    GIT_REVISION "v1.14.0"
-    GIT_URL "https://github.com/google/googletest.git"
-    TARGETS gtest
-)
-
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
@@ -26,6 +19,15 @@ option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
 option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
 option (BUILD_WHEEL "Enable build of the python package." ON)
 option (TEST_EXTENSIONS "Enable testing the extensions." ON)
+
+if(BUILD_TESTING)
+    add_subproject(
+        NAME libgtest
+        GIT_REVISION "v1.14.0"
+        GIT_URL "https://github.com/google/googletest.git"
+        TARGETS gtest
+    )
+endif()
 
 set(YAMAL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(YAMAL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")

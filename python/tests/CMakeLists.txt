@@ -1,5 +1,3 @@
-find_package(PkgConfig)
-
 macro(yamal_unit_test)
     set(oneValueArgs "NAME;DIR")
     set(multiValueArgs "FILES")
