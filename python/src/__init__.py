@@ -37,6 +37,7 @@ class _sys(base.sys):
 
 
 sys = _sys()
+sys.path += system.path
 
 class reactor(base.reactor):
     def run(self, live: bool = True, affinity : Optional[int] = None, priority : Optional[int] = None) -> None:
