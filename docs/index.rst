@@ -1,15 +1,9 @@
 .. /******************************************************************************
-
-        COPYRIGHT (c) 2022 by Featuremine Corporation.
-        This software has been provided pursuant to a License Agreement
-        containing restrictions on its use.  This software contains
-        valuable trade secrets and proprietary information of
-        Featuremine Corporation and is protected by law.  It may not be
-        copied or distributed in any form or medium, disclosed to third
-        parties, reverse engineered or used in any manner not provided
-        for in said License Agreement except with the prior written
-        authorization from Featuremine Corporation.
-
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
+        
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *****************************************************************************/
 
 Welcome to Yamal's documentation!
@@ -30,30 +24,55 @@ Indices and tables
 Docs
 ====
 
-yamal.h
+announcement.h
 -------------
 
-.. doxygenfile:: ytp/yamal.h
+.. doxygenfile:: ytp/announcement.h
 
 control.h
 -------------
 
 .. doxygenfile:: ytp/control.h
 
+cursor.h
+-------------
+
+.. doxygenfile:: ytp/cursor.h
+
+data.h
+-------------
+
+.. doxygenfile:: ytp/data.h
+
+glob.h
+-------------
+
+.. doxygenfile:: ytp/glob.h
+
+index.h
+-------------
+
+.. doxygenfile:: ytp/index.h
+
 sequence.h
 -------------
 
 .. doxygenfile:: ytp/sequence.h
 
-peer.h
+stream.h
 -------------
 
-.. doxygenfile:: ytp/peer.h
+.. doxygenfile:: ytp/stream.h
 
-channel.h
+streams.h
 -------------
 
-.. doxygenfile:: ytp/channel.h
+.. doxygenfile:: ytp/streams.h
+
+subscription.h
+-------------
+
+.. doxygenfile:: ytp/subscription.h
 
 time.h
 -------------
@@ -64,3 +83,8 @@ timeline.h
 -------------
 
 .. doxygenfile:: ytp/timeline.h
+
+yamal.h
+-------------
+
+.. doxygenfile:: ytp/yamal.h

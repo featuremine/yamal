@@ -1,16 +1,10 @@
 /******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
 
-        COPYRIGHT (c) 2022 by Featuremine Corporation.
-        This software has been provided pursuant to a License Agreement
-        containing restrictions on its use.  This software contains
-        valuable trade secrets and proprietary information of
-        Featuremine Corporation and is protected by law.  It may not be
-        copied or distributed in any form or medium, disclosed to third
-        parties, reverse engineered or used in any manner not provided
-        for in said License Agreement except with the prior written
-        authorization from Featuremine Corporation.
-
-*****************************************************************************/
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *****************************************************************************/
 
 /**
  * @file error.cpp
@@ -28,6 +22,7 @@
 #include <windows.h>
 #endif
 
+#include <fmc++/error.hpp>
 #include <fmc/error.h>
 
 #include <cerrno>
@@ -137,15 +132,9 @@ bool fmc_error_has(const fmc_error_t *err) {
   return err->code != FMC_ERROR_NONE;
 }
 
-struct fmc_error_wrap {
-  fmc_error_wrap() { fmc_error_init_none(&error); }
-  ~fmc_error_wrap() { fmc_error_destroy(&error); }
-  fmc_error error;
-};
-
 fmc_error_t *fmc_error_inst() {
-  static thread_local fmc_error_wrap wrap;
-  return &wrap.error;
+  static thread_local fmc::error e;
+  return &e;
 }
 
 const char *fmc_syserror_msg() {

@@ -1,3 +1,11 @@
+#[===[
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
+
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
+]===]
+
 add_executable(
     tests_fmc_compiles_c
     "compiles.c"
@@ -59,7 +67,7 @@ target_link_libraries(
     tests_fmc_component
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(
     NAME fmc_component
@@ -74,7 +82,7 @@ target_link_libraries(
     tests_fmc_config_c
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_config_c COMMAND tests_fmc_config_c)
 
@@ -86,7 +94,7 @@ target_link_libraries(
     tests_fmc_error
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_error COMMAND tests_fmc_error)
 
@@ -98,7 +106,7 @@ target_link_libraries(
     tests_fmc_extension
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(
     NAME fmc_extension
@@ -113,7 +121,7 @@ target_link_libraries(
     tests_fmc_files
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_files COMMAND tests_fmc_files)
 
@@ -125,7 +133,7 @@ target_link_libraries(
     tests_fmc_math
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_math COMMAND tests_fmc_math)
 
@@ -137,7 +145,7 @@ target_link_libraries(
     tests_fmc_time
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_time COMMAND tests_fmc_time)
 
@@ -149,7 +157,7 @@ target_link_libraries(
     tests_fmc_memory
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_memory COMMAND tests_fmc_memory)
 
@@ -161,7 +169,7 @@ target_link_libraries(
     tests_fmc_priority_queue
     PRIVATE
     ytp
-    PkgConfig::GTEST
+    gtest
 )
 add_test(NAME fmc_priority_queue COMMAND tests_fmc_priority_queue)
 

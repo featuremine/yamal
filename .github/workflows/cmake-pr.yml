@@ -1,3 +1,9 @@
+# COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 name: CMake PR
 
 on:
@@ -14,7 +20,7 @@ jobs:
     steps:
     - name: Utility tasks
       id: release-check
-      uses: featuremine/actions/utility@main
+      uses: featuremine/actions/utility@v2
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         utility_token: ${{ secrets.UTILITY_COMMIT_TOKEN }}
@@ -32,7 +38,7 @@ jobs:
         submodules: recursive
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+      uses: featuremine/actions/package/build@v2
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         cpack: TGZ
@@ -57,7 +63,7 @@ jobs:
       run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
-      uses: featuremine/actions/package/build@main
+      uses: featuremine/actions/package/build@v2
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         docs: false
@@ -74,7 +80,7 @@ jobs:
     
     steps:
     - name: Test ${{ github.event.repository.name }} release
-      uses: featuremine/actions/package/test@main
+      uses: featuremine/actions/package/test@v2
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -92,7 +98,7 @@ jobs:
           python-version: ${{ matrix.python_version }}
 
       - name: Test ${{ github.event.repository.name }} release for python version ${{ matrix.python_version }}
-        uses: featuremine/actions/package/test@main
+        uses: featuremine/actions/package/test@v2
         with:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           sudo: true

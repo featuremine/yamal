@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Yamal'
-copyright = '2022, Featuremine Corporation'
+copyright = '2019-2023, Featuremine Corporation'
 author = 'Featuremine'
 
 # The full version, including alpha/beta/rc tags

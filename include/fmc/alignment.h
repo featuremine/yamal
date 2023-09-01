@@ -1,15 +1,9 @@
 /******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
 
-        COPYRIGHT (c) 2022 by Featuremine Corporation.
-        This software has been provided pursuant to a License Agreement
-        containing restrictions on its use.  This software contains
-        valuable trade secrets and proprietary information of
-        Featuremine Corporation and is protected by law.  It may not be
-        copied or distributed in any form or medium, disclosed to third
-        parties, reverse engineered or used in any manner not provided
-        for in said License Agreement except with the prior written
-        authorization from Featuremine Corporation.
-
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *****************************************************************************/
 
 /**
@@ -61,18 +55,18 @@ extern "C" {
 
 #define FMC_BLOCKMASK (FMC_BLOCKSIZE - 1)
 
-inline size_t fmc_hash_combine(size_t seed, size_t hash) {
+static inline size_t fmc_hash_combine(size_t seed, size_t hash) {
   seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   return seed;
 }
 
-inline size_t fmc_wordceil(size_t s) {
+static inline size_t fmc_wordceil(size_t s) {
   const size_t wordmask = FMC_WORDMASK;
   const size_t wordsize = FMC_WORDSIZE;
   return (s & ~wordmask) + wordsize * !!(s & wordmask);
 }
 
-inline size_t fmc_blockceil(size_t s) {
+static inline size_t fmc_blockceil(size_t s) {
   const size_t blockmask = FMC_BLOCKMASK;
   const size_t blocksize = FMC_BLOCKSIZE;
   return (s & ~blockmask) + blocksize * !!(s & blockmask);

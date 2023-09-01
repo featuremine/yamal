@@ -1,20 +1,13 @@
 /******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
 
-        COPYRIGHT (c) 2022 by Featuremine Corporation.
-        This software has been provided pursuant to a License Agreement
-        containing restrictions on its use.  This software contains
-        valuable trade secrets and proprietary information of
-        Featuremine Corporation and is protected by law.  It may not be
-        copied or distributed in any form or medium, disclosed to third
-        parties, reverse engineered or used in any manner not provided
-        for in said License Agreement except with the prior written
-        authorization from Featuremine Corporation.
-
-*****************************************************************************/
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *****************************************************************************/
 
 /**
  * @file threaded.cpp
- * @author Federico Ravchina
  * @date 22 Jul 2021
  * @brief File contains tests for FMC threaded
  *
@@ -24,29 +17,29 @@
 #include <fmc++/gtestwrap.hpp>
 #include <fmc++/threaded.hpp>
 
-const int initial_value = 1000000;
-const int test_count = 500000;
+const int threaded_initial_value = 1000000;
+const int threaded_test_count = 500000;
 
-struct TestValue {
-  int value = initial_value;
+struct TheadedTestValue {
+  int value = threaded_initial_value;
 };
 
 TEST(threaded, concurrent_1) {
-  fmc::threaded<TestValue> value;
+  fmc::threaded<TheadedTestValue> value;
 
   std::atomic<bool> done = false;
 
   std::thread reader([&done, &value]() {
     while (!done.load()) {
       auto &v = value.consume();
-      ASSERT_GE(v.value, initial_value);
-      ASSERT_LE(v.value, initial_value + test_count);
+      ASSERT_GE(v.value, threaded_initial_value);
+      ASSERT_LE(v.value, threaded_initial_value + threaded_test_count);
       value.cleanup();
     }
   });
 
   std::thread writer([&done, &value]() {
-    for (int i = 0; i < test_count; ++i) {
+    for (int i = 0; i < threaded_test_count; ++i) {
       auto &v = value.reserve();
       ++v.value;
       value.commit();
@@ -57,13 +50,13 @@ TEST(threaded, concurrent_1) {
   writer.join();
 
   auto &v = value.consume();
-  ASSERT_EQ(v.value, initial_value + test_count);
+  ASSERT_EQ(v.value, threaded_initial_value + threaded_test_count);
 }
 
 TEST(threaded, sequential_1) {
-  fmc::threaded<TestValue> value;
+  fmc::threaded<TheadedTestValue> value;
 
-  for (int i = 0; i < test_count; ++i) {
+  for (int i = 0; i < threaded_test_count; ++i) {
     {
       auto &v = value.reserve();
       ++v.value;
@@ -71,17 +64,12 @@ TEST(threaded, sequential_1) {
     }
     {
       auto &v = value.consume();
-      ASSERT_GE(v.value, initial_value);
-      ASSERT_LE(v.value, initial_value + test_count);
+      ASSERT_GE(v.value, threaded_initial_value);
+      ASSERT_LE(v.value, threaded_initial_value + threaded_test_count);
       value.cleanup();
     }
   }
 
   auto &v = value.consume();
-  ASSERT_EQ(v.value, initial_value + test_count);
-}
-
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  ASSERT_EQ(v.value, threaded_initial_value + threaded_test_count);
 }

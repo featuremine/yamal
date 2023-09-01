@@ -1,15 +1,9 @@
 /******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
 
-        COPYRIGHT (c) 2022 by Featuremine Corporation.
-        This software has been provided pursuant to a License Agreement
-        containing restrictions on its use.  This software contains
-        valuable trade secrets and proprietary information of
-        Featuremine Corporation and is protected by law.  It may not be
-        copied or distributed in any form or medium, disclosed to third
-        parties, reverse engineered or used in any manner not provided
-        for in said License Agreement except with the prior written
-        authorization from Featuremine Corporation.
-
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *****************************************************************************/
 
 /**
@@ -20,49 +14,6 @@
  * subscription control information.
  * A publisher is a peer that may publish messages on a channel.
  *
- * @par Description
- * - Control message\n
- * <table>
- * <caption id="multi_row">Control message</caption>
- * <tr><th colspan="3">peer/channel/time header  <th>control
- * <tr><th>8 bytes  <th>8 bytes  <th>8 bytes  <th>variable
- * <tr><td>Peer ID  <td>Channel ID  <td>Timestmap  <td>Payload
- * </table>
- * - Channel message\n
- * A peer announces a channel.\n
- * <table>
- * <caption id="multi_row">Channel message</caption>
- * <tr><th colspan="3">peer/channel/time header  <th>channel announcement
- * payload <tr><th>8 bytes  <th>8 bytes  <th>8 bytes  <th>variable <tr><td>Peer
- * ID  <td>Ctrl Channel ID = 0  <td>Timestmap  <td>Channel name
- * </table>
- * The peer needs to avoid publishing duplicated channel messages if the last
- * channel message in yamal has the same payload.\n
- * - Subscribe message\n
- * A peer announces a subscription to a channel.\n
- * <table>
- * <caption id="multi_row">Subscribe message</caption>
- * <tr><th colspan="3">peer/channel/time  <th>subscribe payload
- * <tr><th>8 bytes  <th>8 bytes  <th>8 bytes  <th>variable
- * <tr><td>Peer ID  <td>Ctrl Channel ID = 1  <td>Timestmap  <td>Payload
- * </table>
- * - Payload: If it doesn't end with character "/", a channel name; otherwise, a
- * prefix.\n
- * The peer needs to avoid publishing duplicated subscribe messages if the last
- * subscription message in yamal has the same payload.
- * - Directory message\n
- * Describes the messages that will be published on a particular channel.\n
- * <table>
- * <caption id="multi_row">Directory message</caption>
- * <tr><th colspan="3">peer/channel/time header  <th>directory payload
- * <tr><th>8 bytes  <th>8 bytes  <th>8 bytes  <th>variable
- * <tr><td>Peer ID  <td>Ctrl Channel ID = 2  <td>Timestmap  <td>Payload
- * </table>
- * - Payload : An Simple Channel Directory Protocol (SCDP) encoded string. This
- * field can be empty.\n
- * The peer needs to avoid publishing duplicated directory message if the last
- * directory message in yamal has the same payload.
- *
  * @see http://www.featuremine.com
  */
 
@@ -72,8 +23,6 @@
 #include <stdint.h>
 
 #include <fmc/error.h>
-#include <ytp/channel.h>
-#include <ytp/peer.h>
 #include <ytp/time.h>
 #include <ytp/yamal.h>
 
@@ -89,10 +38,12 @@ extern "C" {
  */
 typedef struct ytp_control ytp_control_t;
 
+#define YTP_PEER_ANN 0
 #define YTP_CHANNEL_ANN 0
 #define YTP_CHANNEL_SUB 1
 #define YTP_CHANNEL_DIR 2
 
+#define YTP_PEER_OFF 0x100
 #define YTP_CHANNEL_OFF 0x100
 
 /**
@@ -118,7 +69,7 @@ FMMODFUNC void ytp_control_init(ytp_control_t *ctrl, fmc_fd fd,
  * @brief Allocates and initializes a ytp_control_t object
  *
  * @param[in] fd a yamal file descriptor
- * @param[in] enable_thread enable the preallocation and sync thread
+ * @param[in] enable_thread enables the auxiliary thread
  * @param[out] error out-parameter for error handling
  * @return ytp_control_t object
  */
@@ -130,7 +81,7 @@ FMMODFUNC ytp_control_t *ytp_control_new_2(fmc_fd fd, bool enable_thread,
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] fd a yamal file descriptor
- * @param[in] enable_thread enable the preallocation and sync thread
+ * @param[in] enable_thread enables the auxiliary thread
  * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_control_init_2(ytp_control_t *ctrl, fmc_fd fd,
@@ -170,17 +121,16 @@ FMMODFUNC char *ytp_control_reserve(ytp_control_t *ctrl, size_t sz,
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
- * @param[in] time
+ * @param[in] ts the time to publish the data
  * @param[in] data the value returned by ytp_peer_reserve if the node is not a
  * sublist. Otherwise the first_ptr returned by ytp_peer_sublist_commit
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl,
                                             ytp_peer_t peer,
-                                            ytp_channel_t channel,
-                                            uint64_t time, void *data,
-                                            fmc_error_t **error);
+                                            ytp_channel_t channel, int64_t ts,
+                                            void *data, fmc_error_t **error);
 
 /**
  * @brief Commits a new data node to an existing sublist (first_ptr, last_ptr)
@@ -189,17 +139,17 @@ FMMODFUNC ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl,
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the data
  * @param[in] channel the channel to publish the data
- * @param[in] time
+ * @param[in] ts the time to publish the data
  * @param[in, out] first_ptr an zero initialized atomic pointer for the first
  * node of the sublist
  * @param[in, out] last_ptr an zero initialized atomic pointer for the last node
  * of the sublist
  * @param[in] new_ptr the value returned by ytp_peer_reserve for the node that
  * is intended to insert
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  */
 FMMODFUNC void ytp_control_sublist_commit(ytp_control_t *ctrl, ytp_peer_t peer,
-                                          ytp_channel_t channel, uint64_t time,
+                                          ytp_channel_t channel, int64_t ts,
                                           void **first_ptr, void **last_ptr,
                                           void *new_ptr, fmc_error_t **error);
 
@@ -208,7 +158,7 @@ FMMODFUNC void ytp_control_sublist_commit(ytp_control_t *ctrl, ytp_peer_t peer,
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] first_ptr the first node of the sublist
- * @param[out] error
+ * @param[out] error out-parameter for error handling
  * @return ytp_iterator_t for the message
  */
 FMMODFUNC ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl,
@@ -222,13 +172,13 @@ FMMODFUNC ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl,
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the subscription message
- * @param[in] time the time to publish the subscription message
+ * @param[in] ts the time to publish the subscription message
  * @param[in] sz size of the payload
  * @param[in] payload a prefix or channel name
  * @param[out] error out-parameter for error handling
  */
-FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer,
-                               uint64_t time, size_t sz, const char *payload,
+FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts,
+                               size_t sz, const char *payload,
                                fmc_error_t **error);
 
 /**
@@ -238,13 +188,13 @@ FMMODFUNC void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer,
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the directory message
- * @param[in] time the time to publish the directory message
+ * @param[in] ts the time to publish the directory message
  * @param[in] sz size of the payload
  * @param[in] payload a SCDP encoded string
  * @param[out] error out-parameter for error handling
  */
-FMMODFUNC void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer,
-                               uint64_t time, size_t sz, const char *payload,
+FMMODFUNC void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts,
+                               size_t sz, const char *payload,
                                fmc_error_t **error);
 
 /**
@@ -269,14 +219,14 @@ FMMODFUNC void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel,
  *
  * @param[in] ctrl the ytp_control_t object
  * @param[in] peer the peer that publishes the channel announcement
- * @param[in] time the time to publish the channel announcement
+ * @param[in] ts the time to publish the channel announcement
  * @param[in] sz size of the channel name
  * @param[in] name name of the channel
  * @param[out] error out-parameter for error handling
- * @return channel reference declared
+ * @return channel id
  */
 FMMODFUNC ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl,
-                                            ytp_peer_t peer, uint64_t time,
+                                            ytp_peer_t peer, int64_t ts,
                                             size_t sz, const char *name,
                                             fmc_error_t **error);
 
@@ -304,54 +254,21 @@ FMMODFUNC void ytp_control_peer_name(ytp_control_t *ctrl, ytp_peer_t peer,
  * @param[in] sz size of the peer name
  * @param[in] name name of the peer
  * @param[out] error out-parameter for error handling
- * @return peer reference declared
+ * @return peer id
  */
 FMMODFUNC ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz,
                                            const char *name,
                                            fmc_error_t **error);
 
 /**
- * @brief Finds next message on control level, moves iterator forward if there
- * is a next message.
+ * @brief Process announcement messages until the specified seqno
  *
  * @param[in] ctrl the ytp_control_t object
- * @param[in] iter input iterator
- * @param[out] error out-parameter for error handling
- * @return the iterator of the next element
- */
-FMMODFUNC ytp_iterator_t ytp_control_next(ytp_control_t *ctrl,
-                                          ytp_iterator_t iter,
-                                          fmc_error_t **error);
-
-/**
- * @brief Reads a message on control level
- *
- * Reads a message on a control level indicating in the case of peer
- * and channel announcement whether announcements are duplicated.
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[in] iter iterator that points to the message node to read from
- * @param[out] peer peer associated of the read message
- * @param[out] channel channel associated of the read message
- * @param[out] time time associated of the read message
- * @param[out] sz size of the read message data
- * @param[out] data pointer to the read message data
+ * @param[in] seqno seqno
  * @param[out] error out-parameter for error handling
  */
-FMMODFUNC void ytp_control_read(ytp_control_t *ctrl, ytp_iterator_t iter,
-                                ytp_peer_t *peer, ytp_channel_t *channel,
-                                uint64_t *time, size_t *sz, const char **data,
-                                fmc_error_t **error);
-
-/**
- * @brief Returns the iterator to the beginning of the list, the first node.
- *
- * @param[in] ctrl the ytp_control_t object
- * @param[out] error out-parameter for error handling
- * @return iterator to the beginning of the list
- */
-FMMODFUNC ytp_iterator_t ytp_control_begin(ytp_control_t *ctrl,
-                                           fmc_error_t **error);
+FMMODFUNC void ytp_control_poll_until(ytp_control_t *ctrl, uint64_t seqno,
+                                      fmc_error_t **error);
 
 /**
  * @brief Returns the iterator to the end of the list, the last node.
@@ -380,7 +297,8 @@ FMMODFUNC bool ytp_control_term(ytp_iterator_t iterator);
  * @param[out] error out-parameter for error handling
  * @return the iterator of the serializable ptr
  */
-FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t off,
+FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl,
+                                          ytp_mmnode_offs off,
                                           fmc_error_t **error);
 
 /**
@@ -391,8 +309,9 @@ FMMODFUNC ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, size_t off,
  * @param[out] error out-parameter for error handling
  * @return the serializable ptr offset
  */
-FMMODFUNC size_t ytp_control_tell(ytp_control_t *ctrl, ytp_iterator_t iterator,
-                                  fmc_error_t **error);
+FMMODFUNC ytp_mmnode_offs ytp_control_tell(ytp_control_t *ctrl,
+                                           ytp_iterator_t iterator,
+                                           fmc_error_t **error);
 
 #ifdef __cplusplus
 }

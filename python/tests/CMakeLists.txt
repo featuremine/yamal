@@ -1,5 +1,10 @@
-find_package(PkgConfig)
-pkg_check_modules(GTEST REQUIRED IMPORTED_TARGET gtest)
+#[===[
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
+
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
+]===]
 
 macro(yamal_unit_test)
     set(oneValueArgs "NAME;DIR")
@@ -27,7 +32,7 @@ macro(yamal_unit_test)
         fmc++
         ytp
         py_yamal_dep
-        PkgConfig::GTEST
+        gtest
         PkgConfig::PYTHON
     )
     add_test(NAME ${ARG_NAME} COMMAND ${ARG_NAME} ${CMAKE_CURRENT_SOURCE_DIR})

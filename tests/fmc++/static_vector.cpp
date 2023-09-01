@@ -1,15 +1,9 @@
 /******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
 
-        COPYRIGHT (c) 2022 by Featuremine Corporation.
-        This software has been provided pursuant to a License Agreement
-        containing restrictions on its use.  This software contains
-        valuable trade secrets and proprietary information of
-        Featuremine Corporation and is protected by law.  It may not be
-        copied or distributed in any form or medium, disclosed to third
-        parties, reverse engineered or used in any manner not provided
-        for in said License Agreement except with the prior written
-        authorization from Featuremine Corporation.
-
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *****************************************************************************/
 
 /**
@@ -533,9 +527,4 @@ TEST(static_vector, copy_assign_2) {
     auto &c = counters[&s.vector[i]];
     EXPECT_EQ(c.constructed + c.copied_to + c.moved_to, c.destroyed);
   }
-}
-
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }
