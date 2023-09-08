@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
         if (msgseqno == 0) {
           seqnum_ = 0;
         }
-        if (msgseqno != seqnum_++) {
+        if ((uint64_t)msgseqno != seqnum_++) {
           ++out_of_sequence_count_;
         }
 

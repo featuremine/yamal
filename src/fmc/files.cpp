@@ -89,6 +89,9 @@ int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
 #else
 #error "Not supported"
 #endif
+  if (p1[0] == '\0') {
+    return snprintf(dest, sz, "%s", p2);
+  }
   return snprintf(dest, sz, "%s%c%s", p1, sep, p2);
 }
 

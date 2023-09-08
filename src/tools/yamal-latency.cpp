@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     ++count;
     it = ytp_yamal_next(src_yml, it, &error);
 
-    if (last + period < now) {
+    if (last + period < (uint64_t)now) {
       std::cout << "count: " << count << std::endl;
       for (double &percentile : percentiles) {
         std::cout << percentile

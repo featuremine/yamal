@@ -376,6 +376,39 @@ TEST(fmc, freadonly) {
   ASSERT_TRUE(fs::remove(name1));
 }
 
+TEST(fmc, path_join) {
+
+  char path_prefix_no_dash[] = "/tmp";
+  char path_prefix_empty[] = "";
+  char filename[] = "filename";
+  char filename_empty[] = "";
+
+  char outbuff[100];
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(
+      fmc_path_join(outbuff, sizeof(outbuff), path_prefix_no_dash, filename),
+      13);
+  ASSERT_EQ(strncmp(outbuff, "/tmp/filename", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(
+      fmc_path_join(outbuff, sizeof(outbuff), path_prefix_empty, filename), 8);
+  ASSERT_EQ(strncmp(outbuff, "filename", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_join(outbuff, sizeof(outbuff), path_prefix_no_dash,
+                          filename_empty),
+            5);
+  ASSERT_EQ(strncmp(outbuff, "/tmp/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_join(outbuff, sizeof(outbuff), path_prefix_empty,
+                          filename_empty),
+            0);
+  ASSERT_EQ(strncmp(outbuff, "", sizeof(outbuff)), 0);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
