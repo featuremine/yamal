@@ -99,6 +99,18 @@ target_link_libraries(
 add_test(NAME fmc_error COMMAND tests_fmc_error)
 
 add_executable(
+    tests_fmc_cmdline
+    "error.cpp"
+)
+target_link_libraries(
+    tests_fmc_cmdline
+    PRIVATE
+    ytp
+    gtest
+)
+add_test(NAME fmc_cmdline COMMAND tests_fmc_cmdline "--one" "one" "--two" "two" "--three" "three")
+
+add_executable(
     tests_fmc_extension
     "extension.cpp"
 )

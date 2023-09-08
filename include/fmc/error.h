@@ -212,6 +212,17 @@ FMMODFUNC void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...);
 FMMODFUNC void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code);
 
 /**
+ * @brief Appends an error message if exists or assigns a pointer to the error
+ *
+ * @param err_ptr
+ * @param sep separator in between the two error strings
+ * @param fmt error format string
+ * @param ... depending on the format string, a sequence of additional arguments
+ * is expected
+ */
+FMMODFUNC void fmc_error_add(fmc_error_t **err_ptr, const char *sep, const char *fmt, ...);
+
+/**
  * @brief Macro to populate error with parameter expansion
  *
  * @param err error pointer

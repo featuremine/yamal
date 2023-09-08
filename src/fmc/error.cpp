@@ -86,6 +86,22 @@ void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
   *err_ptr = err;
 }
 
+void fmc_error_add(fmc_error_t **err_ptr, const char *sep, const char *fmt, ...) {
+  fmc_error_t res1;
+  if (*err_ptr)
+    fmc_error_init_mov(&res1, *err_ptr);
+  else
+    fmc_error_init_none(&res1);
+  fmc_error_t res2;
+  FMC_ERROR_FORMAT(&res2, fmt);
+  fmc_error_t *err = fmc_error_inst();
+  fmc_error_destroy(err);
+  fmc_error_init_join(err, &res1, &res2, sep);
+  fmc_error_destroy(&res1);
+  fmc_error_destroy(&res2);
+  *err_ptr = err;
+}
+
 void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code) {
   fmc_error_t *err = fmc_error_inst();
   fmc_error_destroy(err);
