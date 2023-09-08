@@ -28,6 +28,9 @@ TEST(error, multiple_errors) {
   fmc_error_set(&err, "2");
   ASSERT_NE(err, nullptr);
   ASSERT_EQ(std::string_view(fmc_error_msg(err)), "2");
+  fmc_error_add(&err, ";", "3%s", "4");
+  ASSERT_NE(err, nullptr);
+  ASSERT_EQ(std::string_view(fmc_error_msg(err)), "2;34");
   fmc_error_destroy(err);
 }
 
