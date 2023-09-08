@@ -27,8 +27,6 @@ const char *fmc_cmdline_opt(int argc, const char **argv, const char *opt) {
 
     if (!strncmp(argv[c], opt, n)) {
       if (!*(argv[c] + n) && c < argc - 1) {
-        if (!argv[c + 1] || strlen(argv[c + 1]) > 1024)
-          return NULL;
         return argv[c + 1];
       }
 
