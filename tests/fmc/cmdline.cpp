@@ -8,7 +8,7 @@
 
 /**
  * @file cmdline.cpp
- * @author Maxim Treokhimtchouk
+ * @author Maxim Trokhimtchouk
  * @date 7 Aug 2023
  * @brief File contains tests for cmdline API
  *
