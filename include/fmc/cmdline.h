@@ -23,10 +23,10 @@ extern "C" {
 #endif
 
 typedef struct fmc_cmdline_opt {
-	const char *str;
-	bool required;
-	const char **value;
-	bool set;
+  const char *str;
+  bool required;
+  const char **value;
+  bool set;
 } fmc_cmdline_opt_t;
 
 /**
@@ -39,7 +39,7 @@ typedef struct fmc_cmdline_opt {
  */
 FMMODFUNC const char *fmc_cmdline_opt(int argc, const char **argv,
                                       const char *opt);
-                                      
+
 /**
  * @brief Parses a single command line option
  *

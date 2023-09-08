@@ -25,23 +25,21 @@ const char *two = nullptr;
 const char *three = nullptr;
 
 TEST(fmc_cmdline, fmc_cmdline_opt_proc) {
-    ASSERT_EQ(one, "one");
-    ASSERT_EQ(two, "two");
-    ASSERT_EQ(three, "three");
+  ASSERT_EQ(one, "one");
+  ASSERT_EQ(two, "two");
+  ASSERT_EQ(three, "three");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
 
-    fmc_cmdline_opt_t options[] = {
-        {"--one", true, &one},
-        {"--two", true, &two},
-        {"--three", true, &three},
-        {NULL}
-    };
+  fmc_cmdline_opt_t options[] = {{"--one", true, &one},
+                                 {"--two", true, &two},
+                                 {"--three", true, &three},
+                                 {NULL}};
 
-    if (!fmc_cmdline_opt_proc(argc, argv, options))
-        return 1;
+  if (!fmc_cmdline_opt_proc(argc, argv, options))
+    return 1;
 
   return RUN_ALL_TESTS();
 }

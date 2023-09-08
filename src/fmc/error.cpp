@@ -86,7 +86,8 @@ void fmc_error_set(fmc_error_t **err_ptr, const char *fmt, ...) {
   *err_ptr = err;
 }
 
-void fmc_error_add(fmc_error_t **err_ptr, const char *sep, const char *fmt, ...) {
+void fmc_error_add(fmc_error_t **err_ptr, const char *sep, const char *fmt,
+                   ...) {
   fmc_error_t res1;
   if (*err_ptr)
     fmc_error_init_mov(&res1, *err_ptr);

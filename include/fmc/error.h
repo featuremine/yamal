@@ -220,7 +220,8 @@ FMMODFUNC void fmc_error_set2(fmc_error_t **err_ptr, FMC_ERROR_CODE code);
  * @param ... depending on the format string, a sequence of additional arguments
  * is expected
  */
-FMMODFUNC void fmc_error_add(fmc_error_t **err_ptr, const char *sep, const char *fmt, ...);
+FMMODFUNC void fmc_error_add(fmc_error_t **err_ptr, const char *sep,
+                             const char *fmt, ...);
 
 /**
  * @brief Macro to populate error with parameter expansion
