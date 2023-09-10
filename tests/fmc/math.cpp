@@ -17,10 +17,10 @@
 
 #define FMC_COUNTER_ENABLE
 
-#include <fmc++/gtestwrap.hpp>
-#include <fmc/math.h>
-#include <fmc/alignment.h>
 #include <fmc++/counters.hpp>
+#include <fmc++/gtestwrap.hpp>
+#include <fmc/alignment.h>
+#include <fmc/math.h>
 
 using namespace std;
 

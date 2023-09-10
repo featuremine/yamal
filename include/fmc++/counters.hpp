@@ -120,28 +120,71 @@ inline pair<uint64_t, unsigned> floor_log10(uint64_t val) {
   unsigned idx = (val != 0) * (1 + FMC_FLOORLOG2(val) * 3 / 10);
   uint64_t pow10;
   switch (idx) {
-    case  0: pow10 = 1ULL; break;
-    case  1: pow10 = 1ULL; break;
-    case  2: pow10 = 10ULL; break;
-    case  3: pow10 = 100ULL; break;
-    case  4: pow10 = 1000ULL; break;
-    case  5: pow10 = 10000ULL; break;
-    case  6: pow10 = 100000ULL; break;
-    case  7: pow10 = 1000000ULL; break;
-    case  8: pow10 = 10000000ULL; break;
-    case  9: pow10 = 100000000ULL; break;
-    case 10: pow10 = 1000000000ULL; break;
-    case 11: pow10 = 10000000000ULL; break;
-    case 12: pow10 = 100000000000ULL; break;
-    case 13: pow10 = 1000000000000ULL; break;
-    case 14: pow10 = 10000000000000ULL; break;
-    case 15: pow10 = 100000000000000ULL; break;
-    case 16: pow10 = 1000000000000000ULL; break;
-    case 17: pow10 = 10000000000000000ULL; break;
-    case 18: pow10 = 100000000000000000ULL; break;
-    case 19: pow10 = 1000000000000000000ULL; break;
-    case 20: pow10 = 10000000000000000000ULL; break;
-    default: pow10 = 10000000000000000000ULL;
+  case 0:
+    pow10 = 1ULL;
+    break;
+  case 1:
+    pow10 = 1ULL;
+    break;
+  case 2:
+    pow10 = 10ULL;
+    break;
+  case 3:
+    pow10 = 100ULL;
+    break;
+  case 4:
+    pow10 = 1000ULL;
+    break;
+  case 5:
+    pow10 = 10000ULL;
+    break;
+  case 6:
+    pow10 = 100000ULL;
+    break;
+  case 7:
+    pow10 = 1000000ULL;
+    break;
+  case 8:
+    pow10 = 10000000ULL;
+    break;
+  case 9:
+    pow10 = 100000000ULL;
+    break;
+  case 10:
+    pow10 = 1000000000ULL;
+    break;
+  case 11:
+    pow10 = 10000000000ULL;
+    break;
+  case 12:
+    pow10 = 100000000000ULL;
+    break;
+  case 13:
+    pow10 = 1000000000000ULL;
+    break;
+  case 14:
+    pow10 = 10000000000000ULL;
+    break;
+  case 15:
+    pow10 = 100000000000000ULL;
+    break;
+  case 16:
+    pow10 = 1000000000000000ULL;
+    break;
+  case 17:
+    pow10 = 10000000000000000ULL;
+    break;
+  case 18:
+    pow10 = 100000000000000000ULL;
+    break;
+  case 19:
+    pow10 = 1000000000000000000ULL;
+    break;
+  case 20:
+    pow10 = 10000000000000000000ULL;
+    break;
+  default:
+    pow10 = 10000000000000000000ULL;
   }
   unsigned bump = val / 10 >= pow10;
   idx += bump;
