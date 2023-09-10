@@ -116,6 +116,39 @@ struct last : sample {
   double val_ = 0;
 };
 
+inline pair<uint64_t, unsigned> floor_log10(uint64_t val) {
+  unsigned idx = (val != 0) * (1 + FMC_FLOORLOG2(val) * 3 / 10);
+  uint64_t pow10;
+  switch (idx) {
+    case  0: pow10 = 1ULL; break;
+    case  1: pow10 = 1ULL; break;
+    case  2: pow10 = 10ULL; break;
+    case  3: pow10 = 100ULL; break;
+    case  4: pow10 = 1000ULL; break;
+    case  5: pow10 = 10000ULL; break;
+    case  6: pow10 = 100000ULL; break;
+    case  7: pow10 = 1000000ULL; break;
+    case  8: pow10 = 10000000ULL; break;
+    case  9: pow10 = 100000000ULL; break;
+    case 10: pow10 = 1000000000ULL; break;
+    case 11: pow10 = 10000000000ULL; break;
+    case 12: pow10 = 100000000000ULL; break;
+    case 13: pow10 = 1000000000000ULL; break;
+    case 14: pow10 = 10000000000000ULL; break;
+    case 15: pow10 = 100000000000000ULL; break;
+    case 16: pow10 = 1000000000000000ULL; break;
+    case 17: pow10 = 10000000000000000ULL; break;
+    case 18: pow10 = 100000000000000000ULL; break;
+    case 19: pow10 = 1000000000000000000ULL; break;
+    case 20: pow10 = 10000000000000000000ULL; break;
+    default: pow10 = 10000000000000000000ULL;
+  }
+  unsigned bump = val / 10 >= pow10;
+  idx += bump;
+  pow10 *= bump * 10ULL + !bump;
+  return {pow10, idx};
+}
+
 struct log_bucket : sample {
   static constexpr uint64_t N = 64;
   log_bucket() { buckets_.fill(0ull); }
@@ -153,7 +186,7 @@ class precision_sampler : sample {
 public:
   using buckets_t = fmc::ordered_multimap<uint64_t, uint64_t>;
   void sample(uint64_t x) {
-    auto c = 1ULL << FMC_FLOORLOG2(x + (x == 0));
+    auto c = floor_log10(x).first;
     auto b = uint64_t((x / c) * c);
     if (auto where = buckets_.find(b); where == buckets_.end()) {
       where = buckets_.emplace(b, 1);
@@ -170,6 +203,13 @@ public:
       }
     }
     return buckets_.end();
+  }
+  uint64_t total() const {
+    uint64_t total = 0ULL;
+    for (auto &&[b, c] : buckets_) {
+      total += c;
+    }
+    return total;
   }
   double percentile(double p) const {
     uint64_t total = 0;
