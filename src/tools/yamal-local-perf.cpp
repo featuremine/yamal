@@ -57,14 +57,23 @@ int main(int argc, const char **argv)
 		return 1;
 	}
 
-    fmc::counter::log_bucket sampler;
+    fmc::counter::precision_sampler sampler;
     int64_t last = fmc_cur_time_ns();
     int64_t period = 10LL * 1000000000LL; // 10s
-    uint64_t count = 0ULL;
     auto it = ytp_data_end(yamal, &error);
     while (!interrupted) {
-        if (ytp_yamal_term(it))
+        if (ytp_yamal_term(it)) {
+            int64_t now = fmc_cur_time_ns();
+            if (last + period <= now) {
+                printf("processed %ld samples\n", sampler.total());
+                for (int p = 10; p <= 100; p += 10) {
+                    printf("percentile %d: %.0f\n", p, sampler.percentile(p));
+                }
+                //sampler.clear();
+                last = now;
+            }
             continue;
+        }
         uint64_t seqno;
         int64_t ts;
         ytp_mmnode_offs stream;
@@ -77,16 +86,6 @@ int main(int argc, const char **argv)
         }
         int64_t now = fmc_cur_time_ns();
         sampler.sample(now - ts);
-        ++count;
-        if (last + period <= now) {
-            printf("processed %ld samples\n", count);
-            for (int p = 10; p <= 100; p += 10) {
-                printf("percentile %d: %f\n", p, sampler.percentile(p));
-            }
-            sampler.clear();
-            count = 0ULL;
-            last = now;
-        }
         it = ytp_yamal_next(yamal, it, &error);
     }
 
