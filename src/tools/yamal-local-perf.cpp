@@ -35,16 +35,25 @@ int main(int argc, const char **argv)
 	signal(SIGINT, sigint_handler);
 
 	const char *ytpfile = nullptr;
+    const char *help = nullptr;
 	fmc_cmdline_opt_t options[] = {
 		{"--ytp-file", true, &ytpfile},
+		{"--help", false, &help},
 		{NULL}
 	};
 
 	fmc_cmdline_opt_proc(argc, argv, options, &error);
-	if (error) {
-		fprintf(stderr, "%s, could not process args: %s\n", __func__, fmc_error_msg(error));
+	if (error && !help) {
+		fprintf(stderr, "could not process args: %s\n", fmc_error_msg(error));
 		return 1;
 	}
+
+    if (help) {
+        printf("yamal-local-perf --ytp-file FILE\n\n"
+                "This tools reads new messages and periodically writes out a histogram of\n"
+                "difference between the time on the message and the time it was received.\n");
+        return 0;
+    }
 
 	fd = fmc_fopen(ytpfile, fmc_fmode::READWRITE, &error);
 	if (error) {
@@ -58,7 +67,7 @@ int main(int argc, const char **argv)
 	}
 
     fmc::counter::precision_sampler sampler;
-    int64_t last = fmc_cur_time_ns();
+    int64_t last = 0;
     int64_t period = 10LL * 1000000000LL; // 10s
     auto it = ytp_data_end(yamal, &error);
     while (!interrupted) {
@@ -69,7 +78,6 @@ int main(int argc, const char **argv)
                 for (int p = 10; p <= 100; p += 10) {
                     printf("percentile %d: %.0f\n", p, sampler.percentile(p));
                 }
-                //sampler.clear();
                 last = now;
             }
             continue;
