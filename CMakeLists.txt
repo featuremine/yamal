@@ -23,10 +23,22 @@ find_package(Subproject REQUIRED)
 option (BUILD_SHARED_LIBS "Request build of shared libraries." ON)
 option (BUILD_TESTING "Enable build of the unit tests and their execution." ON)
 option (BUILD_TOOLS "Enable build of command line tools." ON)
-option (BUILD_API_DOCS "Enable build of the Doxygen API documentation." ON)
-option (BUILD_API_DOCS_FORCE "Enable force build of the Doxygen API documentation." OFF)
 option (BUILD_WHEEL "Enable build of the python package." ON)
 option (TEST_EXTENSIONS "Enable testing the extensions." ON)
+option (BUILD_DOCUMENTATION "Build documentation." ON)
+
+if (BUILD_DOCUMENTATION)
+    set(FmDocumentation_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    find_package(FmDocumentation REQUIRED)
+
+    add_documentation(
+        NAME yamal-docs
+        BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs"
+        SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs"
+        TITLE "Yamal Documentation"
+        VERSION "${PROJECT_VERSION}"
+    )
+endif()
 
 if(BUILD_TESTING)
     add_subproject(
@@ -45,12 +57,6 @@ set(YAMAL_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/lib")
 set(FmConfig_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(FmConfig REQUIRED)
 fm_config()
-
-find_package(Doxygen)
-if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
-    # Add subdir "docs" for Doxygen + Sphinx to use.
-    add_subdirectory ("docs")
-endif ()
 
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)

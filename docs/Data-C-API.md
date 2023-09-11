@@ -9,6 +9,7 @@ File contains C declaration of data API.
 ## ytp_data_reserve
 
 Reserves memory for data in the memory mapped list. 
+
 - yamal
 - sz: the size of the data payload
 - error: out-parameter for error handling
@@ -22,6 +23,7 @@ char * ytp_data_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error)
 ## ytp_data_commit
 
 Commits the data to the memory mapped list. 
+
 - yamal
 - ts
 - stream
@@ -37,6 +39,7 @@ ytp_iterator_t ytp_data_commit(ytp_yamal_t *yamal, int64_t ts, ytp_mmnode_offs s
 ## ytp_data_sublist_commit
 
 Commits a new data node to an existing sublist (first_ptr, last_ptr) that is not in the main memory mapped list. 
+
 - yamal
 - ts
 - stream
@@ -52,6 +55,7 @@ void ytp_data_sublist_commit(ytp_yamal_t *yamal, int64_t ts, ytp_mmnode_offs str
 ## ytp_data_sublist_finalize
 
 Commits a data sublist to the memory mapped list. 
+
 - yamal
 - first_ptr: the first node of the sublist
 - error: out-parameter for error handling
@@ -65,6 +69,7 @@ ytp_iterator_t ytp_data_sublist_finalize(ytp_yamal_t *yamal, void *first_ptr, fm
 ## ytp_data_read
 
 Reads a message on data level. 
+
 - yamal
 - iterator
 - seqno
@@ -81,6 +86,7 @@ void ytp_data_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno,
 ## ytp_data_begin
 
 Returns an iterator to the beginning of the list. 
+
 - yamal
 - error: out-parameter for error handling
 
@@ -93,6 +99,7 @@ ytp_iterator_t ytp_data_begin(ytp_yamal_t *yamal, fmc_error_t **error)
 ## ytp_data_end
 
 Returns an iterator to the end of the list. 
+
 - yamal
 - error: out-parameter for error handling
 

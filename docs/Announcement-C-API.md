@@ -9,6 +9,7 @@ File contains C declaration of announcement API.
 ## ytp_announcement_write
 
 Writes a raw stream announcement message. 
+
 - yamal
 - psz: peer size
 - peer: peer name
@@ -27,6 +28,7 @@ ytp_iterator_t ytp_announcement_write(ytp_yamal_t *yamal, size_t psz, const char
 ## ytp_announcement_read
 
 Read an announcement message. 
+
 - yamal
 - iterator
 - seqno
@@ -47,6 +49,7 @@ void ytp_announcement_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t
 ## ytp_announcement_lookup
 
 Look up an announcement message. 
+
 - yamal
 - stream
 - seqno
@@ -67,6 +70,7 @@ void ytp_announcement_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs stream, uint64_
 ## ytp_announcement_begin
 
 Returns an iterator to the beginning of the list. 
+
 - yamal
 - error: out-parameter for error handling
 
@@ -79,6 +83,7 @@ ytp_iterator_t ytp_announcement_begin(ytp_yamal_t *yamal, fmc_error_t **error)
 ## ytp_announcement_next
 
 Returns iterator for the next announcement message. 
+
 - yamal
 - iterator
 - seqno

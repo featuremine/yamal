@@ -1,26 +1,45 @@
-# Yamal
+# Introduction
+
 Yamal is a message-oriented transactional IPC protocol. Yamal can be used to seamlessly interchange between local and distributed deployment.
 
+# How to build
 
-## Documentation
+## Requirements
 
-* [YTP Protocol](docs/YTP-Protocol.md)
-* C API
-  * Yamal (Layer 0)
-    * [ytp/yamal.h](docs/Yamal-C-API.md)
-  * Time (Layer 1)
-    * [ytp/time.h](docs/Time-C-API.md)
-  * Stream (Layer 2)
-    * [ytp/announcement.h](docs/Announcement-C-API.md)
-    * [ytp/cursor.h](docs/Cursor-C-API.md)
-    * [ytp/data.h](docs/Data-C-API.md)
-    * [ytp/glob.h](docs/Glob-C-API.md)
-    * [ytp/index.h](docs/Index-C-API.md)
-    * [ytp/stream.h](docs/Stream-C-API.md)
-    * [ytp/streams.h](docs/Streams-C-API.md)
-    * [ytp/subscription.h](docs/Subscription-C-API.md)
-  * YTP 7 API
-    * [ytp/control.h](docs/Control-C-API.md)
-    * [ytp/timeline.h](docs/Timeline-C-API.md)
-    * [ytp/sequence.h](docs/Sequence-C-API.md)
-* [Python API](docs/YTP-Python-API.md)
+* Cmake
+* Git
+* C/C++ compiler
+* Python >=3.6
+
+```bash
+apt-get install -y cmake git build-essential python3
+```
+
+## Clone and build
+
+```bash
+git clone --recurse-submodules https://github.com/featuremine/yamal.git && \
+mkdir yamal/build && \
+cd yamal/build && \
+cmake .. \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DBUILD_TESTING=ON \
+  -DBUILD_TOOLS=ON \
+  -DBUILD_WHEEL=ON \
+  -DTEST_EXTENSIONS=ON \
+  -DBUILD_DOCUMENTATION=ON \
+  -DCMAKE_BUILD_TYPE=Release && \
+make -j 3
+```
+
+# Testing
+
+## Run using ctest
+
+```bash
+ctest --extra-verbose
+```
+
+# Usage instructions
+
+- [Yamal Documentation](docs/README.md)

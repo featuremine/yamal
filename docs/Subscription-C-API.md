@@ -9,6 +9,7 @@ File contains C declaration of subscription API.
 ## ytp_subscription_write
 
 Writes a raw stream subscription message. 
+
 - yamal
 - stream
 - error: out-parameter for error handling
@@ -22,6 +23,7 @@ ytp_iterator_t ytp_subscription_write(ytp_yamal_t *yamal, ytp_mmnode_offs stream
 ## ytp_subscription_commit
 
 Writes and commits a stream subscription message. 
+
 - yamal
 - stream
 - error: out-parameter for error handling
@@ -35,6 +37,7 @@ bool ytp_subscription_commit(ytp_yamal_t *yamal, ytp_mmnode_offs stream, fmc_err
 ## ytp_subscription_read
 
 Reads a raw stream subscription message. 
+
 - yamal
 - iterator
 - seqno
@@ -50,6 +53,7 @@ void ytp_subscription_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t
 ## ytp_subscription_lookup
 
 Lookups a raw stream subscription message. 
+
 - yamal
 - offset
 - seqno
@@ -65,6 +69,7 @@ void ytp_subscription_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs offset, uint64_
 ## ytp_subscription_next
 
 Lookups a raw stream subscription message. 
+
 - yamal
 - iterator
 - stream
@@ -79,6 +84,7 @@ bool ytp_subscription_next(ytp_yamal_t *yamal, ytp_iterator_t *iterator, ytp_mmn
 ## ytp_subscription_begin
 
 Returns an iterator to the beginning of the list. 
+
 - yamal
 - error: out-parameter for error handling
 
@@ -91,6 +97,7 @@ ytp_iterator_t ytp_subscription_begin(ytp_yamal_t *yamal, fmc_error_t **error)
 ## ytp_subscription_end
 
 Returns an iterator to the end of the list. 
+
 - yamal
 - error: out-parameter for error handling
 
