@@ -85,9 +85,12 @@ streams_reverse_map_addhash(struct ytp_streams_reverse_map_t **m,
                             unsigned hash, fmc_error_t **error) {
   fmc_error_clear(error);
 
-  struct ytp_streams_reverse_map_item_t *item = aligned_alloc(
-      _Alignof(struct ytp_streams_reverse_map_item_t),
+  struct ytp_streams_reverse_map_item_t *item = malloc(
       sizeof(struct ytp_streams_reverse_map_item_t) + key->psz + key->csz);
+  if (!item) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return NULL;
+  }
   char *peer = ((char *)item) + sizeof(struct ytp_streams_reverse_map_item_t);
   char *channel =
       ((char *)item) + sizeof(struct ytp_streams_reverse_map_item_t) + key->psz;
@@ -183,8 +186,7 @@ static void ytp_streams_destroy(ytp_streams_t *streams, fmc_error_t **error) {
 }
 
 ytp_streams_t *ytp_streams_new(ytp_yamal_t *yamal, fmc_error_t **error) {
-  ytp_streams_t *streams = (ytp_streams_t *)aligned_alloc(
-      _Alignof(ytp_streams_t), sizeof(ytp_streams_t));
+  ytp_streams_t *streams = (ytp_streams_t *)malloc(sizeof(ytp_streams_t));
   if (!streams) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return NULL;
