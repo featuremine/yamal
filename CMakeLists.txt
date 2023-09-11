@@ -26,6 +26,7 @@ option (BUILD_TOOLS "Enable build of command line tools." ON)
 option (BUILD_WHEEL "Enable build of the python package." ON)
 option (TEST_EXTENSIONS "Enable testing the extensions." ON)
 option (BUILD_DOCUMENTATION "Build documentation." ON)
+option (BUILD_DOCUMENTATION_FORCE "Force build documentation." OFF)
 
 if (BUILD_DOCUMENTATION)
     set(FmDocumentation_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
