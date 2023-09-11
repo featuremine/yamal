@@ -15,10 +15,61 @@
  * @see http://www.featuremine.com
  */
 
+#define FMC_COUNTER_ENABLE
+
+#include <fmc++/counters.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc/alignment.h>
 #include <fmc/math.h>
 
 using namespace std;
+
+TEST(fmc_math, FMC_FLOORLOG2) {
+  for (uint64_t i = 0; i < 63; ++i) {
+    uint64_t x = 1ULL << i;
+    ASSERT_EQ(FMC_FLOORLOG2(x), i);
+  }
+  for (uint64_t i = 1; i < 63; ++i) {
+    uint64_t x = (1UL << i) + 1;
+    ASSERT_EQ(FMC_FLOORLOG2(x), i);
+  }
+}
+
+TEST(fmc_math, floor_log10) {
+  using namespace fmc::counter;
+  auto res = floor_log10(0);
+  ASSERT_EQ(res.first, 1);
+  ASSERT_EQ(res.second, 0);
+  for (uint64_t x = 1; x < 10; ++x) {
+    res = floor_log10(x);
+    ASSERT_EQ(res.first, 1);
+    ASSERT_EQ(res.second, 1);
+  }
+  for (uint64_t i = 1; i < 10; ++i) {
+    for (uint64_t j = 0; j < 10; ++j) {
+      uint64_t x = i * 10ULL + j;
+      res = floor_log10(x);
+      ASSERT_EQ(res.first, 10);
+      ASSERT_EQ(res.second, 2);
+    }
+  }
+  for (uint64_t pow10 = 1, c = 1; c <= 17; ++c, pow10 *= 10ULL) {
+    for (uint64_t i = 1; i < 10; ++i) {
+      for (uint64_t j = 0; j < 100; ++j) {
+        uint64_t x = (i * 100ULL + j) * pow10;
+        {
+          FMC_NANO_AVG(floor_log10);
+          res = floor_log10(x);
+        }
+        res = floor_log10(x);
+        ASSERT_EQ(res.first, pow10 * 100ULL);
+        ASSERT_EQ(res.second, c + 2);
+        ASSERT_LE(res.first, x);
+        ASSERT_LT(x, res.first * 10UL);
+      }
+    }
+  }
+}
 
 TEST(fmc_math, llround) {
   ASSERT_EQ(fmc_llround(0.0), 0ll);

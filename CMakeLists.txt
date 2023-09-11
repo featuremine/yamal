@@ -380,6 +380,22 @@ if(BUILD_TOOLS)
         yamal-tail
     )
 
+
+    add_executable(
+        yamal-local-perf
+        "src/tools/yamal-local-perf.cpp"
+    )
+    target_link_libraries(
+        yamal-local-perf
+        PRIVATE
+        ytp
+        fmc++
+     )
+    install(
+        TARGETS
+        yamal-local-perf
+    )
+
     add_executable(
         yamal-perf
         "src/tools/yamal-perf.cpp"
