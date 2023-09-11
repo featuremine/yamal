@@ -67,8 +67,11 @@ streams_data_addhash(struct ytp_cursor_streams_data_item_t **m,
                      ytp_mmnode_offs key, unsigned hash, fmc_error_t **error) {
   fmc_error_clear(error);
   struct ytp_cursor_streams_data_item_t *item =
-      aligned_alloc(_Alignof(struct ytp_cursor_streams_data_item_t),
-                    sizeof(struct ytp_cursor_streams_data_item_t));
+      malloc(sizeof(struct ytp_cursor_streams_data_item_t));
+  if (!item) {
+    fmc_error_set2(error, FMC_ERROR_MEMORY);
+    return NULL;
+  }
   item->stream = key;
   HASH_ADD_KEYPTR_BYHASHVALUE(hh, (*m), &item->stream, sizeof(ytp_mmnode_offs),
                               hash, item);
@@ -113,8 +116,7 @@ streams_data_emplace(struct ytp_cursor_streams_data_item_t **m,
 }
 
 ytp_cursor_t *ytp_cursor_new(ytp_yamal_t *yamal, fmc_error_t **error) {
-  ytp_cursor_t *cursor = (ytp_cursor_t *)aligned_alloc(_Alignof(ytp_cursor_t),
-                                                       sizeof(ytp_cursor_t));
+  ytp_cursor_t *cursor = (ytp_cursor_t *)malloc(sizeof(ytp_cursor_t));
   if (!cursor) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return NULL;
