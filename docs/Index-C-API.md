@@ -9,6 +9,7 @@ File contains C declaration of index API.
 ## ytp_index_write
 
 Writes a raw stream index message. 
+
 - yamal
 - stream
 - offset
@@ -25,6 +26,7 @@ ytp_iterator_t ytp_index_write(ytp_yamal_t *yamal, ytp_mmnode_offs stream, ytp_m
 ## ytp_index_read
 
 Reads a raw stream index message. 
+
 - yamal
 - iterator
 - seqno
@@ -41,6 +43,7 @@ void ytp_index_read(ytp_yamal_t *yamal, ytp_iterator_t iterator, uint64_t *seqno
 ## ytp_index_lookup
 
 Lookups a raw stream index message. 
+
 - yamal
 - offset
 - seqno
@@ -57,6 +60,7 @@ void ytp_index_lookup(ytp_yamal_t *yamal, ytp_mmnode_offs offset, uint64_t *seqn
 ## ytp_index_begin
 
 Returns an iterator to the beginning of the list. 
+
 - yamal
 - error: out-parameter for error handling
 
@@ -69,6 +73,7 @@ ytp_iterator_t ytp_index_begin(ytp_yamal_t *yamal, fmc_error_t **error)
 ## ytp_index_end
 
 Returns an iterator to the end of the list. 
+
 - yamal
 - error: out-parameter for error handling
 

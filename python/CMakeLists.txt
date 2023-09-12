@@ -6,12 +6,6 @@
         file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ]===]
 
-find_package(Doxygen)
-if (BUILD_API_DOCS_FORCE OR (DOXYGEN_FOUND AND BUILD_API_DOCS))
-    # Add subdir "docs" for Doxygen + Sphinx to use.
-    add_subdirectory ("docs")
-endif ()
-
 find_package(PkgConfig)
 pkg_search_module(PYTHON IMPORTED_TARGET python3-embed python3)
 
