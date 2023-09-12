@@ -155,65 +155,123 @@ from yamal.ytp import peer
 ```
 
 #### Name
+
+Peer name
+
+**return value**: Name associated with peer object
+
 ```python
 name = p.name()
 ```
 
 #### Identifier
+
+Peer id
+
+**return value**: Numerical identifier associated with peer object
+
 ```python
 identifier = p.id()
 ```
 
 #### Obtain channel
+
+Obtain desired channel by name
+
+- time: Time of the creation of the peer, to be used if peer does not previously exist as an integer.
+- peer_name: Name of the peer to obtain as a string.
+**return value**: channel object
+
 ```python
-ch = p.channel(time, ch_name)
+ch = p.channel(time, channel_name)
 ```
 
 #### Obtain stream
+
+Obtain stream for desired channel
+
+- ch: Channel object to create a stream.
+**return value**: stream object
+
 ```python
 s = p.stream(ch)
 ```
 
 ### Channel
 
+YTP Channel
+
 ```python
 from yamal.ytp import channel # for access to the class
-ch = p.channel(time, peer_name)
 ```
 
 #### Name
+
+Channel name
+
+**return value**: Name associated with channel object
+
 ```python
 name = ch.name()
 ```
 
 #### Identifier
+
+Channel id
+
+**return value**: Numerical identifier associated with channel object
+
 ```python
 identifier = ch.id()
 ```
 
 #### Data callbacks
+
+Set callback for data in channel
+
+- callback: Callback to trigger with discovered data
+
 ```python
+def callback(p: peer, ch: channel, ts: int, data: bytes) -> None:
+    ...
 ch.data_callback(callback)
 ```
 
 ### Stream
 
+YTP Stream
+
 ```python
 from yamal.ytp import stream # for access to the class
-s = p.stream(ch)
 ```
 
 #### Write
+
+Write message to YTP
+
+- time: Timestamp associated with message as an integer.
+- data: Data to be written as bytes.
+
 ```python
 s.write(time, data)
 ```
 
 #### Channel
+
+Obtain channel related to stream
+
+**return value**: Channel object associated with stream object
+
 ```python
 ch = s.channel()
 ```
 
 #### Peer
+
+Obtain peer related to stream
+
+**return value**: Peer object associated with stream object
+
 ```python
 p = s.peer()
 ```
