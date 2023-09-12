@@ -153,7 +153,7 @@ seq.remove_callbacks()
 YTP Peer
 
 ```python
-from yamal.ytp import peer
+from yamal.ytp import peer # for access to the class
 ```
 
 #### Name
