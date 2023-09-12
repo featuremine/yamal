@@ -1,6 +1,6 @@
 # Introduction
 
-Yamal is a message-oriented transactional IPC protocol. Yamal can be used to seamlessly interchange between local and distributed deployment.
+Yamal is an open source library for transactional low-latency IPC and data capture. It is used to build systems where data is communicated and captured between different processes very quickly, with an emphasis on ensuring the consistency and reliability of that data. This is especially important in environments where fast, reliable data transmission and storage are essential, such as financial trading platforms or real-time analytics systems.
 
 # How to build
 
