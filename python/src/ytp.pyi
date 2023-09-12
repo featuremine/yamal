@@ -72,11 +72,11 @@ class sequence:
 
     def __init__(self, file_path: str, readonly: Optional[bool]) -> None: ...
 
-    def peer_callback(self, clbl: Callable[[peer], None]) -> None:
+    def peer_callback(self, clbl: Callable[['peer', str], None]) -> None:
         ''' Set callback for peers in YTP file '''
         pass
 
-    def channel_callback(self, clbl: Callable[[channel], None]) -> None:
+    def channel_callback(self, clbl: Callable[['channel', 'peer', int, str], None]) -> None:
         ''' Set callback for channels in YTP file '''
         pass
 

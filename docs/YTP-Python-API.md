@@ -89,7 +89,7 @@ Set callback for peers in YTP file
 - callback: Callback to trigger when a peer is discovered
 
 ```python
-def callback(ch: peer) -> None:
+def callback(p: peer, name: str) -> None:
     ...
 seq.peer_callback(callback)
 ```
@@ -101,7 +101,7 @@ Set callback for channels in YTP file
 - callback: Callback to trigger when a channel is discovered
 
 ```python
-def callback(p: channel) -> None:
+def callback(ch: channel, p: peer, time: int, name: str) -> None:
     ...
 seq.channel_callback(callback)
 ```
