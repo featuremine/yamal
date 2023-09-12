@@ -2,7 +2,7 @@ The Yamal Python API exposes the following components:
 
 - [Yamal module](#yamal-module)
   - [YTP module](#ytp-module)
-    - [Transaction](#transaction)
+    - [Transactions](#transactions)
     - [Sequence](#sequence)
     - [Peer](#peer)
     - [Channel](#channel)
@@ -19,7 +19,9 @@ import yamal
 from yamal import ytp
 ```
 
-### Sequence
+### Transactions
+
+YTP Transactions
 
 ```python
 from yamal.ytp import transactions
