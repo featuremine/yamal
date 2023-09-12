@@ -9,7 +9,7 @@ Yamal is an open source library for transactional low-latency IPC and data captu
 - **Versatility**: Support for file rollover, indexing, and random access.
 - **Resilience**: In the event of application crashes, data is not lost.
 - **Structured Data**: The data is housed in a flat file.
-- **Simplicity**: Boasts an elementary C and Python API.
+- **Simplicity**: Boasts elementary C and Python API.
 - **Non-blocking**: Ensures message memory is secured without obstructions.
 - **Consistency**: Guarantees data consistency across different processes.
 - **Zero-copy**: Abstains from data copying during read/write.
