@@ -30,10 +30,9 @@ int main(int argc, const char **argv) {
   signal(SIGINT, sigint_handler);
 
   const char *ytpfile = nullptr;
-  fmc_cmdline_opt_t options[] = {
-      /* 0 */ {"--ytp-file", true, &ytpfile},
-      /* 1 */ {"--help", false, NULL},
-      {NULL}};
+  fmc_cmdline_opt_t options[] = {/* 0 */ {"--ytp-file", true, &ytpfile},
+                                 /* 1 */ {"--help", false, NULL},
+                                 {NULL}};
 
   fmc_cmdline_opt_proc(argc, argv, options, &error);
   if (options[1].set) { /* --help passed */

@@ -23,10 +23,11 @@ extern "C" {
 #endif
 
 typedef struct fmc_cmdline_opt {
-  const char *str;    /* option key string */
-  bool required;      /* specifies whether option is required */
-  const char **value; /* if not NULL, the address of the variable to store the value */
-  bool set;           /* will be set by the parser if the option was set */
+  const char *str; /* option key string */
+  bool required;   /* specifies whether option is required */
+  const char *
+      *value; /* if not NULL, the address of the variable to store the value */
+  bool set;   /* will be set by the parser if the option was set */
 } fmc_cmdline_opt_t;
 
 /**

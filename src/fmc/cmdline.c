@@ -20,7 +20,7 @@
 #include <string.h> // strlen()
 
 static bool fmc_cmdline_opt_parse(int argc, const char **argv, const char *opt,
-                            const char **val, fmc_error_t **err) {
+                                  const char **val, fmc_error_t **err) {
   size_t n = strlen(opt);
   int c = argc;
   bool found = false;
@@ -30,14 +30,15 @@ static bool fmc_cmdline_opt_parse(int argc, const char **argv, const char *opt,
   while (--c > 0) {
     if (!strncmp(argv[c], opt, n)) {
       if (found) {
-        fmc_error_set(err, "option %s is repeated (%s:%d)",
-                      opt, __FILE__, __LINE__);
-        return false;        
+        fmc_error_set(err, "option %s is repeated (%s:%d)", opt, __FILE__,
+                      __LINE__);
+        return false;
       }
       found = true;
       if (!val) {
         if (*(argv[c] + n)) {
-          fmc_error_set(err, "option %s is given a value, but none expected (%s:%d)",
+          fmc_error_set(err,
+                        "option %s is given a value, but none expected (%s:%d)",
                         opt, __FILE__, __LINE__);
           return false;
         }
@@ -57,9 +58,10 @@ static bool fmc_cmdline_opt_parse(int argc, const char **argv, const char *opt,
 void fmc_cmdline_opt_proc(int argc, const char **argv, fmc_cmdline_opt_t *opts,
                           fmc_error_t **err) {
   fmc_error_clear(err);
-  
+
   for (int n = 0; opts[n].str; ++n) {
-    opts[n].set = fmc_cmdline_opt_parse(argc, argv, opts[n].str, opts[n].value, err);    
+    opts[n].set =
+        fmc_cmdline_opt_parse(argc, argv, opts[n].str, opts[n].value, err);
     if (err)
       return;
   }
