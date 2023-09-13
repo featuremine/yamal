@@ -30,23 +30,22 @@ int main(int argc, const char **argv) {
   signal(SIGINT, sigint_handler);
 
   const char *ytpfile = nullptr;
-  const char *help = nullptr;
-  fmc_cmdline_opt_t options[] = {
-      {"--ytp-file", true, &ytpfile}, {"--help", false, &help}, {NULL}};
+  fmc_cmdline_opt_t options[] = {/* 0 */ {"--ytp-file", true, &ytpfile},
+                                 /* 1 */ {"--help", false, NULL},
+                                 {NULL}};
 
   fmc_cmdline_opt_proc(argc, argv, options, &error);
-  if (error && !help) {
-    fprintf(stderr, "could not process args: %s\n", fmc_error_msg(error));
-    return 1;
-  }
-
-  if (help) {
+  if (options[1].set) { /* --help passed */
     printf("yamal-local-perf --ytp-file FILE\n\n"
            "This tools reads new messages and periodically writes out a "
            "histogram of\n"
            "difference between the time on the message and the time it was "
            "received.\n");
     return 0;
+  }
+  if (error) {
+    fprintf(stderr, "could not process args: %s\n", fmc_error_msg(error));
+    return 1;
   }
 
   fd = fmc_fopen(ytpfile, fmc_fmode::READWRITE, &error);

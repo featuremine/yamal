@@ -100,7 +100,7 @@ add_test(NAME fmc_error COMMAND tests_fmc_error)
 
 add_executable(
     tests_fmc_cmdline
-    "error.cpp"
+    "cmdline.cpp"
 )
 target_link_libraries(
     tests_fmc_cmdline
@@ -108,7 +108,11 @@ target_link_libraries(
     ytp
     gtest
 )
-add_test(NAME fmc_cmdline COMMAND tests_fmc_cmdline "--one" "one" "--two" "two" "--three" "three")
+add_test(NAME fmc_cmdline_pass COMMAND tests_fmc_cmdline "--gtest_filter=fmc_cmdline.values" "--one" "one" "--two" "two" "--three" "three")
+add_test(NAME fmc_cmdline_fail COMMAND tests_fmc_cmdline "--gtest_filter=fmc_cmdline.no_required" "--two" "two" "--three" "three")
+add_test(NAME fmc_cmdline_dup COMMAND tests_fmc_cmdline "--gtest_filter=fmc_cmdline.duplicated" "--two" "two" "--two" "three")
+add_test(NAME fmc_cmdline_ext1 COMMAND tests_fmc_cmdline "--gtest_filter=fmc_cmdline.extra" "--help=ext" "--one" "one" "--two" "two" "--three" "three")
+add_test(NAME fmc_cmdline_ext2 COMMAND tests_fmc_cmdline "--gtest_filter=fmc_cmdline.extra" "--helpext" "--one" "one" "--two" "two" "--three" "three")
 
 add_executable(
     tests_fmc_extension
