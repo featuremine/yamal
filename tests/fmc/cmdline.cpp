@@ -27,17 +27,17 @@ const char *one = nullptr;
 const char *two = nullptr;
 const char *three = nullptr;
 
-fmc_cmdline_opt_t options[] = {{"--help", false, NULL},
+fmc_cmdline_opt_t options[] = {{"--help", false, nullptr},
                                {"--one", true, &one},
                                {"--two", true, &two},
                                {"--three", true, &three},
-                               {NULL}};
+                               {nullptr}};
 
 TEST(fmc_cmdline, values) {
   fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
-  ASSERT_EQ(err, NULL);
+  ASSERT_EQ(err, nullptr);
 
   ASSERT_STREQ(one, "one");
   ASSERT_STREQ(two, "two");
@@ -48,7 +48,7 @@ TEST(fmc_cmdline, no_required) {
   fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
-  ASSERT_NE(err, NULL);
+  ASSERT_NE(err, nullptr);
 
   ASSERT_STREQ(fmc_error_msg(err),
                "option --one is required and remains unset");
@@ -58,7 +58,7 @@ TEST(fmc_cmdline, duplicated) {
   fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
-  ASSERT_NE(err, NULL);
+  ASSERT_NE(err, nullptr);
 
   ASSERT_STREQ(fmc_error_msg(err), "option --two is repeated");
 }
@@ -67,7 +67,7 @@ TEST(fmc_cmdline, option) {
   fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
-  ASSERT_EQ(err, NULL);
+  ASSERT_EQ(err, nullptr);
 
   ASSERT_TRUE(options[0].set);
   ASSERT_FALSE(options[1].set);
@@ -79,7 +79,7 @@ TEST(fmc_cmdline, extra) {
   fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
-  ASSERT_NE(err, NULL);
+  ASSERT_NE(err, nullptr);
 
   ASSERT_STREQ(fmc_error_msg(err),
                "option --help is given a value, but none expected");
