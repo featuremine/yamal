@@ -95,6 +95,7 @@ if __name__ == "__main__":
                         files[file].write(f"""## {name}
 
 {brief}
+
 {node_to_text(detdesc).strip()}
 
 ```c

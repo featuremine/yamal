@@ -10,6 +10,7 @@ A control channel is used for communicating peer, channel, publisher and subscri
 ## ytp_control_new
 
 Allocates and initializes a ytp_control_t object. 
+
 - fd: a yamal file descriptor
 - error: out-parameter for error handling
 
@@ -22,6 +23,7 @@ ytp_control_t * ytp_control_new(fmc_fd fd, fmc_error_t **error)
 ## ytp_control_init
 
 Initializes a ytp_control_t object. 
+
 - ctrl: the ytp_control_t object
 - fd: a yamal file descriptor
 - error: out-parameter for error handling
@@ -33,6 +35,7 @@ void ytp_control_init(ytp_control_t *ctrl, fmc_fd fd, fmc_error_t **error)
 ## ytp_control_new_2
 
 Allocates and initializes a ytp_control_t object. 
+
 - fd: a yamal file descriptor
 - enable_thread: enables the auxiliary thread
 - error: out-parameter for error handling
@@ -46,6 +49,7 @@ ytp_control_t * ytp_control_new_2(fmc_fd fd, bool enable_thread, fmc_error_t **e
 ## ytp_control_init_2
 
 Initializes a ytp_control_t object. 
+
 - ctrl: the ytp_control_t object
 - fd: a yamal file descriptor
 - enable_thread: enables the auxiliary thread
@@ -58,6 +62,7 @@ void ytp_control_init_2(ytp_control_t *ctrl, fmc_fd fd, bool enable_thread, fmc_
 ## ytp_control_del
 
 Destroys and deallocate a ytp_control_t object. 
+
 - ctrl: the ytp_control_t object
 - error: out-parameter for error handling
 
@@ -68,6 +73,7 @@ void ytp_control_del(ytp_control_t *ctrl, fmc_error_t **error)
 ## ytp_control_destroy
 
 Destroys a ytp_control_t object. 
+
 - ctrl: the ytp_control_t object
 - error: out-parameter for error handling
 
@@ -78,6 +84,7 @@ void ytp_control_destroy(ytp_control_t *ctrl, fmc_error_t **error)
 ## ytp_control_reserve
 
 Reserves memory for data in the memory mapped list to be used to write to the file. 
+
 - ctrl: the ytp_control_t object
 - sz: size of the buffer to hold the memory
 - error: out-parameter for error handling
@@ -91,6 +98,7 @@ char * ytp_control_reserve(ytp_control_t *ctrl, size_t sz, fmc_error_t **error)
 ## ytp_control_commit
 
 Commits the data to the memory mapped list on the control level. 
+
 - ctrl: the ytp_control_t object
 - peer: the peer that publishes the data
 - channel: the channel to publish the data
@@ -107,6 +115,7 @@ ytp_iterator_t ytp_control_commit(ytp_control_t *ctrl, ytp_peer_t peer, ytp_chan
 ## ytp_control_sublist_commit
 
 Commits a new data node to an existing sublist (first_ptr, last_ptr) that is not in the main memory mapped list. 
+
 - ctrl: the ytp_control_t object
 - peer: the peer that publishes the data
 - channel: the channel to publish the data
@@ -123,6 +132,7 @@ void ytp_control_sublist_commit(ytp_control_t *ctrl, ytp_peer_t peer, ytp_channe
 ## ytp_control_sublist_finalize
 
 Commits a sublist to the memory mapped list on the control level. 
+
 - ctrl: the ytp_control_t object
 - first_ptr: the first node of the sublist
 - error: out-parameter for error handling
@@ -136,6 +146,7 @@ ytp_iterator_t ytp_control_sublist_finalize(ytp_control_t *ctrl, void *first_ptr
 ## ytp_control_sub
 
 Publishes a subscription message. 
+
 Complexity: Constant on average, worst case linear in the size of the list.
 
 - ctrl: the ytp_control_t object
@@ -152,6 +163,7 @@ void ytp_control_sub(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts, size_t sz
 ## ytp_control_dir
 
 Publishes a directory message. 
+
 Complexity: Constant on average, worst case linear in the size of the list.
 
 - ctrl: the ytp_control_t object
@@ -168,6 +180,7 @@ void ytp_control_dir(ytp_control_t *ctrl, ytp_peer_t peer, int64_t ts, size_t sz
 ## ytp_control_ch_name
 
 Returns the name of the channel, given the channel reference. 
+
 Complexity: Constant on average, worst case linear in the number of channels.
 
 - ctrl: the ytp_control_t object
@@ -183,6 +196,7 @@ void ytp_control_ch_name(ytp_control_t *ctrl, ytp_channel_t channel, size_t *sz,
 ## ytp_control_ch_decl
 
 Declares an existing/new channel. 
+
 Complexity: Constant on average, worst case linear in the size of the list.
 
 - ctrl: the ytp_control_t object
@@ -201,6 +215,7 @@ ytp_channel_t ytp_control_ch_decl(ytp_control_t *ctrl, ytp_peer_t peer, int64_t 
 ## ytp_control_peer_name
 
 Returns the name of the peer, given the peer reference. 
+
 Complexity: Constant on average, worst case linear in the number of peers.
 
 - ctrl: the ytp_control_t object
@@ -216,6 +231,7 @@ void ytp_control_peer_name(ytp_control_t *ctrl, ytp_peer_t peer, size_t *sz, con
 ## ytp_control_peer_decl
 
 Declares an existing/new peer. 
+
 Complexity: Constant on average, worst case linear in the size of the list.
 
 - ctrl: the ytp_control_t object
@@ -232,6 +248,7 @@ ytp_peer_t ytp_control_peer_decl(ytp_control_t *ctrl, size_t sz, const char *nam
 ## ytp_control_poll_until
 
 Process announcement messages until the specified seqno. 
+
 - ctrl: the ytp_control_t object
 - seqno: seqno
 - error: out-parameter for error handling
@@ -243,6 +260,7 @@ void ytp_control_poll_until(ytp_control_t *ctrl, uint64_t seqno, fmc_error_t **e
 ## ytp_control_end
 
 Returns the iterator to the end of the list, the last node. Also moves control pointer to the end. 
+
 - ctrl: the ytp_control_t object
 - error: out-parameter for error handling
 
@@ -255,6 +273,7 @@ ytp_iterator_t ytp_control_end(ytp_control_t *ctrl, fmc_error_t **error)
 ## ytp_control_term
 
 Checks if there are not more messages. 
+
 - iterator: iterator to test
 
 **return value**: true if there are not more messages, false otherwise
@@ -266,6 +285,7 @@ bool ytp_control_term(ytp_iterator_t iterator)
 ## ytp_control_seek
 
 Returns an iterator given a serializable ptr. Also moves control pointer to catch up with iterator. 
+
 - ctrl: ytp_control_t object
 - off: the serializable ptr offset
 - error: out-parameter for error handling
@@ -279,6 +299,7 @@ ytp_iterator_t ytp_control_seek(ytp_control_t *ctrl, ytp_mmnode_offs off, fmc_er
 ## ytp_control_tell
 
 Returns serializable offset given an iterator. 
+
 - ctrl: ytp_control_t object
 - iterator: the iterator of the serializable ptr
 - error: out-parameter for error handling

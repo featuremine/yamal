@@ -340,8 +340,7 @@ cleanup_0:
 
 ytp_yamal_t *ytp_yamal_new_3(int fd, bool enable_thread,
                              YTP_CLOSABLE_MODE closable, fmc_error_t **error) {
-  ytp_yamal_t *yamal =
-      (ytp_yamal_t *)aligned_alloc(_Alignof(ytp_yamal_t), sizeof(ytp_yamal_t));
+  ytp_yamal_t *yamal = (ytp_yamal_t *)malloc(sizeof(ytp_yamal_t));
   if (!yamal) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return NULL;

@@ -9,6 +9,7 @@ File contains C declaration of stream layer of YTP.
 ## ytp_stream_close
 
 Closes all stream level lists. 
+
 - yamal
 - error: out-parameter for error handling
 

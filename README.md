@@ -1,26 +1,59 @@
-# Yamal
-Yamal is a message-oriented transactional IPC protocol. Yamal can be used to seamlessly interchange between local and distributed deployment.
+# Introduction
 
+Yamal is an open source library for transactional low-latency IPC and data capture. It is used to build systems where data is communicated and captured between different processes very quickly, with an emphasis on ensuring the consistency and reliability of that data. This is especially important in environments where fast, reliable data transmission and storage are essential, such as financial trading platforms or real-time analytics systems.
 
-## Documentation
+**Features**:
+- **Performance**: Astoundingly low latencies - 300ns (median) and 1us (max) on a Ryzen 5950X.
+- **Atomicity**: Ensures the entire update to the bus is either complete or not done at all.
+- **Sequential**: Ensures chronological order for message storage and access.
+- **Versatility**: Support for file rollover, indexing, and random access.
+- **Resilience**: In the event of application crashes, data is not lost.
+- **Structured Data**: The data is housed in a flat file.
+- **Simplicity**: Boasts elementary C and Python API.
+- **Non-blocking**: Ensures message memory is secured without obstructions.
+- **Consistency**: Guarantees data consistency across different processes.
+- **Zero-copy**: Abstains from data copying during read/write.
+- **Availability**: Data pointers remain active until application closure.
+- **Discovery**: designed for on-demand data and data discovery.
 
-* [YTP Protocol](docs/YTP-Protocol.md)
-* C API
-  * Yamal (Layer 0)
-    * [ytp/yamal.h](docs/Yamal-C-API.md)
-  * Time (Layer 1)
-    * [ytp/time.h](docs/Time-C-API.md)
-  * Stream (Layer 2)
-    * [ytp/announcement.h](docs/Announcement-C-API.md)
-    * [ytp/cursor.h](docs/Cursor-C-API.md)
-    * [ytp/data.h](docs/Data-C-API.md)
-    * [ytp/glob.h](docs/Glob-C-API.md)
-    * [ytp/index.h](docs/Index-C-API.md)
-    * [ytp/stream.h](docs/Stream-C-API.md)
-    * [ytp/streams.h](docs/Streams-C-API.md)
-    * [ytp/subscription.h](docs/Subscription-C-API.md)
-  * YTP 7 API
-    * [ytp/control.h](docs/Control-C-API.md)
-    * [ytp/timeline.h](docs/Timeline-C-API.md)
-    * [ytp/sequence.h](docs/Sequence-C-API.md)
-* [Python API](docs/YTP-Python-API.md)
+# How to build
+
+## Requirements
+
+* Cmake
+* Git
+* C/C++ compiler
+* Python >=3.6
+
+```bash
+apt-get install -y cmake git build-essential python3
+```
+
+## Clone and build
+
+```bash
+git clone --recurse-submodules https://github.com/featuremine/yamal.git && \
+mkdir yamal/build && \
+cd yamal/build && \
+cmake .. \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DBUILD_TESTING=ON \
+  -DBUILD_TOOLS=ON \
+  -DBUILD_WHEEL=ON \
+  -DTEST_EXTENSIONS=ON \
+  -DBUILD_DOCUMENTATION=OFF \
+  -DCMAKE_BUILD_TYPE=Release && \
+make -j 3
+```
+
+# Testing
+
+## Run using ctest
+
+```bash
+ctest --extra-verbose
+```
+
+# Usage instructions
+
+- [Yamal Documentation](docs/README.md)
