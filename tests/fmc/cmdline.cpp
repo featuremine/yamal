@@ -34,7 +34,7 @@ fmc_cmdline_opt_t options[] = {{"--help", false, NULL},
                                {NULL}};
 
 TEST(fmc_cmdline, values) {
-	fmc_error_t *err = nullptr;
+  fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
   ASSERT_EQ(err, NULL);
@@ -44,18 +44,18 @@ TEST(fmc_cmdline, values) {
   ASSERT_STREQ(three, "three");
 }
 
-
 TEST(fmc_cmdline, no_required) {
-	fmc_error_t *err = nullptr;
+  fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
   ASSERT_NE(err, NULL);
 
-  ASSERT_STREQ(fmc_error_msg(err), "option --one is required and remains unset");
+  ASSERT_STREQ(fmc_error_msg(err),
+               "option --one is required and remains unset");
 }
 
 TEST(fmc_cmdline, duplicated) {
-	fmc_error_t *err = nullptr;
+  fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
   ASSERT_NE(err, NULL);
@@ -64,7 +64,7 @@ TEST(fmc_cmdline, duplicated) {
 }
 
 TEST(fmc_cmdline, option) {
-	fmc_error_t *err = nullptr;
+  fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
   ASSERT_EQ(err, NULL);
@@ -76,19 +76,20 @@ TEST(fmc_cmdline, option) {
 }
 
 TEST(fmc_cmdline, extra) {
-	fmc_error_t *err = nullptr;
+  fmc_error_t *err = nullptr;
 
   fmc_cmdline_opt_proc(_argc, _argv, options, &err);
   ASSERT_NE(err, NULL);
 
-  ASSERT_STREQ(fmc_error_msg(err), "option --help is given a value, but none expected");
+  ASSERT_STREQ(fmc_error_msg(err),
+               "option --help is given a value, but none expected");
 }
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
 
   _argc = argc;
-  _argv = (const char**)argv;
+  _argv = (const char **)argv;
 
   return RUN_ALL_TESTS();
 }
