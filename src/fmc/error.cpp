@@ -121,7 +121,9 @@ void fmc_error_destroy(fmc_error_t *err) {
 void fmc_error_clear(fmc_error_t **err) { *err = NULL; }
 
 const char *fmc_error_msg(const fmc_error_t *err) {
-  return err ? (err->code == FMC_ERROR_CUSTOM ? err->buf : error_msgs[err->code]) : error_msgs[0];
+  return err ? (err->code == FMC_ERROR_CUSTOM ? err->buf
+                                              : error_msgs[err->code])
+             : error_msgs[0];
 }
 
 void fmc_error_cpy(fmc_error_t *err1, const fmc_error_t *err2) {

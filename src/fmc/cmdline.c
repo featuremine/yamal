@@ -36,7 +36,8 @@ static bool fmc_cmdline_opt_parse(int argc, const char **argv, const char *opt,
       found = true;
       if (!val) {
         if (*(argv[c] + n)) {
-          fmc_error_set(err, "option %s is given a value, but none expected", opt);
+          fmc_error_set(err, "option %s is given a value, but none expected",
+                        opt);
           return false;
         }
         continue;
@@ -65,8 +66,8 @@ void fmc_cmdline_opt_proc(int argc, const char **argv, fmc_cmdline_opt_t *opts,
   for (int n = 0; opts[n].str; ++n) {
     if (!opts[n].required || opts[n].set)
       continue;
-    fmc_error_add(err, "\n",
-                  "option %s is required and remains unset", opts[n].str);
+    fmc_error_add(err, "\n", "option %s is required and remains unset",
+                  opts[n].str);
   }
   return;
 }
