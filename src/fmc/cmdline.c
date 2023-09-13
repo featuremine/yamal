@@ -30,16 +30,13 @@ static bool fmc_cmdline_opt_parse(int argc, const char **argv, const char *opt,
   while (--c > 0) {
     if (!strncmp(argv[c], opt, n)) {
       if (found) {
-        fmc_error_set(err, "option %s is repeated (%s:%d)", opt, __FILE__,
-                      __LINE__);
+        fmc_error_set(err, "option %s is repeated", opt);
         return false;
       }
       found = true;
       if (!val) {
         if (*(argv[c] + n)) {
-          fmc_error_set(err,
-                        "option %s is given a value, but none expected (%s:%d)",
-                        opt, __FILE__, __LINE__);
+          fmc_error_set(err, "option %s is given a value, but none expected", opt);
           return false;
         }
         continue;
@@ -62,16 +59,14 @@ void fmc_cmdline_opt_proc(int argc, const char **argv, fmc_cmdline_opt_t *opts,
   for (int n = 0; opts[n].str; ++n) {
     opts[n].set =
         fmc_cmdline_opt_parse(argc, argv, opts[n].str, opts[n].value, err);
-    if (err)
+    if (*err)
       return;
   }
   for (int n = 0; opts[n].str; ++n) {
     if (!opts[n].required || opts[n].set)
       continue;
     fmc_error_add(err, "\n",
-                  "option %s is required and remains"
-                  " unset (%s:%d)",
-                  opts[n].str, __FILE__, __LINE__);
+                  "option %s is required and remains unset", opts[n].str);
   }
   return;
 }
