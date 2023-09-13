@@ -23,22 +23,11 @@ extern "C" {
 #endif
 
 typedef struct fmc_cmdline_opt {
-  const char *str;
-  bool required;
-  const char **value;
-  bool set;
+  const char *str;    /* option key string */
+  bool required;      /* specifies whether option is required */
+  const char **value; /* if not NULL, the address of the variable to store the value */
+  bool set;           /* will be set by the parser if the option was set */
 } fmc_cmdline_opt_t;
-
-/**
- * @brief Parses a single command line option
- *
- * @param argc count of command line arguments
- * @param argv command line arguments
- * @param opt command line option to process
- * @return NULL if option \p opt is not found, pointer to option value otherwise
- */
-FMMODFUNC const char *fmc_cmdline_opt(int argc, const char **argv,
-                                      const char *opt);
 
 /**
  * @brief Parses a single command line option
