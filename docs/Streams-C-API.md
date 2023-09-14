@@ -9,6 +9,7 @@ File contains C declaration of streams API.
 ## ytp_streams_new
 
 Allocates and initializes a ytp_streams_t object. 
+
 - yamal
 - error: out-parameter for error handling
 
@@ -21,6 +22,7 @@ ytp_streams_t * ytp_streams_new(ytp_yamal_t *yamal, fmc_error_t **error)
 ## ytp_streams_del
 
 Destroys and deallocate a ytp_streams_t object. 
+
 - streams
 - error: out-parameter for error handling
 
@@ -31,6 +33,7 @@ void ytp_streams_del(ytp_streams_t *streams, fmc_error_t **error)
 ## ytp_streams_announce
 
 Announces a stream in adherence to stream protocol. 
+
 - yamal
 - psz: peer size
 - peer: peer name
@@ -49,6 +52,7 @@ ytp_mmnode_offs ytp_streams_announce(ytp_streams_t *streams, size_t psz, const c
 ## ytp_streams_lookup
 
 Lookups a stream in adherence to stream protocol. 
+
 - yamal
 - psz: peer size
 - peer: peer name

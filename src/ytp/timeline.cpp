@@ -98,8 +98,8 @@ ytp_timeline::ytp_timeline(ytp_control_t *ctrl) : ctrl(ctrl), ann_processed(0) {
 }
 
 ytp_timeline_t *ytp_timeline_new(ytp_control_t *ctrl, fmc_error_t **error) {
-  auto *timeline = static_cast<ytp_timeline_t *>(
-      aligned_alloc(alignof(ytp_timeline_t), sizeof(ytp_timeline_t)));
+  auto *timeline =
+      static_cast<ytp_timeline_t *>(malloc(sizeof(ytp_timeline_t)));
   if (!timeline) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return {};

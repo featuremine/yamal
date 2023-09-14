@@ -19,53 +19,55 @@
 #include <fmc/error.h>
 #include <string.h> // strlen()
 
-const char *fmc_cmdline_opt(int argc, const char **argv, const char *opt) {
+static bool fmc_cmdline_opt_parse(int argc, const char **argv, const char *opt,
+                                  const char **val, fmc_error_t **err) {
   size_t n = strlen(opt);
   int c = argc;
+  bool found = false;
+
+  fmc_error_clear(err);
 
   while (--c > 0) {
-
     if (!strncmp(argv[c], opt, n)) {
-      if (!*(argv[c] + n) && c < argc - 1) {
-        return argv[c + 1];
+      if (found) {
+        fmc_error_set(err, "option %s is repeated", opt);
+        return false;
       }
-
-      if (argv[c][n] == '=')
-        return &argv[c][n + 1];
-      return argv[c] + n;
+      found = true;
+      if (!val) {
+        if (*(argv[c] + n)) {
+          fmc_error_set(err, "option %s is given a value, but none expected",
+                        opt);
+          return false;
+        }
+        continue;
+      }
+      if (!*(argv[c] + n) && c < argc - 1) {
+        *val = argv[c + 1];
+        continue;
+      }
+      *val = argv[c][n] == '=' ? &argv[c][n + 1] : argv[c] + n;
     }
   }
 
-  return NULL;
+  return found;
 }
 
 void fmc_cmdline_opt_proc(int argc, const char **argv, fmc_cmdline_opt_t *opts,
                           fmc_error_t **err) {
-  const char *p;
-  int n;
-
   fmc_error_clear(err);
 
-  for (n = 0; opts[n].str; ++n) {
-    opts[n].set = false;
-    p = fmc_cmdline_opt(argc, argv, opts[n].str);
-    if (!p)
-      continue;
-    if (opts[n].set) {
-      fmc_error_set(err, "option %s is repeated (%s:%d)", opts[n].str, __FILE__,
-                    __LINE__);
+  for (int n = 0; opts[n].str; ++n) {
+    opts[n].set =
+        fmc_cmdline_opt_parse(argc, argv, opts[n].str, opts[n].value, err);
+    if (*err)
       return;
-    }
-    opts[n].set = true;
-    *opts[n].value = p;
   }
-  for (n = 0; opts[n].str; ++n) {
+  for (int n = 0; opts[n].str; ++n) {
     if (!opts[n].required || opts[n].set)
       continue;
-    fmc_error_add(err, "\n",
-                  "option %s is required and remains"
-                  " unset (%s:%d)",
-                  opts[n].str, __FILE__, __LINE__);
+    fmc_error_add(err, "\n", "option %s is required and remains unset",
+                  opts[n].str);
   }
   return;
 }

@@ -70,8 +70,8 @@ void ytp_sequence_init(ytp_sequence_t *seq, fmc_fd fd, fmc_error_t **error) {
 
 ytp_sequence_t *ytp_sequence_new_2(fmc_fd fd, bool enable_thread,
                                    fmc_error_t **error) {
-  auto *sequence = static_cast<ytp_sequence_t *>(
-      aligned_alloc(alignof(ytp_sequence_t), sizeof(ytp_sequence_t)));
+  auto *sequence =
+      static_cast<ytp_sequence_t *>(malloc(sizeof(ytp_sequence_t)));
   if (!sequence) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return {};

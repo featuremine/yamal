@@ -35,8 +35,7 @@ void ytp_control_init(ytp_control_t *ctrl, fmc_fd fd, fmc_error_t **error) {
 
 ytp_control_t *ytp_control_new_2(fmc_fd fd, bool enable_thread,
                                  fmc_error_t **error) {
-  auto *control = static_cast<ytp_control_t *>(
-      aligned_alloc(alignof(ytp_control_t), sizeof(ytp_control_t)));
+  auto *control = static_cast<ytp_control_t *>(malloc(sizeof(ytp_control_t)));
   if (!control) {
     fmc_error_set2(error, FMC_ERROR_MEMORY);
     return {};

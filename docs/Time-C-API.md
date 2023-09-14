@@ -9,6 +9,7 @@ File contains C declaration of time layer of YTP.
 ## ytp_time_reserve
 
 Reserves memory for data in the memory mapped list. 
+
 - yamal: the ytp_yamal_t object
 - sz: the size of the data payload
 - error: out-parameter for error handling
@@ -22,6 +23,7 @@ char * ytp_time_reserve(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error)
 ## ytp_time_commit
 
 Commits the data to the memory mapped list on the time level. 
+
 - yamal: the ytp_yamal_t object
 - ts: the time to publish the message
 - data: the value returned by ytp_peer_reserve if the node is not a sublist. Otherwise the first_ptr returned by ytp_peer_sublist_commit
@@ -37,6 +39,7 @@ ytp_iterator_t ytp_time_commit(ytp_yamal_t *yamal, int64_t ts, void *data, size_
 ## ytp_time_sublist_commit
 
 Commits a new data node to an existing sublist (first_ptr, last_ptr) that is not in the main memory mapped list. 
+
 - yamal
 - peer: the peer that publishes the data
 - channel: the channel to publish the data
@@ -53,6 +56,7 @@ void ytp_time_sublist_commit(ytp_yamal_t *yamal, int64_t ts, void **first_ptr, v
 ## ytp_time_read
 
 Reads a message on channel level. 
+
 - yamal: the ytp_yamal_t object
 - iterator
 - seqno
