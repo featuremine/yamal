@@ -17,7 +17,7 @@ Where
 
 The configuration file for two YTPs looks like:
 
-```dosini
+```ini
 [main]
 ytps=ytp1,ytp2,
 

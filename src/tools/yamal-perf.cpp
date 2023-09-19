@@ -287,10 +287,10 @@ int main(int argc, char **argv) {
         int64_t time_write_read = now - msgts;
 
         if (first_message_ == 0) {
-          first_message_ = msgts;
+          first_message_ = now;
         }
         messages_count_ += 1;
-        last_message_ = msgts;
+        last_message_ = now;
         total_size_ += data_sz;
         total_time_ += time_write_read;
 
