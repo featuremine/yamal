@@ -203,7 +203,7 @@ else()
 endif()
 
 if(BUILD_WHEEL)
-    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}-egg")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}-py")
     find_program(PYTHON3_BIN "python3")
     add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-py3-none-manylinux_2_17_x86_64.whl"
@@ -230,7 +230,7 @@ if(BUILD_WHEEL)
     )
 
     add_custom_command(
-        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}-egg/yamal.egg-info/SOURCES.txt"
+        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}-py/yamal.egg-info/SOURCES.txt"
     
         COMMAND
         "${PYTHON3_BIN}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py"
@@ -239,7 +239,7 @@ if(BUILD_WHEEL)
         "--executable=${PYTHON3_BIN}"
 
         "egg_info"
-        "--egg-base" "${CMAKE_CURRENT_BINARY_DIR}-egg"
+        "--egg-base" "${CMAKE_CURRENT_BINARY_DIR}-py"
 
         "build"
         "--build-base=${CMAKE_CURRENT_BINARY_DIR}/build"
@@ -257,7 +257,7 @@ if(BUILD_WHEEL)
     )
     add_custom_target(
         yamal-py ALL
-        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}-egg/yamal.egg-info/SOURCES.txt"
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}-py/yamal.egg-info/SOURCES.txt"
     )
     set(WHEEL_yamal_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "Wheel path for yamal" FORCE)
     set(WHEEL_yamal_SCRIPTS "${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "Wheel script path for yamal" FORCE)
