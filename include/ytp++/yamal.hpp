@@ -44,7 +44,7 @@ public:
       return *this;
     }
     bool operator==(data::base_iterator<forward> &other) {
-      return it_ == it_;
+      return it_ == other.it_;
     }
     uint64_t operator uint64_t() {
       fmc_error_t *err = nullptr;
