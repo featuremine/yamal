@@ -24,6 +24,8 @@
 #include <ytp/sequence.h>
 #include <ytp/version.h>
 
+#include <fmc/python/common.h>
+
 using namespace std;
 
 struct YTPSequenceBase : std::enable_shared_from_this<YTPSequenceBase> {
@@ -1276,14 +1278,6 @@ static PyMethodDef YtpMethods[] = {{"api_v1", (PyCFunction)YtpModule_api_v1,
 
 static PyModuleDef YtpModule = {PyModuleDef_HEAD_INIT, "ytp", "ytp module", -1,
                                 YtpMethods};
-
-// TODO: move to common
-
-#define ADD_PY_CLASS(C, N, MOD)                                                \
-  if (PyType_Ready(&C) < 0)                                                    \
-    return NULL;                                                               \
-  Py_INCREF(&C);                                                               \
-  PyModule_AddObject(MOD, N, (PyObject *)&C)
 
 PyMODINIT_FUNC fm_ytp_py_init(void) FMMODFUNC FMPYMODPUB;
 
