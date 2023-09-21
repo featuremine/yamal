@@ -30,7 +30,11 @@ public:
     data::base_iterator<forward>() : it_(nullptr), yamal_(nullptr) {}
     data::base_iterator<forward> &operator++() {
       fmc_error_t *err = nullptr;
-      it_ = ytp_yamal_next(yamal_, it_, &err);
+      if constexpr (forward) {
+        it_ = ytp_yamal_next(yamal_, it_, &err);
+      } else {
+        it_ = ytp_yamal_prev(yamal_, it_, &err);
+      }
       fmc_runtime_error_unless(!err)
           << "unable to obtain next position of iterator with error :"
           << fmc_error_msg(err);
@@ -38,13 +42,21 @@ public:
     }
     data::base_iterator<forward> &operator--() {
       fmc_error_t *err = nullptr;
-      it_ = ytp_yamal_prev(yamal_, it_, &err);
+      if constexpr (forward) {
+        it_ = ytp_yamal_prev(yamal_, it_, &err);
+      } else {
+        it_ = ytp_yamal_next(yamal_, it_, &err);
+      }
       fmc_runtime_error_unless(!err)
           << "unable to obtain previous position of iterator with error :"
           << fmc_error_msg(err);
       return *this;
     }
     bool operator==(data::base_iterator<forward> &other) {
+      // Todo: check for the end, either one could be null
+      // Ensure we deal with forward:
+      // - if forward iterator, check for term
+      // - if reverse iterator, end would be at the head
       return it_ == other.it_;
     }
     ytp_mmnode_offs operator ytp_mmnode_offs() {
@@ -78,28 +90,29 @@ public:
   };
   using iterator = base_iterator<true>;
   using reverse_iterator = base_iterator<false>;
-  data::iterator begin() {
+  iterator begin() {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_data_begin(yamal_, &err);
     fmc_runtime_error_unless(!err)
         << "unable to find begin iterator with error :" << fmc_error_msg(err);
-    return data::iterator(yamal_, it);
+    return iterator(yamal_, it);
   }
-  data::iterator end() { return data::iterator(); }
-  data::reverse_iterator rbegin() {
+  iterator end() { return iterator(); }
+  reverse_iterator rbegin() {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_data_end(yamal_, &err);
     fmc_runtime_error_unless(!err)
         << "unable to find begin iterator with error :" << fmc_error_msg(err);
-    return data::iterator(yamal_, it);
+    // find previous to it and return THAT, we are after
+    return reverse_iterator(yamal_, it);
   }
-  data::reverse_iterator rend() { return data::iterator(); }
-  data::iterator seek(ytp_mmnode_offs offset) {
+  reverse_iterator rend() { return reverse_iterator(); }
+  iterator seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_yamal_seek(yamal_, offset, &err);
     fmc_runtime_error_unless(!err)
         << "unable to seek iterator with error :" << fmc_error_msg(err);
-    return data::iterator(yamal_, it);
+    return iterator(yamal_, it);
   }
 
 private:
