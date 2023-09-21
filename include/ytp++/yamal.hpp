@@ -36,7 +36,7 @@ public:
         it_ = ytp_yamal_prev(yamal_, it_, &err);
       }
       fmc_runtime_error_unless(!err)
-          << "unable to obtain next position of iterator with error :"
+          << "unable to obtain next position of iterator with error:"
           << fmc_error_msg(err);
       return *this;
     }
@@ -48,7 +48,7 @@ public:
         it_ = ytp_yamal_next(yamal_, it_, &err);
       }
       fmc_runtime_error_unless(!err)
-          << "unable to obtain previous position of iterator with error :"
+          << "unable to obtain previous position of iterator with error:"
           << fmc_error_msg(err);
       return *this;
     }
@@ -63,7 +63,7 @@ public:
       fmc_error_t *err = nullptr;
       ytp_mmnode_offs off = ytp_yamal_tell(yamal_, it_, &err);
       fmc_runtime_error_unless(!err)
-          << "unable to tell position of iterator with error :"
+          << "unable to tell position of iterator with error:"
           << fmc_error_msg(err);
       return off;
     }
@@ -76,7 +76,7 @@ public:
       const char *msgdata;
       ytp_data_read(yamal_, it_, &seqno, &ts, &sid, &msgsz, &msgdata, &err);
       fmc_runtime_error_unless(!err)
-          << "unable to read with error :" << fmc_error_msg(err);
+          << "unable to read with error:" << fmc_error_msg(err);
       return std::make_tuple<uint64_t, int64_t, stream, const std::string_view>(
           seqno, ts, stream(sid), std::string_view(msgdata, msgsz))
     }
@@ -95,7 +95,7 @@ public:
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_data_begin(yamal_, &err);
     fmc_runtime_error_unless(!err)
-        << "unable to find begin iterator with error :" << fmc_error_msg(err);
+        << "unable to find begin iterator with error:" << fmc_error_msg(err);
     return iterator(yamal_, it);
   }
   iterator end() { return iterator(); }
@@ -103,7 +103,7 @@ public:
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_data_end(yamal_, &err);
     fmc_runtime_error_unless(!err)
-        << "unable to find begin iterator with error :" << fmc_error_msg(err);
+        << "unable to find begin iterator with error:" << fmc_error_msg(err);
     // find previous to it and return THAT, we are after
     return reverse_iterator(yamal_, it);
   }
@@ -112,9 +112,13 @@ public:
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_yamal_seek(yamal_, offset, &err);
     fmc_runtime_error_unless(!err)
-        << "unable to seek iterator with error :" << fmc_error_msg(err);
+        << "unable to seek iterator with error:" << fmc_error_msg(err);
     return iterator(yamal_, it);
   }
+
+  void close() {}
+  bool closed() {}
+  bool closable() {}
 
 private:
   data(ytp_yamal_t *yamal) : yamal_(yamal) {}
@@ -125,36 +129,51 @@ private:
 
 class streams {
 public:
-  stream announce(std::string_view channel, std::string_view peer,
+  stream announce(std::string_view peer, std::string_view channel,
                   std::string_view encoding) {
     fmc_error_t *err = nullptr;
+    // Change streams functions
     ytp_iterator_t sid = ytp_announcement_write(
         yamal_, peer.size(), peer.data(), channel.size(), channel.data(),
         encoding.size(), encoding.data(), &err);
     fmc_runtime_error_unless(!err)
-        << "unable to announce stream with error :" << fmc_error_msg(err);
+        << "unable to announce stream with error:" << fmc_error_msg(err);
     return stream(sid);
   }
 
+  ytp_mmnode_offs lookup(std::string_view peer, std::string_view channel,
+                         std::string_view encoding) {
+    ytp_mmnode_offs off = ytp_streams_lookup(streams_.get(), peer.size(), peer.data(),
+                                             channel.size(), channel.data(),
+                                             encoding.size(), encoding.data(), &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to look up stream with error:" << fmc_error_msg(err);
+    return off;
+  }
+
 private:
-  streams(ytp_yamal_t *yamal) yamal_(yamal) {}
+  streams(ytp_yamal_t *yamal) yamal_(yamal) {
+    fmc_error_t *err = nullptr;
+    streams_ = ytp_streams_new(yamal_, &err);
+  }
   ytp_yamal_t *yamal_ = nullptr;
+  std::shared_ptr<ytp_streams_t> streams_;
 
   friend yamal;
 };
 
 class yamal {
 public:
-  yamal(std::string_view fname, bool readonly) {
+  yamal(std::string_view fname, bool readonly, bool closable = false) {
     fmc_error_t *err = nullptr;
     fd_ = fmc_fopen(fname.data(),
                     fmc_fmode::READ |
                         fmc_fmode((!readonly) * fmc_fmode::WRITE) & err);
     fmc_runtime_error_unless(!err)
-        << "unable to open file with error :" << fmc_error_msg(err);
+        << "unable to open file with error:" << fmc_error_msg(err);
     yamal_ = ytp_yamal_new(fd_, &err);
     fmc_runtime_error_unless(!err)
-        << "unable to create Yamal object with error :" << fmc_error_msg(err);
+        << "unable to create Yamal object with error:" << fmc_error_msg(err);
   }
 
   ~yamal() {
@@ -173,7 +192,8 @@ public:
 
 private:
   fmc_fd fd_ = -1;
-  ytp_yamal_t *yamal_ = nullptr;
+  std::shared_ptr<ytp_yamal_t> yamal_ = nullptr;
+  // use shared ptr, destructor will have deletion function that clears the descriptor
 }
 
 } // namespace ytp
