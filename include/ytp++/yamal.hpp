@@ -144,14 +144,14 @@ public:
     return stream(sid);
   }
 
-  ytp_mmnode_offs lookup(std::string_view peer, std::string_view channel,
+  stream lookup(std::string_view peer, std::string_view channel,
                          std::string_view encoding) {
-    ytp_mmnode_offs off = ytp_streams_lookup(streams_.get(), peer.size(), peer.data(),
+    ytp_mmnode_offs sid = ytp_streams_lookup(streams_.get(), peer.size(), peer.data(),
                                              channel.size(), channel.data(),
                                              encoding.size(), encoding.data(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to look up stream with error:" << fmc_error_msg(err);
-    return off;
+    return stream(sid);
   }
 
 private:
