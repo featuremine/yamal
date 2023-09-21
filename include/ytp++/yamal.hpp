@@ -22,7 +22,8 @@ public:
   template <bool forward> class base_iterator {
   public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = std::tuple<uint64_t, int64_t, stream, const std::string_view>;
+    using value_type =
+        std::tuple<uint64_t, int64_t, stream, const std::string_view>;
     using pointer = value_type *;
     using reference = value_type &;
 
