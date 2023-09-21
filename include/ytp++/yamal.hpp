@@ -47,7 +47,7 @@ public:
     bool operator==(data::base_iterator<forward> &other) {
       return it_ == other.it_;
     }
-    uint64_t operator uint64_t() {
+    ytp_mmnode_offs operator ytp_mmnode_offs() {
       fmc_error_t *err = nullptr;
       ytp_mmnode_offs off = ytp_yamal_tell(yamal_, it_, &err);
       fmc_runtime_error_unless(!err)
@@ -94,7 +94,7 @@ public:
     return data::iterator(yamal_, it);
   }
   data::reverse_iterator rend() { return data::iterator(); }
-  data::iterator seek(uint64_t offset) {
+  data::iterator seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_yamal_seek(yamal_, offset, &err);
     fmc_runtime_error_unless(!err)
