@@ -7,7 +7,7 @@ class data;
 class streams;
 
 class stream {
-  //TODO: make hashable and serializable
+  // TODO: make hashable and serializable
 private:
   stream() = default;
   ytp_mmnode_offs id_;
@@ -146,9 +146,9 @@ public:
 
   ytp_mmnode_offs lookup(std::string_view peer, std::string_view channel,
                          std::string_view encoding) {
-    ytp_mmnode_offs off = ytp_streams_lookup(streams_.get(), peer.size(), peer.data(),
-                                             channel.size(), channel.data(),
-                                             encoding.size(), encoding.data(), &err);
+    ytp_mmnode_offs off = ytp_streams_lookup(
+        streams_.get(), peer.size(), peer.data(), channel.size(),
+        channel.data(), encoding.size(), encoding.data(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to look up stream with error:" << fmc_error_msg(err);
     return off;
@@ -194,12 +194,14 @@ public:
   streams streams() { return streams(yamal_); }
 
   // seqnum, peer, channel, encoding
-  tuple<int, std::string_view, std::string_view, std::string_view> announcement(stream s);
+  tuple<int, std::string_view, std::string_view, std::string_view>
+  announcement(stream s);
 
 private:
   fmc_fd fd_ = -1;
   std::shared_ptr<ytp_yamal_t> yamal_ = nullptr;
-  // use shared ptr, destructor will have deletion function that clears the descriptor
+  // use shared ptr, destructor will have deletion function that clears the
+  // descriptor
 }
 
 } // namespace ytp

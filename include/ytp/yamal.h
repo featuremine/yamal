@@ -333,7 +333,6 @@ FMMODFUNC bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx,
  */
 FMMODFUNC bool ytp_yamal_closable(ytp_yamal_t *yamal, size_t lstidx);
 
-
 /**
  * @brief Allocates a specific page
  *
