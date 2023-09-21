@@ -7,6 +7,7 @@ class data;
 class streams;
 
 class stream {
+  //TODO: make hashable
 private:
   stream() = default;
   ytp_mmnode_offs id_;
