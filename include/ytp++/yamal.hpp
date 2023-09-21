@@ -51,7 +51,6 @@ public:
           << fmc_error_msg(err);
       return off;
     }
-    // Tuple contains: Sequence Number, Stream, Data
     value_type operator*() {
       fmc_error_t *err = nullptr;
       uint64_t seqno;
