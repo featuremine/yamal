@@ -121,6 +121,8 @@ public:
   bool closed() {}
   bool closable() {}
 
+  void write(stream s);
+
 private:
   data(ytp_yamal_t *yamal) : yamal_(yamal) {}
   ytp_yamal_t *yamal_ = nullptr;
