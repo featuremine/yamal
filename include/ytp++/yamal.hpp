@@ -190,6 +190,9 @@ public:
   data data() { return data(yamal_); }
   streams streams() { return streams(yamal_); }
 
+  // seqnum, peer, channel, encoding
+  tuple<int, std::string_view, std::string_view, std::string_view> announcement(stream &s);
+
 private:
   fmc_fd fd_ = -1;
   std::shared_ptr<ytp_yamal_t> yamal_ = nullptr;
