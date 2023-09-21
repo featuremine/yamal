@@ -65,7 +65,7 @@ public:
       ytp_data_read(yamal_, it_, &seqno, &ts, &sid, &msgsz, &msgdata, &err);
       fmc_runtime_error_unless(!err)
           << "unable to read with error :" << fmc_error_msg(err);
-      std::make_tuple<uint64_t, int64_t, stream, const std::string_view>(
+      return std::make_tuple<uint64_t, int64_t, stream, const std::string_view>(
           seqno, ts, stream(sid), std::string_view(msgdata, msgsz))
     }
 
