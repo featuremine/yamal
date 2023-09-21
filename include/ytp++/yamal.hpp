@@ -8,7 +8,7 @@ class streams;
 
 class stream {
 private:
-  stream();
+  stream() = default;
   ytp_mmnode_offs id_;
 
   friend data;
@@ -21,8 +21,7 @@ class data {
 public:
   template <bool forward> class base_iterator {
   public:
-    // Random access seems the most reasonable
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_category = std::bidirectional_iterator_tag;
     using value_type = base_iterator<forward>;
     // Confirm, should it be std::ptrdiff_t instead?
     using difference_type = uint64_t;
