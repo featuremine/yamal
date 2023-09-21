@@ -192,7 +192,7 @@ public:
   streams streams() { return streams(yamal_); }
 
   // seqnum, peer, channel, encoding
-  tuple<int, std::string_view, std::string_view, std::string_view> announcement(stream &s);
+  tuple<int, std::string_view, std::string_view, std::string_view> announcement(stream s);
 
 private:
   fmc_fd fd_ = -1;
