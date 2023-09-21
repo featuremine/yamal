@@ -43,6 +43,9 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
+    bool operator==(data::base_iterator<forward> &other) {
+      return it_ == it_;
+    }
     uint64_t operator uint64_t() {
       fmc_error_t *err = nullptr;
       ytp_mmnode_offs off = ytp_yamal_tell(yamal_, it_, &err);
@@ -66,8 +69,11 @@ public:
     }
 
   private:
+    data::base_iterator<forward>(ytp_yamal_t *yamal, ytp_iterator_t it) : it_(it), yamal_(yamal) {}
     ytp_iterator_t it_ = nullptr;
     ytp_yamal_t *yamal_ = nullptr;
+
+    friend data;
   };
   using iterator = base_iterator<true>;
   using reverse_iterator = base_iterator<false>;
@@ -76,7 +82,7 @@ public:
     ytp_iterator_t it = ytp_data_begin(yamal_, &err);
     fmc_runtime_error_unless(!err)
         << "unable to find begin iterator with error :" << fmc_error_msg(err);
-    return data::iterator(it);
+    return data::iterator(yamal_, it);
   }
   data::iterator end() { return data::iterator(); }
   data::reverse_iterator rbegin() {
@@ -84,7 +90,7 @@ public:
     ytp_iterator_t it = ytp_data_end(yamal_, &err);
     fmc_runtime_error_unless(!err)
         << "unable to find begin iterator with error :" << fmc_error_msg(err);
-    return data::iterator(it);
+    return data::iterator(yamal_, it);
   }
   data::reverse_iterator rend() { return data::iterator(); }
   data::iterator seek(uint64_t offset) {
@@ -92,7 +98,7 @@ public:
     ytp_iterator_t it = ytp_yamal_seek(yamal_, offset, &err);
     fmc_runtime_error_unless(!err)
         << "unable to seek iterator with error :" << fmc_error_msg(err);
-    return data::iterator(it);
+    return data::iterator(yamal_, it);
   }
 
 private:
