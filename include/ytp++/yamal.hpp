@@ -82,7 +82,8 @@ public:
     }
 
   private:
-    data::base_iterator<forward>(ytp_yamal_t *yamal, ytp_iterator_t it) : it_(it), yamal_(yamal) {}
+    data::base_iterator<forward>(ytp_yamal_t *yamal, ytp_iterator_t it)
+        : it_(it), yamal_(yamal) {}
     ytp_iterator_t it_ = nullptr;
     ytp_yamal_t *yamal_ = nullptr;
 
