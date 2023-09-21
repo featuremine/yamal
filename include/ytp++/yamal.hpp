@@ -22,11 +22,9 @@ public:
   template <bool forward> class base_iterator {
   public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = base_iterator<forward>;
-    // Confirm, should it be std::ptrdiff_t instead?
-    using difference_type = uint64_t;
-    using pointer = base_iterator<forward> *;
-    using reference = base_iterator<forward> &;
+    using value_type = std::tuple<uint64_t, int64_t, stream, const std::string_view>;
+    using pointer = value_type *;
+    using reference = value_type &;
 
     data::base_iterator<forward>() : it_(nullptr), yamal_(nullptr) {}
     data::base_iterator<forward> &operator++() {
@@ -54,7 +52,7 @@ public:
       return off;
     }
     // Tuple contains: Sequence Number, Stream, Data
-    std::tuple<uint64_t, int64_t, stream, const std::string_view> operator*() {
+    value_type operator*() {
       fmc_error_t *err = nullptr;
       uint64_t seqno;
       int64_t ts;
