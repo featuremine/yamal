@@ -49,7 +49,6 @@ TEST(yamal, yamal_base) {
   ASSERT_EQ(speer, "peer1");
   ASSERT_EQ(sch, "ch1");
   ASSERT_EQ(sencoding, "encoding1");
-
 }
 
 GTEST_API_ int main(int argc, char **argv) {
@@ -99,6 +98,6 @@ GTEST_API_ int main(int argc, char **argv) {
 //   ~yamal();
 //   data data();
 //   streams streams();
-//   std::tuple<int, std::string_view, std::string_view, std::string_view> announcement(stream s);
-//   ytp_yamal_t *get();
+//   std::tuple<int, std::string_view, std::string_view, std::string_view>
+//   announcement(stream s); ytp_yamal_t *get();
 // };
