@@ -16,6 +16,7 @@
 
 #include <thread>
 
+#include <ytp++/yamal.hpp>
 #include <ytp/cursor.h>
 #include <ytp/data.h>
 #include <ytp/glob.h>
@@ -24,7 +25,6 @@
 #include <ytp/streams.h>
 #include <ytp/subscription.h>
 #include <ytp/yamal.h>
-#include <ytp++/yamal.hpp>
 
 #include <fmc++/gtestwrap.hpp>
 #include <fmc++/mpl.hpp>
@@ -892,7 +892,7 @@ TEST(stream, cpp_main_test_1) {
   auto fd = fmc_ftemp(&error);
   ASSERT_EQ(error, nullptr);
 
-  fmc::scope_end_call fdc([&](){
+  fmc::scope_end_call fdc([&]() {
     fmc_fclose(fd, &error);
     ASSERT_EQ(error, nullptr);
   });
@@ -956,7 +956,8 @@ TEST(stream, cpp_main_test_1) {
     msg0003 = ytp_yamal_tell(yamal.get(), it, &error);
   }
 
-  ASSERT_THROW(anns.announce("peer1", "ch2", "encoding2_override"), std::runtime_error);
+  ASSERT_THROW(anns.announce("peer1", "ch2", "encoding2_override"),
+               std::runtime_error);
 
   auto stream12_redef = anns.announce("peer1", "ch2", "encoding2");
   ASSERT_EQ(error, nullptr);
@@ -1033,13 +1034,20 @@ TEST(stream, cpp_main_test_1) {
     EXPECT_EQ(readone(), Msg{MsgSub(stream22.id())});
     EXPECT_EQ(readone(), Msg{std::monostate{}});
 
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5005}, stream11.id(), "0000"));
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5006}, stream21.id(), "0001"));
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5007}, stream12.id(), "0002"));
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream22.id(), "0003"));
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream11.id(), "0004"));
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream12.id(), "0005"));
-    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream21.id(), "0006"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5005}, stream11.id(), "0000"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5006}, stream21.id(), "0001"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5007}, stream12.id(), "0002"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5009}, stream22.id(), "0003"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5009}, stream11.id(), "0004"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5009}, stream12.id(), "0005"));
+    EXPECT_EQ(readoneraw_data(),
+              buildmsg(uint64_t{5009}, stream21.id(), "0006"));
     EXPECT_EQ(readoneraw_data(), "");
 
     std::vector<size_t> subs;
@@ -1146,8 +1154,8 @@ TEST(stream, cpp_main_test_1) {
       ytp_mmnode_offs offset;
       size_t sz;
       const char *payload;
-      ytp_index_read(yamal.get(), idx_it, &seqno, &stream, &offset, &sz, &payload,
-                     &error);
+      ytp_index_read(yamal.get(), idx_it, &seqno, &stream, &offset, &sz,
+                     &payload, &error);
       ASSERT_EQ(error, nullptr);
 
       output.emplace_back(
@@ -1177,7 +1185,6 @@ TEST(stream, cpp_main_test_1) {
 
   ytp_cursor_del(cursor, &error);
   ASSERT_EQ(error, nullptr);
-
 }
 
 GTEST_API_ int main(int argc, char **argv) {
