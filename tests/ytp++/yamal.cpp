@@ -35,16 +35,16 @@ TEST(yamal, yamal_base) {
   ytp::data data = yamal.data();
   ytp::streams streams = yamal.streams();
 
+  ASSERT_FALSE(data.closable());
+  ASSERT_FALSE(data.closed());
+  ASSERT_THROW(data.close(), std::runtime_error);
+
   stream s = streams.announce("peer1", "ch1", "encoding1");
   ASSERT_THROW(streams.announce("peer1", "ch1", "invalid"), std::runtime_error);
-  auto [ls, lsenc] = streams.lookup("peer1", "ch1");
+  auto [ls, lsenc] = *streams.lookup("peer1", "ch1");
   ASSERT_EQ(s, ls);
-  auto [sinv1, sencinv1] = streams.lookup("peer1", "invalid");
-  ASSERT_EQ(sinv1.id(), 0);
-  ASSERT_EQ(sencinv1, std::string_view());
-  auto [sinv2, sencinv2] = streams.lookup("invalid", "ch1");
-  ASSERT_EQ(sinv2.id(), 0);
-  ASSERT_EQ(sencinv2, std::string_view());
+  ASSERT_FALSE(streams.lookup("peer1", "invalid"));
+  ASSERT_FALSE(streams.lookup("invalid", "ch1"));
   auto [sseqn, speer, sch, sencoding] = yamal.announcement(s);
   ASSERT_EQ(sseqn, 1);
   ASSERT_EQ(speer, "peer1");
