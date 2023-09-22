@@ -36,6 +36,7 @@ TEST(yamal, yamal_base) {
   ytp::streams streams = yamal.streams();
 
   stream s = streams.announce("peer1", "ch1", "encoding1");
+  ASSERT_THROW(streams.announce("peer1", "ch1", "invalid"), std::runtime_error);
   auto [ls, lsenc] = streams.lookup("peer1", "ch1");
   ASSERT_EQ(s, ls);
   auto [sinv1, sencinv1] = streams.lookup("peer1", "invalid");
@@ -86,19 +87,3 @@ GTEST_API_ int main(int argc, char **argv) {
 //   ytp_iterator_t commit(int64_t ts, stream s, fmc::buffer data);
 // };
 
-// class streams {
-//   stream announce(std::string_view peer, std::string_view channel,
-//                   std::string_view encoding);
-//   std::pair<stream, std::string_view> lookup(std::string_view peer,
-//                                              std::string_view channel);
-// };
-
-// class yamal {
-// public:
-//   yamal(fmc_fd fd, bool closable = false);
-//   ~yamal();
-//   data data();
-//   streams streams();
-//   std::tuple<int, std::string_view, std::string_view, std::string_view> announcement(stream s);
-//   ytp_yamal_t *get();
-// };
