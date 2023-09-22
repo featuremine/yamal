@@ -1,37 +1,47 @@
 #include "fmc/files.h"
 #include "ytp/yamal.h"
+#include "ytp/streams.h"
 #include "fmc++/memory.hpp"
+#include "fmc++/mpl.hpp"
+
+#include <string_view>
+#include <utility>
 
 namespace ytp {
 
+class yamal;
+
 class data;
+
+
 class streams;
 
 class stream {
+public:
   // TODO: make hashable and serializable
-  ytp_mmnode_offs id() {return id_;}
+  ytp_mmnode_offs id() const {return id_;}
+  stream(ytp_mmnode_offs id) : id_(id) {}
+  stream(const stream &s) = default;
+  stream(stream &&s) = default;
+  bool operator==(const stream other) const {
+    return id_ == other.id_;
+  }
 private:
   stream() = default;
   ytp_mmnode_offs id_;
-
-  friend data;
-  friend streams;
 };
-
-class yamal;
 
 class data {
 public:
   template <bool forward> class base_iterator {
   public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type =
-        std::tuple<uint64_t, int64_t, stream, const std::string_view>;
+    using value_type = std::tuple<uint64_t, int64_t, stream, std::string_view>;
     using pointer = value_type *;
     using reference = value_type &;
 
-    data::base_iterator<forward>() : it_(nullptr), yamal_(nullptr) {}
-    data::base_iterator<forward> &operator++() {
+    base_iterator() : it_(nullptr), yamal_(nullptr) {}
+    base_iterator<forward> &operator++() {
       fmc_error_t *err = nullptr;
       if constexpr (forward) {
         it_ = ytp_yamal_next(yamal_.get(), it_, &err);
@@ -43,7 +53,7 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    data::base_iterator<forward> &operator--() {
+    base_iterator<forward> &operator--() {
       fmc_error_t *err = nullptr;
       if constexpr (forward) {
         it_ = ytp_yamal_prev(yamal_.get(), it_, &err);
@@ -55,14 +65,14 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    bool operator==(data::base_iterator<forward> &other) {
+    bool operator==(base_iterator<forward> &other) {
       // Todo: check for the end, either one could be null
       // Ensure we deal with forward:
       // - if forward iterator, check for term
       // - if reverse iterator, end would be at the head
       return it_ == other.it_;
     }
-    ytp_mmnode_offs operator ytp_mmnode_offs() {
+    operator ytp_mmnode_offs() {
       fmc_error_t *err = nullptr;
       ytp_mmnode_offs off = ytp_yamal_tell(yamal_.get(), it_, &err);
       fmc_runtime_error_unless(!err)
@@ -80,14 +90,13 @@ public:
       ytp_data_read(yamal_.get(), it_, &seqno, &ts, &sid, &msgsz, &msgdata, &err);
       fmc_runtime_error_unless(!err)
           << "unable to read with error:" << fmc_error_msg(err);
-      return std::make_tuple<uint64_t, int64_t, stream, const std::string_view>(
-          seqno, ts, stream(sid), std::string_view(msgdata, msgsz))
+      return value_type(seqno, ts, stream(sid), std::string_view(msgdata, msgsz));
     }
 
   private:
-    data::base_iterator<forward>(std::shared_ptr<ytp_yamal_t> yamal, ytp_iterator_t it)
+    base_iterator(std::shared_ptr<ytp_yamal_t> yamal, ytp_iterator_t it)
         : it_(it), yamal_(yamal) {}
-    ytp_iterator_t it_ = nullptr;
+    ytp_iterator_t it_;
     std::shared_ptr<ytp_yamal_t> yamal_;
 
     friend data;
@@ -99,7 +108,7 @@ public:
     ytp_iterator_t it = ytp_data_begin(yamal_.get(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to find begin iterator with error:" << fmc_error_msg(err);
-    return iterator(yamal_.get(), it);
+    return iterator(yamal_, it);
   }
   iterator end() { return iterator(); }
   reverse_iterator rbegin() {
@@ -108,7 +117,7 @@ public:
     fmc_runtime_error_unless(!err)
         << "unable to find begin iterator with error:" << fmc_error_msg(err);
     // find previous to it and return THAT, we are after
-    return reverse_iterator(yamal_.get(), it);
+    return reverse_iterator(yamal_, it);
   }
   reverse_iterator rend() { return reverse_iterator(); }
   iterator seek(ytp_mmnode_offs offset) {
@@ -116,26 +125,25 @@ public:
     ytp_iterator_t it = ytp_yamal_seek(yamal_.get(), offset, &err);
     fmc_runtime_error_unless(!err)
         << "unable to seek iterator with error:" << fmc_error_msg(err);
-    return iterator(yamal_.get(), it);
+    return iterator(yamal_, it);
   }
 
   void close() {
     fmc_error_t *err = nullptr;
-    ytp_yamal_close(ytp_yamal_t *yamal, YTP_STREAM_LIST_DATA, &err);
+    ytp_yamal_close(yamal_.get(), YTP_STREAM_LIST_DATA, &err);
     fmc_runtime_error_unless(!err)
         << "unable to close yamal with error:" << fmc_error_msg(err);
-    return ret;
   }
   bool closed() {
     fmc_error_t *err = nullptr;
-    bool ret = ytp_yamal_closed(ytp_yamal_t *yamal, YTP_STREAM_LIST_DATA, &err);
+    bool ret = ytp_yamal_closed(yamal_.get(), YTP_STREAM_LIST_DATA, &err);
     fmc_runtime_error_unless(!err)
         << "unable to validate if yamal is closed with error:" << fmc_error_msg(err);
     return ret;
   }
   bool closable() {
     fmc_error_t *err = nullptr;
-    bool ret = ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error);
+    bool ret = ytp_yamal_closable(yamal_.get(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to validate if yamal is closable with error:" << fmc_error_msg(err);
     return ret;
@@ -147,12 +155,14 @@ public:
     fmc_runtime_error_unless(!err)
         << "unable to reserve data with error:" << fmc_error_msg(err);
     return fmc::buffer(out, sz);
+  }
 
-  void commit(stream s, fmc::buffer data) {
-    ytp_iterator_t ytp_data_commit(yamal_.get(), fmc_cur_time_ns(),
-                                   s.id(), data.data(), &err);
+  ytp_iterator_t commit(int64_t ts, stream s, fmc::buffer data) {
+    fmc_error_t *err = nullptr;
+    ytp_iterator_t ret = ytp_data_commit(yamal_.get(), ts, s.id(), data.data(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to commit data with error:" << fmc_error_msg(err);
+    return ret;
   }
 
 private:
@@ -167,32 +177,33 @@ public:
   stream announce(std::string_view peer, std::string_view channel,
                   std::string_view encoding) {
     fmc_error_t *err = nullptr;
-    // Change streams functions
-    ytp_iterator_t sid = ytp_announcement_write(
-        yamal_.get(), peer.size(), peer.data(), channel.size(), channel.data(),
-        encoding.size(), encoding.data(), &err);
+    ytp_mmnode_offs sid = ytp_streams_announce(streams_.get(),
+      peer.size(), peer.data(), channel.size(), channel.data(),
+      encoding.size(), encoding.data(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to announce stream with error:" << fmc_error_msg(err);
     return stream(sid);
   }
 
-  stream lookup(std::string_view peer, std::string_view channel,
-                std::string_view encoding) {
+  std::pair<stream, std::string_view> lookup(std::string_view peer, std::string_view channel) {
+    fmc_error_t *err = nullptr;
+    size_t esz;
+    const char *edata;
     ytp_mmnode_offs sid = ytp_streams_lookup(
         streams_.get(), peer.size(), peer.data(), channel.size(),
-        channel.data(), encoding.size(), encoding.data(), &err);
+        channel.data(), &esz, &edata, &err);
     fmc_runtime_error_unless(!err)
         << "unable to look up stream with error:" << fmc_error_msg(err);
-    return stream(sid);
+    return std::pair<stream, std::string_view>(stream(sid), std::string_view(edata, esz));
   }
 
 private:
-  streams(std::shared_ptr<ytp_yamal_t> yamal) yamal_(yamal) {
+  streams(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {
     fmc_error_t *err = nullptr;
     streams_ = std::shared_ptr<ytp_streams_t>(ytp_streams_new(yamal_.get(), &err), [](auto ss){
       fmc_error_t *err = nullptr;
       if (ss) {
-        ytp_streams_del(ss.get(), &err);
+        ytp_streams_del(ss, &err);
       }
     });
     fmc_runtime_error_unless(!err)
@@ -211,7 +222,7 @@ public:
     yamal_ = std::shared_ptr<ytp_yamal_t>(ytp_yamal_new(fd, &err), [](auto yml){
       fmc_error_t *err = nullptr;
       if (yml) {
-        ytp_yamal_del(yml.get(), &err);
+        ytp_yamal_del(yml, &err);
       }
     });
     fmc_runtime_error_unless(!err)
@@ -220,8 +231,8 @@ public:
 
   ~yamal() = default;
 
-  data data() { return data(yamal_); }
-  streams streams() { return streams(yamal_); }
+  data data() { return ytp::data(yamal_); }
+  streams streams() { return ytp::streams(yamal_); }
 
   // seqnum, peer, channel, encoding
   std::tuple<int, std::string_view, std::string_view, std::string_view>
@@ -236,7 +247,7 @@ public:
     const char *encoding;
     ytp_mmnode_offs *original;
     ytp_mmnode_offs *subscribed;
-    ytp_announcement_lookup(yamal_.get(), s.id(), &seqno, &psz, &*peer,
+    ytp_announcement_lookup(yamal_.get(), s.id(), &seqno, &psz, &peer,
                             &csz, &channel, &esz, &encoding, &original,
                             &subscribed, &err);
     fmc_runtime_error_unless(!err)
@@ -246,8 +257,26 @@ public:
       std::string_view(encoding, esz));
   }
 
+  ytp_yamal_t * get() {
+    return yamal_.get();
+  }
+
 private:
   std::shared_ptr<ytp_yamal_t> yamal_;
-}
+};
 
 } // namespace ytp
+
+namespace std {
+
+inline ostream &operator<<(ostream &os, const ytp::stream &s) {
+  return os << s.id();
+}
+
+template <> struct hash<ytp::stream> {
+  size_t operator()(const ytp::stream &s) const {
+    return std::hash<ytp_mmnode_offs>{}(s.id());
+  }
+};
+
+} // namespace std

@@ -694,12 +694,12 @@ bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx, fmc_error_t **error) {
   return false;
 }
 
-void ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error) {
+bool ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error) {
   fmc_error_clear(error);
   // Validate that sequence is closable
   struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
   if (*error) {
-    return;
+    return false;
   }
   return hdr->closable == YTP_CLOSABLE;
 }

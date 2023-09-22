@@ -35,13 +35,18 @@ using autofree = std::unique_ptr<T, hidden::autofree_destructor>;
 class buffer {
 public:
   buffer(void *data, size_t sz) : data_(data), sz_(sz) {}
-  buffer(std::string_view buff) : data_(buff.data), sz_(buff.sz())  {}
   operator std::string_view() {
-    return std::string_view(data_, sz_);
+    return std::string_view((char*) data_, sz_);
+  }
+  void * data() {
+    return data_;
+  }
+  size_t size() {
+    return sz_;
   }
 private:
   void *data_;
   size_t sz_;
-}
+};
 
 } // namespace fmc

@@ -24,8 +24,10 @@
 #include <ytp/streams.h>
 #include <ytp/subscription.h>
 #include <ytp/yamal.h>
+#include <ytp++/yamal.hpp>
 
 #include <fmc++/gtestwrap.hpp>
+#include <fmc++/mpl.hpp>
 #include <fmc/files.h>
 
 #include <deque>
@@ -881,6 +883,301 @@ TEST(stream, cursor_consume) {
 
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
+}
+
+TEST(stream, cpp_main_test_1) {
+  callback_helper helper;
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc::scope_end_call fdc([&](){
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+  });
+
+  ytp::yamal yamal = ytp::yamal(fd);
+
+  publisher_t publish{yamal.get(), error};
+  readoneraw_t readoneraw_data(yamal.get(), error, YTP_STREAM_LIST_DATA);
+  readoneraw_t readoneraw_anns(yamal.get(), error, YTP_STREAM_LIST_ANNS);
+  readoneraw_t readoneraw_subs(yamal.get(), error, YTP_STREAM_LIST_SUBS);
+  readoneraw_t readoneraw_indx(yamal.get(), error, YTP_STREAM_LIST_INDX);
+
+  auto *cursor = ytp_cursor_new(yamal.get(), &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto anns = yamal.streams();
+
+  auto subs_it = ytp_subscription_begin(yamal.get(), &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto stream11 = anns.announce("peer1", "ch1", "encoding1");
+  auto stream12 = anns.announce("peer1", "ch2", "encoding2");
+  auto stream21 = anns.announce("peer2", "ch1", "encoding3");
+
+  ytp_mmnode_offs msg0003;
+  ytp_mmnode_offs msg0004;
+
+  ytp::data data = yamal.data();
+
+  {
+    auto ptr = data.reserve(4);
+    ASSERT_EQ(error, nullptr);
+    std::memcpy(ptr.data(), "0000", 4);
+    data.commit(5005, stream11, ptr);
+    ASSERT_EQ(error, nullptr);
+  }
+  {
+    auto ptr = data.reserve(4);
+    ASSERT_EQ(error, nullptr);
+    std::memcpy(ptr.data(), "0001", 4);
+    data.commit(5006, stream21, ptr);
+    ASSERT_EQ(error, nullptr);
+  }
+  {
+    auto ptr = data.reserve(4);
+    ASSERT_EQ(error, nullptr);
+    std::memcpy(ptr.data(), "0002", 4);
+    data.commit(5007, stream12, ptr);
+    ASSERT_EQ(error, nullptr);
+  }
+
+  auto stream22 = anns.announce("peer2", "ch2", "encoding4");
+  ASSERT_EQ(error, nullptr);
+
+  {
+    auto ptr = data.reserve(4);
+    ASSERT_EQ(error, nullptr);
+    std::memcpy(ptr.data(), "0003", 4);
+    auto it = data.commit(5009, stream22, ptr);
+    ASSERT_EQ(error, nullptr);
+    msg0003 = ytp_yamal_tell(yamal.get(), it, &error);
+  }
+
+  ASSERT_THROW(anns.announce("peer1", "ch2", "encoding2_override"), std::runtime_error);
+
+  auto stream12_redef = anns.announce("peer1", "ch2", "encoding2");
+  ASSERT_EQ(error, nullptr);
+  ASSERT_EQ(stream12, stream12_redef);
+
+  std::list<Msg> output;
+  {
+    ytp_mmnode_offs substream;
+    readone_t readone(yamal.get(), error, output);
+
+    publish(MsgAnn{"peer1", "ch1", "encoding1"});
+    publish(MsgAnn{"peer1", "ch1", "update-encoding123"});
+
+    publish(MsgAnn{"peer1", "ch2", "encoding2"});
+    publish(MsgAnn{"peer2", "ch1", "encoding3"});
+
+    msg0004 = publish(MsgData{5009, stream11.id(), tostr("0004")});
+    publish(MsgData{5009, stream12.id(), tostr("0005")});
+    publish(MsgData{5009, stream21.id(), tostr("0006")});
+    auto sub21 = publish(MsgSub(stream21.id()));
+
+    while (ytp_subscription_next(yamal.get(), &subs_it, &substream, &error)) {
+      output.emplace_back(MsgSub(substream));
+    }
+    ASSERT_EQ(error, nullptr);
+
+    auto sub22 = publish(MsgSub(stream22.id()));
+
+    {
+      auto cb = helper.anncb(
+          [&](uint64_t seqno, ytp_mmnode_offs stream, size_t peer_sz,
+              const char *peer_name, size_t ch_sz, const char *ch_name,
+              size_t encoding_sz, const char *encoding_data, bool subscribed) {
+            auto peername = std::string_view(peer_name, peer_sz);
+            auto chname = std::string_view(ch_name, ch_sz);
+            auto encoding = std::string_view(encoding_data, encoding_sz);
+
+            output.push_back(MsgAnn(peername, chname, encoding));
+
+            if (peername != "peer1" || chname != "ch1") {
+              auto cb = helper.datacb([&](uint64_t seqno, int64_t msgtime,
+                                          ytp_mmnode_offs stream, size_t sz,
+                                          const char *data) {
+                output.push_back(MsgData(msgtime, stream, {data, sz}));
+              });
+              ytp_cursor_data_cb(cursor, stream, cb.first, cb.second, &error);
+              EXPECT_EQ(error, nullptr);
+            }
+          });
+      ytp_cursor_ann_cb(cursor, cb.first, cb.second, &error);
+      ASSERT_EQ(error, nullptr);
+    }
+
+    while (ytp_cursor_poll(cursor, &error)) {
+      ASSERT_EQ(error, nullptr);
+    }
+    ASSERT_EQ(error, nullptr);
+
+    while (ytp_subscription_next(yamal.get(), &subs_it, &substream, &error)) {
+      output.emplace_back(MsgSub(substream));
+    }
+
+    EXPECT_EQ(readone(), Msg{MsgSub(stream21.id())});
+    EXPECT_EQ(readone(), Msg{MsgAnn("peer1", "ch1", "encoding1")});
+    EXPECT_EQ(readone(), Msg{MsgAnn("peer1", "ch2", "encoding2")});
+    EXPECT_EQ(readone(), Msg{MsgAnn("peer2", "ch1", "encoding3")});
+    EXPECT_EQ(readone(), Msg{MsgAnn("peer2", "ch2", "encoding4")});
+    EXPECT_EQ(readone(), Msg{MsgData(5006, stream21.id(), "0001")});
+    EXPECT_EQ(readone(), Msg{MsgData(5007, stream12.id(), "0002")});
+    EXPECT_EQ(readone(), Msg{MsgData(5009, stream22.id(), "0003")});
+    EXPECT_EQ(readone(), Msg{MsgData(5009, stream12.id(), "0005")});
+    EXPECT_EQ(readone(), Msg{MsgData(5009, stream21.id(), "0006")});
+    EXPECT_EQ(readone(), Msg{MsgSub(stream12.id())});
+    EXPECT_EQ(readone(), Msg{MsgSub(stream22.id())});
+    EXPECT_EQ(readone(), Msg{std::monostate{}});
+
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5005}, stream11.id(), "0000"));
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5006}, stream21.id(), "0001"));
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5007}, stream12.id(), "0002"));
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream22.id(), "0003"));
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream11.id(), "0004"));
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream12.id(), "0005"));
+    EXPECT_EQ(readoneraw_data(), buildmsg(uint64_t{5009}, stream21.id(), "0006"));
+    EXPECT_EQ(readoneraw_data(), "");
+
+    std::vector<size_t> subs;
+    subs.push_back(ytp_yamal_tell(yamal.get(), readoneraw_subs.it, &error));
+    EXPECT_EQ(readoneraw_subs(), buildmsg(stream21.id()));
+    subs.push_back(ytp_yamal_tell(yamal.get(), readoneraw_subs.it, &error));
+    EXPECT_EQ(readoneraw_subs(), buildmsg(stream22.id()));
+    subs.push_back(ytp_yamal_tell(yamal.get(), readoneraw_subs.it, &error));
+    EXPECT_EQ(readoneraw_subs(), buildmsg(stream12.id()));
+    subs.push_back(ytp_yamal_tell(yamal.get(), readoneraw_subs.it, &error));
+    EXPECT_EQ(readoneraw_subs(), buildmsg(stream22.id()));
+    EXPECT_EQ(readoneraw_subs(), "");
+
+    EXPECT_EQ(subs[0], sub21);
+    EXPECT_EQ(subs[1], sub22);
+    EXPECT_EQ(subs[2], 1616);
+    EXPECT_EQ(subs[3], 1656);
+
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream11.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream12.id()}, uint64_t{subs[2]}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch2", "encoding2"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream21.id()}, uint64_t{sub21}, uint32_t{5},
+                       uint32_t{3}, "peer2", "ch1", "encoding3"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream22.id()}, uint64_t{subs[3]}, uint32_t{5},
+                       uint32_t{3}, "peer2", "ch2", "encoding4"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{0}, uint64_t{0}, uint32_t{5}, uint32_t{3},
+                       "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{0}, uint64_t{0}, uint32_t{5}, uint32_t{3},
+                       "peer1", "ch1", "update-encoding123"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{0}, uint64_t{0}, uint32_t{5}, uint32_t{3},
+                       "peer1", "ch2", "encoding2"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{0}, uint64_t{0}, uint32_t{5}, uint32_t{3},
+                       "peer2", "ch1", "encoding3"));
+    EXPECT_EQ(readoneraw_anns(), "");
+
+    readoneraw_data.restart();
+    readoneraw_anns.restart();
+    readoneraw_subs.restart();
+    readoneraw_indx.restart();
+
+    auto stream23 = anns.announce("peer2", "ch3", "encoding5");
+
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream11.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream12.id()}, uint64_t{subs[2]}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch2", "encoding2"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream21.id()}, uint64_t{subs[0]}, uint32_t{5},
+                       uint32_t{3}, "peer2", "ch1", "encoding3"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream22.id()}, uint64_t{subs[3]}, uint32_t{5},
+                       uint32_t{3}, "peer2", "ch2", "encoding4"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream11.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch1", "encoding1"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream11.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch1", "update-encoding123"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream12.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer1", "ch2", "encoding2"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream21.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer2", "ch1", "encoding3"));
+    EXPECT_EQ(readoneraw_anns(),
+              buildmsg(uint64_t{stream23.id()}, uint64_t{0}, uint32_t{5},
+                       uint32_t{3}, "peer2", "ch3", "encoding5"));
+    EXPECT_EQ(readoneraw_anns(), "");
+
+    EXPECT_EQ(readone(), Msg{std::monostate{}});
+
+    while (ytp_cursor_poll(cursor, &error)) {
+      ASSERT_EQ(error, nullptr);
+    }
+    ASSERT_EQ(error, nullptr);
+
+    EXPECT_EQ(readone(), Msg{MsgAnn("peer2", "ch3", "encoding5")});
+    EXPECT_EQ(readone(), Msg{std::monostate{}});
+  }
+
+  {
+    publish(MsgIdx(stream22.id(), msg0003, "index22_1"));
+    publish(MsgIdx(stream11.id(), msg0004, "index11_1"));
+
+    readone_t readone(yamal.get(), error, output);
+
+    auto idx_it = ytp_index_begin(yamal.get(), &error);
+    ASSERT_EQ(error, nullptr);
+
+    while (!ytp_yamal_term(idx_it)) {
+      uint64_t seqno;
+      ytp_mmnode_offs stream;
+      ytp_mmnode_offs offset;
+      size_t sz;
+      const char *payload;
+      ytp_index_read(yamal.get(), idx_it, &seqno, &stream, &offset, &sz, &payload,
+                     &error);
+      ASSERT_EQ(error, nullptr);
+
+      output.emplace_back(
+          MsgIdx(stream, offset, std::string_view(payload, sz)));
+
+      idx_it = ytp_yamal_next(yamal.get(), idx_it, &error);
+      ASSERT_EQ(error, nullptr);
+    }
+
+    EXPECT_EQ(readone(), Msg{MsgIdx(stream22.id(), msg0003, "index22_1")});
+    EXPECT_EQ(readone(), Msg{MsgIdx(stream11.id(), msg0004, "index11_1")});
+    EXPECT_EQ(readone(), Msg{std::monostate{}});
+
+    ytp_cursor_seek(cursor, msg0003, &error);
+    ASSERT_EQ(error, nullptr);
+
+    while (ytp_cursor_poll(cursor, &error)) {
+      ASSERT_EQ(error, nullptr);
+    }
+    ASSERT_EQ(error, nullptr);
+
+    EXPECT_EQ(readone(), Msg{MsgData(5009, stream22.id(), "0003")});
+    EXPECT_EQ(readone(), Msg{MsgData(5009, stream12.id(), "0005")});
+    EXPECT_EQ(readone(), Msg{MsgData(5009, stream21.id(), "0006")});
+    EXPECT_EQ(readone(), Msg{std::monostate{}});
+  }
+
+  ytp_cursor_del(cursor, &error);
+  ASSERT_EQ(error, nullptr);
+
 }
 
 GTEST_API_ int main(int argc, char **argv) {
