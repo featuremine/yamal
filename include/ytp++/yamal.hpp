@@ -18,7 +18,6 @@ class streams;
 
 class stream {
 public:
-  // TODO: make hashable and serializable
   ytp_mmnode_offs id() const {return id_;}
   stream(ytp_mmnode_offs id) : id_(id) {}
   stream(const stream &s) = default;
@@ -66,10 +65,36 @@ public:
       return *this;
     }
     bool operator==(base_iterator<forward> &other) {
-      // Todo: check for the end, either one could be null
-      // Ensure we deal with forward:
-      // - if forward iterator, check for term
-      // - if reverse iterator, end would be at the head
+      if constexpr (forward) {
+        if (it_ == nullptr) {
+          return ytp_yamal_term(other.it_);
+        } else if (other.it_ == nullptr) {
+          return ytp_yamal_term(it_);
+        }
+      } else {
+        fmc_error_t *err = nullptr;
+        if (it_ == nullptr) {
+          ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
+          fmc_runtime_error_unless(!err)
+              << "unable to obtain begining of data with error:"
+              << fmc_error_msg(err);
+          ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
+          fmc_runtime_error_unless(!err)
+              << "unable to obtain head of data with error:"
+              << fmc_error_msg(err);
+          return other.it_ == head;
+        } else if (other.it_ == nullptr) {
+          ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
+          fmc_runtime_error_unless(!err)
+              << "unable to obtain begining of data with error:"
+              << fmc_error_msg(err);
+          ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
+          fmc_runtime_error_unless(!err)
+              << "unable to obtain head of data with error:"
+              << fmc_error_msg(err);
+          return it_ == head;
+        }
+      }
       return it_ == other.it_;
     }
     operator ytp_mmnode_offs() {
