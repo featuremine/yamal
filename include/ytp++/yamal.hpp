@@ -1,5 +1,6 @@
 #include "fmc/files.h"
 #include "ytp/yamal.h"
+#include "fmc++/memory.hpp"
 
 namespace ytp {
 
@@ -140,14 +141,16 @@ public:
     return ret;
   }
 
-  void write(stream s, std::string_view data) {
+  fmc::buffer reserve(size_t sz) {
     fmc_error_t *err = nullptr;
-    char *out = ytp_data_reserve(yamal_.get(), data.sz(), &err);
+    char *out = ytp_data_reserve(yamal_.get(), sz, &err);
     fmc_runtime_error_unless(!err)
         << "unable to reserve data with error:" << fmc_error_msg(err);
-    memcpy(out, data.data(), data.sz());
+    return fmc::buffer(out, sz);
+
+  void commit(stream s, fmc::buffer data) {
     ytp_iterator_t ytp_data_commit(yamal_.get(), fmc_cur_time_ns(),
-                                   s.id(), out, &err);
+                                   s.id(), data.data(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to commit data with error:" << fmc_error_msg(err);
   }
@@ -186,7 +189,14 @@ public:
 private:
   streams(std::shared_ptr<ytp_yamal_t> yamal) yamal_(yamal) {
     fmc_error_t *err = nullptr;
-    streams_ = ytp_streams_new(yamal_.get(), &err);
+    streams_ = std::shared_ptr<ytp_streams_t>(ytp_streams_new(yamal_.get(), &err), [](auto ss){
+      fmc_error_t *err = nullptr;
+      if (ss) {
+        ytp_streams_del(ss.get(), &err);
+      }
+    });
+    fmc_runtime_error_unless(!err)
+        << "unable to create streams object with error:" << fmc_error_msg(err);
   }
   std::shared_ptr<ytp_yamal_t> yamal_;
   std::shared_ptr<ytp_streams_t> streams_;
@@ -198,10 +208,10 @@ class yamal {
 public:
   yamal(fmc_fd fd, bool closable = false) {
     fmc_error_t *err = nullptr;
-    yamal_ = std::shared_ptr<ytp_yamal_t>(ytp_yamal_new(fd, &err), [](auto yamal){
+    yamal_ = std::shared_ptr<ytp_yamal_t>(ytp_yamal_new(fd, &err), [](auto yml){
       fmc_error_t *err = nullptr;
-      if (yamal) {
-        ytp_yamal_del(yamal, &err);
+      if (yml) {
+        ytp_yamal_del(yml.get(), &err);
       }
     });
     fmc_runtime_error_unless(!err)
@@ -214,14 +224,30 @@ public:
   streams streams() { return streams(yamal_); }
 
   // seqnum, peer, channel, encoding
-  tuple<int, std::string_view, std::string_view, std::string_view>
-  announcement(stream s);
+  std::tuple<int, std::string_view, std::string_view, std::string_view>
+  announcement(stream s) {
+    fmc_error_t *err = nullptr;
+    uint64_t seqno;
+    size_t psz;
+    const char *peer;
+    size_t csz;
+    const char *channel;
+    size_t esz;
+    const char *encoding;
+    ytp_mmnode_offs *original;
+    ytp_mmnode_offs *subscribed;
+    ytp_announcement_lookup(yamal_.get(), s.id(), &seqno, &psz, &*peer,
+                            &csz, &channel, &esz, &encoding, &original,
+                            &subscribed, &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to create Yamal object with error:" << fmc_error_msg(err);
+    return std::make_tuple<int, std::string_view, std::string_view, std::string_view>(
+      seqno, std::string_view(peer, psz), std::string_view(channel, csz),
+      std::string_view(encoding, esz));
+  }
 
 private:
-  fmc_fd fd_ = -1;
   std::shared_ptr<ytp_yamal_t> yamal_;
-  // use shared ptr, destructor will have deletion function that clears the
-  // descriptor
 }
 
 } // namespace ytp
