@@ -231,8 +231,8 @@ public:
     return stream(sid);
   }
 
-  std::optional<std::pair<stream, std::string_view>> lookup(std::string_view peer,
-                                             std::string_view channel) {
+  std::optional<std::pair<stream, std::string_view>>
+  lookup(std::string_view peer, std::string_view channel) {
     fmc_error_t *err = nullptr;
     size_t esz = 0;
     const char *edata = nullptr;
@@ -271,9 +271,11 @@ class yamal {
 public:
   yamal(fmc_fd fd, bool closable = false, bool enable_thread = true) {
     fmc_error_t *err = nullptr;
-    yamal_ =
-        std::shared_ptr<ytp_yamal_t>(
-        ytp_yamal_new_3(fd, enable_thread, YTP_CLOSABLE_MODE(YTP_CLOSABLE * closable + YTP_UNCLOSABLE * !closable), &err),
+    yamal_ = std::shared_ptr<ytp_yamal_t>(
+        ytp_yamal_new_3(fd, enable_thread,
+                        YTP_CLOSABLE_MODE(YTP_CLOSABLE * closable +
+                                          YTP_UNCLOSABLE * !closable),
+                        &err),
         [](auto yml) {
           fmc_error_t *err = nullptr;
           if (yml) {
