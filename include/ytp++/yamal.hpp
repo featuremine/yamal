@@ -1,6 +1,6 @@
+#include "fmc++/memory.hpp"
 #include "fmc/files.h"
 #include "ytp/yamal.h"
-#include "fmc++/memory.hpp"
 
 namespace ytp {
 
@@ -9,7 +9,8 @@ class streams;
 
 class stream {
   // TODO: make hashable and serializable
-  ytp_mmnode_offs id() {return id_;}
+  ytp_mmnode_offs id() { return id_; }
+
 private:
   stream() = default;
   ytp_mmnode_offs id_;
@@ -77,7 +78,8 @@ public:
       ytp_mmnode_offs sid;
       size_t msgsz;
       const char *msgdata;
-      ytp_data_read(yamal_.get(), it_, &seqno, &ts, &sid, &msgsz, &msgdata, &err);
+      ytp_data_read(yamal_.get(), it_, &seqno, &ts, &sid, &msgsz, &msgdata,
+                    &err);
       fmc_runtime_error_unless(!err)
           << "unable to read with error:" << fmc_error_msg(err);
       return std::make_tuple<uint64_t, int64_t, stream, const std::string_view>(
@@ -85,7 +87,8 @@ public:
     }
 
   private:
-    data::base_iterator<forward>(std::shared_ptr<ytp_yamal_t> yamal, ytp_iterator_t it)
+    data::base_iterator<forward>(std::shared_ptr<ytp_yamal_t> yamal,
+                                 ytp_iterator_t it)
         : it_(it), yamal_(yamal) {}
     ytp_iterator_t it_ = nullptr;
     std::shared_ptr<ytp_yamal_t> yamal_;
@@ -121,23 +124,26 @@ public:
 
   void close() {
     fmc_error_t *err = nullptr;
-    ytp_yamal_close(ytp_yamal_t *yamal, YTP_STREAM_LIST_DATA, &err);
+    ytp_yamal_close(ytp_yamal_t * yamal, YTP_STREAM_LIST_DATA, &err);
     fmc_runtime_error_unless(!err)
         << "unable to close yamal with error:" << fmc_error_msg(err);
     return ret;
   }
   bool closed() {
     fmc_error_t *err = nullptr;
-    bool ret = ytp_yamal_closed(ytp_yamal_t *yamal, YTP_STREAM_LIST_DATA, &err);
+    bool ret =
+        ytp_yamal_closed(ytp_yamal_t * yamal, YTP_STREAM_LIST_DATA, &err);
     fmc_runtime_error_unless(!err)
-        << "unable to validate if yamal is closed with error:" << fmc_error_msg(err);
+        << "unable to validate if yamal is closed with error:"
+        << fmc_error_msg(err);
     return ret;
   }
   bool closable() {
     fmc_error_t *err = nullptr;
-    bool ret = ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error);
+    bool ret = ytp_yamal_closable(ytp_yamal_t * yamal, fmc_error_t * *error);
     fmc_runtime_error_unless(!err)
-        << "unable to validate if yamal is closable with error:" << fmc_error_msg(err);
+        << "unable to validate if yamal is closable with error:"
+        << fmc_error_msg(err);
     return ret;
   }
 
@@ -148,106 +154,110 @@ public:
         << "unable to reserve data with error:" << fmc_error_msg(err);
     return fmc::buffer(out, sz);
 
-  void commit(stream s, fmc::buffer data) {
-    ytp_iterator_t ytp_data_commit(yamal_.get(), fmc_cur_time_ns(),
-                                   s.id(), data.data(), &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to commit data with error:" << fmc_error_msg(err);
-  }
+    void commit(stream s, fmc::buffer data) {
+      ytp_iterator_t ytp_data_commit(yamal_.get(), fmc_cur_time_ns(), s.id(),
+                                     data.data(), &err);
+      fmc_runtime_error_unless(!err)
+          << "unable to commit data with error:" << fmc_error_msg(err);
+    }
 
-private:
-  data(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {}
-  std::shared_ptr<ytp_yamal_t> yamal_;
+  private:
+    data(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {}
+    std::shared_ptr<ytp_yamal_t> yamal_;
 
-  friend yamal;
-};
+    friend yamal;
+  };
 
-class streams {
-public:
-  stream announce(std::string_view peer, std::string_view channel,
+  class streams {
+  public:
+    stream announce(std::string_view peer, std::string_view channel,
+                    std::string_view encoding) {
+      fmc_error_t *err = nullptr;
+      // Change streams functions
+      ytp_iterator_t sid = ytp_announcement_write(
+          yamal_.get(), peer.size(), peer.data(), channel.size(),
+          channel.data(), encoding.size(), encoding.data(), &err);
+      fmc_runtime_error_unless(!err)
+          << "unable to announce stream with error:" << fmc_error_msg(err);
+      return stream(sid);
+    }
+
+    stream lookup(std::string_view peer, std::string_view channel,
                   std::string_view encoding) {
-    fmc_error_t *err = nullptr;
-    // Change streams functions
-    ytp_iterator_t sid = ytp_announcement_write(
-        yamal_.get(), peer.size(), peer.data(), channel.size(), channel.data(),
-        encoding.size(), encoding.data(), &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to announce stream with error:" << fmc_error_msg(err);
-    return stream(sid);
-  }
+      ytp_mmnode_offs sid = ytp_streams_lookup(
+          streams_.get(), peer.size(), peer.data(), channel.size(),
+          channel.data(), encoding.size(), encoding.data(), &err);
+      fmc_runtime_error_unless(!err)
+          << "unable to look up stream with error:" << fmc_error_msg(err);
+      return stream(sid);
+    }
 
-  stream lookup(std::string_view peer, std::string_view channel,
-                std::string_view encoding) {
-    ytp_mmnode_offs sid = ytp_streams_lookup(
-        streams_.get(), peer.size(), peer.data(), channel.size(),
-        channel.data(), encoding.size(), encoding.data(), &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to look up stream with error:" << fmc_error_msg(err);
-    return stream(sid);
-  }
-
-private:
-  streams(std::shared_ptr<ytp_yamal_t> yamal) yamal_(yamal) {
-    fmc_error_t *err = nullptr;
-    streams_ = std::shared_ptr<ytp_streams_t>(ytp_streams_new(yamal_.get(), &err), [](auto ss){
+  private:
+    streams(std::shared_ptr<ytp_yamal_t> yamal) yamal_(yamal) {
       fmc_error_t *err = nullptr;
-      if (ss) {
-        ytp_streams_del(ss.get(), &err);
-      }
-    });
-    fmc_runtime_error_unless(!err)
-        << "unable to create streams object with error:" << fmc_error_msg(err);
-  }
-  std::shared_ptr<ytp_yamal_t> yamal_;
-  std::shared_ptr<ytp_streams_t> streams_;
+      streams_ = std::shared_ptr<ytp_streams_t>(
+          ytp_streams_new(yamal_.get(), &err), [](auto ss) {
+            fmc_error_t *err = nullptr;
+            if (ss) {
+              ytp_streams_del(ss.get(), &err);
+            }
+          });
+      fmc_runtime_error_unless(!err)
+          << "unable to create streams object with error:"
+          << fmc_error_msg(err);
+    }
+    std::shared_ptr<ytp_yamal_t> yamal_;
+    std::shared_ptr<ytp_streams_t> streams_;
 
-  friend yamal;
-};
+    friend yamal;
+  };
 
-class yamal {
-public:
-  yamal(fmc_fd fd, bool closable = false) {
-    fmc_error_t *err = nullptr;
-    yamal_ = std::shared_ptr<ytp_yamal_t>(ytp_yamal_new(fd, &err), [](auto yml){
+  class yamal {
+  public:
+    yamal(fmc_fd fd, bool closable = false) {
       fmc_error_t *err = nullptr;
-      if (yml) {
-        ytp_yamal_del(yml.get(), &err);
-      }
-    });
-    fmc_runtime_error_unless(!err)
-        << "unable to create Yamal object with error:" << fmc_error_msg(err);
+      yamal_ =
+          std::shared_ptr<ytp_yamal_t>(ytp_yamal_new(fd, &err), [](auto yml) {
+            fmc_error_t *err = nullptr;
+            if (yml) {
+              ytp_yamal_del(yml.get(), &err);
+            }
+          });
+      fmc_runtime_error_unless(!err)
+          << "unable to create Yamal object with error:" << fmc_error_msg(err);
+    }
+
+    ~yamal() = default;
+
+    data data() { return data(yamal_); }
+    streams streams() { return streams(yamal_); }
+
+    // seqnum, peer, channel, encoding
+    std::tuple<int, std::string_view, std::string_view, std::string_view>
+    announcement(stream s) {
+      fmc_error_t *err = nullptr;
+      uint64_t seqno;
+      size_t psz;
+      const char *peer;
+      size_t csz;
+      const char *channel;
+      size_t esz;
+      const char *encoding;
+      ytp_mmnode_offs *original;
+      ytp_mmnode_offs *subscribed;
+      ytp_announcement_lookup(yamal_.get(), s.id(), &seqno, &psz, &*peer, &csz,
+                              &channel, &esz, &encoding, &original, &subscribed,
+                              &err);
+      fmc_runtime_error_unless(!err)
+          << "unable to create Yamal object with error:" << fmc_error_msg(err);
+      return std::make_tuple<int, std::string_view, std::string_view,
+                             std::string_view>(
+          seqno, std::string_view(peer, psz), std::string_view(channel, csz),
+          std::string_view(encoding, esz));
+    }
+
+  private:
+    std::shared_ptr<ytp_yamal_t> yamal_;
   }
-
-  ~yamal() = default;
-
-  data data() { return data(yamal_); }
-  streams streams() { return streams(yamal_); }
-
-  // seqnum, peer, channel, encoding
-  std::tuple<int, std::string_view, std::string_view, std::string_view>
-  announcement(stream s) {
-    fmc_error_t *err = nullptr;
-    uint64_t seqno;
-    size_t psz;
-    const char *peer;
-    size_t csz;
-    const char *channel;
-    size_t esz;
-    const char *encoding;
-    ytp_mmnode_offs *original;
-    ytp_mmnode_offs *subscribed;
-    ytp_announcement_lookup(yamal_.get(), s.id(), &seqno, &psz, &*peer,
-                            &csz, &channel, &esz, &encoding, &original,
-                            &subscribed, &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to create Yamal object with error:" << fmc_error_msg(err);
-    return std::make_tuple<int, std::string_view, std::string_view, std::string_view>(
-      seqno, std::string_view(peer, psz), std::string_view(channel, csz),
-      std::string_view(encoding, esz));
-  }
-
-private:
-  std::shared_ptr<ytp_yamal_t> yamal_;
-}
 
 } // namespace ytp
