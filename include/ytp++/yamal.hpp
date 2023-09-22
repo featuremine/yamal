@@ -1,3 +1,20 @@
+/******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
+
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *****************************************************************************/
+
+/**
+ * @file yamal.hpp
+ * @author Andres Rangel
+ * @date 22 Sep 2022
+ * @brief File contains C++ definitions for YTP yamal layer
+ *
+ * @see http://www.featuremine.com
+ */
+
 #include "fmc++/memory.hpp"
 #include "fmc++/mpl.hpp"
 #include "fmc/files.h"
