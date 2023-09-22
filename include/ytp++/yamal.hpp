@@ -177,7 +177,7 @@ public:
   }
 
   stream lookup(std::string_view peer, std::string_view channel,
-                         std::string_view encoding) {
+                std::string_view encoding) {
     ytp_mmnode_offs sid = ytp_streams_lookup(
         streams_.get(), peer.size(), peer.data(), channel.size(),
         channel.data(), encoding.size(), encoding.data(), &err);
