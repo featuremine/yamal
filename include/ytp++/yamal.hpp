@@ -1,6 +1,7 @@
 #include "fmc++/memory.hpp"
 #include "fmc++/mpl.hpp"
 #include "fmc/files.h"
+#include "ytp/data.h"
 #include "ytp/streams.h"
 #include "ytp/yamal.h"
 
@@ -216,8 +217,8 @@ public:
   std::pair<stream, std::string_view> lookup(std::string_view peer,
                                              std::string_view channel) {
     fmc_error_t *err = nullptr;
-    size_t esz;
-    const char *edata;
+    size_t esz = 0;
+    const char *edata = nullptr;
     ytp_mmnode_offs sid =
         ytp_streams_lookup(streams_.get(), peer.size(), peer.data(),
                            channel.size(), channel.data(), &esz, &edata, &err);
