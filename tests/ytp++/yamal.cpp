@@ -20,7 +20,48 @@
 
 using namespace ytp;
 
-TEST(yamal, yamal_base) {
+TEST(yamal, data_closable) {
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc::scope_end_call fdc([&]() {
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+  });
+
+  ytp::yamal yamal = ytp::yamal(fd, true);
+  ytp::data data = yamal.data();
+
+  ASSERT_TRUE(data.closable());
+  ASSERT_FALSE(data.closed());
+  data.close();
+  ASSERT_TRUE(data.closed());
+
+}
+
+TEST(yamal, data_unclosable) {
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc::scope_end_call fdc([&]() {
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+  });
+
+  ytp::yamal yamal = ytp::yamal(fd, false);
+  ytp::data data = yamal.data();
+
+  ASSERT_FALSE(data.closable());
+  ASSERT_FALSE(data.closed());
+  ASSERT_THROW(data.close(), std::runtime_error);
+
+}
+
+TEST(yamal, yamal_streams) {
 
   fmc_error_t *error;
   auto fd = fmc_ftemp(&error);
@@ -32,12 +73,7 @@ TEST(yamal, yamal_base) {
   });
 
   ytp::yamal yamal = ytp::yamal(fd);
-  ytp::data data = yamal.data();
   ytp::streams streams = yamal.streams();
-
-  ASSERT_FALSE(data.closable());
-  ASSERT_FALSE(data.closed());
-  ASSERT_THROW(data.close(), std::runtime_error);
 
   stream s = streams.announce("peer1", "ch1", "encoding1");
   ASSERT_THROW(streams.announce("peer1", "ch1", "invalid"), std::runtime_error);
