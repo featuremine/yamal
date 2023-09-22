@@ -38,7 +38,6 @@ TEST(yamal, data_closable) {
   ASSERT_FALSE(data.closed());
   data.close();
   ASSERT_TRUE(data.closed());
-
 }
 
 TEST(yamal, data_unclosable) {
@@ -58,7 +57,6 @@ TEST(yamal, data_unclosable) {
   ASSERT_FALSE(data.closable());
   ASSERT_FALSE(data.closed());
   ASSERT_THROW(data.close(), std::runtime_error);
-
 }
 
 TEST(yamal, yamal_streams) {
@@ -93,4 +91,3 @@ GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
