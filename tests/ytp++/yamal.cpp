@@ -50,7 +50,6 @@ TEST(yamal, yamal_base) {
   ASSERT_EQ(speer, "peer1");
   ASSERT_EQ(sch, "ch1");
   ASSERT_EQ(sencoding, "encoding1");
-
 }
 
 GTEST_API_ int main(int argc, char **argv) {
@@ -86,4 +85,3 @@ GTEST_API_ int main(int argc, char **argv) {
 //   fmc::buffer reserve(size_t sz);
 //   ytp_iterator_t commit(int64_t ts, stream s, fmc::buffer data);
 // };
-
