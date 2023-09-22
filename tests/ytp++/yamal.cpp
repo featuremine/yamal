@@ -76,6 +76,7 @@ TEST(yamal, yamal_streams) {
   ytp::streams streams = yamal.streams();
 
   stream s = streams.announce("peer1", "ch1", "encoding1");
+  ASSERT_NE(s.id(), 0);
   ASSERT_THROW(streams.announce("peer1", "ch1", "invalid"), std::runtime_error);
   auto [ls, lsenc] = *streams.lookup("peer1", "ch1");
   ASSERT_EQ(s, ls);
@@ -93,31 +94,3 @@ GTEST_API_ int main(int argc, char **argv) {
   return RUN_ALL_TESTS();
 }
 
-// class stream {
-// public:
-//   ytp_mmnode_offs id() const { return id_; }
-//   stream(ytp_mmnode_offs id) : id_(id) {}
-//   stream(const stream &s) = default;
-//   stream(stream &&s) = default;
-//   bool operator==(const stream other) const { return id_ == other.id_; }
-// };
-
-// class data {
-//   template <bool forward> class base_iterator {
-//     base_iterator<forward> &operator++();
-//     base_iterator<forward> &operator--();
-//     bool operator==(base_iterator<forward> &other);
-//     operator ytp_mmnode_offs();
-//     value_type operator*();
-//   };
-//   iterator begin();
-//   iterator end();
-//   reverse_iterator rbegin();
-//   reverse_iterator rend();
-//   iterator seek(ytp_mmnode_offs offset);
-//   void close();
-//   bool closed();
-//   bool closable();
-//   fmc::buffer reserve(size_t sz);
-//   ytp_iterator_t commit(int64_t ts, stream s, fmc::buffer data);
-// };
