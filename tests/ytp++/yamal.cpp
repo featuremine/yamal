@@ -195,11 +195,6 @@ TEST(yamal, iteration) {
   ASSERT_EQ(rit, data.rend());
 }
 
-GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-
 TEST(yamal, serialization) {
 
   fmc_error_t *error;
@@ -241,4 +236,9 @@ TEST(yamal, hashing) {
   size_t shash = std::hash<ytp::stream_t>{}(stream);
   size_t rawhash = std::hash<ytp_mmnode_offs>{}(stream.id());
   ASSERT_EQ(shash, rawhash);
+}
+
+GTEST_API_ int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
