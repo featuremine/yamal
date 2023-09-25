@@ -107,7 +107,8 @@ TEST(yamal, iteration) {
   ytp::streams_t streams = yamal.streams();
   ytp::stream_t stream = streams.announce("peer", "channel", "encoding");
   ytp::stream_t stream_other = streams.announce("peer2", "channel", "encoding");
-  ytp::stream_t stream_other2 = streams.announce("peer", "channel2", "encoding");
+  ytp::stream_t stream_other2 =
+      streams.announce("peer", "channel2", "encoding");
 
   ASSERT_EQ(data.begin(), data.end());
   ASSERT_EQ(data.rbegin(), data.rend());
