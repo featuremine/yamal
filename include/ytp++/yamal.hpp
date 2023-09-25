@@ -324,8 +324,6 @@ public:
                                              std::string_view(encoding, esz));
   }
 
-  ytp_yamal_t *get() { return yamal_.get(); }
-
 private:
   std::shared_ptr<ytp_yamal_t> yamal_;
 };
