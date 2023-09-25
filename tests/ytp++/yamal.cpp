@@ -16,8 +16,8 @@
  */
 
 #include <fmc++/gtestwrap.hpp>
-#include <ytp++/yamal.hpp>
 #include <ostream>
+#include <ytp++/yamal.hpp>
 
 using namespace ytp;
 
@@ -124,7 +124,6 @@ TEST(yamal, iteration) {
   memcpy(ptr.data(), "msg3", 4);
   data.commit(3, stream, ptr);
 
-
   // Forward:
 
   auto it = data.begin();
@@ -221,7 +220,6 @@ TEST(yamal, serialization) {
   std::string sstream = os.str();
   ASSERT_EQ(sstream, std::to_string(stream.id()));
   ASSERT_EQ(sstream, "48");
-
 }
 
 TEST(yamal, hashing) {
@@ -240,7 +238,6 @@ TEST(yamal, hashing) {
   ytp::stream stream = streams.announce("peer", "channel", "encoding");
 
   size_t shash = std::hash<ytp::stream>{}(stream);
-  size_t rawhash =  std::hash<ytp_mmnode_offs>{}(stream.id());
+  size_t rawhash = std::hash<ytp_mmnode_offs>{}(stream.id());
   ASSERT_EQ(shash, rawhash);
-
 }

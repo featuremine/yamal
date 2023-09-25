@@ -20,8 +20,8 @@
 
 #include <fmc/platform.h>
 #include <memory>
-#include <string_view>
 #include <stdlib.h>
+#include <string_view>
 
 namespace fmc {
 namespace hidden {

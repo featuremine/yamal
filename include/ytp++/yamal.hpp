@@ -162,7 +162,8 @@ public:
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_data_end(yamal_.get(), &err);
     fmc_runtime_error_unless(!err)
-        << "unable to find rbegin (end) iterator with error:" << fmc_error_msg(err);
+        << "unable to find rbegin (end) iterator with error:"
+        << fmc_error_msg(err);
     it = ytp_yamal_prev(yamal_.get(), it, &err);
     fmc_runtime_error_unless(!err)
         << "unable to find rbegin iterator with error:" << fmc_error_msg(err);
@@ -170,7 +171,7 @@ public:
   }
   reverse_iterator rend() { return reverse_iterator(); }
 
-  template<bool forward=true>
+  template <bool forward = true>
   base_iterator<forward> seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_yamal_seek(yamal_.get(), offset, &err);
