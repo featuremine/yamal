@@ -17,6 +17,7 @@
 
 #include <fmc++/gtestwrap.hpp>
 #include <ytp++/yamal.hpp>
+#include <ostream>
 
 using namespace ytp;
 
@@ -87,7 +88,159 @@ TEST(yamal, yamal_streams) {
   ASSERT_EQ(sencoding, "encoding1");
 }
 
+TEST(yamal, iteration) {
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc::scope_end_call fdc([&]() {
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+  });
+
+  ytp::yamal yamal = ytp::yamal(fd, true);
+  ytp::data data = yamal.data();
+
+  ASSERT_TRUE(data.closable());
+
+  ytp::streams streams = yamal.streams();
+  ytp::stream stream = streams.announce("peer", "channel", "encoding");
+  ytp::stream stream_other = streams.announce("peer2", "channel", "encoding");
+  ytp::stream stream_other2 = streams.announce("peer", "channel2", "encoding");
+
+  ASSERT_EQ(data.begin(), data.end());
+  ASSERT_EQ(data.rbegin(), data.rend());
+
+  auto ptr = data.reserve(4);
+  memcpy(ptr.data(), "msg1", 4);
+  data.commit(1, stream, ptr);
+
+  ptr = data.reserve(4);
+  memcpy(ptr.data(), "msg2", 4);
+  data.commit(2, stream, ptr);
+
+  ptr = data.reserve(4);
+  memcpy(ptr.data(), "msg3", 4);
+  data.commit(3, stream, ptr);
+
+
+  // Forward:
+
+  auto it = data.begin();
+  ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
+  ASSERT_NE(it, data.end());
+  auto [seqno1, ts1, stream1, data1] = *it;
+  ASSERT_EQ(seqno1, 1);
+  ASSERT_EQ(ts1, 1);
+  ASSERT_EQ(stream1, stream);
+  ASSERT_NE(stream1, stream_other);
+  ASSERT_NE(stream1, stream_other2);
+  ASSERT_EQ(data1, "msg1");
+  ++it;
+  ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
+  auto [seqno2, ts2, stream2, data2] = *it;
+  ASSERT_EQ(seqno2, 2);
+  ASSERT_EQ(ts2, 2);
+  ASSERT_EQ(stream2, stream);
+  ASSERT_NE(stream2, stream_other);
+  ASSERT_NE(stream2, stream_other2);
+  ASSERT_EQ(data2, "msg2");
+  ++it;
+  ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
+  auto [seqno3, ts3, stream3, data3] = *it;
+  ASSERT_EQ(seqno3, 3);
+  ASSERT_EQ(ts3, 3);
+  ASSERT_EQ(stream3, stream);
+  ASSERT_NE(stream3, stream_other);
+  ASSERT_NE(stream3, stream_other2);
+  ASSERT_EQ(data3, "msg3");
+  ASSERT_NE(it, data.end());
+  ++it;
+  ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
+  ASSERT_EQ(it, data.end());
+
+  // Reverse:
+  auto rit = data.rbegin();
+  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  ASSERT_NE(rit, data.rend());
+  auto [rseqno1, rts1, rstream1, rdata1] = *rit;
+  ASSERT_EQ(rseqno1, 3);
+  ASSERT_EQ(rts1, 3);
+  ASSERT_EQ(rstream1, stream);
+  ASSERT_NE(rstream1, stream_other);
+  ASSERT_NE(rstream1, stream_other2);
+  ASSERT_EQ(rdata1, "msg3");
+  ++rit;
+  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  auto [rseqno2, rts2, rstream2, rdata2] = *rit;
+  ASSERT_EQ(rseqno2, 2);
+  ASSERT_EQ(rts2, 2);
+  ASSERT_EQ(rstream2, stream);
+  ASSERT_NE(rstream2, stream_other);
+  ASSERT_NE(rstream2, stream_other2);
+  ASSERT_EQ(rdata2, "msg2");
+  ++rit;
+  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  auto [rseqno3, rts3, rstream3, rdata3] = *rit;
+  ASSERT_EQ(rseqno3, 1);
+  ASSERT_EQ(rts3, 1);
+  ASSERT_EQ(rstream3, stream);
+  ASSERT_NE(rstream3, stream_other);
+  ASSERT_NE(rstream3, stream_other2);
+  ASSERT_EQ(rdata3, "msg1");
+  ASSERT_NE(rit, data.rend());
+  ++rit;
+  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  ASSERT_EQ(rit, data.rend());
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+TEST(yamal, serialization) {
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc::scope_end_call fdc([&]() {
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+  });
+
+  ytp::yamal yamal = ytp::yamal(fd, true);
+  ytp::streams streams = yamal.streams();
+  ytp::stream stream = streams.announce("peer", "channel", "encoding");
+
+  std::ostringstream os;
+  os << stream;
+
+  std::string sstream = os.str();
+  ASSERT_EQ(sstream, std::to_string(stream.id()));
+  ASSERT_EQ(sstream, "48");
+
+}
+
+TEST(yamal, hashing) {
+
+  fmc_error_t *error;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+
+  fmc::scope_end_call fdc([&]() {
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+  });
+
+  ytp::yamal yamal = ytp::yamal(fd, true);
+  ytp::streams streams = yamal.streams();
+  ytp::stream stream = streams.announce("peer", "channel", "encoding");
+
+  size_t shash = std::hash<ytp::stream>{}(stream);
+  size_t rawhash =  std::hash<ytp_mmnode_offs>{}(stream.id());
+  ASSERT_EQ(shash, rawhash);
+
 }

@@ -21,6 +21,7 @@
 #include <fmc/platform.h>
 #include <memory>
 #include <string_view>
+#include <stdlib.h>
 
 namespace fmc {
 namespace hidden {

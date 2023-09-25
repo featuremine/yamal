@@ -40,6 +40,7 @@ public:
   stream(const stream &s) = default;
   stream(stream &&s) = default;
   bool operator==(const stream other) const { return id_ == other.id_; }
+  bool operator!=(const stream other) const { return id_ != other.id_; }
 
 private:
   stream() = default;
@@ -80,7 +81,7 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    bool operator==(base_iterator<forward> &other) {
+    bool operator==(const base_iterator<forward> &other) {
       if constexpr (forward) {
         if (it_ == nullptr) {
           return ytp_yamal_term(other.it_);
@@ -112,6 +113,9 @@ public:
         }
       }
       return it_ == other.it_;
+    }
+    bool operator!=(const base_iterator<forward> &other) {
+      return !(*this == other);
     }
     operator ytp_mmnode_offs() {
       fmc_error_t *err = nullptr;
@@ -158,17 +162,21 @@ public:
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_data_end(yamal_.get(), &err);
     fmc_runtime_error_unless(!err)
-        << "unable to find begin iterator with error:" << fmc_error_msg(err);
-    // find previous to it and return THAT, we are after
+        << "unable to find rbegin (end) iterator with error:" << fmc_error_msg(err);
+    it = ytp_yamal_prev(yamal_.get(), it, &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to find rbegin iterator with error:" << fmc_error_msg(err);
     return reverse_iterator(yamal_, it);
   }
   reverse_iterator rend() { return reverse_iterator(); }
-  iterator seek(ytp_mmnode_offs offset) {
+
+  template<bool forward=true>
+  base_iterator<forward> seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_yamal_seek(yamal_.get(), offset, &err);
     fmc_runtime_error_unless(!err)
         << "unable to seek iterator with error:" << fmc_error_msg(err);
-    return iterator(yamal_, it);
+    return base_iterator<forward>(yamal_, it);
   }
 
   void close() {
