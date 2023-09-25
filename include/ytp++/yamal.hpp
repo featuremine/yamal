@@ -82,7 +82,7 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    bool operator==(const base_iterator<forward> &other) {
+    bool operator==(const base_iterator<forward> &other) const {
       if constexpr (forward) {
         if (it_ == nullptr) {
           return ytp_yamal_term(other.it_);
@@ -115,7 +115,7 @@ public:
       }
       return it_ == other.it_;
     }
-    bool operator!=(const base_iterator<forward> &other) {
+    bool operator!=(const base_iterator<forward> &other) const {
       return !(*this == other);
     }
     operator ytp_mmnode_offs() {
