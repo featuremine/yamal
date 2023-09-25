@@ -32,8 +32,8 @@ TEST(yamal, data_closable) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal yamal = ytp::yamal(fd, true);
-  ytp::data data = yamal.data();
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::data_t data = yamal.data();
 
   ASSERT_TRUE(data.closable());
   ASSERT_FALSE(data.closed());
@@ -52,8 +52,8 @@ TEST(yamal, data_unclosable) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal yamal = ytp::yamal(fd, false);
-  ytp::data data = yamal.data();
+  ytp::yamal_t yamal = ytp::yamal_t(fd, false);
+  ytp::data_t data = yamal.data();
 
   ASSERT_FALSE(data.closable());
   ASSERT_FALSE(data.closed());
@@ -71,10 +71,10 @@ TEST(yamal, yamal_streams) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal yamal = ytp::yamal(fd);
-  ytp::streams streams = yamal.streams();
+  ytp::yamal_t yamal = ytp::yamal_t(fd);
+  ytp::streams_t streams = yamal.streams();
 
-  stream s = streams.announce("peer1", "ch1", "encoding1");
+  ytp::stream_t s = streams.announce("peer1", "ch1", "encoding1");
   ASSERT_NE(s.id(), 0);
   ASSERT_THROW(streams.announce("peer1", "ch1", "invalid"), std::runtime_error);
   auto [ls, lsenc] = *streams.lookup("peer1", "ch1");
@@ -99,15 +99,15 @@ TEST(yamal, iteration) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal yamal = ytp::yamal(fd, true);
-  ytp::data data = yamal.data();
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::data_t data = yamal.data();
 
   ASSERT_TRUE(data.closable());
 
-  ytp::streams streams = yamal.streams();
-  ytp::stream stream = streams.announce("peer", "channel", "encoding");
-  ytp::stream stream_other = streams.announce("peer2", "channel", "encoding");
-  ytp::stream stream_other2 = streams.announce("peer", "channel2", "encoding");
+  ytp::streams_t streams = yamal.streams();
+  ytp::stream_t stream = streams.announce("peer", "channel", "encoding");
+  ytp::stream_t stream_other = streams.announce("peer2", "channel", "encoding");
+  ytp::stream_t stream_other2 = streams.announce("peer", "channel2", "encoding");
 
   ASSERT_EQ(data.begin(), data.end());
   ASSERT_EQ(data.rbegin(), data.rend());
@@ -161,7 +161,7 @@ TEST(yamal, iteration) {
 
   // Reverse:
   auto rit = data.rbegin();
-  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
   auto [rseqno1, rts1, rstream1, rdata1] = *rit;
   ASSERT_EQ(rseqno1, 3);
@@ -171,7 +171,7 @@ TEST(yamal, iteration) {
   ASSERT_NE(rstream1, stream_other2);
   ASSERT_EQ(rdata1, "msg3");
   ++rit;
-  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   auto [rseqno2, rts2, rstream2, rdata2] = *rit;
   ASSERT_EQ(rseqno2, 2);
   ASSERT_EQ(rts2, 2);
@@ -180,7 +180,7 @@ TEST(yamal, iteration) {
   ASSERT_NE(rstream2, stream_other2);
   ASSERT_EQ(rdata2, "msg2");
   ++rit;
-  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   auto [rseqno3, rts3, rstream3, rdata3] = *rit;
   ASSERT_EQ(rseqno3, 1);
   ASSERT_EQ(rts3, 1);
@@ -190,7 +190,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(rdata3, "msg1");
   ASSERT_NE(rit, data.rend());
   ++rit;
-  ASSERT_EQ(data.seek<false>((ytp_mmnode_offs)rit), rit);
+  ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_EQ(rit, data.rend());
 }
 
@@ -210,9 +210,9 @@ TEST(yamal, serialization) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal yamal = ytp::yamal(fd, true);
-  ytp::streams streams = yamal.streams();
-  ytp::stream stream = streams.announce("peer", "channel", "encoding");
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::streams_t streams = yamal.streams();
+  ytp::stream_t stream = streams.announce("peer", "channel", "encoding");
 
   std::ostringstream os;
   os << stream;
@@ -233,11 +233,11 @@ TEST(yamal, hashing) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal yamal = ytp::yamal(fd, true);
-  ytp::streams streams = yamal.streams();
-  ytp::stream stream = streams.announce("peer", "channel", "encoding");
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::streams_t streams = yamal.streams();
+  ytp::stream_t stream = streams.announce("peer", "channel", "encoding");
 
-  size_t shash = std::hash<ytp::stream>{}(stream);
+  size_t shash = std::hash<ytp::stream_t>{}(stream);
   size_t rawhash = std::hash<ytp_mmnode_offs>{}(stream.id());
   ASSERT_EQ(shash, rawhash);
 }

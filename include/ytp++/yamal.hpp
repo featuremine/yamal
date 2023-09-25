@@ -27,32 +27,32 @@
 
 namespace ytp {
 
-class yamal;
+class yamal_t;
 
-class data;
+class data_t;
 
-class streams;
+class streams_t;
 
-class stream {
+class stream_t {
 public:
   ytp_mmnode_offs id() const { return id_; }
-  stream(ytp_mmnode_offs id) : id_(id) {}
-  stream(const stream &s) = default;
-  stream(stream &&s) = default;
-  bool operator==(const stream other) const { return id_ == other.id_; }
-  bool operator!=(const stream other) const { return id_ != other.id_; }
+  stream_t(ytp_mmnode_offs id) : id_(id) {}
+  stream_t(const stream_t &s) = default;
+  stream_t(stream_t &&s) = default;
+  bool operator==(const stream_t other) const { return id_ == other.id_; }
+  bool operator!=(const stream_t other) const { return id_ != other.id_; }
 
 private:
-  stream() = default;
+  stream_t() = default;
   ytp_mmnode_offs id_;
 };
 
-class data {
+class data_t {
 public:
   template <bool forward> class base_iterator {
   public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = std::tuple<uint64_t, int64_t, stream, std::string_view>;
+    using value_type = std::tuple<uint64_t, int64_t, stream_t, std::string_view>;
     using pointer = value_type *;
     using reference = value_type &;
 
@@ -136,7 +136,7 @@ public:
                     &err);
       fmc_runtime_error_unless(!err)
           << "unable to read with error:" << fmc_error_msg(err);
-      return value_type(seqno, ts, stream(sid),
+      return value_type(seqno, ts, stream_t(sid),
                         std::string_view(msgdata, msgsz));
     }
 
@@ -146,7 +146,7 @@ public:
     ytp_iterator_t it_;
     std::shared_ptr<ytp_yamal_t> yamal_;
 
-    friend data;
+    friend data_t;
   };
   using iterator = base_iterator<true>;
   using reverse_iterator = base_iterator<false>;
@@ -171,13 +171,20 @@ public:
   }
   reverse_iterator rend() { return reverse_iterator(); }
 
-  template <bool forward = true>
-  base_iterator<forward> seek(ytp_mmnode_offs offset) {
+  iterator seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;
     ytp_iterator_t it = ytp_yamal_seek(yamal_.get(), offset, &err);
     fmc_runtime_error_unless(!err)
         << "unable to seek iterator with error:" << fmc_error_msg(err);
-    return base_iterator<forward>(yamal_, it);
+    return iterator(yamal_, it);
+  }
+
+  reverse_iterator rseek(ytp_mmnode_offs offset) {
+    fmc_error_t *err = nullptr;
+    ytp_iterator_t it = ytp_yamal_seek(yamal_.get(), offset, &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to seek iterator with error:" << fmc_error_msg(err);
+    return reverse_iterator(yamal_, it);
   }
 
   void close() {
@@ -211,7 +218,7 @@ public:
     return fmc::buffer(out, sz);
   }
 
-  ytp_iterator_t commit(int64_t ts, stream s, fmc::buffer data) {
+  ytp_iterator_t commit(int64_t ts, stream_t s, fmc::buffer data) {
     fmc_error_t *err = nullptr;
     ytp_iterator_t ret =
         ytp_data_commit(yamal_.get(), ts, s.id(), data.data(), &err);
@@ -221,26 +228,26 @@ public:
   }
 
 private:
-  data(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {}
+  data_t(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {}
   std::shared_ptr<ytp_yamal_t> yamal_;
 
-  friend yamal;
+  friend yamal_t;
 };
 
-class streams {
+class streams_t {
 public:
-  stream announce(std::string_view peer, std::string_view channel,
-                  std::string_view encoding) {
+  stream_t announce(std::string_view peer, std::string_view channel,
+                    std::string_view encoding) {
     fmc_error_t *err = nullptr;
     ytp_mmnode_offs sid = ytp_streams_announce(
         streams_.get(), peer.size(), peer.data(), channel.size(),
         channel.data(), encoding.size(), encoding.data(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to announce stream with error:" << fmc_error_msg(err);
-    return stream(sid);
+    return stream_t(sid);
   }
 
-  std::optional<std::pair<stream, std::string_view>>
+  std::optional<std::pair<stream_t, std::string_view>>
   lookup(std::string_view peer, std::string_view channel) {
     fmc_error_t *err = nullptr;
     size_t esz = 0;
@@ -253,12 +260,12 @@ public:
     if (!sid) {
       return std::nullopt;
     }
-    return std::pair<stream, std::string_view>(stream(sid),
-                                               std::string_view(edata, esz));
+    return std::pair<stream_t, std::string_view>(stream_t(sid),
+                                                 std::string_view(edata, esz));
   }
 
 private:
-  streams(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {
+  streams_t(std::shared_ptr<ytp_yamal_t> yamal) : yamal_(yamal) {
     fmc_error_t *err = nullptr;
     streams_ = std::shared_ptr<ytp_streams_t>(
         ytp_streams_new(yamal_.get(), &err), [](auto ss) {
@@ -273,12 +280,12 @@ private:
   std::shared_ptr<ytp_yamal_t> yamal_;
   std::shared_ptr<ytp_streams_t> streams_;
 
-  friend yamal;
+  friend yamal_t;
 };
 
-class yamal {
+class yamal_t {
 public:
-  yamal(fmc_fd fd, bool closable = false, bool enable_thread = true) {
+  yamal_t(fmc_fd fd, bool closable = false, bool enable_thread = true) {
     fmc_error_t *err = nullptr;
     yamal_ = std::shared_ptr<ytp_yamal_t>(
         ytp_yamal_new_3(fd, enable_thread,
@@ -295,14 +302,14 @@ public:
         << "unable to create Yamal object with error:" << fmc_error_msg(err);
   }
 
-  ~yamal() = default;
+  ~yamal_t() = default;
 
-  data data() { return ytp::data(yamal_); }
-  streams streams() { return ytp::streams(yamal_); }
+  data_t data() { return ytp::data_t(yamal_); }
+  streams_t streams() { return ytp::streams_t(yamal_); }
 
   // seqnum, peer, channel, encoding
   std::tuple<int, std::string_view, std::string_view, std::string_view>
-  announcement(stream s) {
+  announcement(stream_t s) {
     fmc_error_t *err = nullptr;
     uint64_t seqno;
     size_t psz;
@@ -332,12 +339,12 @@ private:
 
 namespace std {
 
-inline ostream &operator<<(ostream &os, const ytp::stream &s) {
+inline ostream &operator<<(ostream &os, const ytp::stream_t &s) {
   return os << s.id();
 }
 
-template <> struct hash<ytp::stream> {
-  size_t operator()(const ytp::stream &s) const {
+template <> struct hash<ytp::stream_t> {
+  size_t operator()(const ytp::stream_t &s) const {
     return std::hash<ytp_mmnode_offs>{}(s.id());
   }
 };
