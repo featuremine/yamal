@@ -119,31 +119,31 @@ class TestYamal8(unittest.TestCase):
 
         # For on iterator
         it = reversed(dat)
-        i = 0
+        i = 2
         for seq, ts, strm, msg in it:
             self.assertEqual(seq, i)
             self.assertEqual(ts, i)
             self.assertEqual(strm, s)
             self.assertEqual(msg, messages[i])
-            i+=1
+            i-=1
 
         # Direct iteration
         it = reversed(dat)
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 0)
-        self.assertEqual(ts, 0)
+        self.assertEqual(seq, 2)
+        self.assertEqual(ts, 2)
         self.assertEqual(strm, s)
-        self.assertEqual(msg, messages[0])
+        self.assertEqual(msg, messages[2])
         seq, ts, strm, msg = next(it)
         self.assertEqual(seq, 1)
         self.assertEqual(ts, 1)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[1])
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 2)
-        self.assertEqual(ts, 2)
+        self.assertEqual(seq, 0)
+        self.assertEqual(ts, 0)
         self.assertEqual(strm, s)
-        self.assertEqual(msg, messages[2])
+        self.assertEqual(msg, messages[0])
         self.assertRaises(next(it), StopIteration)
 
     def test_serialization(self):
