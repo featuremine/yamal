@@ -8,6 +8,7 @@
 
 import unittest
 from yamal import yamal, data, streams, stream
+import typing
 
 class TestYamal8(unittest.TestCase):
 
@@ -144,6 +145,26 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[2])
         self.assertRaises(next(it), StopIteration)
+
+    def test_serialization(self):
+        y = yamal(fname, closable=False)
+        self.assertIsInstance(y, yamal)
+        ss = y.streams()
+        self.assertIsInstance(ss, streams)
+        s = ss.announce("peer1", "ch1", "encoding1")
+        self.assertIsInstance(s, stream)
+        self.assertEqual(str(s), "48")
+        self.assertEqual(repr(s), "48")
+
+    def test_hashing(self):
+        y = yamal(fname, closable=False)
+        self.assertIsInstance(y, yamal)
+        ss = y.streams()
+        self.assertIsInstance(ss, streams)
+        s = ss.announce("peer1", "ch1", "encoding1")
+        self.assertIsInstance(s, stream)
+        self.assertIsInstance(s, typing.Hashable)
+        self.assertEqual(hash(s), 48)
 
 if __name__ == '__main__':
     unittest.main()
