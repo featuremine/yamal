@@ -235,16 +235,40 @@ static void Data_dealloc(Data *self) {
 }
 
 static PyObject *Data_closable(Data *self) {
-  return PyBool_FromLong(self->data_.closable());
+  try
+  {
+    return PyBool_FromLong(self->data_.closable());
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
 }
 
 static PyObject *Data_close(Data *self) {
-  self->data_.close();
-  Py_RETURN_NONE;
+  try
+  {
+    self->data_.close();
+    Py_RETURN_NONE;
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
 }
 
 static PyObject *Data_closed(Data *self) {
-  return PyBool_FromLong(self->data_.closed());
+  try
+  {
+    return PyBool_FromLong(self->data_.closed());
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
 }
 
 static PyMethodDef Data_methods[] = {
