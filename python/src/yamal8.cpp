@@ -710,9 +710,9 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
     return NULL;
   }
 
-  try
-  {
-    auto [seqno, peer, channel, encoding] = self->yamal_.announcement(stream->stream_);
+  try {
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_.announcement(stream->stream_);
     PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
     if (!pyseqno) {
       return NULL;
@@ -722,13 +722,15 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
       Py_XDECREF(pyseqno);
       return NULL;
     }
-    PyObject *pychannel = PyUnicode_FromStringAndSize(channel.data(), channel.size());
+    PyObject *pychannel =
+        PyUnicode_FromStringAndSize(channel.data(), channel.size());
     if (!pychannel) {
       Py_XDECREF(pyseqno);
       Py_XDECREF(pypeer);
       return NULL;
     }
-    PyObject *pyencoding = PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
+    PyObject *pyencoding =
+        PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
     if (!pyencoding) {
       Py_XDECREF(pyseqno);
       Py_XDECREF(pypeer);
@@ -747,10 +749,8 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
     PyTuple_SET_ITEM(obj, 1, pypeer);
     PyTuple_SET_ITEM(obj, 2, pychannel);
     PyTuple_SET_ITEM(obj, 3, pyencoding);
-    
-  }
-  catch(const std::exception& e)
-  {
+
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_KeyError, e.what());
     return NULL;
   }
