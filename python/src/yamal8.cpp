@@ -44,6 +44,16 @@ static PyGetSetDef Stream_getset[] = {
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
 
+static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
+  //TODO: Implement
+  Py_RETURN_NONE;
+}
+
+static PyMethodDef Stream_methods[] = {
+    {"write", (PyCFunction)Stream_write, METH_VARARGS | METH_KEYWORDS, "Write a new message"},
+    {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
 static PyTypeObject StreamType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.stream", /* tp_name */
     sizeof(Stream),                                       /* tp_basicsize */
@@ -71,7 +81,7 @@ static PyTypeObject StreamType = {
     0,                     /* tp_weaklistoffset */
     0,                     /* tp_iter */
     0,                     /* tp_iternext */
-    0,                     /* tp_methods */
+    Stream_methods,                     /* tp_methods */
     0,                     /* tp_members */
     Stream_getset,         /* tp_getset */
     0,                     /* tp_base */
