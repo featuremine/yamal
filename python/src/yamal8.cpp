@@ -118,9 +118,9 @@ static PyObject *Streams_announce(Streams *self, PyObject *args,
       (char *)"peer", (char *)"channel", (char *)"encoding", NULL /* Sentinel */
   };
 
-  char *peer = NULL;
-  char *channel = NULL;
-  char *encoding = NULL;
+  const char *peer = NULL;
+  const char *channel = NULL;
+  const char *encoding = NULL;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss", kwlist, &peer, &channel,
                                    &encoding)) {
     return NULL;
@@ -137,8 +137,8 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
       (char *)"peer", (char *)"channel", NULL /* Sentinel */
   };
 
-  char *peer = NULL;
-  char *channel = NULL;
+  const char *peer = NULL;
+  const char *channel = NULL;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist, &peer, &channel)) {
     return NULL;
   }
@@ -354,11 +354,11 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
       (char *)"enable_thread", NULL /* Sentinel */
   };
 
-  char *path = NULL;
+  const char *path = NULL;
   bool readonly = false;
   bool closable = false;
   bool enable_thread = true;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|ppp", kwlist, &path,
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|ppp", kwlist, &path,
                                    &readonly, &closable, &enable_thread)) {
     return -1;
   }
@@ -385,7 +385,14 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
   return 0;
 }
 
-static void Yamal_dealloc(Yamal *self) {}
+static void Yamal_dealloc(Yamal *self) {
+  fmc_fd fd = self->yamal_.fd();
+  self->yamal_.~yamal_t();
+  if (fmc_fvalid(fd)) {
+    fmc_error_t *err = NULL;
+    fmc_fclose(fd, &err);
+  }
+}
 
 static PyObject *Yamal_data(Yamal *self) { return Data_new(self); }
 

@@ -334,6 +334,13 @@ public:
                                              std::string_view(encoding, esz));
   }
 
+  fmc_fd fd() {
+    if (!yamal_) {
+      return -1;
+    }
+    return ytp_yamal_fd(yamal_.get());
+  }
+
 private:
   std::shared_ptr<ytp_yamal_t> yamal_;
 };
