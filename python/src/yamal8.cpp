@@ -1,3 +1,11 @@
+/******************************************************************************
+        COPYRIGHT (c) 2019-2023 by Featuremine Corporation.
+
+        This Source Code Form is subject to the terms of the Mozilla Public
+        License, v. 2.0. If a copy of the MPL was not distributed with this
+        file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *****************************************************************************/
+
 #define PY_SSIZE_T_CLEAN
 
 #include <fmc/platform.h>
@@ -8,11 +16,6 @@
 #include <Python.h>
 
 #include <ytp++/yamal.hpp>
-
-// TODO:
-// - Handle exceptions
-// - Finish stream attributes
-// - Confirm if announcement should be removed
 
 struct Yamal;
 struct Streams;
@@ -189,35 +192,44 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
     return NULL;
   }
 
-  auto sl = self->streams_.lookup(peer, channel);
+  try
+  {
+    auto sl = self->streams_.lookup(peer, channel);
 
-  if (!sl) {
-    PyErr_SetString(PyExc_KeyError, "Unable to find stream");
+    if (!sl) {
+      PyErr_SetString(PyExc_KeyError, "Unable to find stream");
+      return NULL;
+    }
+
+    PyObject *s = Stream_new(self->yamal_, sl->first);
+    if (!s) {
+      return NULL;
+    }
+
+    PyObject *encoding =
+        PyUnicode_FromStringAndSize(sl->second.data(), sl->second.size());
+    if (!encoding) {
+      Py_XDECREF(s);
+      return NULL;
+    }
+
+    auto *obj = PyTuple_New(2);
+    if (!obj) {
+      Py_XDECREF(s);
+      Py_XDECREF(encoding);
+      return NULL;
+    }
+    PyTuple_SET_ITEM(obj, 0, s);
+    PyTuple_SET_ITEM(obj, 1, encoding);
+
+    return obj;
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
-
-  PyObject *s = Stream_new(self->yamal_, sl->first);
-  if (!s) {
-    return NULL;
-  }
-
-  PyObject *encoding =
-      PyUnicode_FromStringAndSize(sl->second.data(), sl->second.size());
-  if (!encoding) {
-    Py_XDECREF(s);
-    return NULL;
-  }
-
-  auto *obj = PyTuple_New(2);
-  if (!obj) {
-    Py_XDECREF(s);
-    Py_XDECREF(encoding);
-    return NULL;
-  }
-  PyTuple_SET_ITEM(obj, 0, s);
-  PyTuple_SET_ITEM(obj, 1, encoding);
-
-  return obj;
+  
 }
 
 static PyMethodDef Streams_methods[] = {
@@ -287,12 +299,12 @@ PyObject *DataIter_iter(PyObject *self) {
 
 PyObject *DataIter_iternext(DataIter *self) {
 
-  if (self->it_ == self->data_->data_.end()) {
-    PyErr_SetNone(PyExc_StopIteration);
-    return NULL;
-  }
-
-  try {
+  try
+  {
+    if (self->it_ == self->data_->data_.end()) {
+      PyErr_SetNone(PyExc_StopIteration);
+      return NULL;
+    }
     auto [seqno, ts, stream, data] = *self->it_;
     PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
     if (!pyseqno) {
@@ -537,7 +549,15 @@ static PyObject *Data_closed(Data *self) {
 }
 
 PyObject *Data_reversed(Data *self) {
-  return DataRevIter_new(self, self->data_.rbegin());
+  try
+  {
+    return DataRevIter_new(self, self->data_.rbegin());
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
 }
 
 static PyMethodDef Data_methods[] = {
@@ -552,7 +572,15 @@ static PyMethodDef Data_methods[] = {
 };
 
 PyObject *Data_iter(Data *self) {
-  return DataIter_new(self, self->data_.begin());
+  try
+  {
+    return DataIter_new(self, self->data_.begin());
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
 }
 
 static PyTypeObject DataType = {
@@ -627,7 +655,13 @@ static PyObject *Data_new(Yamal *yamal) {
   if (!self) {
     return NULL;
   }
-  self->data_ = yamal->yamal_.data();
+  try {
+    self->data_ = yamal->yamal_.data();
+  } catch (const std::exception &e) {
+    Py_XDECREF(self);
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return nullptr;
+  }
   self->yamal_ = yamal;
   Py_INCREF(yamal);
   return (PyObject *)self;
@@ -638,7 +672,13 @@ static PyObject *Streams_new(Yamal *yamal) {
   if (!self) {
     return NULL;
   }
-  self->streams_ = yamal->yamal_.streams();
+  try {
+    self->streams_ = yamal->yamal_.streams();
+  } catch (const std::exception &e) {
+    Py_XDECREF(self);
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return nullptr;
+  }
   self->yamal_ = yamal;
   Py_INCREF(yamal);
   return (PyObject *)self;
