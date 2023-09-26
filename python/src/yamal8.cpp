@@ -70,13 +70,13 @@ static PyTypeObject StreamType = {
     0,                                                    /* tp_getattr */
     0,                                                    /* tp_setattr */
     0,                                                    /* tp_reserved */
-    Stream_str,                                                    /* tp_repr */
+    Stream_str,                                           /* tp_repr */
     0,                                                    /* tp_as_number */
     0,                                                    /* tp_as_sequence */
     0,                                                    /* tp_as_mapping */
-    Stream_hash,                                                    /* tp_hash  */
+    Stream_hash,                                          /* tp_hash  */
     0,                                                    /* tp_call */
-    Stream_str,                                                    /* tp_str */
+    Stream_str,                                           /* tp_str */
     0,                                                    /* tp_getattro */
     0,                                                    /* tp_setattro */
     0,                                                    /* tp_as_buffer */
@@ -84,30 +84,32 @@ static PyTypeObject StreamType = {
     "Stream object",                                      /* tp_doc */
     0,                                                    /* tp_traverse */
     0,                                                    /* tp_clear */
-    Stream_richcompare,                                                    /* tp_richcompare */
-    0,                     /* tp_weaklistoffset */
-    0,                     /* tp_iter */
-    0,                     /* tp_iternext */
-    Stream_methods,        /* tp_methods */
-    0,                     /* tp_members */
-    Stream_getset,         /* tp_getset */
-    0,                     /* tp_base */
-    0,                     /* tp_dict */
-    0,                     /* tp_descr_get */
-    0,                     /* tp_descr_set */
-    0,                     /* tp_dictoffset */
-    0,                     /* tp_init */
-    0,                     /* tp_alloc */
-    0                      /* tp_new */
+    Stream_richcompare,                                   /* tp_richcompare */
+    0,              /* tp_weaklistoffset */
+    0,              /* tp_iter */
+    0,              /* tp_iternext */
+    Stream_methods, /* tp_methods */
+    0,              /* tp_members */
+    Stream_getset,  /* tp_getset */
+    0,              /* tp_base */
+    0,              /* tp_dict */
+    0,              /* tp_descr_get */
+    0,              /* tp_descr_set */
+    0,              /* tp_dictoffset */
+    0,              /* tp_init */
+    0,              /* tp_alloc */
+    0               /* tp_new */
 };
 
 static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op) {
   if (!PyObject_TypeCheck(obj1, &StreamType)) {
-    PyErr_SetString(PyExc_RuntimeError, "Invalid type of first argument, expected Stream");
+    PyErr_SetString(PyExc_RuntimeError,
+                    "Invalid type of first argument, expected Stream");
     return NULL;
   }
   if (!PyObject_TypeCheck(obj2, &StreamType)) {
-    PyErr_SetString(PyExc_RuntimeError, "Invalid type of second argument, expected Stream");
+    PyErr_SetString(PyExc_RuntimeError,
+                    "Invalid type of second argument, expected Stream");
     return NULL;
   }
   switch (op) {
@@ -126,7 +128,8 @@ static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op) {
   case Py_GE:
     break;
   }
-  PyErr_SetString(PyExc_RuntimeError, "Unsupported stream comparison operation");
+  PyErr_SetString(PyExc_RuntimeError,
+                  "Unsupported stream comparison operation");
   return NULL;
 }
 
@@ -245,20 +248,20 @@ static PyTypeObject StreamsType = {
     0,                                                     /* tp_traverse */
     0,                                                     /* tp_clear */
     0,                                                     /* tp_richcompare */
-    0,                      /* tp_weaklistoffset */
-    0,                      /* tp_iter */
-    0,                      /* tp_iternext */
-    Streams_methods,        /* tp_methods */
-    0,                      /* tp_members */
-    0,                      /* tp_getset */
-    0,                      /* tp_base */
-    0,                      /* tp_dict */
-    0,                      /* tp_descr_get */
-    0,                      /* tp_descr_set */
-    0,                      /* tp_dictoffset */
-    0,                      /* tp_init */
-    0,                      /* tp_alloc */
-    0                       /* tp_new */
+    0,               /* tp_weaklistoffset */
+    0,               /* tp_iter */
+    0,               /* tp_iternext */
+    Streams_methods, /* tp_methods */
+    0,               /* tp_members */
+    0,               /* tp_getset */
+    0,               /* tp_base */
+    0,               /* tp_dict */
+    0,               /* tp_descr_get */
+    0,               /* tp_descr_set */
+    0,               /* tp_dictoffset */
+    0,               /* tp_init */
+    0,               /* tp_alloc */
+    0                /* tp_new */
 };
 
 struct Data {
@@ -279,7 +282,7 @@ PyObject *DataIter_iter(PyObject *self) {
 }
 
 PyObject *DataIter_iternext(DataIter *self) {
-  //TODO: Implement
+  // TODO: Implement
   PyErr_SetNone(PyExc_StopIteration);
   return NULL;
 }
@@ -292,41 +295,41 @@ static void DataIter_dealloc(DataIter *self) {
 static PyTypeObject DataIterType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
     sizeof(DataIter),                                        /* tp_basicsize */
-    0,                                                   /* tp_itemsize */
-    (destructor)DataIter_dealloc,                        /* tp_dealloc */
-    0,                                                   /* tp_print */
-    0,                                                   /* tp_getattr */
-    0,                                                   /* tp_setattr */
-    0,                                                   /* tp_reserved */
-    0,                                                   /* tp_repr */
-    0,                                                   /* tp_as_number */
-    0,                                                   /* tp_as_sequence */
-    0,                                                   /* tp_as_mapping */
-    0,                                                   /* tp_hash  */
-    0,                                                   /* tp_call */
-    0,                                                   /* tp_str */
-    0,                                                   /* tp_getattro */
-    0,                                                   /* tp_setattro */
-    0,                                                   /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,            /* tp_flags */
-    "DataIter object",                                   /* tp_doc */
-    0,                                                   /* tp_traverse */
-    0,                                                   /* tp_clear */
-    0,                                                   /* tp_richcompare */
-    0,                                                   /* tp_weaklistoffset */
-    DataIter_iter,                                       /* tp_iter */
-    DataIter_iternext,                                   /* tp_iternext */
-    0,                                                   /* tp_methods */
-    0,                                                   /* tp_members */
-    0,                                                   /* tp_getset */
-    0,                                                   /* tp_base */
-    0,                                                   /* tp_dict */
-    0,                                                   /* tp_descr_get */
-    0,                                                   /* tp_descr_set */
-    0,                                                   /* tp_dictoffset */
-    0,                                                   /* tp_init */
-    0,                                                   /* tp_alloc */
-    0                                                    /* tp_new */
+    0,                                                       /* tp_itemsize */
+    (destructor)DataIter_dealloc,                            /* tp_dealloc */
+    0,                                                       /* tp_print */
+    0,                                                       /* tp_getattr */
+    0,                                                       /* tp_setattr */
+    0,                                                       /* tp_reserved */
+    0,                                                       /* tp_repr */
+    0,                                                       /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash  */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    0,                                        /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+    "DataIter object",                        /* tp_doc */
+    0,                                        /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    DataIter_iter,                            /* tp_iter */
+    DataIter_iternext,                        /* tp_iternext */
+    0,                                        /* tp_methods */
+    0,                                        /* tp_members */
+    0,                                        /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    0,                                        /* tp_descr_get */
+    0,                                        /* tp_descr_set */
+    0,                                        /* tp_dictoffset */
+    0,                                        /* tp_init */
+    0,                                        /* tp_alloc */
+    0                                         /* tp_new */
 };
 
 PyObject *DataIter_new(Data *data, ytp::data_t::iterator it) {
