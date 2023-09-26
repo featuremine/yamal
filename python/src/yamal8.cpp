@@ -1,3 +1,5 @@
+#define PY_SSIZE_T_CLEAN
+
 #include <fmc/platform.h>
 #include <fmc/python/common.h>
 
@@ -600,13 +602,15 @@ struct Yamal {
 
 static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
   static char *kwlist[] = {(char *)"time", (char *)"data", NULL /* Sentinel */};
-  uint64_t time;
+  unsigned long long time;
   const char *src = nullptr;
   Py_ssize_t sz;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "Ky#", kwlist, &time, &src,
                                    &sz)) {
     return nullptr;
   }
+
+  std::cout<<"attempting to write "<<sz<< " bytes"<<std::endl;
 
   try {
     auto data = self->yamal_->yamal_.data();
