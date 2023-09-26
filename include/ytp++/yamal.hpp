@@ -24,6 +24,7 @@
 
 #include <string_view>
 #include <utility>
+#include <optional>
 
 namespace ytp {
 
