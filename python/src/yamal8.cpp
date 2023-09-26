@@ -390,56 +390,52 @@ static void DataRevIter_dealloc(DataRevIter *self) {
   Py_XDECREF(self->data_);
 }
 
-PyObject *DataRevIter_nb_int(DataRevIter* self) {
-  try
-  {
+PyObject *DataRevIter_nb_int(DataRevIter *self) {
+  try {
     return PyLong_FromUnsignedLongLong(ytp_mmnode_offs(self->it_));
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
-  }  
+  }
 }
 
-
 static PyNumberMethods DataRevIter_as_number[] = {
-    NULL,       /*nb_add*/
-    NULL, /*nb_substract*/
-    NULL,  /*nb_multiply*/
-    NULL,                           /*nb_remainder*/
-    NULL,                           /*nb_divmod*/
-    NULL,       /*nb_power*/
-    NULL,                           /*nb_negative*/
-    NULL,                           /*nb_positive*/
-    NULL,                           /*nb_absolute*/
-    NULL,                           /*nb_bool*/
-    NULL,                           /*nb_invert*/
-    NULL,                           /*nb_lshift*/
-    NULL,                           /*nb_rshift*/
-    NULL,       /*nb_and*/
-    NULL,                           /*nb_xor*/
-    NULL,        /*nb_or*/
-    (unaryfunc)DataRevIter_nb_int,                           /*nb_int*/
-    NULL,                           /*nb_reserved*/
-    NULL,                           /*nb_float*/
-    NULL,                           /*nb_inplace_add*/
-    NULL,                           /*nb_inplace_substract*/
-    NULL,                           /*nb_inplace_multiply*/
-    NULL,                           /*nb_inplace_remainder*/
-    NULL,                           /*nb_inplace_power*/
-    NULL,                           /*nb_inplace_lshift*/
-    NULL,                           /*nb_inplace_rshift*/
-    NULL,                           /*nb_inplace_and*/
-    NULL,                           /*nb_inplace_xor*/
-    NULL,                           /*nb_inplace_or*/
-    NULL,                           /*nb_floor_divide*/
-    NULL,       /*nb_true_divide*/
-    NULL,                           /*nb_inplace_floor_divide*/
-    NULL,                           /*nb_inplace_true_divide*/
-    NULL,                           /*nb_index*/
-    NULL,                           /*nb_matrix_multiply*/
-    NULL                            /*nb_inplace_matrix_multiply*/
+    NULL,                          /*nb_add*/
+    NULL,                          /*nb_substract*/
+    NULL,                          /*nb_multiply*/
+    NULL,                          /*nb_remainder*/
+    NULL,                          /*nb_divmod*/
+    NULL,                          /*nb_power*/
+    NULL,                          /*nb_negative*/
+    NULL,                          /*nb_positive*/
+    NULL,                          /*nb_absolute*/
+    NULL,                          /*nb_bool*/
+    NULL,                          /*nb_invert*/
+    NULL,                          /*nb_lshift*/
+    NULL,                          /*nb_rshift*/
+    NULL,                          /*nb_and*/
+    NULL,                          /*nb_xor*/
+    NULL,                          /*nb_or*/
+    (unaryfunc)DataRevIter_nb_int, /*nb_int*/
+    NULL,                          /*nb_reserved*/
+    NULL,                          /*nb_float*/
+    NULL,                          /*nb_inplace_add*/
+    NULL,                          /*nb_inplace_substract*/
+    NULL,                          /*nb_inplace_multiply*/
+    NULL,                          /*nb_inplace_remainder*/
+    NULL,                          /*nb_inplace_power*/
+    NULL,                          /*nb_inplace_lshift*/
+    NULL,                          /*nb_inplace_rshift*/
+    NULL,                          /*nb_inplace_and*/
+    NULL,                          /*nb_inplace_xor*/
+    NULL,                          /*nb_inplace_or*/
+    NULL,                          /*nb_floor_divide*/
+    NULL,                          /*nb_true_divide*/
+    NULL,                          /*nb_inplace_floor_divide*/
+    NULL,                          /*nb_inplace_true_divide*/
+    NULL,                          /*nb_index*/
+    NULL,                          /*nb_matrix_multiply*/
+    NULL                           /*nb_inplace_matrix_multiply*/
 };
 
 static PyTypeObject DataRevIterType = {
@@ -452,7 +448,7 @@ static PyTypeObject DataRevIterType = {
     0,                                                       /* tp_setattr */
     0,                                                       /* tp_reserved */
     0,                                                       /* tp_repr */
-    DataRevIter_as_number,                                                       /* tp_as_number */
+    DataRevIter_as_number,                                   /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
@@ -555,7 +551,8 @@ static void DataIter_dealloc(DataIter *self) {
 
 PyObject *DataIter_reversed(DataIter *self) {
   try {
-    return DataRevIter_new(self->data_, ytp::data_t::reverse_iterator(self->it_));
+    return DataRevIter_new(self->data_,
+                           ytp::data_t::reverse_iterator(self->it_));
   } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
@@ -568,56 +565,52 @@ static PyMethodDef DataIter_methods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
-PyObject *DataIter_nb_int(DataIter* self) {
-  try
-  {
+PyObject *DataIter_nb_int(DataIter *self) {
+  try {
     return PyLong_FromUnsignedLongLong(ytp_mmnode_offs(self->it_));
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
-  }  
+  }
 }
 
-
 static PyNumberMethods DataIter_as_number[] = {
-    NULL,       /*nb_add*/
-    NULL, /*nb_substract*/
-    NULL,  /*nb_multiply*/
-    NULL,                           /*nb_remainder*/
-    NULL,                           /*nb_divmod*/
-    NULL,       /*nb_power*/
-    NULL,                           /*nb_negative*/
-    NULL,                           /*nb_positive*/
-    NULL,                           /*nb_absolute*/
-    NULL,                           /*nb_bool*/
-    NULL,                           /*nb_invert*/
-    NULL,                           /*nb_lshift*/
-    NULL,                           /*nb_rshift*/
-    NULL,       /*nb_and*/
-    NULL,                           /*nb_xor*/
-    NULL,        /*nb_or*/
-    (unaryfunc)DataIter_nb_int,                           /*nb_int*/
-    NULL,                           /*nb_reserved*/
-    NULL,                           /*nb_float*/
-    NULL,                           /*nb_inplace_add*/
-    NULL,                           /*nb_inplace_substract*/
-    NULL,                           /*nb_inplace_multiply*/
-    NULL,                           /*nb_inplace_remainder*/
-    NULL,                           /*nb_inplace_power*/
-    NULL,                           /*nb_inplace_lshift*/
-    NULL,                           /*nb_inplace_rshift*/
-    NULL,                           /*nb_inplace_and*/
-    NULL,                           /*nb_inplace_xor*/
-    NULL,                           /*nb_inplace_or*/
-    NULL,                           /*nb_floor_divide*/
-    NULL,       /*nb_true_divide*/
-    NULL,                           /*nb_inplace_floor_divide*/
-    NULL,                           /*nb_inplace_true_divide*/
-    NULL,                           /*nb_index*/
-    NULL,                           /*nb_matrix_multiply*/
-    NULL                            /*nb_inplace_matrix_multiply*/
+    NULL,                       /*nb_add*/
+    NULL,                       /*nb_substract*/
+    NULL,                       /*nb_multiply*/
+    NULL,                       /*nb_remainder*/
+    NULL,                       /*nb_divmod*/
+    NULL,                       /*nb_power*/
+    NULL,                       /*nb_negative*/
+    NULL,                       /*nb_positive*/
+    NULL,                       /*nb_absolute*/
+    NULL,                       /*nb_bool*/
+    NULL,                       /*nb_invert*/
+    NULL,                       /*nb_lshift*/
+    NULL,                       /*nb_rshift*/
+    NULL,                       /*nb_and*/
+    NULL,                       /*nb_xor*/
+    NULL,                       /*nb_or*/
+    (unaryfunc)DataIter_nb_int, /*nb_int*/
+    NULL,                       /*nb_reserved*/
+    NULL,                       /*nb_float*/
+    NULL,                       /*nb_inplace_add*/
+    NULL,                       /*nb_inplace_substract*/
+    NULL,                       /*nb_inplace_multiply*/
+    NULL,                       /*nb_inplace_remainder*/
+    NULL,                       /*nb_inplace_power*/
+    NULL,                       /*nb_inplace_lshift*/
+    NULL,                       /*nb_inplace_rshift*/
+    NULL,                       /*nb_inplace_and*/
+    NULL,                       /*nb_inplace_xor*/
+    NULL,                       /*nb_inplace_or*/
+    NULL,                       /*nb_floor_divide*/
+    NULL,                       /*nb_true_divide*/
+    NULL,                       /*nb_inplace_floor_divide*/
+    NULL,                       /*nb_inplace_true_divide*/
+    NULL,                       /*nb_index*/
+    NULL,                       /*nb_matrix_multiply*/
+    NULL                        /*nb_inplace_matrix_multiply*/
 };
 
 static PyTypeObject DataIterType = {
@@ -713,8 +706,7 @@ PyObject *Data_reversed(Data *self) {
   }
 }
 
-static PyObject *Data_seek(Data *self, PyObject *args,
-                                    PyObject *kwds) {
+static PyObject *Data_seek(Data *self, PyObject *args, PyObject *kwds) {
   static char *kwlist[] = {
       (char *)"offset", NULL /* Sentinel */
   };
@@ -724,16 +716,12 @@ static PyObject *Data_seek(Data *self, PyObject *args,
     return NULL;
   }
 
-  try
-  {
+  try {
     return DataIter_new(self, self->data_.seek(offset));
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
-
 }
 
 static PyMethodDef Data_methods[] = {
@@ -744,8 +732,7 @@ static PyMethodDef Data_methods[] = {
      "Check if data is closed."},
     {"__reversed__", (PyCFunction)Data_reversed, METH_NOARGS,
      "Obtain reverse iterator."},
-    {"seek", (PyCFunction)Data_seek,
-     METH_VARARGS | METH_KEYWORDS,
+    {"seek", (PyCFunction)Data_seek, METH_VARARGS | METH_KEYWORDS,
      "Obtain the iterator for the desired position"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
