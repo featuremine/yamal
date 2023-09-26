@@ -22,9 +22,9 @@
 #include "ytp/streams.h"
 #include "ytp/yamal.h"
 
+#include <optional>
 #include <string_view>
 #include <utility>
-#include <optional>
 
 namespace ytp {
 
