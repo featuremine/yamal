@@ -103,6 +103,18 @@ class TestYamal8(unittest.TestCase):
             i+=1
         self.assertEqual(i, len(messages))
 
+        message = "msg4"
+        s.write(3, message)
+        messages += [message]
+
+        for seq, ts, strm, msg in it:
+            self.assertEqual(seq, i + 1)
+            self.assertEqual(ts, i)
+            self.assertEqual(strm, s)
+            self.assertEqual(msg, messages[i])
+            i+=1
+        self.assertEqual(i, len(messages))
+
         # For on data
         i = 0
         for seq, ts, strm, msg in dat:
@@ -130,6 +142,21 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(ts, 2)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[2])
+        seq, ts, strm, msg = next(it)
+        self.assertEqual(seq, 4)
+        self.assertEqual(ts, 3)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[3])
+        self.assertRaises(StopIteration, next, it)
+
+        message = "msg5"
+        s.write(4, message)
+        messages += [message]
+
+        self.assertEqual(seq, 5)
+        self.assertEqual(ts, 4)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[4])
         self.assertRaises(StopIteration, next, it)
 
         # Reverse:
