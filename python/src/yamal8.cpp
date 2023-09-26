@@ -326,38 +326,37 @@ static PyObject *Streams_new(Yamal *yamal) {
 static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
 
   static char *kwlist[] = {
-      (char *)"path", (char *)"readonly", (char *)"closable", (char *)"enable_thread",
-      NULL /* Sentinel */
+      (char *)"path", (char *)"readonly", (char *)"closable",
+      (char *)"enable_thread", NULL /* Sentinel */
   };
 
   char *path = NULL;
   bool readonly = false;
   bool closable = false;
   bool enable_thread = true;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|ppp", kwlist, &path, &readonly, &closable, &enable_thread)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|ppp", kwlist, &path,
+                                   &readonly, &closable, &enable_thread)) {
     return -1;
   }
 
   fmc_error_t *err = NULL;
 
-  fmc_fd fd = fmc_fopen(path, fmc_fmode(fmc_fmode::READ | (fmc_fmode::WRITE * !readonly)), &err);
+  fmc_fd fd = fmc_fopen(
+      path, fmc_fmode(fmc_fmode::READ | (fmc_fmode::WRITE * !readonly)), &err);
 
   if (err) {
-    PyErr_SetString(PyExc_RuntimeError, "Unable to open file in specified path with permissions");
+    PyErr_SetString(PyExc_RuntimeError,
+                    "Unable to open file in specified path with permissions");
     return -1;
   }
 
-  try
-  {
+  try {
     self->yamal_ = ytp::yamal_t(fd, closable, enable_thread);
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     Py_XDECREF(self);
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return -1;
   }
-  
 
   return 0;
 }
