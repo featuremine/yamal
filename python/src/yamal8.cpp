@@ -22,7 +22,9 @@ struct Stream {
 };
 
 static int Stream_init(Stream *self, PyObject *args, PyObject *kwds) {
-  PyErr_SetString(PyExc_RuntimeError, "Stream objects are not standalone, use the Streams object to obtain an instance");
+  PyErr_SetString(PyExc_RuntimeError,
+                  "Stream objects are not standalone, use the Streams object "
+                  "to obtain an instance");
   return -1;
 }
 
@@ -113,14 +115,14 @@ static void Streams_dealloc(Streams *self) {
 static PyObject *Streams_announce(Streams *self, PyObject *args,
                                   PyObject *kwds) {
   static char *kwlist[] = {
-      (char *)"peer", (char *)"channel", (char *)"encoding",
-      NULL /* Sentinel */
+      (char *)"peer", (char *)"channel", (char *)"encoding", NULL /* Sentinel */
   };
 
   char *peer = NULL;
   char *channel = NULL;
   char *encoding = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss", kwlist, &peer, &channel, &encoding)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss", kwlist, &peer, &channel,
+                                   &encoding)) {
     return NULL;
   }
 
@@ -132,8 +134,7 @@ static PyObject *Streams_announce(Streams *self, PyObject *args,
 static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
 
   static char *kwlist[] = {
-      (char *)"peer", (char *)"channel",
-      NULL /* Sentinel */
+      (char *)"peer", (char *)"channel", NULL /* Sentinel */
   };
 
   char *peer = NULL;
@@ -154,7 +155,8 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
     return NULL;
   }
 
-  PyObject *encoding = PyUnicode_FromStringAndSize(sl->second.data(), sl->second.size());
+  PyObject *encoding =
+      PyUnicode_FromStringAndSize(sl->second.data(), sl->second.size());
   if (!encoding) {
     Py_XDECREF(s);
     return NULL;
