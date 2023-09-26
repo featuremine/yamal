@@ -133,7 +133,7 @@ target_compile_definitions(
 set_target_properties(
     yamal8_module
     PROPERTIES
-    OUTPUT_NAME "yamal88"
+    OUTPUT_NAME "yamal8"
     PREFIX ""
     SUFFIX ".so"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"

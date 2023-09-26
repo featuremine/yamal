@@ -79,7 +79,7 @@ static PyTypeObject StreamType = {
     0,                     /* tp_dictoffset */
     (initproc)Stream_init, /* tp_init */
     0,                     /* tp_alloc */
-    0,                     /* tp_new */
+    0                      /* tp_new */
 };
 
 struct Streams {
@@ -212,7 +212,7 @@ static PyTypeObject StreamsType = {
     0,                      /* tp_dictoffset */
     (initproc)Streams_init, /* tp_init */
     0,                      /* tp_alloc */
-    0,                      /* tp_new */
+    0                       /* tp_new */
 };
 
 struct Data {
@@ -291,7 +291,7 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_dictoffset */
     (initproc)Data_init,                                 /* tp_init */
     0,                                                   /* tp_alloc */
-    0,                                                   /* tp_new */
+    0                                                    /* tp_new */
 };
 
 struct Yamal {
@@ -386,6 +386,15 @@ static PyMethodDef Yamal_methods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+static PyObject *Yamal_new(PyTypeObject *subtype, PyObject *args,
+                           PyObject *kwds) {
+  auto *self = (Yamal *)subtype->tp_alloc(subtype, 0);
+  if (!self) {
+    return nullptr;
+  }
+  return (PyObject *)self;
+}
+
 static PyTypeObject YamalType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.yamal", /* tp_name */
     sizeof(Yamal),                                       /* tp_basicsize */
@@ -423,7 +432,7 @@ static PyTypeObject YamalType = {
     0,                                                   /* tp_dictoffset */
     (initproc)Yamal_init,                                /* tp_init */
     0,                                                   /* tp_alloc */
-    0,                                                   /* tp_new */
+    Yamal_new                                            /* tp_new */
 };
 
 static PyModuleDef Yamal8Module = {PyModuleDef_HEAD_INIT, "yamal8",
