@@ -57,8 +57,8 @@ class TestYamal8(unittest.TestCase):
         ls, lsenc = ss.lookup("peer1", "ch1")
         self.assertEqual(s, ls)
 
-        self.assertIsNone(ss.lookup("peer1", "invalid"))
-        self.assertIsNone(ss.lookup("invalid", "ch1"))
+        self.assertRaises(KeyError, ss.lookup, "peer1", "invalid")
+        self.assertRaises(KeyError, ss.lookup, "invalid", "ch1")
 
         sseqn, speer, sch, sencoding = y.announcement(s)
         self.assertEqual(sseqn, 1)

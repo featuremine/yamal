@@ -21,13 +21,6 @@ struct Stream {
   Yamal *yamal_;
 };
 
-static int Stream_init(Stream *self, PyObject *args, PyObject *kwds) {
-  PyErr_SetString(PyExc_RuntimeError,
-                  "Stream objects are not standalone, use the Streams object "
-                  "to obtain an instance");
-  return -1;
-}
-
 static void Stream_dealloc(Stream *self) {
   self->stream_.~stream_t();
   Py_XDECREF(self->yamal_);
@@ -35,6 +28,10 @@ static void Stream_dealloc(Stream *self) {
 
 PyObject *Stream_id(Stream *self, void *) {
   return PyLong_FromLong(self->stream_.id());
+}
+
+Py_hash_t Stream_hash(Stream *self) {
+  return std::hash<ytp::stream_t>{}(self->stream_);
 }
 
 static PyGetSetDef Stream_getset[] = {
@@ -55,6 +52,15 @@ static PyMethodDef Stream_methods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+static PyObject *Stream_str(Stream *self) {
+  std::ostringstream o;
+  o << self->stream_;
+  auto os = o.str();
+  return PyUnicode_FromString(os.c_str());
+}
+
+static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op);
+
 static PyTypeObject StreamType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.stream", /* tp_name */
     sizeof(Stream),                                       /* tp_basicsize */
@@ -64,13 +70,13 @@ static PyTypeObject StreamType = {
     0,                                                    /* tp_getattr */
     0,                                                    /* tp_setattr */
     0,                                                    /* tp_reserved */
-    0,                                                    /* tp_repr */
+    Stream_str,                                                    /* tp_repr */
     0,                                                    /* tp_as_number */
     0,                                                    /* tp_as_sequence */
     0,                                                    /* tp_as_mapping */
-    0,                                                    /* tp_hash  */
+    Stream_hash,                                                    /* tp_hash  */
     0,                                                    /* tp_call */
-    0,                                                    /* tp_str */
+    Stream_str,                                                    /* tp_str */
     0,                                                    /* tp_getattro */
     0,                                                    /* tp_setattro */
     0,                                                    /* tp_as_buffer */
@@ -78,7 +84,7 @@ static PyTypeObject StreamType = {
     "Stream object",                                      /* tp_doc */
     0,                                                    /* tp_traverse */
     0,                                                    /* tp_clear */
-    0,                                                    /* tp_richcompare */
+    Stream_richcompare,                                                    /* tp_richcompare */
     0,                     /* tp_weaklistoffset */
     0,                     /* tp_iter */
     0,                     /* tp_iternext */
@@ -90,10 +96,39 @@ static PyTypeObject StreamType = {
     0,                     /* tp_descr_get */
     0,                     /* tp_descr_set */
     0,                     /* tp_dictoffset */
-    (initproc)Stream_init, /* tp_init */
+    0,                     /* tp_init */
     0,                     /* tp_alloc */
     0                      /* tp_new */
 };
+
+static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op) {
+  if (!PyObject_TypeCheck(obj1, &StreamType)) {
+    PyErr_SetString(PyExc_RuntimeError, "Invalid type of first argument, expected Stream");
+    return NULL;
+  }
+  if (!PyObject_TypeCheck(obj2, &StreamType)) {
+    PyErr_SetString(PyExc_RuntimeError, "Invalid type of second argument, expected Stream");
+    return NULL;
+  }
+  switch (op) {
+  case Py_LT:
+    break;
+  case Py_LE:
+    break;
+  case Py_EQ:
+    return PyBool_FromLong(obj1->stream_ == obj2->stream_);
+    break;
+  case Py_NE:
+    return PyBool_FromLong(obj1->stream_ != obj2->stream_);
+    break;
+  case Py_GT:
+    break;
+  case Py_GE:
+    break;
+  }
+  PyErr_SetString(PyExc_RuntimeError, "Unsupported stream comparison operation");
+  return NULL;
+}
 
 struct Streams {
   PyObject_HEAD;
@@ -110,12 +145,6 @@ static PyObject *Stream_new(Yamal *yamal, ytp::stream_t stream) {
   self->yamal_ = yamal;
   Py_INCREF(yamal);
   return (PyObject *)self;
-}
-
-static int Streams_init(Streams *self, PyObject *args, PyObject *kwds) {
-  PyErr_SetString(PyExc_RuntimeError, "Streams objects are not standalone, use "
-                                      "the Yamal object to obtain an instance");
-  return -1;
 }
 
 static void Streams_dealloc(Streams *self) {
@@ -231,7 +260,7 @@ static PyTypeObject StreamsType = {
     0,                      /* tp_descr_get */
     0,                      /* tp_descr_set */
     0,                      /* tp_dictoffset */
-    (initproc)Streams_init, /* tp_init */
+    0,                      /* tp_init */
     0,                      /* tp_alloc */
     0                       /* tp_new */
 };
@@ -242,10 +271,77 @@ struct Data {
   Yamal *yamal_;
 };
 
-static int Data_init(Data *self, PyObject *args, PyObject *kwds) {
-  PyErr_SetString(PyExc_RuntimeError, "Data objects are not standalone, use "
-                                      "the Yamal object to obtain an instance");
-  return -1;
+struct DataIter {
+  PyObject_HEAD;
+  ytp::data_t::iterator it_;
+  Data *data_;
+};
+
+PyObject *DataIter_iter(PyObject *self) {
+  Py_INCREF(self);
+  return self;
+}
+
+PyObject *DataIter_iternext(DataIter *self) {
+  //TODO: Implement
+  PyErr_SetNone(PyExc_StopIteration);
+  return NULL;
+}
+
+static void DataIter_dealloc(DataIter *self) {
+  self->it_.ytp::data_t::iterator::~iterator();
+  Py_XDECREF(self->data_);
+}
+
+static PyTypeObject DataIterType = {
+    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
+    sizeof(DataIter),                                        /* tp_basicsize */
+    0,                                                   /* tp_itemsize */
+    (destructor)DataIter_dealloc,                        /* tp_dealloc */
+    0,                                                   /* tp_print */
+    0,                                                   /* tp_getattr */
+    0,                                                   /* tp_setattr */
+    0,                                                   /* tp_reserved */
+    0,                                                   /* tp_repr */
+    0,                                                   /* tp_as_number */
+    0,                                                   /* tp_as_sequence */
+    0,                                                   /* tp_as_mapping */
+    0,                                                   /* tp_hash  */
+    0,                                                   /* tp_call */
+    0,                                                   /* tp_str */
+    0,                                                   /* tp_getattro */
+    0,                                                   /* tp_setattro */
+    0,                                                   /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,            /* tp_flags */
+    "DataIter object",                                   /* tp_doc */
+    0,                                                   /* tp_traverse */
+    0,                                                   /* tp_clear */
+    0,                                                   /* tp_richcompare */
+    0,                                                   /* tp_weaklistoffset */
+    DataIter_iter,                                       /* tp_iter */
+    DataIter_iternext,                                   /* tp_iternext */
+    0,                                                   /* tp_methods */
+    0,                                                   /* tp_members */
+    0,                                                   /* tp_getset */
+    0,                                                   /* tp_base */
+    0,                                                   /* tp_dict */
+    0,                                                   /* tp_descr_get */
+    0,                                                   /* tp_descr_set */
+    0,                                                   /* tp_dictoffset */
+    0,                                                   /* tp_init */
+    0,                                                   /* tp_alloc */
+    0                                                    /* tp_new */
+};
+
+PyObject *DataIter_new(Data *data, ytp::data_t::iterator it) {
+  auto *self = (DataIter *)DataIterType.tp_alloc(&DataIterType, 0);
+  if (!self) {
+    return nullptr;
+  }
+  self->it_ = it;
+  self->data_ = data;
+  Py_INCREF(data);
+  return (PyObject *)self;
 }
 
 static void Data_dealloc(Data *self) {
@@ -290,6 +386,10 @@ static PyMethodDef Data_methods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+PyObject *Data_iter(Data *self) {
+  return DataIter_new(self, self->data_.begin());
+}
+
 static PyTypeObject DataType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.yamal", /* tp_name */
     sizeof(Data),                                        /* tp_basicsize */
@@ -315,7 +415,7 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_clear */
     0,                                                   /* tp_richcompare */
     0,                                                   /* tp_weaklistoffset */
-    0,                                                   /* tp_iter */
+    Data_iter,                                           /* tp_iter */
     0,                                                   /* tp_iternext */
     Data_methods,                                        /* tp_methods */
     0,                                                   /* tp_members */
@@ -325,7 +425,7 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_descr_get */
     0,                                                   /* tp_descr_set */
     0,                                                   /* tp_dictoffset */
-    (initproc)Data_init,                                 /* tp_init */
+    0,                                                   /* tp_init */
     0,                                                   /* tp_alloc */
     0                                                    /* tp_new */
 };
@@ -499,6 +599,7 @@ PyMODINIT_FUNC PyInit_yamal8(void) {
   if (auto *module = PyModule_Create(&Yamal8Module); module) {
     ADD_PY_CLASS(StreamType, "stream", module);
     ADD_PY_CLASS(StreamsType, "streams", module);
+    ADD_PY_CLASS(DataIterType, "data_iterator", module);
     ADD_PY_CLASS(DataType, "data", module);
     ADD_PY_CLASS(YamalType, "yamal", module);
     if (PyModule_AddStringConstant(module, "__version__", YTP_VERSION) == -1)
