@@ -610,8 +610,6 @@ static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
     return nullptr;
   }
 
-  std::cout<<"attempting to write "<<sz<< " bytes"<<std::endl;
-
   try {
     auto data = self->yamal_->yamal_.data();
     auto dst = data.reserve(sz);
