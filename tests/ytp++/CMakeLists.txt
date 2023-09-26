@@ -8,16 +8,16 @@
 
 function(add_ytppp_test NAME)
     add_executable(
-        tests_ytppp_${NAME}
+        tests_ytp_${NAME}pp
         "${NAME}.cpp"
     )
     target_link_libraries(
-        tests_ytppp_${NAME}
+        tests_ytp_${NAME}pp
         PUBLIC
         ytp
         gtest
     )
-    add_test(NAME ytppp_${NAME} COMMAND tests_ytppp_${NAME})
+    add_test(NAME ytp_${NAME}pp COMMAND tests_ytp_${NAME}pp)
 endfunction()
 
 add_ytppp_test("yamal")
