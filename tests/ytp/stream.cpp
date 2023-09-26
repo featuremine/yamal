@@ -26,7 +26,6 @@
 #include <ytp/yamal.h>
 
 #include <fmc++/gtestwrap.hpp>
-#include <fmc++/mpl.hpp>
 #include <fmc/files.h>
 
 #include <deque>
