@@ -120,7 +120,7 @@ static PyObject *Streams_announce(Streams *self, PyObject *args,
   char *peer = NULL;
   char *channel = NULL;
   char *encoding = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist, &peer, &channel, &encoding)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss", kwlist, &peer, &channel, &encoding)) {
     return NULL;
   }
 
