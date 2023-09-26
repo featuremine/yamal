@@ -96,35 +96,37 @@ class TestYamal8(unittest.TestCase):
         it = iter(dat)
         i = 0
         for seq, ts, strm, msg in it:
-            self.assertEqual(seq, i)
+            self.assertEqual(seq, i + 1)
             self.assertEqual(ts, i)
             self.assertEqual(strm, s)
             self.assertEqual(msg, messages[i])
             i+=1
+        self.assertEqual(i, len(messages))
 
         # For on data
         i = 0
         for seq, ts, strm, msg in dat:
-            self.assertEqual(seq, i)
+            self.assertEqual(seq, i + 1)
             self.assertEqual(ts, i)
             self.assertEqual(strm, s)
             self.assertEqual(msg, messages[i])
             i+=1
+        self.assertEqual(i, len(messages))
 
         # Direct iteration
         it = iter(dat)
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 0)
+        self.assertEqual(seq, 1)
         self.assertEqual(ts, 0)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[0])
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 1)
+        self.assertEqual(seq, 2)
         self.assertEqual(ts, 1)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[1])
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 2)
+        self.assertEqual(seq, 3)
         self.assertEqual(ts, 2)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[2])
@@ -134,28 +136,29 @@ class TestYamal8(unittest.TestCase):
 
         # For on iterator
         it = reversed(dat)
-        i = 2
+        i = len(messages)
         for seq, ts, strm, msg in it:
             self.assertEqual(seq, i)
-            self.assertEqual(ts, i)
+            self.assertEqual(ts, i - 1)
             self.assertEqual(strm, s)
-            self.assertEqual(msg, messages[i])
+            self.assertEqual(msg, messages[i - 1])
             i-=1
+        self.assertEqual(i, 0)
 
         # Direct iteration
         it = reversed(dat)
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 2)
+        self.assertEqual(seq, 3)
         self.assertEqual(ts, 2)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[2])
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 1)
+        self.assertEqual(seq, 2)
         self.assertEqual(ts, 1)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[1])
         seq, ts, strm, msg = next(it)
-        self.assertEqual(seq, 0)
+        self.assertEqual(seq, 1)
         self.assertEqual(ts, 0)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[0])
