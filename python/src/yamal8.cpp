@@ -137,17 +137,13 @@ static PyObject *Streams_announce(Streams *self, PyObject *args,
     return NULL;
   }
 
-  try
-  {
+  try {
     auto sl = self->streams_.announce(peer, channel, encoding);
     return Stream_new(self->yamal_, sl);
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, "Unable to announce stream");
     return NULL;
   }
-
 }
 
 static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
