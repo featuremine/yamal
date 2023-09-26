@@ -67,13 +67,13 @@ static PyTypeObject StreamType = {
     0,                                                    /* tp_getattr */
     0,                                                    /* tp_setattr */
     0,                                                    /* tp_reserved */
-    (reprfunc)Stream_str,                                           /* tp_repr */
+    (reprfunc)Stream_str,                                 /* tp_repr */
     0,                                                    /* tp_as_number */
     0,                                                    /* tp_as_sequence */
     0,                                                    /* tp_as_mapping */
-    (hashfunc)Stream_hash,                                          /* tp_hash  */
+    (hashfunc)Stream_hash,                                /* tp_hash  */
     0,                                                    /* tp_call */
-    (reprfunc)Stream_str,                                           /* tp_str */
+    (reprfunc)Stream_str,                                 /* tp_str */
     0,                                                    /* tp_getattro */
     0,                                                    /* tp_setattro */
     0,                                                    /* tp_as_buffer */
@@ -81,7 +81,7 @@ static PyTypeObject StreamType = {
     "Stream object",                                      /* tp_doc */
     0,                                                    /* tp_traverse */
     0,                                                    /* tp_clear */
-    (richcmpfunc)Stream_richcompare,                                   /* tp_richcompare */
+    (richcmpfunc)Stream_richcompare,                      /* tp_richcompare */
     0,              /* tp_weaklistoffset */
     0,              /* tp_iter */
     0,              /* tp_iternext */
@@ -365,7 +365,7 @@ static PyTypeObject DataIterType = {
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     DataIter_iter,                            /* tp_iter */
-    (iternextfunc)DataIter_iternext,                        /* tp_iternext */
+    (iternextfunc)DataIter_iternext,          /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
@@ -476,7 +476,7 @@ static PyTypeObject DataRevIterType = {
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     DataRevIter_iter,                         /* tp_iter */
-    (iternextfunc)DataRevIter_iternext,                     /* tp_iternext */
+    (iternextfunc)DataRevIter_iternext,       /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
@@ -578,7 +578,7 @@ static PyTypeObject DataType = {
     0,                                                  /* tp_clear */
     0,                                                  /* tp_richcompare */
     0,                                                  /* tp_weaklistoffset */
-    (getiterfunc)Data_iter,                                          /* tp_iter */
+    (getiterfunc)Data_iter,                             /* tp_iter */
     0,                                                  /* tp_iternext */
     Data_methods,                                       /* tp_methods */
     0,                                                  /* tp_members */
@@ -710,9 +710,9 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
     return NULL;
   }
 
-  try
-  {
-    auto [seqno, peer, channel, encoding] = self->yamal_.announcement(stream->stream_);
+  try {
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_.announcement(stream->stream_);
     PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
     if (!pyseqno) {
       return NULL;
@@ -722,13 +722,15 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
       Py_XDECREF(pyseqno);
       return NULL;
     }
-    PyObject *pychannel = PyUnicode_FromStringAndSize(channel.data(), channel.size());
+    PyObject *pychannel =
+        PyUnicode_FromStringAndSize(channel.data(), channel.size());
     if (!pychannel) {
       Py_XDECREF(pyseqno);
       Py_XDECREF(pypeer);
       return NULL;
     }
-    PyObject *pyencoding = PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
+    PyObject *pyencoding =
+        PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
     if (!pyencoding) {
       Py_XDECREF(pyseqno);
       Py_XDECREF(pypeer);
@@ -748,9 +750,7 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
     PyTuple_SET_ITEM(obj, 2, pychannel);
     PyTuple_SET_ITEM(obj, 3, pyencoding);
     return obj;
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_KeyError, e.what());
     return NULL;
   }
