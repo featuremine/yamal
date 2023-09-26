@@ -100,7 +100,8 @@ static PyObject *Stream_new(Yamal *yamal, ytp::stream_t stream) {
 }
 
 static int Streams_init(Streams *self, PyObject *args, PyObject *kwds) {
-  PyErr_SetString(PyExc_RuntimeError, "Streams objects are not standalone, use the Yamal object to obtain an instance");
+  PyErr_SetString(PyExc_RuntimeError, "Streams objects are not standalone, use "
+                                      "the Yamal object to obtain an instance");
   return -1;
 }
 
@@ -221,7 +222,8 @@ struct Data {
 };
 
 static int Data_init(Data *self, PyObject *args, PyObject *kwds) {
-  PyErr_SetString(PyExc_RuntimeError, "Data objects are not standalone, use the Yamal object to obtain an instance");
+  PyErr_SetString(PyExc_RuntimeError, "Data objects are not standalone, use "
+                                      "the Yamal object to obtain an instance");
   return -1;
 }
 
@@ -347,20 +349,15 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
 
 static void Yamal_dealloc(Yamal *self) {}
 
-static PyObject *Yamal_data(Yamal *self) {
-  return Data_new(self);
-}
+static PyObject *Yamal_data(Yamal *self) { return Data_new(self); }
 
-static PyObject *Yamal_streams(Yamal *self) {
-  return Streams_new(self);
-}
+static PyObject *Yamal_streams(Yamal *self) { return Streams_new(self); }
 
 static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
                                     PyObject *kwds) {
 
   static char *kwlist[] = {
-      (char *)"stream",
-      NULL /* Sentinel */
+      (char *)"stream", NULL /* Sentinel */
   };
 
   Stream *stream = NULL;
@@ -375,9 +372,8 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
 
   self->yamal_.announcement(stream->stream_);
 
-  //TODO: Return proper object
+  // TODO: Return proper object
   Py_RETURN_NONE;
-
 }
 
 static PyMethodDef Yamal_methods[] = {
