@@ -250,8 +250,7 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
     return NULL;
   }
 
-  try
-  {
+  try {
     auto sl = self->streams_.lookup(peer, channel);
 
     if (!sl) {
@@ -281,13 +280,10 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
     PyTuple_SET_ITEM(obj, 1, encoding);
 
     return obj;
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
-  
 }
 
 static PyMethodDef Streams_methods[] = {
@@ -345,8 +341,7 @@ PyObject *DataIter_iter(PyObject *self) {
 
 PyObject *DataIter_iternext(DataIter *self) {
 
-  try
-  {
+  try {
     if (self->it_ == self->data_->data_.end()) {
       PyErr_SetNone(PyExc_StopIteration);
       return NULL;
@@ -589,12 +584,9 @@ static PyObject *Data_closed(Data *self) {
 }
 
 PyObject *Data_reversed(Data *self) {
-  try
-  {
+  try {
     return DataRevIter_new(self, self->data_.rbegin());
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
@@ -612,12 +604,9 @@ static PyMethodDef Data_methods[] = {
 };
 
 PyObject *Data_iter(Data *self) {
-  try
-  {
+  try {
     return DataIter_new(self, self->data_.begin());
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
