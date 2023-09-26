@@ -7,7 +7,13 @@
 
 #include <ytp++/yamal.hpp>
 
+// TODO:
+// - Handle exceptions
+// - Finish stream attributes
+// - Confirm if announcement should be removed
+
 struct Yamal;
+struct Streams;
 
 struct Stream {
   PyObject_HEAD;
@@ -15,9 +21,15 @@ struct Stream {
   Yamal *yamal_;
 };
 
-static int Stream_init(Stream *self, PyObject *args, PyObject *kwds) {}
+static int Stream_init(Stream *self, PyObject *args, PyObject *kwds) {
+  PyErr_SetString(PyExc_RuntimeError, "Stream objects are not standalone, use the Streams object to obtain an instance");
+  return -1;
+}
 
-static void Stream_dealloc(Stream *self) {}
+static void Stream_dealloc(Stream *self) {
+  self->stream_.~stream_t();
+  Py_XDECREF(self->yamal_);
+}
 
 PyObject *Stream_id(Stream *self, void *) {
   return PyLong_FromLong(self->stream_.id());
@@ -76,6 +88,17 @@ struct Streams {
   Yamal *yamal_;
 };
 
+static PyObject *Stream_new(Yamal *yamal, ytp::stream_t stream) {
+  auto *self = (Stream *)StreamType.tp_alloc(&StreamType, 0);
+  if (!self) {
+    return nullptr;
+  }
+  self->stream_ = stream;
+  self->yamal_ = yamal;
+  Py_INCREF(yamal);
+  return (PyObject *)self;
+}
+
 static int Streams_init(Streams *self, PyObject *args, PyObject *kwds) {
   PyErr_SetString(PyExc_RuntimeError, "Streams objects are not standalone, use the Yamal object to obtain an instance");
   return -1;
@@ -87,9 +110,60 @@ static void Streams_dealloc(Streams *self) {
 }
 
 static PyObject *Streams_announce(Streams *self, PyObject *args,
-                                  PyObject *kwds) {}
+                                  PyObject *kwds) {
+  static char *kwlist[] = {
+      (char *)"peer", (char *)"channel", (char *)"encoding",
+      NULL /* Sentinel */
+  };
+
+  char *peer = NULL;
+  char *channel = NULL;
+  char *encoding = NULL;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist, &peer, &channel, &encoding)) {
+    return NULL;
+  }
+
+  auto sl = self->streams_.announce(peer, channel, encoding);
+
+  return Stream_new(self->yamal_, sl);
+}
 
 static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
+
+  static char *kwlist[] = {
+      (char *)"peer", (char *)"channel",
+      NULL /* Sentinel */
+  };
+
+  char *peer = NULL;
+  char *channel = NULL;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist, &peer, &channel)) {
+    return NULL;
+  }
+
+  auto sl = self->streams_.lookup(peer, channel);
+
+  if (!sl) {
+    PyErr_SetString(PyExc_KeyError, "Unable to find stream");
+    return NULL;
+  }
+
+  PyObject *s = Stream_new(self->yamal_, sl->first);
+  if (!s) {
+    return NULL;
+  }
+
+  PyObject *encoding = PyUnicode_FromStringAndSize(sl->second.data(), sl->second.size());
+  if (!encoding) {
+    Py_XDECREF(s);
+    return NULL;
+  }
+
+  auto *obj = PyTuple_New(2);
+  PyTuple_SET_ITEM(obj, 0, s);
+  PyTuple_SET_ITEM(obj, 1, encoding);
+
+  return obj;
 }
 
 static PyMethodDef Streams_methods[] = {
@@ -139,8 +213,6 @@ static PyTypeObject StreamsType = {
     0,                      /* tp_alloc */
     0,                      /* tp_new */
 };
-
-static PyObject *Streams_new(Yamal *yamal);
 
 struct Data {
   PyObject_HEAD;
@@ -219,8 +291,6 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_alloc */
     0,                                                   /* tp_new */
 };
-
-static PyObject *Data_new(Yamal *yamal);
 
 struct Yamal {
   PyObject_HEAD;
