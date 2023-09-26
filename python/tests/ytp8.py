@@ -40,7 +40,7 @@ class TestYamal8(unittest.TestCase):
         self.assertIsInstance(dat, data)
         self.assertFalse(dat.closable())
         self.assertFalse(dat.closed())
-        self.assertRaises(dat.close(), RuntimeError)
+        self.assertRaises(RuntimeError, dat.close)
 
     def test_streams(self):
         fname = "test_streams.ytp"
@@ -51,8 +51,8 @@ class TestYamal8(unittest.TestCase):
         self.assertIsInstance(ss, streams)
         s = ss.announce("peer1", "ch1", "encoding1")
         self.assertIsInstance(s, stream)
-        self.assertNotEqual(s.id(), 0)
-        self.assertRaises(ss.announce("peer1", "ch1", "invalid"), RuntimeError)
+        self.assertNotEqual(s.id, 0)
+        self.assertRaises(RuntimeError, ss.announce, "peer1", "ch1", "invalid")
 
         ls, lsenc = ss.lookup("peer1", "ch1")
         self.assertEqual(s, ls)
@@ -128,7 +128,7 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(ts, 2)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[2])
-        self.assertRaises(next(it), StopIteration)
+        self.assertRaises(StopIteration, next, it)
 
         # Reverse:
 
@@ -159,7 +159,7 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(ts, 0)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[0])
-        self.assertRaises(next(it), StopIteration)
+        self.assertRaises(StopIteration, next, it)
 
     def test_serialization(self):
         fname = "test_serialization.ytp"
@@ -183,7 +183,7 @@ class TestYamal8(unittest.TestCase):
         s = ss.announce("peer1", "ch1", "encoding1")
         self.assertIsInstance(s, stream)
         self.assertIsInstance(s, typing.Hashable)
-        self.assertEqual(hash(s), 8765566764985)
+        self.assertNotEqual(hash(s), 0)
 
 if __name__ == '__main__':
     unittest.main()

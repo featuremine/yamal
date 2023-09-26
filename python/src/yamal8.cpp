@@ -136,9 +136,17 @@ static PyObject *Streams_announce(Streams *self, PyObject *args,
     return NULL;
   }
 
-  auto sl = self->streams_.announce(peer, channel, encoding);
+  try
+  {
+    auto sl = self->streams_.announce(peer, channel, encoding);
+    return Stream_new(self->yamal_, sl);
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, "Unable to announce stream");
+    return NULL;
+  }
 
-  return Stream_new(self->yamal_, sl);
 }
 
 static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
@@ -355,10 +363,10 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
       (char *)"enable_thread", NULL /* Sentinel */
   };
 
-  const char *path = NULL;
-  bool readonly = false;
-  bool closable = false;
-  bool enable_thread = true;
+  char *path;
+  int readonly = false;
+  int closable = false;
+  int enable_thread = true;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|ppp", kwlist, &path,
                                    &readonly, &closable, &enable_thread)) {
     return -1;
