@@ -330,6 +330,169 @@ static PyTypeObject StreamsType = {
     0                /* tp_new */
 };
 
+PyObject *DataRevIter_iter(PyObject *self) {
+  Py_INCREF(self);
+  return self;
+}
+
+PyObject *DataRevIter_iternext(DataRevIter *self) {
+
+  try {
+    if (self->it_ == self->data_->data_.rend()) {
+      PyErr_SetNone(PyExc_StopIteration);
+      return NULL;
+    }
+    auto [seqno, ts, stream, data] = *self->it_;
+    PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
+    if (!pyseqno) {
+      return NULL;
+    }
+    PyObject *pyts = PyLong_FromUnsignedLongLong(ts);
+    if (!pyts) {
+      Py_XDECREF(pyseqno);
+      return NULL;
+    }
+    PyObject *pystream = Stream_new(self->data_->yamal_, stream);
+    if (!pystream) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pyts);
+      return NULL;
+    }
+    PyObject *pydata = PyBytes_FromStringAndSize(data.data(), data.size());
+    if (!pydata) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pyts);
+      Py_XDECREF(pystream);
+      return NULL;
+    }
+    auto *obj = PyTuple_New(4);
+    if (!obj) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pyts);
+      Py_XDECREF(pystream);
+      Py_XDECREF(pydata);
+      return NULL;
+    }
+    PyTuple_SET_ITEM(obj, 0, pyseqno);
+    PyTuple_SET_ITEM(obj, 1, pyts);
+    PyTuple_SET_ITEM(obj, 2, pystream);
+    PyTuple_SET_ITEM(obj, 3, pydata);
+    ++self->it_;
+    return obj;
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
+}
+
+static void DataRevIter_dealloc(DataRevIter *self) {
+  self->it_.ytp::data_t::reverse_iterator::~reverse_iterator();
+  Py_XDECREF(self->data_);
+}
+
+PyObject *DataRevIter_nb_int(DataRevIter* self) {
+  try
+  {
+    return PyLong_FromUnsignedLongLong(ytp_mmnode_offs(self->it_));
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }  
+}
+
+
+static PyNumberMethods DataRevIter_as_number[] = {
+    NULL,       /*nb_add*/
+    NULL, /*nb_substract*/
+    NULL,  /*nb_multiply*/
+    NULL,                           /*nb_remainder*/
+    NULL,                           /*nb_divmod*/
+    NULL,       /*nb_power*/
+    NULL,                           /*nb_negative*/
+    NULL,                           /*nb_positive*/
+    NULL,                           /*nb_absolute*/
+    NULL,                           /*nb_bool*/
+    NULL,                           /*nb_invert*/
+    NULL,                           /*nb_lshift*/
+    NULL,                           /*nb_rshift*/
+    NULL,       /*nb_and*/
+    NULL,                           /*nb_xor*/
+    NULL,        /*nb_or*/
+    (unaryfunc)DataRevIter_nb_int,                           /*nb_int*/
+    NULL,                           /*nb_reserved*/
+    NULL,                           /*nb_float*/
+    NULL,                           /*nb_inplace_add*/
+    NULL,                           /*nb_inplace_substract*/
+    NULL,                           /*nb_inplace_multiply*/
+    NULL,                           /*nb_inplace_remainder*/
+    NULL,                           /*nb_inplace_power*/
+    NULL,                           /*nb_inplace_lshift*/
+    NULL,                           /*nb_inplace_rshift*/
+    NULL,                           /*nb_inplace_and*/
+    NULL,                           /*nb_inplace_xor*/
+    NULL,                           /*nb_inplace_or*/
+    NULL,                           /*nb_floor_divide*/
+    NULL,       /*nb_true_divide*/
+    NULL,                           /*nb_inplace_floor_divide*/
+    NULL,                           /*nb_inplace_true_divide*/
+    NULL,                           /*nb_index*/
+    NULL,                           /*nb_matrix_multiply*/
+    NULL                            /*nb_inplace_matrix_multiply*/
+};
+
+static PyTypeObject DataRevIterType = {
+    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
+    sizeof(DataRevIter),                                     /* tp_basicsize */
+    0,                                                       /* tp_itemsize */
+    (destructor)DataRevIter_dealloc,                         /* tp_dealloc */
+    0,                                                       /* tp_print */
+    0,                                                       /* tp_getattr */
+    0,                                                       /* tp_setattr */
+    0,                                                       /* tp_reserved */
+    0,                                                       /* tp_repr */
+    DataRevIter_as_number,                                                       /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash  */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    0,                                        /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+    "DataRevIter object",                     /* tp_doc */
+    0,                                        /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    DataRevIter_iter,                         /* tp_iter */
+    (iternextfunc)DataRevIter_iternext,       /* tp_iternext */
+    0,                                        /* tp_methods */
+    0,                                        /* tp_members */
+    0,                                        /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    0,                                        /* tp_descr_get */
+    0,                                        /* tp_descr_set */
+    0,                                        /* tp_dictoffset */
+    0,                                        /* tp_init */
+    0,                                        /* tp_alloc */
+    0                                         /* tp_new */
+};
+
+PyObject *DataRevIter_new(Data *data, ytp::data_t::reverse_iterator it) {
+  auto *self = (DataRevIter *)DataRevIterType.tp_alloc(&DataRevIterType, 0);
+  if (!self) {
+    return NULL;
+  }
+  self->it_ = it;
+  self->data_ = data;
+  Py_INCREF(data);
+  return (PyObject *)self;
+}
+
 PyObject *DataIter_iter(PyObject *self) {
   Py_INCREF(self);
   return self;
@@ -390,6 +553,73 @@ static void DataIter_dealloc(DataIter *self) {
   Py_XDECREF(self->data_);
 }
 
+PyObject *DataIter_reversed(DataIter *self) {
+  try {
+    return DataRevIter_new(self->data_, ytp::data_t::reverse_iterator(self->it_));
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
+}
+
+static PyMethodDef DataIter_methods[] = {
+    {"__reversed__", (PyCFunction)DataIter_reversed, METH_NOARGS,
+     "Obtain reverse iterator."},
+    {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+PyObject *DataIter_nb_int(DataIter* self) {
+  try
+  {
+    return PyLong_FromUnsignedLongLong(ytp_mmnode_offs(self->it_));
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }  
+}
+
+
+static PyNumberMethods DataIter_as_number[] = {
+    NULL,       /*nb_add*/
+    NULL, /*nb_substract*/
+    NULL,  /*nb_multiply*/
+    NULL,                           /*nb_remainder*/
+    NULL,                           /*nb_divmod*/
+    NULL,       /*nb_power*/
+    NULL,                           /*nb_negative*/
+    NULL,                           /*nb_positive*/
+    NULL,                           /*nb_absolute*/
+    NULL,                           /*nb_bool*/
+    NULL,                           /*nb_invert*/
+    NULL,                           /*nb_lshift*/
+    NULL,                           /*nb_rshift*/
+    NULL,       /*nb_and*/
+    NULL,                           /*nb_xor*/
+    NULL,        /*nb_or*/
+    (unaryfunc)DataIter_nb_int,                           /*nb_int*/
+    NULL,                           /*nb_reserved*/
+    NULL,                           /*nb_float*/
+    NULL,                           /*nb_inplace_add*/
+    NULL,                           /*nb_inplace_substract*/
+    NULL,                           /*nb_inplace_multiply*/
+    NULL,                           /*nb_inplace_remainder*/
+    NULL,                           /*nb_inplace_power*/
+    NULL,                           /*nb_inplace_lshift*/
+    NULL,                           /*nb_inplace_rshift*/
+    NULL,                           /*nb_inplace_and*/
+    NULL,                           /*nb_inplace_xor*/
+    NULL,                           /*nb_inplace_or*/
+    NULL,                           /*nb_floor_divide*/
+    NULL,       /*nb_true_divide*/
+    NULL,                           /*nb_inplace_floor_divide*/
+    NULL,                           /*nb_inplace_true_divide*/
+    NULL,                           /*nb_index*/
+    NULL,                           /*nb_matrix_multiply*/
+    NULL                            /*nb_inplace_matrix_multiply*/
+};
+
 static PyTypeObject DataIterType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
     sizeof(DataIter),                                        /* tp_basicsize */
@@ -400,7 +630,7 @@ static PyTypeObject DataIterType = {
     0,                                                       /* tp_setattr */
     0,                                                       /* tp_reserved */
     0,                                                       /* tp_repr */
-    0,                                                       /* tp_as_number */
+    DataIter_as_number,                                      /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
@@ -417,7 +647,7 @@ static PyTypeObject DataIterType = {
     0,                                        /* tp_weaklistoffset */
     DataIter_iter,                            /* tp_iter */
     (iternextfunc)DataIter_iternext,          /* tp_iternext */
-    0,                                        /* tp_methods */
+    DataIter_methods,                         /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
@@ -432,111 +662,6 @@ static PyTypeObject DataIterType = {
 
 PyObject *DataIter_new(Data *data, ytp::data_t::iterator it) {
   auto *self = (DataIter *)DataIterType.tp_alloc(&DataIterType, 0);
-  if (!self) {
-    return NULL;
-  }
-  self->it_ = it;
-  self->data_ = data;
-  Py_INCREF(data);
-  return (PyObject *)self;
-}
-
-PyObject *DataRevIter_iter(PyObject *self) {
-  Py_INCREF(self);
-  return self;
-}
-
-PyObject *DataRevIter_iternext(DataRevIter *self) {
-
-  if (self->it_ == self->data_->data_.rend()) {
-    PyErr_SetNone(PyExc_StopIteration);
-    return NULL;
-  }
-
-  try {
-    auto [seqno, ts, stream, data] = *self->it_;
-    PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
-    if (!pyseqno) {
-      return NULL;
-    }
-    PyObject *pyts = PyLong_FromUnsignedLongLong(ts);
-    if (!pyts) {
-      Py_XDECREF(pyseqno);
-      return NULL;
-    }
-    PyObject *pystream = Stream_new(self->data_->yamal_, stream);
-    if (!pystream) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
-      return NULL;
-    }
-    PyObject *pydata = PyBytes_FromStringAndSize(data.data(), data.size());
-    if (!pydata) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
-      Py_XDECREF(pystream);
-      return NULL;
-    }
-    auto *obj = PyTuple_New(4);
-    PyTuple_SET_ITEM(obj, 0, pyseqno);
-    PyTuple_SET_ITEM(obj, 1, pyts);
-    PyTuple_SET_ITEM(obj, 2, pystream);
-    PyTuple_SET_ITEM(obj, 3, pydata);
-    ++self->it_;
-    return obj;
-  } catch (const std::exception &e) {
-    PyErr_SetString(PyExc_RuntimeError, e.what());
-    return NULL;
-  }
-}
-
-static void DataRevIter_dealloc(DataRevIter *self) {
-  self->it_.ytp::data_t::reverse_iterator::~reverse_iterator();
-  Py_XDECREF(self->data_);
-}
-
-static PyTypeObject DataRevIterType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
-    sizeof(DataRevIter),                                     /* tp_basicsize */
-    0,                                                       /* tp_itemsize */
-    (destructor)DataRevIter_dealloc,                         /* tp_dealloc */
-    0,                                                       /* tp_print */
-    0,                                                       /* tp_getattr */
-    0,                                                       /* tp_setattr */
-    0,                                                       /* tp_reserved */
-    0,                                                       /* tp_repr */
-    0,                                                       /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
-    "DataRevIter object",                     /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    DataRevIter_iter,                         /* tp_iter */
-    (iternextfunc)DataRevIter_iternext,       /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    0                                         /* tp_new */
-};
-
-PyObject *DataRevIter_new(Data *data, ytp::data_t::reverse_iterator it) {
-  auto *self = (DataRevIter *)DataRevIterType.tp_alloc(&DataRevIterType, 0);
   if (!self) {
     return NULL;
   }
@@ -588,6 +713,29 @@ PyObject *Data_reversed(Data *self) {
   }
 }
 
+static PyObject *Data_seek(Data *self, PyObject *args,
+                                    PyObject *kwds) {
+  static char *kwlist[] = {
+      (char *)"offset", NULL /* Sentinel */
+  };
+
+  unsigned long long offset;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "K", kwlist, &offset)) {
+    return NULL;
+  }
+
+  try
+  {
+    return DataIter_new(self, self->data_.seek(offset));
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return NULL;
+  }
+
+}
+
 static PyMethodDef Data_methods[] = {
     {"closable", (PyCFunction)Data_closable, METH_NOARGS,
      "Check if data is closable."},
@@ -596,6 +744,9 @@ static PyMethodDef Data_methods[] = {
      "Check if data is closed."},
     {"__reversed__", (PyCFunction)Data_reversed, METH_NOARGS,
      "Obtain reverse iterator."},
+    {"seek", (PyCFunction)Data_seek,
+     METH_VARARGS | METH_KEYWORDS,
+     "Obtain the iterator for the desired position"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

@@ -141,6 +141,7 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(ts, 1)
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[1])
+        midoffset = int(it)
         seq, ts, strm, msg = next(it)
         self.assertEqual(seq, 3)
         self.assertEqual(ts, 2)
@@ -163,6 +164,25 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[4])
         self.assertRaises(StopIteration, next, it)
+
+        forwardit = dat.seek(midoffset)
+
+        seq, ts, strm, msg = next(forwardit)
+        self.assertEqual(seq, 3)
+        self.assertEqual(ts, 2)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[2])
+        seq, ts, strm, msg = next(forwardit)
+        self.assertEqual(seq, 4)
+        self.assertEqual(ts, 3)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[3])
+        seq, ts, strm, msg = next(forwardit)
+        self.assertEqual(seq, 5)
+        self.assertEqual(ts, 4)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[4])
+        self.assertRaises(StopIteration, next, forwardit)
 
         # Reverse:
 
@@ -205,6 +225,25 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(strm, s)
         self.assertEqual(msg, messages[0])
         self.assertRaises(StopIteration, next, it)
+
+        reverseit = reversed(dat.seek(midoffset))
+
+        seq, ts, strm, msg = next(reverseit)
+        self.assertEqual(seq, 3)
+        self.assertEqual(ts, 2)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[2])
+        seq, ts, strm, msg = next(reverseit)
+        self.assertEqual(seq, 2)
+        self.assertEqual(ts, 1)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[1])
+        seq, ts, strm, msg = next(reverseit)
+        self.assertEqual(seq, 1)
+        self.assertEqual(ts, 0)
+        self.assertEqual(strm, s)
+        self.assertEqual(msg, messages[0])
+        self.assertRaises(StopIteration, next, reverseit)
 
     def test_serialization(self):
         fname = "test_serialization.ytp"

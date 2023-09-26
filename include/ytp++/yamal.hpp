@@ -59,6 +59,8 @@ public:
     using pointer = value_type *;
     using reference = value_type &;
 
+    template<bool direction>
+    base_iterator(const base_iterator<direction> other) : it_(other.it_), yamal_(other.yamal_) {}
     base_iterator() : it_(nullptr), yamal_(nullptr) {}
     base_iterator<forward> &operator++() {
       fmc_error_t *err = nullptr;
