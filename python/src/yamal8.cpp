@@ -45,12 +45,13 @@ static PyGetSetDef Stream_getset[] = {
 };
 
 static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
-  //TODO: Implement
+  // TODO: Implement
   Py_RETURN_NONE;
 }
 
 static PyMethodDef Stream_methods[] = {
-    {"write", (PyCFunction)Stream_write, METH_VARARGS | METH_KEYWORDS, "Write a new message"},
+    {"write", (PyCFunction)Stream_write, METH_VARARGS | METH_KEYWORDS,
+     "Write a new message"},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -81,7 +82,7 @@ static PyTypeObject StreamType = {
     0,                     /* tp_weaklistoffset */
     0,                     /* tp_iter */
     0,                     /* tp_iternext */
-    Stream_methods,                     /* tp_methods */
+    Stream_methods,        /* tp_methods */
     0,                     /* tp_members */
     Stream_getset,         /* tp_getset */
     0,                     /* tp_base */
