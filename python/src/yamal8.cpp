@@ -204,6 +204,11 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
   }
 
   auto *obj = PyTuple_New(2);
+  if (!obj) {
+    Py_XDECREF(s);
+    Py_XDECREF(encoding);
+    return NULL;
+  }
   PyTuple_SET_ITEM(obj, 0, s);
   PyTuple_SET_ITEM(obj, 1, encoding);
 
@@ -308,6 +313,13 @@ PyObject *DataIter_iternext(DataIter *self) {
       return NULL;
     }
     auto *obj = PyTuple_New(4);
+    if (!obj) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pyts);
+      Py_XDECREF(pystream);
+      Py_XDECREF(pydata);
+      return NULL;
+    }
     PyTuple_SET_ITEM(obj, 0, pyseqno);
     PyTuple_SET_ITEM(obj, 1, pyts);
     PyTuple_SET_ITEM(obj, 2, pystream);
@@ -592,11 +604,11 @@ struct Yamal {
 static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
   static char *kwlist[] = {(char *)"time", (char *)"data", NULL /* Sentinel */};
   uint64_t time;
-  const char *src = NULL;
+  const char *src = nullptr;
   Py_ssize_t sz;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "Ky#", kwlist, &time, &src,
                                    &sz)) {
-    return NULL;
+    return nullptr;
   }
 
   try
@@ -705,10 +717,50 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
     return NULL;
   }
 
-  self->yamal_.announcement(stream->stream_);
-
-  // TODO: Return proper object
-  Py_RETURN_NONE;
+  try
+  {
+    auto [seqno, peer, channel, encoding] = self->yamal_.announcement(stream->stream_);
+    PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
+    if (!pyseqno) {
+      return NULL;
+    }
+    PyObject *pypeer = PyUnicode_FromStringAndSize(peer.data(), peer.size());
+    if (!pypeer) {
+      Py_XDECREF(pyseqno);
+      return NULL;
+    }
+    PyObject *pychannel = PyUnicode_FromStringAndSize(channel.data(), channel.size());
+    if (!pychannel) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pypeer);
+      return NULL;
+    }
+    PyObject *pyencoding = PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
+    if (!pyencoding) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pypeer);
+      Py_XDECREF(pychannel);
+      return NULL;
+    }
+    auto *obj = PyTuple_New(4);
+    if (!obj) {
+      Py_XDECREF(pyseqno);
+      Py_XDECREF(pypeer);
+      Py_XDECREF(pychannel);
+      Py_XDECREF(pyencoding);
+      return NULL;
+    }
+    PyTuple_SET_ITEM(obj, 0, pyseqno);
+    PyTuple_SET_ITEM(obj, 1, pypeer);
+    PyTuple_SET_ITEM(obj, 2, pychannel);
+    PyTuple_SET_ITEM(obj, 3, pyencoding);
+    
+  }
+  catch(const std::exception& e)
+  {
+    PyErr_SetString(PyExc_KeyError, e.what());
+    return NULL;
+  }
 }
 
 static PyMethodDef Yamal_methods[] = {
