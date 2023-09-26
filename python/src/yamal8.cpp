@@ -155,6 +155,9 @@ static PyMethodDef Data_methods[] = {
   {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+static PyObject *Data_new(PyTypeObject *subtype, PyObject *args,
+                          PyObject *kwds);
+
 static PyTypeObject DataType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.yamal", /* tp_name */
     sizeof(Data),                                       /* tp_basicsize */
@@ -192,8 +195,18 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_dictoffset */
     (initproc)Data_init,                                /* tp_init */
     0,                                                   /* tp_alloc */
-    0,                                                   /* tp_new */
+    Data_new,                                                   /* tp_new */
 };
+
+static PyObject *Data_new(PyTypeObject *subtype, PyObject *args,
+                          PyObject *kwds) {
+  auto *self = (Data *)subtype->tp_alloc(subtype, 0);
+  if (!self) {
+    return nullptr;
+  }
+  return (PyObject *)self;
+}
+
 
 struct Yamal {
   PyObject_HEAD;
@@ -234,6 +247,8 @@ static PyObject *Yamal_data(Yamal *self) {
 }
 
 static PyObject *Yamal_streams(Yamal *self) {
+
+
 }
 
 static PyObject *Yamal_announcement(Yamal *self, PyObject *args, PyObject *kwds) {
