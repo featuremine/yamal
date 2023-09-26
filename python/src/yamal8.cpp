@@ -96,17 +96,13 @@ static PyGetSetDef Stream_getset[] = {
      (char *)"Returns the numerical identifier associated with the stream.",
      NULL},
     {(char *)"seqno", (getter)Stream_seqno, NULL,
-     (char *)"Returns the sequence number associated with the stream.",
-     NULL},
+     (char *)"Returns the sequence number associated with the stream.", NULL},
     {(char *)"peer", (getter)Stream_peer, NULL,
-     (char *)"Returns the peer associated with the stream.",
-     NULL},
+     (char *)"Returns the peer associated with the stream.", NULL},
     {(char *)"channel", (getter)Stream_channel, NULL,
-     (char *)"Returns the channel associated with the stream.",
-     NULL},
+     (char *)"Returns the channel associated with the stream.", NULL},
     {(char *)"encoding", (getter)Stream_encoding, NULL,
-     (char *)"Returns the encoding associated with the stream.",
-     NULL},
+     (char *)"Returns the encoding associated with the stream.", NULL},
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
 
