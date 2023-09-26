@@ -25,48 +25,49 @@ PyObject *Stream_id(Stream *self, void *) {
 
 static PyGetSetDef Stream_getset[] = {
     {(char *)"id", (getter)Stream_id, NULL,
-     (char *)"Returns the numerical identifier associated with the stream.", NULL},
+     (char *)"Returns the numerical identifier associated with the stream.",
+     NULL},
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
 
 static PyTypeObject StreamType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.stream", /* tp_name */
     sizeof(Stream),                                       /* tp_basicsize */
-    0,                                                   /* tp_itemsize */
+    0,                                                    /* tp_itemsize */
     (destructor)Stream_dealloc,                           /* tp_dealloc */
-    0,                                                   /* tp_print */
-    0,                                                   /* tp_getattr */
-    0,                                                   /* tp_setattr */
-    0,                                                   /* tp_reserved */
-    0,                                                   /* tp_repr */
-    0,                                                   /* tp_as_number */
-    0,                                                   /* tp_as_sequence */
-    0,                                                   /* tp_as_mapping */
-    0,                                                   /* tp_hash  */
-    0,                                                   /* tp_call */
-    0,                                                   /* tp_str */
-    0,                                                   /* tp_getattro */
-    0,                                                   /* tp_setattro */
-    0,                                                   /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,            /* tp_flags */
+    0,                                                    /* tp_print */
+    0,                                                    /* tp_getattr */
+    0,                                                    /* tp_setattr */
+    0,                                                    /* tp_reserved */
+    0,                                                    /* tp_repr */
+    0,                                                    /* tp_as_number */
+    0,                                                    /* tp_as_sequence */
+    0,                                                    /* tp_as_mapping */
+    0,                                                    /* tp_hash  */
+    0,                                                    /* tp_call */
+    0,                                                    /* tp_str */
+    0,                                                    /* tp_getattro */
+    0,                                                    /* tp_setattro */
+    0,                                                    /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /* tp_flags */
     "Stream object",                                      /* tp_doc */
-    0,                                                   /* tp_traverse */
-    0,                                                   /* tp_clear */
-    0,                                                   /* tp_richcompare */
-    0,                                                   /* tp_weaklistoffset */
-    0,                                                   /* tp_iter */
-    0,                                                   /* tp_iternext */
-    0,                                       /* tp_methods */
-    0,                                                   /* tp_members */
-    Stream_getset,                                                   /* tp_getset */
-    0,                                                   /* tp_base */
-    0,                                                   /* tp_dict */
-    0,                                                   /* tp_descr_get */
-    0,                                                   /* tp_descr_set */
-    0,                                                   /* tp_dictoffset */
-    (initproc)Stream_init,                                /* tp_init */
-    0,                                                   /* tp_alloc */
-    0,                                                   /* tp_new */
+    0,                                                    /* tp_traverse */
+    0,                                                    /* tp_clear */
+    0,                                                    /* tp_richcompare */
+    0,                     /* tp_weaklistoffset */
+    0,                     /* tp_iter */
+    0,                     /* tp_iternext */
+    0,                     /* tp_methods */
+    0,                     /* tp_members */
+    Stream_getset,         /* tp_getset */
+    0,                     /* tp_base */
+    0,                     /* tp_dict */
+    0,                     /* tp_descr_get */
+    0,                     /* tp_descr_set */
+    0,                     /* tp_dictoffset */
+    (initproc)Stream_init, /* tp_init */
+    0,                     /* tp_alloc */
+    0,                     /* tp_new */
 };
 
 struct Streams {
@@ -77,58 +78,58 @@ static int Streams_init(Streams *self, PyObject *args, PyObject *kwds) {}
 
 static void Streams_dealloc(Streams *self) {}
 
-static PyObject *Streams_announce(Streams *self, PyObject *args, PyObject *kwds) {
-}
+static PyObject *Streams_announce(Streams *self, PyObject *args,
+                                  PyObject *kwds) {}
 
 static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
 }
 
 static PyMethodDef Streams_methods[] = {
-  {"announce", (PyCFunction)Streams_announce, METH_VARARGS | METH_KEYWORDS,
-    "Announce a new stream and obtain it"},
-  {"lookup", (PyCFunction)Streams_lookup, METH_VARARGS | METH_KEYWORDS,
-    "Obtain the desired stream"},
-  {NULL, NULL, 0, NULL} /* Sentinel */
+    {"announce", (PyCFunction)Streams_announce, METH_VARARGS | METH_KEYWORDS,
+     "Announce a new stream and obtain it"},
+    {"lookup", (PyCFunction)Streams_lookup, METH_VARARGS | METH_KEYWORDS,
+     "Obtain the desired stream"},
+    {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyTypeObject StreamsType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.streams", /* tp_name */
     sizeof(Streams),                                       /* tp_basicsize */
-    0,                                                   /* tp_itemsize */
+    0,                                                     /* tp_itemsize */
     (destructor)Streams_dealloc,                           /* tp_dealloc */
-    0,                                                   /* tp_print */
-    0,                                                   /* tp_getattr */
-    0,                                                   /* tp_setattr */
-    0,                                                   /* tp_reserved */
-    0,                                                   /* tp_repr */
-    0,                                                   /* tp_as_number */
-    0,                                                   /* tp_as_sequence */
-    0,                                                   /* tp_as_mapping */
-    0,                                                   /* tp_hash  */
-    0,                                                   /* tp_call */
-    0,                                                   /* tp_str */
-    0,                                                   /* tp_getattro */
-    0,                                                   /* tp_setattro */
-    0,                                                   /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,            /* tp_flags */
+    0,                                                     /* tp_print */
+    0,                                                     /* tp_getattr */
+    0,                                                     /* tp_setattr */
+    0,                                                     /* tp_reserved */
+    0,                                                     /* tp_repr */
+    0,                                                     /* tp_as_number */
+    0,                                                     /* tp_as_sequence */
+    0,                                                     /* tp_as_mapping */
+    0,                                                     /* tp_hash  */
+    0,                                                     /* tp_call */
+    0,                                                     /* tp_str */
+    0,                                                     /* tp_getattro */
+    0,                                                     /* tp_setattro */
+    0,                                                     /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,              /* tp_flags */
     "Streams object",                                      /* tp_doc */
-    0,                                                   /* tp_traverse */
-    0,                                                   /* tp_clear */
-    0,                                                   /* tp_richcompare */
-    0,                                                   /* tp_weaklistoffset */
-    0,                                                   /* tp_iter */
-    0,                                                   /* tp_iternext */
-    Streams_methods,                                       /* tp_methods */
-    0,                                                   /* tp_members */
-    0,                                                   /* tp_getset */
-    0,                                                   /* tp_base */
-    0,                                                   /* tp_dict */
-    0,                                                   /* tp_descr_get */
-    0,                                                   /* tp_descr_set */
-    0,                                                   /* tp_dictoffset */
-    (initproc)Streams_init,                                /* tp_init */
-    0,                                                   /* tp_alloc */
-    0,                                                   /* tp_new */
+    0,                                                     /* tp_traverse */
+    0,                                                     /* tp_clear */
+    0,                                                     /* tp_richcompare */
+    0,                      /* tp_weaklistoffset */
+    0,                      /* tp_iter */
+    0,                      /* tp_iternext */
+    Streams_methods,        /* tp_methods */
+    0,                      /* tp_members */
+    0,                      /* tp_getset */
+    0,                      /* tp_base */
+    0,                      /* tp_dict */
+    0,                      /* tp_descr_get */
+    0,                      /* tp_descr_set */
+    0,                      /* tp_dictoffset */
+    (initproc)Streams_init, /* tp_init */
+    0,                      /* tp_alloc */
+    0,                      /* tp_new */
 };
 
 struct Data {
@@ -139,27 +140,26 @@ static int Data_init(Data *self, PyObject *args, PyObject *kwds) {}
 
 static void Data_dealloc(Data *self) {}
 
-static PyObject *Data_closable(Data *self) {
-}
+static PyObject *Data_closable(Data *self) {}
 
-static PyObject *Data_close(Data *self) {
-}
+static PyObject *Data_close(Data *self) {}
 
-static PyObject *Data_closed(Data *self) {
-}
+static PyObject *Data_closed(Data *self) {}
 
 static PyMethodDef Data_methods[] = {
-  {"closable", (PyCFunction)Data_closable, METH_NOARGS, "Check if data is closable."},
-  {"close", (PyCFunction)Data_close, METH_NOARGS, "Close data."},
-  {"closed", (PyCFunction)Data_closed, METH_NOARGS, "Check if data is closed."},
-  {NULL, NULL, 0, NULL} /* Sentinel */
+    {"closable", (PyCFunction)Data_closable, METH_NOARGS,
+     "Check if data is closable."},
+    {"close", (PyCFunction)Data_close, METH_NOARGS, "Close data."},
+    {"closed", (PyCFunction)Data_closed, METH_NOARGS,
+     "Check if data is closed."},
+    {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyTypeObject DataType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.yamal", /* tp_name */
-    sizeof(Data),                                       /* tp_basicsize */
+    sizeof(Data),                                        /* tp_basicsize */
     0,                                                   /* tp_itemsize */
-    (destructor)Data_dealloc,                           /* tp_dealloc */
+    (destructor)Data_dealloc,                            /* tp_dealloc */
     0,                                                   /* tp_print */
     0,                                                   /* tp_getattr */
     0,                                                   /* tp_setattr */
@@ -175,14 +175,14 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_setattro */
     0,                                                   /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,            /* tp_flags */
-    "Data object",                                      /* tp_doc */
+    "Data object",                                       /* tp_doc */
     0,                                                   /* tp_traverse */
     0,                                                   /* tp_clear */
     0,                                                   /* tp_richcompare */
     0,                                                   /* tp_weaklistoffset */
     0,                                                   /* tp_iter */
     0,                                                   /* tp_iternext */
-    Data_methods,                                       /* tp_methods */
+    Data_methods,                                        /* tp_methods */
     0,                                                   /* tp_members */
     0,                                                   /* tp_getset */
     0,                                                   /* tp_base */
@@ -190,7 +190,7 @@ static PyTypeObject DataType = {
     0,                                                   /* tp_descr_get */
     0,                                                   /* tp_descr_set */
     0,                                                   /* tp_dictoffset */
-    (initproc)Data_init,                                /* tp_init */
+    (initproc)Data_init,                                 /* tp_init */
     0,                                                   /* tp_alloc */
     0,                                                   /* tp_new */
 };
@@ -203,16 +203,15 @@ struct Yamal {
 static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
 
   static char *kwlist[] = {
-    (char *)"file",
-    (char *)"closable",
-    (char *)"enable_thread",
-    NULL /* Sentinel */
+      (char *)"file", (char *)"closable", (char *)"enable_thread",
+      NULL /* Sentinel */
   };
 
   PyObject *file = NULL;
   bool closable = false;
   bool enable_thread = true;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|pp", kwlist, &file, &closable, &enable_thread)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|pp", kwlist, &file, &closable,
+                                   &enable_thread)) {
     return NULL;
   }
 
@@ -225,26 +224,25 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
   self->yamal_ = ytp::yamal_t(fd, closable, enable_thread);
 
   return 0;
-
 }
 
 static void Yamal_dealloc(Yamal *self) {}
 
-static PyObject *Yamal_data(Yamal *self) {
-}
+static PyObject *Yamal_data(Yamal *self) {}
 
-static PyObject *Yamal_streams(Yamal *self) {
-}
+static PyObject *Yamal_streams(Yamal *self) {}
 
-static PyObject *Yamal_announcement(Yamal *self, PyObject *args, PyObject *kwds) {
-}
+static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
+                                    PyObject *kwds) {}
 
 static PyMethodDef Yamal_methods[] = {
-  {"data", (PyCFunction)Yamal_data, METH_NOARGS, "Obtain data object."},
-  {"streams", (PyCFunction)Yamal_streams, METH_NOARGS, "Obtain streams object"},
-  {"announcement", (PyCFunction)Yamal_announcement, METH_VARARGS | METH_KEYWORDS,
-    "Obtain the announcement details for the desired stream"},
-  {NULL, NULL, 0, NULL} /* Sentinel */
+    {"data", (PyCFunction)Yamal_data, METH_NOARGS, "Obtain data object."},
+    {"streams", (PyCFunction)Yamal_streams, METH_NOARGS,
+     "Obtain streams object"},
+    {"announcement", (PyCFunction)Yamal_announcement,
+     METH_VARARGS | METH_KEYWORDS,
+     "Obtain the announcement details for the desired stream"},
+    {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
 static PyTypeObject YamalType = {
