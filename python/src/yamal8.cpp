@@ -18,12 +18,40 @@
 #include <ytp++/yamal.hpp>
 
 struct Yamal;
-struct Streams;
+
+struct Streams {
+  PyObject_HEAD;
+  ytp::streams_t streams_;
+  Yamal *yamal_;
+};
 
 struct Stream {
   PyObject_HEAD;
   ytp::stream_t stream_;
   Yamal *yamal_;
+};
+
+struct Yamal {
+  PyObject_HEAD;
+  ytp::yamal_t yamal_;
+};
+
+struct Data {
+  PyObject_HEAD;
+  ytp::data_t data_;
+  Yamal *yamal_;
+};
+
+struct DataIter {
+  PyObject_HEAD;
+  ytp::data_t::iterator it_;
+  Data *data_;
+};
+
+struct DataRevIter {
+  PyObject_HEAD;
+  ytp::data_t::reverse_iterator it_;
+  Data *data_;
 };
 
 static void Stream_dealloc(Stream *self) {
@@ -35,6 +63,30 @@ PyObject *Stream_id(Stream *self, void *) {
   return PyLong_FromLong(self->stream_.id());
 }
 
+PyObject *Stream_seqno(Stream *self, void *) {
+  auto [seqno, peer, channel, encoding] =
+      self->yamal_->yamal_.announcement(self->stream_);
+  return PyLong_FromLong(seqno);
+}
+
+PyObject *Stream_peer(Stream *self, void *) {
+  auto [seqno, peer, channel, encoding] =
+      self->yamal_->yamal_.announcement(self->stream_);
+  return PyUnicode_FromStringAndSize(peer.data(), peer.size());
+}
+
+PyObject *Stream_channel(Stream *self, void *) {
+  auto [seqno, peer, channel, encoding] =
+      self->yamal_->yamal_.announcement(self->stream_);
+  return PyUnicode_FromStringAndSize(channel.data(), channel.size());
+}
+
+PyObject *Stream_encoding(Stream *self, void *) {
+  auto [seqno, peer, channel, encoding] =
+      self->yamal_->yamal_.announcement(self->stream_);
+  return PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
+}
+
 Py_hash_t Stream_hash(Stream *self) {
   return std::hash<ytp::stream_t>{}(self->stream_);
 }
@@ -42,6 +94,18 @@ Py_hash_t Stream_hash(Stream *self) {
 static PyGetSetDef Stream_getset[] = {
     {(char *)"id", (getter)Stream_id, NULL,
      (char *)"Returns the numerical identifier associated with the stream.",
+     NULL},
+    {(char *)"seqno", (getter)Stream_seqno, NULL,
+     (char *)"Returns the sequence number associated with the stream.",
+     NULL},
+    {(char *)"peer", (getter)Stream_peer, NULL,
+     (char *)"Returns the peer associated with the stream.",
+     NULL},
+    {(char *)"channel", (getter)Stream_channel, NULL,
+     (char *)"Returns the channel associated with the stream.",
+     NULL},
+    {(char *)"encoding", (getter)Stream_encoding, NULL,
+     (char *)"Returns the encoding associated with the stream.",
      NULL},
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
@@ -134,12 +198,6 @@ static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op) {
                   "Unsupported stream comparison operation");
   return NULL;
 }
-
-struct Streams {
-  PyObject_HEAD;
-  ytp::streams_t streams_;
-  Yamal *yamal_;
-};
 
 static PyObject *Stream_new(Yamal *yamal, ytp::stream_t stream) {
   auto *self = (Stream *)StreamType.tp_alloc(&StreamType, 0);
@@ -280,18 +338,6 @@ static PyTypeObject StreamsType = {
     0                /* tp_new */
 };
 
-struct Data {
-  PyObject_HEAD;
-  ytp::data_t data_;
-  Yamal *yamal_;
-};
-
-struct DataIter {
-  PyObject_HEAD;
-  ytp::data_t::iterator it_;
-  Data *data_;
-};
-
 PyObject *DataIter_iter(PyObject *self) {
   Py_INCREF(self);
   return self;
@@ -403,12 +449,6 @@ PyObject *DataIter_new(Data *data, ytp::data_t::iterator it) {
   Py_INCREF(data);
   return (PyObject *)self;
 }
-
-struct DataRevIter {
-  PyObject_HEAD;
-  ytp::data_t::reverse_iterator it_;
-  Data *data_;
-};
 
 PyObject *DataRevIter_iter(PyObject *self) {
   Py_INCREF(self);
@@ -621,11 +661,6 @@ static PyTypeObject DataType = {
     0,                                                  /* tp_init */
     0,                                                  /* tp_alloc */
     0                                                   /* tp_new */
-};
-
-struct Yamal {
-  PyObject_HEAD;
-  ytp::yamal_t yamal_;
 };
 
 static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {

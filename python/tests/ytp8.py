@@ -65,6 +65,10 @@ class TestYamal8(unittest.TestCase):
         self.assertEqual(speer, "peer1")
         self.assertEqual(sch, "ch1")
         self.assertEqual(sencoding, "encoding1")
+        self.assertEqual(s.seqno, 1)
+        self.assertEqual(s.peer, "peer1")
+        self.assertEqual(s.channel, "ch1")
+        self.assertEqual(s.encoding, "encoding1")
 
 
     def test_iteration(self):
