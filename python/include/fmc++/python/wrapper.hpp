@@ -487,7 +487,7 @@ public:
     for (size_t i = 0; i < argv.size(); ++i) {
       PyTuple_SET_ITEM(obj, i, argv[i]);
     }
-    *this = std::move(object::from_new(obj));
+    *this = object::from_new(obj);
   }
 
   template <class... Args> operator std::tuple<Args...>() {

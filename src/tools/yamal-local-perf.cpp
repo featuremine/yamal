@@ -69,7 +69,7 @@ int main(int argc, const char **argv) {
     if (ytp_yamal_term(it)) {
       int64_t now = fmc_cur_time_ns();
       if (last + period <= now) {
-        printf("processed %ld samples\n", sampler.total());
+        printf("processed %llu samples\n", sampler.total());
         for (int p = 10; p <= 100; p += 10) {
           printf("percentile %d: %.0f\n", p, sampler.percentile(p));
         }

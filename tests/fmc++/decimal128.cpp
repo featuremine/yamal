@@ -2128,7 +2128,7 @@ TEST(decimal128, performance) {
                                                                 999999999);
   auto gen_digits = [&](int digits) {
     char buff[64];
-    snprintf(buff, sizeof(buff), "%lu", dist(rng));
+    snprintf(buff, sizeof(buff), "%u", dist(rng));
     return std::string(buff + (9 - digits));
   };
 
