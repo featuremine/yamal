@@ -72,7 +72,11 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    void operator++(int) { ++(*this); }
+    base_iterator<forward> operator++(int) {
+      auto result = *this;
+      ++(*this);
+      return result;
+    }
     base_iterator<forward> &operator--() {
       fmc_error_t *err = nullptr;
       if constexpr (forward) {
@@ -85,7 +89,11 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    void operator--(int) { --(*this); }
+    base_iterator<forward> operator--(int) {
+      auto result = *this;
+      --(*this);
+      return result;
+    }
     bool operator==(const base_iterator<forward> &other) const {
       if constexpr (forward) {
         if (it_ == nullptr && other.it_ != nullptr) {
