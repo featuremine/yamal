@@ -305,7 +305,7 @@ public:
   streams_t streams() { return ytp::streams_t(yamal_); }
 
   // seqnum, peer, channel, encoding
-  std::tuple<int, std::string_view, std::string_view, std::string_view>
+  std::tuple<uint64_t, std::string_view, std::string_view, std::string_view>
   announcement(stream_t s) {
     fmc_error_t *err = nullptr;
     uint64_t seqno;
@@ -322,8 +322,8 @@ public:
                             &err);
     fmc_runtime_error_unless(!err)
         << "unable to create Yamal object with error:" << fmc_error_msg(err);
-    return std::make_tuple<int, std::string_view, std::string_view,
-                           std::string_view>(seqno, std::string_view(peer, psz),
+    return std::make_tuple<uint64_t, std::string_view, std::string_view,
+                           std::string_view>(std::move(seqno), std::string_view(peer, psz),
                                              std::string_view(channel, csz),
                                              std::string_view(encoding, esz));
   }
