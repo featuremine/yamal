@@ -36,13 +36,13 @@ public:
   ytp_mmnode_offs id() const { return id_; }
   stream_t(const stream_t &s) = default;
   stream_t(stream_t &&s) = default;
+  stream_t() : id_(0) {}
   stream_t &operator=(const stream_t &s) = default;
   stream_t &operator=(stream_t &&s) = default;
   bool operator==(const stream_t other) const { return id_ == other.id_; }
   bool operator!=(const stream_t other) const { return id_ != other.id_; }
 
 private:
-  stream_t() = default;
   stream_t(ytp_mmnode_offs id) : id_(id) {}
   ytp_mmnode_offs id_;
 
