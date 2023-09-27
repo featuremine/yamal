@@ -139,11 +139,14 @@ static PyObject *Stream_str(Stream *self) {
     std::ostringstream o;
     auto [seqno, peer, channel, encoding] =
         self->yamal_->yamal_.announcement(self->stream_);
-    o << "stream_t(id=" << self->stream_.id() << ",seqno=" << seqno << ",peer=" << peer << ",channel=" << channel << ",encoding=" << encoding << ")";
+    o << "stream_t(id=" << self->stream_.id() << ",seqno=" << seqno
+      << ",peer=" << peer << ",channel=" << channel << ",encoding=" << encoding
+      << ")";
     auto os = o.str();
     return PyUnicode_FromString(os.c_str());
   } catch (const std::exception &e) {
-    PyErr_SetString(PyExc_RuntimeError, "Unable to generate string representation of stream");
+    PyErr_SetString(PyExc_RuntimeError,
+                    "Unable to generate string representation of stream");
     return NULL;
   }
 }
