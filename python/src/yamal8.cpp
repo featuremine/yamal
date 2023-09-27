@@ -400,8 +400,7 @@ PyObject *DataRevIter_nb_int(DataRevIter *self) {
 }
 
 static PyNumberMethods DataRevIter_as_number = {
-    .nb_int = (unaryfunc)DataRevIter_nb_int
-};
+    .nb_int = (unaryfunc)DataRevIter_nb_int};
 
 static PyTypeObject DataRevIterType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
@@ -413,7 +412,7 @@ static PyTypeObject DataRevIterType = {
     0,                                                       /* tp_setattr */
     0,                                                       /* tp_reserved */
     0,                                                       /* tp_repr */
-    &DataRevIter_as_number,                                   /* tp_as_number */
+    &DataRevIter_as_number,                                  /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
@@ -539,9 +538,8 @@ PyObject *DataIter_nb_int(DataIter *self) {
   }
 }
 
-static PyNumberMethods DataIter_as_number = {
-    .nb_int = (unaryfunc)DataIter_nb_int
-};
+static PyNumberMethods DataIter_as_number = {.nb_int =
+                                                 (unaryfunc)DataIter_nb_int};
 
 static PyTypeObject DataIterType = {
     PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
@@ -553,7 +551,7 @@ static PyTypeObject DataIterType = {
     0,                                                       /* tp_setattr */
     0,                                                       /* tp_reserved */
     0,                                                       /* tp_repr */
-    &DataIter_as_number,                                      /* tp_as_number */
+    &DataIter_as_number,                                     /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
