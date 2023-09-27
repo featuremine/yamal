@@ -72,9 +72,7 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    void operator++(int) {
-      ++(*this);
-    }
+    void operator++(int) { ++(*this); }
     base_iterator<forward> &operator--() {
       fmc_error_t *err = nullptr;
       if constexpr (forward) {
@@ -87,9 +85,7 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
-    void operator--(int) {
-      --(*this);
-    }
+    void operator--(int) { --(*this); }
     bool operator==(const base_iterator<forward> &other) const {
       if constexpr (forward) {
         if (it_ == nullptr && other.it_ != nullptr) {
@@ -163,8 +159,7 @@ public:
         << fmc_error_msg(err);
     ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
     fmc_runtime_error_unless(!err)
-        << "unable to obtain head of data with error:"
-        << fmc_error_msg(err);
+        << "unable to obtain head of data with error:" << fmc_error_msg(err);
     return reverse_iterator(yamal_, head);
   }
 
