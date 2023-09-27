@@ -23,6 +23,7 @@
 #include <libdecnumber/decQuad.h>
 #include <random>
 #include <string.h>
+#include <inttypes.h>
 
 static_assert(sizeof(decQuad) == sizeof(fmc_decimal128_t),
               "sizeof doesn't match");
@@ -2128,7 +2129,7 @@ TEST(decimal128, performance) {
                                                                 999999999);
   auto gen_digits = [&](int digits) {
     char buff[64];
-    snprintf(buff, sizeof(buff), "%u", dist(rng));
+    snprintf(buff, sizeof(buff), "%" PRIuFAST32, dist(rng));
     return std::string(buff + (9 - digits));
   };
 
