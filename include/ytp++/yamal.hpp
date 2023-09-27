@@ -28,12 +28,6 @@
 
 namespace ytp {
 
-class yamal_t;
-
-class data_t;
-
-class streams_t;
-
 class stream_t {
 public:
   ytp_mmnode_offs id() const { return id_; }
@@ -49,6 +43,8 @@ private:
   stream_t() = default;
   ytp_mmnode_offs id_;
 };
+
+class yamal_t;
 
 class data_t {
 public:
@@ -90,14 +86,14 @@ public:
     }
     bool operator==(const base_iterator<forward> &other) const {
       if constexpr (forward) {
-        if (it_ == nullptr) {
+        if (it_ == nullptr && other.it_ != nullptr) {
           return ytp_yamal_term(other.it_);
-        } else if (other.it_ == nullptr) {
+        } else if (other.it_ == nullptr && it_ != nullptr) {
           return ytp_yamal_term(it_);
         }
       } else {
         fmc_error_t *err = nullptr;
-        if (it_ == nullptr) {
+        if (it_ == nullptr && other.it_ != nullptr) {
           ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
           fmc_runtime_error_unless(!err)
               << "unable to obtain begining of data with error:"
@@ -107,7 +103,7 @@ public:
               << "unable to obtain head of data with error:"
               << fmc_error_msg(err);
           return other.it_ == head;
-        } else if (other.it_ == nullptr) {
+        } else if (other.it_ == nullptr && it_ != nullptr) {
           ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
           fmc_runtime_error_unless(!err)
               << "unable to obtain begining of data with error:"

@@ -102,6 +102,9 @@ TEST(yamal, iteration) {
   ytp::yamal_t yamal = ytp::yamal_t(fd, true);
   ytp::data_t data = yamal.data();
 
+  ASSERT_EQ(ytp::data_t::iterator(), ytp::data_t::iterator());
+  ASSERT_EQ(ytp::data_t::reverse_iterator(), ytp::data_t::reverse_iterator());
+
   ASSERT_TRUE(data.closable());
 
   ytp::streams_t streams = yamal.streams();
