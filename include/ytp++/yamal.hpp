@@ -65,7 +65,14 @@ public:
       if constexpr (forward) {
         it_ = ytp_yamal_next(yamal_.get(), it_, &err);
       } else {
-        it_ = ytp_yamal_prev(yamal_.get(), it_, &err);
+        ytp_iterator_t begin = ytp_data_begin(yamal_.get(), &err);
+        fmc_runtime_error_unless(!err)
+            << "unable to find begin iterator with error:" << fmc_error_msg(err);
+        if (it_ == begin) {
+          it_ = nullptr;
+        } else {
+          it_ = ytp_yamal_prev(yamal_.get(), it_, &err);
+        }
       }
       fmc_runtime_error_unless(!err)
           << "unable to obtain next position of iterator with error:"
@@ -150,6 +157,13 @@ public:
   iterator end() { return iterator(); }
   reverse_iterator rbegin() {
     fmc_error_t *err = nullptr;
+    ytp_iterator_t bgn = ytp_data_begin(yamal_.get(), &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to find rbegin (begin) iterator with error:"
+        << fmc_error_msg(err);
+    if (ytp_yamal_term(bgn)) {
+      return reverse_iterator();
+    }
     ytp_iterator_t it = ytp_data_end(yamal_.get(), &err);
     fmc_runtime_error_unless(!err)
         << "unable to find rbegin (end) iterator with error:"
@@ -159,17 +173,7 @@ public:
         << "unable to find rbegin iterator with error:" << fmc_error_msg(err);
     return reverse_iterator(yamal_, it);
   }
-  reverse_iterator rend() {
-    fmc_error_t *err = nullptr;
-    ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to obtain begining of data with error:"
-        << fmc_error_msg(err);
-    ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
-    fmc_runtime_error_unless(!err)
-        << "unable to obtain head of data with error:" << fmc_error_msg(err);
-    return reverse_iterator(yamal_, head);
-  }
+  reverse_iterator rend() { return reverse_iterator(); }
 
   iterator seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;

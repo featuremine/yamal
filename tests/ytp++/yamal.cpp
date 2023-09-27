@@ -123,6 +123,8 @@ TEST(yamal, iteration) {
   memcpy(ptr.data(), "msg1", 4);
   data.commit(1, stream, ptr);
 
+  ASSERT_EQ(data.rend(), rendempty);
+
   ptr = data.reserve(4);
   memcpy(ptr.data(), "msg2", 4);
   data.commit(2, stream, ptr);
@@ -175,7 +177,6 @@ TEST(yamal, iteration) {
   ASSERT_EQ(stream3, streamdup3);
   ASSERT_EQ(data3, datadup3);
   ++it;
-  ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_EQ(it, data.end());
   ASSERT_EQ(it, fend);
 
@@ -223,7 +224,6 @@ TEST(yamal, iteration) {
   ASSERT_EQ(rstream3, rstreamdup3);
   ASSERT_EQ(rdata3, rdatadup3);
   ++rit;
-  ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_EQ(rit, data.rend());
   ASSERT_EQ(rit, rend);
 }
