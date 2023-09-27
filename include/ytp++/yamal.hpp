@@ -28,10 +28,12 @@
 
 namespace ytp {
 
+class streams_t;
+class data_t;
+
 class stream_t {
 public:
   ytp_mmnode_offs id() const { return id_; }
-  stream_t(ytp_mmnode_offs id) : id_(id) {}
   stream_t(const stream_t &s) = default;
   stream_t(stream_t &&s) = default;
   stream_t &operator=(const stream_t &s) = default;
@@ -41,7 +43,11 @@ public:
 
 private:
   stream_t() = default;
+  stream_t(ytp_mmnode_offs id) : id_(id) {}
   ytp_mmnode_offs id_;
+
+  friend streams_t;
+  friend data_t;
 };
 
 class yamal_t;

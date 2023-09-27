@@ -154,43 +154,18 @@ static PyObject *Stream_str(Stream *self) {
 static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op);
 
 static PyTypeObject StreamType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.stream", /* tp_name */
-    sizeof(Stream),                                       /* tp_basicsize */
-    0,                                                    /* tp_itemsize */
-    (destructor)Stream_dealloc,                           /* tp_dealloc */
-    0,                                                    /* tp_print */
-    0,                                                    /* tp_getattr */
-    0,                                                    /* tp_setattr */
-    0,                                                    /* tp_reserved */
-    (reprfunc)Stream_str,                                 /* tp_repr */
-    0,                                                    /* tp_as_number */
-    0,                                                    /* tp_as_sequence */
-    0,                                                    /* tp_as_mapping */
-    (hashfunc)Stream_hash,                                /* tp_hash  */
-    0,                                                    /* tp_call */
-    (reprfunc)Stream_str,                                 /* tp_str */
-    0,                                                    /* tp_getattro */
-    0,                                                    /* tp_setattro */
-    0,                                                    /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /* tp_flags */
-    "Stream object",                                      /* tp_doc */
-    0,                                                    /* tp_traverse */
-    0,                                                    /* tp_clear */
-    (richcmpfunc)Stream_richcompare,                      /* tp_richcompare */
-    0,              /* tp_weaklistoffset */
-    0,              /* tp_iter */
-    0,              /* tp_iternext */
-    Stream_methods, /* tp_methods */
-    0,              /* tp_members */
-    Stream_getset,  /* tp_getset */
-    0,              /* tp_base */
-    0,              /* tp_dict */
-    0,              /* tp_descr_get */
-    0,              /* tp_descr_set */
-    0,              /* tp_dictoffset */
-    0,              /* tp_init */
-    0,              /* tp_alloc */
-    0               /* tp_new */
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "yamal.yamal8.stream",
+    .tp_basicsize = sizeof(Stream),
+    .tp_dealloc = (destructor)Stream_dealloc,
+    .tp_repr = (reprfunc)Stream_str,
+    .tp_hash = (hashfunc)Stream_hash,
+    .tp_str = (reprfunc)Stream_str,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "Stream object",
+    .tp_richcompare = (richcmpfunc)Stream_richcompare,
+    .tp_methods = Stream_methods,
+    .tp_getset = Stream_getset
 };
 
 static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op) {
@@ -321,43 +296,13 @@ static PyMethodDef Streams_methods[] = {
 };
 
 static PyTypeObject StreamsType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.streams", /* tp_name */
-    sizeof(Streams),                                       /* tp_basicsize */
-    0,                                                     /* tp_itemsize */
-    (destructor)Streams_dealloc,                           /* tp_dealloc */
-    0,                                                     /* tp_print */
-    0,                                                     /* tp_getattr */
-    0,                                                     /* tp_setattr */
-    0,                                                     /* tp_reserved */
-    0,                                                     /* tp_repr */
-    0,                                                     /* tp_as_number */
-    0,                                                     /* tp_as_sequence */
-    0,                                                     /* tp_as_mapping */
-    0,                                                     /* tp_hash  */
-    0,                                                     /* tp_call */
-    0,                                                     /* tp_str */
-    0,                                                     /* tp_getattro */
-    0,                                                     /* tp_setattro */
-    0,                                                     /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,              /* tp_flags */
-    "Streams object",                                      /* tp_doc */
-    0,                                                     /* tp_traverse */
-    0,                                                     /* tp_clear */
-    0,                                                     /* tp_richcompare */
-    0,               /* tp_weaklistoffset */
-    0,               /* tp_iter */
-    0,               /* tp_iternext */
-    Streams_methods, /* tp_methods */
-    0,               /* tp_members */
-    0,               /* tp_getset */
-    0,               /* tp_base */
-    0,               /* tp_dict */
-    0,               /* tp_descr_get */
-    0,               /* tp_descr_set */
-    0,               /* tp_dictoffset */
-    0,               /* tp_init */
-    0,               /* tp_alloc */
-    0                /* tp_new */
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "yamal.yamal8.streams",
+    .tp_basicsize = sizeof(Streams),
+    .tp_dealloc = (destructor)Streams_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "Streams object",
+    .tp_methods = Streams_methods
 };
 
 PyObject *DataRevIter_iter(PyObject *self) {
@@ -433,43 +378,15 @@ static PyNumberMethods DataRevIter_as_number = {
     .nb_int = (unaryfunc)DataRevIter_nb_int};
 
 static PyTypeObject DataRevIterType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
-    sizeof(DataRevIter),                                     /* tp_basicsize */
-    0,                                                       /* tp_itemsize */
-    (destructor)DataRevIter_dealloc,                         /* tp_dealloc */
-    0,                                                       /* tp_print */
-    0,                                                       /* tp_getattr */
-    0,                                                       /* tp_setattr */
-    0,                                                       /* tp_reserved */
-    0,                                                       /* tp_repr */
-    &DataRevIter_as_number,                                  /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
-    "DataRevIter object",                     /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    DataRevIter_iter,                         /* tp_iter */
-    (iternextfunc)DataRevIter_iternext,       /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    0                                         /* tp_new */
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "yamal.yamal8.data_rev_iter",
+    .tp_basicsize = sizeof(DataRevIter),
+    .tp_dealloc = (destructor)DataRevIter_dealloc,
+    .tp_as_number = &DataRevIter_as_number,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "DataRevIter object",
+    .tp_iter = DataRevIter_iter,
+    .tp_iternext = (iternextfunc)DataRevIter_iternext
 };
 
 PyObject *DataRevIter_new(Data *data, ytp::data_t::reverse_iterator it) {
@@ -572,43 +489,16 @@ static PyNumberMethods DataIter_as_number = {.nb_int =
                                                  (unaryfunc)DataIter_nb_int};
 
 static PyTypeObject DataIterType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data_iter", /* tp_name */
-    sizeof(DataIter),                                        /* tp_basicsize */
-    0,                                                       /* tp_itemsize */
-    (destructor)DataIter_dealloc,                            /* tp_dealloc */
-    0,                                                       /* tp_print */
-    0,                                                       /* tp_getattr */
-    0,                                                       /* tp_setattr */
-    0,                                                       /* tp_reserved */
-    0,                                                       /* tp_repr */
-    &DataIter_as_number,                                     /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
-    "DataIter object",                        /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    DataIter_iter,                            /* tp_iter */
-    (iternextfunc)DataIter_iternext,          /* tp_iternext */
-    DataIter_methods,                         /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    0                                         /* tp_new */
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "yamal.yamal8.data_iter",
+    .tp_basicsize = sizeof(DataIter),
+    .tp_dealloc = (destructor)DataIter_dealloc,
+    .tp_as_number = &DataIter_as_number,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "DataIter object",
+    .tp_iter = DataIter_iter,
+    .tp_iternext = (iternextfunc)DataIter_iternext,
+    .tp_methods = DataIter_methods
 };
 
 PyObject *DataIter_new(Data *data, ytp::data_t::iterator it) {
@@ -705,43 +595,14 @@ PyObject *Data_iter(Data *self) {
 }
 
 static PyTypeObject DataType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.data", /* tp_name */
-    sizeof(Data),                                       /* tp_basicsize */
-    0,                                                  /* tp_itemsize */
-    (destructor)Data_dealloc,                           /* tp_dealloc */
-    0,                                                  /* tp_print */
-    0,                                                  /* tp_getattr */
-    0,                                                  /* tp_setattr */
-    0,                                                  /* tp_reserved */
-    0,                                                  /* tp_repr */
-    0,                                                  /* tp_as_number */
-    0,                                                  /* tp_as_sequence */
-    0,                                                  /* tp_as_mapping */
-    0,                                                  /* tp_hash  */
-    0,                                                  /* tp_call */
-    0,                                                  /* tp_str */
-    0,                                                  /* tp_getattro */
-    0,                                                  /* tp_setattro */
-    0,                                                  /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,           /* tp_flags */
-    "Data object",                                      /* tp_doc */
-    0,                                                  /* tp_traverse */
-    0,                                                  /* tp_clear */
-    0,                                                  /* tp_richcompare */
-    0,                                                  /* tp_weaklistoffset */
-    (getiterfunc)Data_iter,                             /* tp_iter */
-    0,                                                  /* tp_iternext */
-    Data_methods,                                       /* tp_methods */
-    0,                                                  /* tp_members */
-    0,                                                  /* tp_getset */
-    0,                                                  /* tp_base */
-    0,                                                  /* tp_dict */
-    0,                                                  /* tp_descr_get */
-    0,                                                  /* tp_descr_set */
-    0,                                                  /* tp_dictoffset */
-    0,                                                  /* tp_init */
-    0,                                                  /* tp_alloc */
-    0                                                   /* tp_new */
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "yamal.yamal8.data",
+    .tp_basicsize = sizeof(Data),
+    .tp_dealloc = (destructor)Data_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "Data object",
+    .tp_iter = (getiterfunc)Data_iter,
+    .tp_methods = Data_methods
 };
 
 static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
@@ -934,43 +795,15 @@ static PyObject *Yamal_new(PyTypeObject *subtype, PyObject *args,
 }
 
 static PyTypeObject YamalType = {
-    PyVarObject_HEAD_INIT(NULL, 0) "yamal.yamal8.yamal", /* tp_name */
-    sizeof(Yamal),                                       /* tp_basicsize */
-    0,                                                   /* tp_itemsize */
-    (destructor)Yamal_dealloc,                           /* tp_dealloc */
-    0,                                                   /* tp_print */
-    0,                                                   /* tp_getattr */
-    0,                                                   /* tp_setattr */
-    0,                                                   /* tp_reserved */
-    0,                                                   /* tp_repr */
-    0,                                                   /* tp_as_number */
-    0,                                                   /* tp_as_sequence */
-    0,                                                   /* tp_as_mapping */
-    0,                                                   /* tp_hash  */
-    0,                                                   /* tp_call */
-    0,                                                   /* tp_str */
-    0,                                                   /* tp_getattro */
-    0,                                                   /* tp_setattro */
-    0,                                                   /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,            /* tp_flags */
-    "Yamal object",                                      /* tp_doc */
-    0,                                                   /* tp_traverse */
-    0,                                                   /* tp_clear */
-    0,                                                   /* tp_richcompare */
-    0,                                                   /* tp_weaklistoffset */
-    0,                                                   /* tp_iter */
-    0,                                                   /* tp_iternext */
-    Yamal_methods,                                       /* tp_methods */
-    0,                                                   /* tp_members */
-    0,                                                   /* tp_getset */
-    0,                                                   /* tp_base */
-    0,                                                   /* tp_dict */
-    0,                                                   /* tp_descr_get */
-    0,                                                   /* tp_descr_set */
-    0,                                                   /* tp_dictoffset */
-    (initproc)Yamal_init,                                /* tp_init */
-    0,                                                   /* tp_alloc */
-    Yamal_new                                            /* tp_new */
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "yamal.yamal8.yamal",
+    .tp_basicsize = sizeof(Yamal),
+    .tp_dealloc = (destructor)Yamal_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "Yamal object",
+    .tp_methods = Yamal_methods,
+    .tp_init = (initproc)Yamal_init,
+    .tp_new = Yamal_new
 };
 
 static PyModuleDef Yamal8Module = {PyModuleDef_HEAD_INIT, "yamal8",
