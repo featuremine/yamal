@@ -254,8 +254,8 @@ class TestYamal8(unittest.TestCase):
         self.assertIsInstance(ss, streams)
         s = ss.announce("peer1", "ch1", "encoding1")
         self.assertIsInstance(s, stream)
-        self.assertEqual(str(s), "48")
-        self.assertEqual(repr(s), "48")
+        self.assertEqual(str(s), "stream_t(id=48,seqno=1,peer=peer1,channel=ch1,encoding=encoding1)")
+        self.assertEqual(repr(s), "stream_t(id=48,seqno=1,peer=peer1,channel=ch1,encoding=encoding1)")
 
     def test_hashing(self):
         fname = "test_hashing.ytp"

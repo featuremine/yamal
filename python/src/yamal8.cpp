@@ -64,27 +64,47 @@ PyObject *Stream_id(Stream *self, void *) {
 }
 
 PyObject *Stream_seqno(Stream *self, void *) {
-  auto [seqno, peer, channel, encoding] =
-      self->yamal_->yamal_.announcement(self->stream_);
-  return PyLong_FromLong(seqno);
+  try {
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_->yamal_.announcement(self->stream_);
+    return PyLong_FromLong(seqno);
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, "Unable to obtain the stream seqno");
+    return NULL;
+  }
 }
 
 PyObject *Stream_peer(Stream *self, void *) {
-  auto [seqno, peer, channel, encoding] =
-      self->yamal_->yamal_.announcement(self->stream_);
-  return PyUnicode_FromStringAndSize(peer.data(), peer.size());
+  try {
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_->yamal_.announcement(self->stream_);
+    return PyUnicode_FromStringAndSize(peer.data(), peer.size());
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, "Unable to obtain the stream peer");
+    return NULL;
+  }
 }
 
 PyObject *Stream_channel(Stream *self, void *) {
-  auto [seqno, peer, channel, encoding] =
-      self->yamal_->yamal_.announcement(self->stream_);
-  return PyUnicode_FromStringAndSize(channel.data(), channel.size());
+  try {
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_->yamal_.announcement(self->stream_);
+    return PyUnicode_FromStringAndSize(channel.data(), channel.size());
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, "Unable to obtain the stream channel");
+    return NULL;
+  }
 }
 
 PyObject *Stream_encoding(Stream *self, void *) {
-  auto [seqno, peer, channel, encoding] =
-      self->yamal_->yamal_.announcement(self->stream_);
-  return PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
+  try {
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_->yamal_.announcement(self->stream_);
+    return PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, "Unable to obtain the stream encoding");
+    return NULL;
+  }
 }
 
 Py_hash_t Stream_hash(Stream *self) {
@@ -115,10 +135,17 @@ static PyMethodDef Stream_methods[] = {
 };
 
 static PyObject *Stream_str(Stream *self) {
-  std::ostringstream o;
-  o << self->stream_;
-  auto os = o.str();
-  return PyUnicode_FromString(os.c_str());
+  try {
+    std::ostringstream o;
+    auto [seqno, peer, channel, encoding] =
+        self->yamal_->yamal_.announcement(self->stream_);
+    o << "stream_t(id=" << self->stream_.id() << ",seqno=" << seqno << ",peer=" << peer << ",channel=" << channel << ",encoding=" << encoding << ")";
+    auto os = o.str();
+    return PyUnicode_FromString(os.c_str());
+  } catch (const std::exception &e) {
+    PyErr_SetString(PyExc_RuntimeError, "Unable to generate string representation of stream");
+    return NULL;
+  }
 }
 
 static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op);
