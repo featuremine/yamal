@@ -20,10 +20,10 @@
 #include <fenv.h>
 #include <fmc++/counters.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <inttypes.h>
 #include <libdecnumber/decQuad.h>
 #include <random>
 #include <string.h>
-#include <inttypes.h>
 
 static_assert(sizeof(decQuad) == sizeof(fmc_decimal128_t),
               "sizeof doesn't match");
