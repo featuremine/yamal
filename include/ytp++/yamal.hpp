@@ -72,6 +72,9 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
+    void operator++(int) {
+      ++(*this);
+    }
     base_iterator<forward> &operator--() {
       fmc_error_t *err = nullptr;
       if constexpr (forward) {
@@ -84,35 +87,15 @@ public:
           << fmc_error_msg(err);
       return *this;
     }
+    void operator--(int) {
+      --(*this);
+    }
     bool operator==(const base_iterator<forward> &other) const {
       if constexpr (forward) {
         if (it_ == nullptr && other.it_ != nullptr) {
           return ytp_yamal_term(other.it_);
         } else if (other.it_ == nullptr && it_ != nullptr) {
           return ytp_yamal_term(it_);
-        }
-      } else {
-        fmc_error_t *err = nullptr;
-        if (it_ == nullptr && other.it_ != nullptr) {
-          ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
-          fmc_runtime_error_unless(!err)
-              << "unable to obtain begining of data with error:"
-              << fmc_error_msg(err);
-          ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
-          fmc_runtime_error_unless(!err)
-              << "unable to obtain head of data with error:"
-              << fmc_error_msg(err);
-          return other.it_ == head;
-        } else if (other.it_ == nullptr && it_ != nullptr) {
-          ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
-          fmc_runtime_error_unless(!err)
-              << "unable to obtain begining of data with error:"
-              << fmc_error_msg(err);
-          ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
-          fmc_runtime_error_unless(!err)
-              << "unable to obtain head of data with error:"
-              << fmc_error_msg(err);
-          return it_ == head;
         }
       }
       return it_ == other.it_;
@@ -172,7 +155,18 @@ public:
         << "unable to find rbegin iterator with error:" << fmc_error_msg(err);
     return reverse_iterator(yamal_, it);
   }
-  reverse_iterator rend() { return reverse_iterator(); }
+  reverse_iterator rend() {
+    fmc_error_t *err = nullptr;
+    ytp_iterator_t first = ytp_data_begin(yamal_.get(), &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to obtain begining of data with error:"
+        << fmc_error_msg(err);
+    ytp_iterator_t head = ytp_yamal_prev(yamal_.get(), first, &err);
+    fmc_runtime_error_unless(!err)
+        << "unable to obtain head of data with error:"
+        << fmc_error_msg(err);
+    return reverse_iterator(yamal_, head);
+  }
 
   iterator seek(ytp_mmnode_offs offset) {
     fmc_error_t *err = nullptr;

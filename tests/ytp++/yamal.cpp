@@ -149,7 +149,7 @@ TEST(yamal, iteration) {
   ASSERT_NE(stream2, stream_other);
   ASSERT_NE(stream2, stream_other2);
   ASSERT_EQ(data2, "msg2");
-  ++it;
+  it++;
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   auto [seqno3, ts3, stream3, data3] = *it;
   ASSERT_EQ(seqno3, 3);
@@ -183,7 +183,7 @@ TEST(yamal, iteration) {
   ASSERT_NE(rstream2, stream_other);
   ASSERT_NE(rstream2, stream_other2);
   ASSERT_EQ(rdata2, "msg2");
-  ++rit;
+  rit++;
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   auto [rseqno3, rts3, rstream3, rdata3] = *rit;
   ASSERT_EQ(rseqno3, 1);
