@@ -73,7 +73,8 @@ public:
       } else {
         ytp_iterator_t begin = ytp_data_begin(yamal_.get(), &err);
         fmc_runtime_error_unless(!err)
-            << "unable to find begin iterator with error:" << fmc_error_msg(err);
+            << "unable to find begin iterator with error:"
+            << fmc_error_msg(err);
         if (it_ == begin) {
           it_ = nullptr;
         } else {
