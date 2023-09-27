@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 struct fmc_reactor_api_v1 *_reactor;
 
@@ -37,7 +38,7 @@ static void testcomponent_process_one(struct fmc_component *self,
                                       fmc_time64_t time) {
   struct testcomponent *comp = (struct testcomponent *)self;
   ++comp->run;
-  fprintf(comp->fp, "%lld\n", fmc_time64_to_nanos(time));
+  fprintf(comp->fp, "%" PRId64 "\n", fmc_time64_to_nanos(time));
   if (comp->run < 5) {
     _reactor->schedule(ctx, fmc_time64_from_nanos(comp->run));
   }
