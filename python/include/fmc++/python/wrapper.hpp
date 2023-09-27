@@ -270,9 +270,7 @@ public:
   }
 };
 template <> struct _py_object_t<unsigned> { using type = py_unsigned; };
-template <> struct _py_object_t<unsigned long> {
-  using type = py_unsigned;
-};
+template <> struct _py_object_t<unsigned long> { using type = py_unsigned; };
 template <> struct _py_object_t<unsigned long long> {
   using type = py_unsigned;
 };

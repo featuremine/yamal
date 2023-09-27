@@ -15,8 +15,8 @@
 
 #include <Python.h>
 
-#include <ytp++/yamal.hpp>
 #include <fmc++/python/wrapper.hpp>
+#include <ytp++/yamal.hpp>
 
 struct Yamal;
 
@@ -155,8 +155,7 @@ static PyObject *Stream_str(Stream *self) {
 static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op);
 
 static PyTypeObject StreamType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "yamal.yamal8.stream",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "yamal.yamal8.stream",
     .tp_basicsize = sizeof(Stream),
     .tp_dealloc = (destructor)Stream_dealloc,
     .tp_repr = (reprfunc)Stream_str,
@@ -166,8 +165,7 @@ static PyTypeObject StreamType = {
     .tp_doc = "Stream object",
     .tp_richcompare = (richcmpfunc)Stream_richcompare,
     .tp_methods = Stream_methods,
-    .tp_getset = Stream_getset
-};
+    .tp_getset = Stream_getset};
 
 static PyObject *Stream_richcompare(Stream *obj1, Stream *obj2, int op) {
   if (!PyObject_TypeCheck(obj1, &StreamType)) {
@@ -260,7 +258,8 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
       return NULL;
     }
 
-    auto pystream = fmc::python::object::from_new(Stream_new(self->yamal_, sl->first));
+    auto pystream =
+        fmc::python::object::from_new(Stream_new(self->yamal_, sl->first));
     if (!pystream) {
       return NULL;
     }
@@ -281,14 +280,12 @@ static PyMethodDef Streams_methods[] = {
 };
 
 static PyTypeObject StreamsType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "yamal.yamal8.streams",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "yamal.yamal8.streams",
     .tp_basicsize = sizeof(Streams),
     .tp_dealloc = (destructor)Streams_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Streams object",
-    .tp_methods = Streams_methods
-};
+    .tp_methods = Streams_methods};
 
 PyObject *DataRevIter_iter(PyObject *self) {
   Py_INCREF(self);
@@ -303,7 +300,8 @@ PyObject *DataRevIter_iternext(DataRevIter *self) {
       return NULL;
     }
     auto [seqno, ts, stream, data] = *self->it_;
-    auto pyseqno = fmc::python::object::from_new(PyLong_FromUnsignedLongLong(seqno));
+    auto pyseqno =
+        fmc::python::object::from_new(PyLong_FromUnsignedLongLong(seqno));
     if (!pyseqno) {
       return NULL;
     }
@@ -311,11 +309,13 @@ PyObject *DataRevIter_iternext(DataRevIter *self) {
     if (!pyts) {
       return NULL;
     }
-    auto pystream = fmc::python::object::from_new(Stream_new(self->data_->yamal_, stream));
+    auto pystream =
+        fmc::python::object::from_new(Stream_new(self->data_->yamal_, stream));
     if (!pystream) {
       return NULL;
     }
-    auto pydata = fmc::python::object::from_new(PyBytes_FromStringAndSize(data.data(), data.size()));
+    auto pydata = fmc::python::object::from_new(
+        PyBytes_FromStringAndSize(data.data(), data.size()));
     if (!pydata) {
       return NULL;
     }
@@ -346,16 +346,15 @@ static PyNumberMethods DataRevIter_as_number = {
     .nb_int = (unaryfunc)DataRevIter_nb_int};
 
 static PyTypeObject DataRevIterType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "yamal.yamal8.data_rev_iter",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name =
+        "yamal.yamal8.data_rev_iter",
     .tp_basicsize = sizeof(DataRevIter),
     .tp_dealloc = (destructor)DataRevIter_dealloc,
     .tp_as_number = &DataRevIter_as_number,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "DataRevIter object",
     .tp_iter = DataRevIter_iter,
-    .tp_iternext = (iternextfunc)DataRevIter_iternext
-};
+    .tp_iternext = (iternextfunc)DataRevIter_iternext};
 
 PyObject *DataRevIter_new(Data *data, ytp::data_t::reverse_iterator it) {
   auto *self = (DataRevIter *)DataRevIterType.tp_alloc(&DataRevIterType, 0);
@@ -381,7 +380,8 @@ PyObject *DataIter_iternext(DataIter *self) {
       return NULL;
     }
     auto [seqno, ts, stream, data] = *self->it_;
-    auto pyseqno = fmc::python::object::from_new(PyLong_FromUnsignedLongLong(seqno));
+    auto pyseqno =
+        fmc::python::object::from_new(PyLong_FromUnsignedLongLong(seqno));
     if (!pyseqno) {
       return NULL;
     }
@@ -389,11 +389,13 @@ PyObject *DataIter_iternext(DataIter *self) {
     if (!pyts) {
       return NULL;
     }
-    auto pystream = fmc::python::object::from_new(Stream_new(self->data_->yamal_, stream));
+    auto pystream =
+        fmc::python::object::from_new(Stream_new(self->data_->yamal_, stream));
     if (!pystream) {
       return NULL;
     }
-    auto pydata = fmc::python::object::from_new(PyBytes_FromStringAndSize(data.data(), data.size()));
+    auto pydata = fmc::python::object::from_new(
+        PyBytes_FromStringAndSize(data.data(), data.size()));
     if (!pydata) {
       return NULL;
     }
@@ -440,8 +442,8 @@ static PyNumberMethods DataIter_as_number = {.nb_int =
                                                  (unaryfunc)DataIter_nb_int};
 
 static PyTypeObject DataIterType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "yamal.yamal8.data_iter",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name =
+        "yamal.yamal8.data_iter",
     .tp_basicsize = sizeof(DataIter),
     .tp_dealloc = (destructor)DataIter_dealloc,
     .tp_as_number = &DataIter_as_number,
@@ -449,8 +451,7 @@ static PyTypeObject DataIterType = {
     .tp_doc = "DataIter object",
     .tp_iter = DataIter_iter,
     .tp_iternext = (iternextfunc)DataIter_iternext,
-    .tp_methods = DataIter_methods
-};
+    .tp_methods = DataIter_methods};
 
 PyObject *DataIter_new(Data *data, ytp::data_t::iterator it) {
   auto *self = (DataIter *)DataIterType.tp_alloc(&DataIterType, 0);
@@ -546,15 +547,13 @@ PyObject *Data_iter(Data *self) {
 }
 
 static PyTypeObject DataType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "yamal.yamal8.data",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "yamal.yamal8.data",
     .tp_basicsize = sizeof(Data),
     .tp_dealloc = (destructor)Data_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Data object",
     .tp_iter = (getiterfunc)Data_iter,
-    .tp_methods = Data_methods
-};
+    .tp_methods = Data_methods};
 
 static PyObject *Stream_write(Stream *self, PyObject *args, PyObject *kwds) {
   static char *kwlist[] = {(char *)"time", (char *)"data", NULL /* Sentinel */};
@@ -583,7 +582,7 @@ static PyObject *Data_new(Yamal *yamal) {
   if (!self) {
     return NULL;
   }
-  auto pself = fmc::python::object::from_new((PyObject*)self);
+  auto pself = fmc::python::object::from_new((PyObject *)self);
   try {
     self->data_ = yamal->yamal_.data();
   } catch (const std::exception &e) {
@@ -600,7 +599,7 @@ static PyObject *Streams_new(Yamal *yamal) {
   if (!self) {
     return NULL;
   }
-  auto pself = fmc::python::object::from_new((PyObject*)self);
+  auto pself = fmc::python::object::from_new((PyObject *)self);
   try {
     self->streams_ = yamal->yamal_.streams();
   } catch (const std::exception &e) {
@@ -709,16 +708,14 @@ static PyObject *Yamal_new(PyTypeObject *subtype, PyObject *args,
 }
 
 static PyTypeObject YamalType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "yamal.yamal8.yamal",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "yamal.yamal8.yamal",
     .tp_basicsize = sizeof(Yamal),
     .tp_dealloc = (destructor)Yamal_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Yamal object",
     .tp_methods = Yamal_methods,
     .tp_init = (initproc)Yamal_init,
-    .tp_new = Yamal_new
-};
+    .tp_new = Yamal_new};
 
 static PyModuleDef Yamal8Module = {PyModuleDef_HEAD_INIT, "yamal8",
                                    "yamal8 module", -1, NULL};
