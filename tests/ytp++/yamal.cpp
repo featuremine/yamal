@@ -129,10 +129,11 @@ TEST(yamal, iteration) {
   data.commit(3, stream, ptr);
 
   // Forward:
-
+  auto fend = data.end();
   auto it = data.begin();
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_NE(it, data.end());
+  ASSERT_NE(it, fend);
   auto [seqno1, ts1, stream1, data1] = *it;
   ASSERT_EQ(seqno1, 1);
   ASSERT_EQ(ts1, 1);
@@ -143,6 +144,7 @@ TEST(yamal, iteration) {
   ++it;
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_NE(it, data.end());
+  ASSERT_NE(it, fend);
   auto [seqno2, ts2, stream2, data2] = *it;
   ASSERT_EQ(seqno2, 2);
   ASSERT_EQ(ts2, 2);
@@ -153,6 +155,7 @@ TEST(yamal, iteration) {
   it++;
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_NE(it, data.end());
+  ASSERT_NE(it, fend);
   auto [seqno3, ts3, stream3, data3] = *it;
   ASSERT_EQ(seqno3, 3);
   ASSERT_EQ(ts3, 3);
@@ -168,11 +171,14 @@ TEST(yamal, iteration) {
   ++it;
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_EQ(it, data.end());
+  ASSERT_EQ(it, fend);
 
   // Reverse:
+  auto rend = data.rend();
   auto rit = data.rbegin();
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
+  ASSERT_NE(rit, rend);
   auto [rseqno1, rts1, rstream1, rdata1] = *rit;
   ASSERT_EQ(rseqno1, 3);
   ASSERT_EQ(rts1, 3);
@@ -183,6 +189,7 @@ TEST(yamal, iteration) {
   ++rit;
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
+  ASSERT_NE(rit, rend);
   auto [rseqno2, rts2, rstream2, rdata2] = *rit;
   ASSERT_EQ(rseqno2, 2);
   ASSERT_EQ(rts2, 2);
@@ -193,6 +200,7 @@ TEST(yamal, iteration) {
   rit++;
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
+  ASSERT_NE(rit, rend);
   auto [rseqno3, rts3, rstream3, rdata3] = *rit;
   ASSERT_EQ(rseqno3, 1);
   ASSERT_EQ(rts3, 1);
@@ -208,6 +216,7 @@ TEST(yamal, iteration) {
   ++rit;
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_EQ(rit, data.rend());
+  ASSERT_EQ(rit, rend);
 }
 
 TEST(yamal, serialization) {
