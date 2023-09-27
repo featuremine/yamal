@@ -399,43 +399,8 @@ PyObject *DataRevIter_nb_int(DataRevIter *self) {
   }
 }
 
-static PyNumberMethods DataRevIter_as_number[] = {
-    NULL,                          /*nb_add*/
-    NULL,                          /*nb_substract*/
-    NULL,                          /*nb_multiply*/
-    NULL,                          /*nb_remainder*/
-    NULL,                          /*nb_divmod*/
-    NULL,                          /*nb_power*/
-    NULL,                          /*nb_negative*/
-    NULL,                          /*nb_positive*/
-    NULL,                          /*nb_absolute*/
-    NULL,                          /*nb_bool*/
-    NULL,                          /*nb_invert*/
-    NULL,                          /*nb_lshift*/
-    NULL,                          /*nb_rshift*/
-    NULL,                          /*nb_and*/
-    NULL,                          /*nb_xor*/
-    NULL,                          /*nb_or*/
-    (unaryfunc)DataRevIter_nb_int, /*nb_int*/
-    NULL,                          /*nb_reserved*/
-    NULL,                          /*nb_float*/
-    NULL,                          /*nb_inplace_add*/
-    NULL,                          /*nb_inplace_substract*/
-    NULL,                          /*nb_inplace_multiply*/
-    NULL,                          /*nb_inplace_remainder*/
-    NULL,                          /*nb_inplace_power*/
-    NULL,                          /*nb_inplace_lshift*/
-    NULL,                          /*nb_inplace_rshift*/
-    NULL,                          /*nb_inplace_and*/
-    NULL,                          /*nb_inplace_xor*/
-    NULL,                          /*nb_inplace_or*/
-    NULL,                          /*nb_floor_divide*/
-    NULL,                          /*nb_true_divide*/
-    NULL,                          /*nb_inplace_floor_divide*/
-    NULL,                          /*nb_inplace_true_divide*/
-    NULL,                          /*nb_index*/
-    NULL,                          /*nb_matrix_multiply*/
-    NULL                           /*nb_inplace_matrix_multiply*/
+static PyNumberMethods DataRevIter_as_number = {
+    .nb_int = (unaryfunc)DataRevIter_nb_int
 };
 
 static PyTypeObject DataRevIterType = {
@@ -448,7 +413,7 @@ static PyTypeObject DataRevIterType = {
     0,                                                       /* tp_setattr */
     0,                                                       /* tp_reserved */
     0,                                                       /* tp_repr */
-    DataRevIter_as_number,                                   /* tp_as_number */
+    &DataRevIter_as_number,                                   /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
@@ -574,43 +539,8 @@ PyObject *DataIter_nb_int(DataIter *self) {
   }
 }
 
-static PyNumberMethods DataIter_as_number[] = {
-    NULL,                       /*nb_add*/
-    NULL,                       /*nb_substract*/
-    NULL,                       /*nb_multiply*/
-    NULL,                       /*nb_remainder*/
-    NULL,                       /*nb_divmod*/
-    NULL,                       /*nb_power*/
-    NULL,                       /*nb_negative*/
-    NULL,                       /*nb_positive*/
-    NULL,                       /*nb_absolute*/
-    NULL,                       /*nb_bool*/
-    NULL,                       /*nb_invert*/
-    NULL,                       /*nb_lshift*/
-    NULL,                       /*nb_rshift*/
-    NULL,                       /*nb_and*/
-    NULL,                       /*nb_xor*/
-    NULL,                       /*nb_or*/
-    (unaryfunc)DataIter_nb_int, /*nb_int*/
-    NULL,                       /*nb_reserved*/
-    NULL,                       /*nb_float*/
-    NULL,                       /*nb_inplace_add*/
-    NULL,                       /*nb_inplace_substract*/
-    NULL,                       /*nb_inplace_multiply*/
-    NULL,                       /*nb_inplace_remainder*/
-    NULL,                       /*nb_inplace_power*/
-    NULL,                       /*nb_inplace_lshift*/
-    NULL,                       /*nb_inplace_rshift*/
-    NULL,                       /*nb_inplace_and*/
-    NULL,                       /*nb_inplace_xor*/
-    NULL,                       /*nb_inplace_or*/
-    NULL,                       /*nb_floor_divide*/
-    NULL,                       /*nb_true_divide*/
-    NULL,                       /*nb_inplace_floor_divide*/
-    NULL,                       /*nb_inplace_true_divide*/
-    NULL,                       /*nb_index*/
-    NULL,                       /*nb_matrix_multiply*/
-    NULL                        /*nb_inplace_matrix_multiply*/
+static PyNumberMethods DataIter_as_number = {
+    .nb_int = (unaryfunc)DataIter_nb_int
 };
 
 static PyTypeObject DataIterType = {
@@ -623,7 +553,7 @@ static PyTypeObject DataIterType = {
     0,                                                       /* tp_setattr */
     0,                                                       /* tp_reserved */
     0,                                                       /* tp_repr */
-    DataIter_as_number,                                      /* tp_as_number */
+    &DataIter_as_number,                                      /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
