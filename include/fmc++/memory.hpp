@@ -20,6 +20,8 @@
 
 #include <fmc/platform.h>
 #include <memory>
+#include <stdlib.h>
+#include <string_view>
 
 namespace fmc {
 namespace hidden {
@@ -30,5 +32,18 @@ struct autofree_destructor {
 
 template <typename T>
 using autofree = std::unique_ptr<T, hidden::autofree_destructor>;
+
+class buffer {
+public:
+  buffer() : data_(nullptr), sz_(0) {}
+  buffer(void *data, size_t sz) : data_(data), sz_(sz) {}
+  operator std::string_view() { return std::string_view((char *)data_, sz_); }
+  void *data() { return data_; }
+  size_t size() { return sz_; }
+
+private:
+  void *data_;
+  size_t sz_;
+};
 
 } // namespace fmc

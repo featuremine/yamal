@@ -20,6 +20,7 @@
 #include <fenv.h>
 #include <fmc++/counters.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <inttypes.h>
 #include <libdecnumber/decQuad.h>
 #include <random>
 #include <string.h>
@@ -2128,7 +2129,7 @@ TEST(decimal128, performance) {
                                                                 999999999);
   auto gen_digits = [&](int digits) {
     char buff[64];
-    snprintf(buff, sizeof(buff), "%lu", dist(rng));
+    snprintf(buff, sizeof(buff), "%" PRIuFAST32, dist(rng));
     return std::string(buff + (9 - digits));
   };
 
