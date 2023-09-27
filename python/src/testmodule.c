@@ -10,10 +10,10 @@
 #include <fmc/config.h>
 #include <fmc/error.h>
 #include <fmc/time.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
 
 struct fmc_reactor_api_v1 *_reactor;
 

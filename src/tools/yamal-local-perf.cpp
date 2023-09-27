@@ -7,10 +7,10 @@
  *****************************************************************************/
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
 
 #include <fmc++/counters.hpp>
 #include <fmc/cmdline.h>
