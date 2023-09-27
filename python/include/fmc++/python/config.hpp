@@ -93,7 +93,6 @@ private:
 
 public:
   section(fmc::python::object &&obj);
-  section() = default;
   section(const section &) = default;
   section &operator=(const section &) = default;
   section(section &&) = default;
@@ -131,7 +130,6 @@ private:
 
 public:
   array(fmc::python::object &&obj);
-  array() = default;
   array(const array &) = default;
   array &operator=(const array &) = default;
   array(array &&) = default;

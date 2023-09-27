@@ -212,6 +212,7 @@ public:
 };
 template <> struct _py_object_t<const char *> { using type = string; };
 template <> struct _py_object_t<std::string> { using type = string; };
+template <> struct _py_object_t<std::string_view> { using type = string; };
 
 inline object object::operator[](string &name) {
   return (*this)[(std::string)name];
@@ -269,6 +270,7 @@ public:
   }
 };
 template <> struct _py_object_t<unsigned> { using type = py_unsigned; };
+template <> struct _py_object_t<unsigned long> { using type = py_unsigned; };
 template <> struct _py_object_t<unsigned long long> {
   using type = py_unsigned;
 };
@@ -487,7 +489,7 @@ public:
     for (size_t i = 0; i < argv.size(); ++i) {
       PyTuple_SET_ITEM(obj, i, argv[i]);
     }
-    *this = std::move(object::from_new(obj));
+    *this = object::from_new(obj);
   }
 
   template <class... Args> operator std::tuple<Args...>() {

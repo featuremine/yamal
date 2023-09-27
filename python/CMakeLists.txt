@@ -115,6 +115,37 @@ target_include_directories(
 )
 
 add_library(
+    yamal8_module
+    SHARED
+    "src/yamal8.cpp"
+)
+target_link_libraries(
+    yamal8_module
+    PRIVATE
+    ytp
+    py_yamal_dep
+)
+target_compile_definitions(
+    yamal8_module
+    PRIVATE
+    NO_DLL_DECORATOR
+)
+set_target_properties(
+    yamal8_module
+    PROPERTIES
+    OUTPUT_NAME "yamal8"
+    PREFIX ""
+    SUFFIX ".so"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/dist/yamal"
+)
+target_include_directories(
+    yamal8_module
+    PRIVATE
+    "${YAMAL_INC_DIR}"
+    "${PYTHON_INCLUDE_DIRS}"
+)
+
+add_library(
     yamal-python_testmodule
     SHARED
     "src/testmodule.c"
@@ -142,9 +173,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_link_options(yamal-python_module PRIVATE -undefined dynamic_lookup)
     target_link_options(yamal-sys_base_module PRIVATE -Wl,-rpath,@loader_path)
     target_link_options(yamal-sys_base_module PRIVATE -undefined dynamic_lookup)
+    target_link_options(yamal8_module PRIVATE -Wl,-rpath,@loader_path)
+    target_link_options(yamal8_module PRIVATE -undefined dynamic_lookup)
 else()
     set_property(TARGET yamal-python_module PROPERTY BUILD_RPATH_USE_ORIGIN TRUE)
     set_property(TARGET yamal-sys_base_module PROPERTY BUILD_RPATH_USE_ORIGIN TRUE)
+    set_property(TARGET yamal8_module PROPERTY BUILD_RPATH_USE_ORIGIN TRUE)
 endif()
 
 file(
@@ -226,7 +260,7 @@ if(BUILD_WHEEL)
         "--plat-name=${PYTHON_PLATFORM}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist
 
-        DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
+        DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule yamal8_module
     )
 
     add_custom_command(
@@ -249,7 +283,7 @@ if(BUILD_WHEEL)
 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist
 
-        DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule
+        DEPENDS yamal-python_module yamal-sys_base_module yamal-python_testmodule yamal8_module
     )
     add_custom_target(
         yamal-whl ALL
