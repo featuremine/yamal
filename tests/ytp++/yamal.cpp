@@ -102,6 +102,9 @@ TEST(yamal, iteration) {
   ytp::yamal_t yamal = ytp::yamal_t(fd, true);
   ytp::data_t data = yamal.data();
 
+  auto rendempty = data.rend();
+  auto fendempty = data.end();
+
   ASSERT_EQ(ytp::data_t::iterator(), ytp::data_t::iterator());
   ASSERT_EQ(ytp::data_t::reverse_iterator(), ytp::data_t::reverse_iterator());
 
@@ -134,6 +137,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_NE(it, data.end());
   ASSERT_NE(it, fend);
+  ASSERT_NE(it, fendempty);
   auto [seqno1, ts1, stream1, data1] = *it;
   ASSERT_EQ(seqno1, 1);
   ASSERT_EQ(ts1, 1);
@@ -145,6 +149,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_NE(it, data.end());
   ASSERT_NE(it, fend);
+  ASSERT_NE(it, fendempty);
   auto [seqno2, ts2, stream2, data2] = *it;
   ASSERT_EQ(seqno2, 2);
   ASSERT_EQ(ts2, 2);
@@ -156,6 +161,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(data.seek((ytp_mmnode_offs)it), it);
   ASSERT_NE(it, data.end());
   ASSERT_NE(it, fend);
+  ASSERT_NE(it, fendempty);
   auto [seqno3, ts3, stream3, data3] = *it;
   ASSERT_EQ(seqno3, 3);
   ASSERT_EQ(ts3, 3);
@@ -179,6 +185,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
   ASSERT_NE(rit, rend);
+  ASSERT_NE(rit, rendempty);
   auto [rseqno1, rts1, rstream1, rdata1] = *rit;
   ASSERT_EQ(rseqno1, 3);
   ASSERT_EQ(rts1, 3);
@@ -190,6 +197,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
   ASSERT_NE(rit, rend);
+  ASSERT_NE(rit, rendempty);
   auto [rseqno2, rts2, rstream2, rdata2] = *rit;
   ASSERT_EQ(rseqno2, 2);
   ASSERT_EQ(rts2, 2);
@@ -201,6 +209,7 @@ TEST(yamal, iteration) {
   ASSERT_EQ(data.rseek((ytp_mmnode_offs)rit), rit);
   ASSERT_NE(rit, data.rend());
   ASSERT_NE(rit, rend);
+  ASSERT_NE(rit, rendempty);
   auto [rseqno3, rts3, rstream3, rdata3] = *rit;
   ASSERT_EQ(rseqno3, 1);
   ASSERT_EQ(rts3, 1);
