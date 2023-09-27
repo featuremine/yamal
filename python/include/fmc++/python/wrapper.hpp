@@ -212,6 +212,7 @@ public:
 };
 template <> struct _py_object_t<const char *> { using type = string; };
 template <> struct _py_object_t<std::string> { using type = string; };
+template <> struct _py_object_t<std::string_view> { using type = string; };
 
 inline object object::operator[](string &name) {
   return (*this)[(std::string)name];
@@ -269,6 +270,9 @@ public:
   }
 };
 template <> struct _py_object_t<unsigned> { using type = py_unsigned; };
+template <> struct _py_object_t<unsigned long> {
+  using type = py_unsigned;
+};
 template <> struct _py_object_t<unsigned long long> {
   using type = py_unsigned;
 };

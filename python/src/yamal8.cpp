@@ -16,6 +16,7 @@
 #include <Python.h>
 
 #include <ytp++/yamal.hpp>
+#include <fmc++/python/wrapper.hpp>
 
 struct Yamal;
 
@@ -259,28 +260,12 @@ static PyObject *Streams_lookup(Streams *self, PyObject *args, PyObject *kwds) {
       return NULL;
     }
 
-    PyObject *s = Stream_new(self->yamal_, sl->first);
-    if (!s) {
+    auto pystream = fmc::python::object::from_new(Stream_new(self->yamal_, sl->first));
+    if (!pystream) {
       return NULL;
     }
 
-    PyObject *encoding =
-        PyUnicode_FromStringAndSize(sl->second.data(), sl->second.size());
-    if (!encoding) {
-      Py_XDECREF(s);
-      return NULL;
-    }
-
-    auto *obj = PyTuple_New(2);
-    if (!obj) {
-      Py_XDECREF(s);
-      Py_XDECREF(encoding);
-      return NULL;
-    }
-    PyTuple_SET_ITEM(obj, 0, s);
-    PyTuple_SET_ITEM(obj, 1, encoding);
-
-    return obj;
+    return fmc::python::tuple::from_args(pystream, sl->second);
   } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
@@ -318,40 +303,23 @@ PyObject *DataRevIter_iternext(DataRevIter *self) {
       return NULL;
     }
     auto [seqno, ts, stream, data] = *self->it_;
-    PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
+    auto pyseqno = fmc::python::object::from_new(PyLong_FromUnsignedLongLong(seqno));
     if (!pyseqno) {
       return NULL;
     }
-    PyObject *pyts = PyLong_FromUnsignedLongLong(ts);
+    auto pyts = fmc::python::object::from_new(PyLong_FromUnsignedLongLong(ts));
     if (!pyts) {
-      Py_XDECREF(pyseqno);
       return NULL;
     }
-    PyObject *pystream = Stream_new(self->data_->yamal_, stream);
+    auto pystream = fmc::python::object::from_new(Stream_new(self->data_->yamal_, stream));
     if (!pystream) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
       return NULL;
     }
-    PyObject *pydata = PyBytes_FromStringAndSize(data.data(), data.size());
+    auto pydata = fmc::python::object::from_new(PyBytes_FromStringAndSize(data.data(), data.size()));
     if (!pydata) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
-      Py_XDECREF(pystream);
       return NULL;
     }
-    auto *obj = PyTuple_New(4);
-    if (!obj) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
-      Py_XDECREF(pystream);
-      Py_XDECREF(pydata);
-      return NULL;
-    }
-    PyTuple_SET_ITEM(obj, 0, pyseqno);
-    PyTuple_SET_ITEM(obj, 1, pyts);
-    PyTuple_SET_ITEM(obj, 2, pystream);
-    PyTuple_SET_ITEM(obj, 3, pydata);
+    auto obj = fmc::python::tuple::from_args(pyseqno, pyts, pystream, pydata);
     ++self->it_;
     return obj;
   } catch (const std::exception &e) {
@@ -413,40 +381,23 @@ PyObject *DataIter_iternext(DataIter *self) {
       return NULL;
     }
     auto [seqno, ts, stream, data] = *self->it_;
-    PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
+    auto pyseqno = fmc::python::object::from_new(PyLong_FromUnsignedLongLong(seqno));
     if (!pyseqno) {
       return NULL;
     }
-    PyObject *pyts = PyLong_FromUnsignedLongLong(ts);
+    auto pyts = fmc::python::object::from_new(PyLong_FromUnsignedLongLong(ts));
     if (!pyts) {
-      Py_XDECREF(pyseqno);
       return NULL;
     }
-    PyObject *pystream = Stream_new(self->data_->yamal_, stream);
+    auto pystream = fmc::python::object::from_new(Stream_new(self->data_->yamal_, stream));
     if (!pystream) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
       return NULL;
     }
-    PyObject *pydata = PyBytes_FromStringAndSize(data.data(), data.size());
+    auto pydata = fmc::python::object::from_new(PyBytes_FromStringAndSize(data.data(), data.size()));
     if (!pydata) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
-      Py_XDECREF(pystream);
       return NULL;
     }
-    auto *obj = PyTuple_New(4);
-    if (!obj) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pyts);
-      Py_XDECREF(pystream);
-      Py_XDECREF(pydata);
-      return NULL;
-    }
-    PyTuple_SET_ITEM(obj, 0, pyseqno);
-    PyTuple_SET_ITEM(obj, 1, pyts);
-    PyTuple_SET_ITEM(obj, 2, pystream);
-    PyTuple_SET_ITEM(obj, 3, pydata);
+    auto obj = fmc::python::tuple::from_args(pyseqno, pyts, pystream, pydata);
     ++self->it_;
     return obj;
   } catch (const std::exception &e) {
@@ -632,16 +583,16 @@ static PyObject *Data_new(Yamal *yamal) {
   if (!self) {
     return NULL;
   }
+  auto pself = fmc::python::object::from_new((PyObject*)self);
   try {
     self->data_ = yamal->yamal_.data();
   } catch (const std::exception &e) {
-    Py_XDECREF(self);
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return nullptr;
   }
   self->yamal_ = yamal;
   Py_INCREF(yamal);
-  return (PyObject *)self;
+  return (PyObject *)pself.steal_ref();
 }
 
 static PyObject *Streams_new(Yamal *yamal) {
@@ -649,16 +600,16 @@ static PyObject *Streams_new(Yamal *yamal) {
   if (!self) {
     return NULL;
   }
+  auto pself = fmc::python::object::from_new((PyObject*)self);
   try {
     self->streams_ = yamal->yamal_.streams();
   } catch (const std::exception &e) {
-    Py_XDECREF(self);
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return nullptr;
   }
   self->yamal_ = yamal;
   Py_INCREF(yamal);
-  return (PyObject *)self;
+  return (PyObject *)pself.steal_ref();
 }
 
 static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
@@ -691,7 +642,6 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
   try {
     self->yamal_ = ytp::yamal_t(fd, closable, enable_thread);
   } catch (const std::exception &e) {
-    Py_XDECREF(self);
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return -1;
   }
@@ -732,43 +682,7 @@ static PyObject *Yamal_announcement(Yamal *self, PyObject *args,
   try {
     auto [seqno, peer, channel, encoding] =
         self->yamal_.announcement(stream->stream_);
-    PyObject *pyseqno = PyLong_FromUnsignedLongLong(seqno);
-    if (!pyseqno) {
-      return NULL;
-    }
-    PyObject *pypeer = PyUnicode_FromStringAndSize(peer.data(), peer.size());
-    if (!pypeer) {
-      Py_XDECREF(pyseqno);
-      return NULL;
-    }
-    PyObject *pychannel =
-        PyUnicode_FromStringAndSize(channel.data(), channel.size());
-    if (!pychannel) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pypeer);
-      return NULL;
-    }
-    PyObject *pyencoding =
-        PyUnicode_FromStringAndSize(encoding.data(), encoding.size());
-    if (!pyencoding) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pypeer);
-      Py_XDECREF(pychannel);
-      return NULL;
-    }
-    auto *obj = PyTuple_New(4);
-    if (!obj) {
-      Py_XDECREF(pyseqno);
-      Py_XDECREF(pypeer);
-      Py_XDECREF(pychannel);
-      Py_XDECREF(pyencoding);
-      return NULL;
-    }
-    PyTuple_SET_ITEM(obj, 0, pyseqno);
-    PyTuple_SET_ITEM(obj, 1, pypeer);
-    PyTuple_SET_ITEM(obj, 2, pychannel);
-    PyTuple_SET_ITEM(obj, 3, pyencoding);
-    return obj;
+    return fmc::python::tuple::from_args(seqno, peer, channel, encoding);
   } catch (const std::exception &e) {
     PyErr_SetString(PyExc_KeyError, e.what());
     return NULL;
