@@ -32,7 +32,7 @@ TEST(yamal, data_closable) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true, true);
   ytp::data_t data = yamal.data();
 
   ASSERT_TRUE(data.closable());
@@ -52,7 +52,7 @@ TEST(yamal, data_unclosable) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal_t yamal = ytp::yamal_t(fd, false);
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true, false);
   ytp::data_t data = yamal.data();
 
   ASSERT_FALSE(data.closable());
@@ -99,7 +99,7 @@ TEST(yamal, iteration) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true, true);
   ytp::data_t data = yamal.data();
 
   auto rendempty = data.rend();
@@ -239,7 +239,7 @@ TEST(yamal, serialization) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true, true);
   ytp::streams_t streams = yamal.streams();
   ytp::stream_t stream = streams.announce("peer", "channel", "encoding");
 
@@ -262,7 +262,7 @@ TEST(yamal, hashing) {
     ASSERT_EQ(error, nullptr);
   });
 
-  ytp::yamal_t yamal = ytp::yamal_t(fd, true);
+  ytp::yamal_t yamal = ytp::yamal_t(fd, true, true);
   ytp::streams_t streams = yamal.streams();
   ytp::stream_t stream = streams.announce("peer", "channel", "encoding");
 

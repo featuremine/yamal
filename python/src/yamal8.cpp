@@ -615,16 +615,16 @@ static PyObject *Streams_new(Yamal *yamal) {
 static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
 
   static char *kwlist[] = {
-      (char *)"path", (char *)"readonly", (char *)"closable",
-      (char *)"enable_thread", NULL /* Sentinel */
+      (char *)"path", (char *)"readonly", (char *)"enable_thread",
+      (char *)"closable", NULL /* Sentinel */
   };
 
   char *path;
   int readonly = false;
-  int closable = false;
   int enable_thread = true;
+  int closable = false;
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|ppp", kwlist, &path,
-                                   &readonly, &closable, &enable_thread)) {
+                                   &readonly, &enable_thread, &closable)) {
     return -1;
   }
 
@@ -640,7 +640,7 @@ static int Yamal_init(Yamal *self, PyObject *args, PyObject *kwds) {
   }
 
   try {
-    self->yamal_ = ytp::yamal_t(fd, closable, enable_thread);
+    self->yamal_ = ytp::yamal_t(fd, enable_thread, closable);
   } catch (const std::exception &e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return -1;

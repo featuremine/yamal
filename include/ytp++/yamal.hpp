@@ -299,7 +299,7 @@ public:
   using announcement_type = std::tuple<uint64_t, std::string_view,
                                        std::string_view, std::string_view>;
 
-  yamal_t(fmc_fd fd, bool closable = false, bool enable_thread = true) {
+  yamal_t(fmc_fd fd, bool enable_thread = true, bool closable = false) {
     fmc_error_t *err = nullptr;
     yamal_ = std::shared_ptr<ytp_yamal_t>(
         ytp_yamal_new_3(fd, enable_thread,
