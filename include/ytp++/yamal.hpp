@@ -277,6 +277,8 @@ private:
 
 class yamal_t {
 public:
+  using announcement_type = std::tuple<uint64_t, std::string_view, std::string_view, std::string_view>;
+
   yamal_t(fmc_fd fd, bool closable = false, bool enable_thread = true) {
     fmc_error_t *err = nullptr;
     yamal_ = std::shared_ptr<ytp_yamal_t>(
@@ -300,8 +302,7 @@ public:
   streams_t streams() { return ytp::streams_t(yamal_); }
 
   // seqnum, peer, channel, encoding
-  std::tuple<uint64_t, std::string_view, std::string_view, std::string_view>
-  announcement(stream_t s) {
+  announcement_type announcement(stream_t s) {
     fmc_error_t *err = nullptr;
     uint64_t seqno;
     size_t psz;
@@ -317,10 +318,7 @@ public:
                             &err);
     fmc_runtime_error_unless(!err)
         << "unable to create Yamal object with error:" << fmc_error_msg(err);
-    return std::make_tuple<uint64_t, std::string_view, std::string_view,
-                           std::string_view>(std::move(seqno), std::string_view(peer, psz),
-                                             std::string_view(channel, csz),
-                                             std::string_view(encoding, esz));
+    return {seqno, std::string_view(peer, psz), std::string_view(channel, csz), std::string_view(encoding, esz)};
   }
 
   fmc_fd fd() {
