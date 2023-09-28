@@ -119,7 +119,8 @@ template <class A, class B, class... Tail> struct hash<tuple<A, B, Tail...>> {
     result_type const h1(std::hash<A>{}(get<0>(obj)));
     result_type const h2(std::hash<tuple<B, Tail...>>{}(apply(
         [](A a, B b, Tail... tail) {
-          return tuple<B, Tail...>(std::forward<B>(b), std::forward<Tail>(tail)...);
+          return tuple<B, Tail...>(std::forward<B>(b),
+                                   std::forward<Tail>(tail)...);
         },
         obj)));
     return fmc_hash_combine(h1, h2);

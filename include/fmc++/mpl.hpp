@@ -314,7 +314,8 @@ template <class Op, class Func, class... Ts, class... Args>
 decltype(auto) apply_for_each_type(Op &&op, Func &&f, type_list<Ts...>,
                                    Args &&...args) {
   return apply_for_each(
-      std::forward<Op>(op), [&](auto t) { return f(t, std::forward<Args>(args)...); },
+      std::forward<Op>(op),
+      [&](auto t) { return f(t, std::forward<Args>(args)...); },
       typify<Ts>()...);
 }
 
