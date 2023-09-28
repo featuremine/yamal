@@ -41,7 +41,6 @@ jobs:
       uses: featuremine/actions/package/build@v2
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
-        cpack: TGZ
         docs: true
         wheel: true
         upload: ${{ needs.utility.outputs.release-check == 'release' }}
@@ -69,7 +68,6 @@ jobs:
         docs: false
         wheel: true
         upload: ${{ needs.utility.outputs.release-check == 'release' }}
-        cpack: TGZ
 
   test-centos:
     needs: [utility, build-manylinux]
