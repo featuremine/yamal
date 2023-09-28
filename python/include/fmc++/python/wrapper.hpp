@@ -474,7 +474,7 @@ public:
       auto add_item = [&](auto &&arg) {
         PyTuple_SET_ITEM(obj, i++, make_py_object(arg).steal_ref());
       };
-      (add_item(forward<Args>(args)), ...);
+      (add_item(std::forward<Args>(args)), ...);
     }
     return obj;
   }
