@@ -12,6 +12,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include <type_traits>
 
 #include <fmc++/error.hpp>
 
@@ -191,13 +192,13 @@ char *ytp_control_reserve(ytp_control_t *ctrl, size_t size,
 }
 
 template <typename C>
-static std::result_of_t<C(ytp_yamal_t *, int64_t, ytp_mmnode_offs, void *,
-                          fmc_error_t **)>
+static std::invoke_result_t<C, ytp_yamal_t *, int64_t, ytp_mmnode_offs, void *,
+                          fmc_error_t **>
 ytp_control_commit_internal(ytp_control_t *ctrl, ytp_peer_t peer,
                             ytp_channel_t channel, int64_t ts, void *data,
                             fmc_error_t **error, const C &commit) {
-  using result_t = std::result_of_t<C(ytp_yamal_t *, int64_t, ytp_mmnode_offs,
-                                      void *, fmc_error_t **)>;
+  using result_t = std::invoke_result_t<C, ytp_yamal_t *, int64_t, ytp_mmnode_offs,
+                                      void *, fmc_error_t **>;
 
   fmc_error_clear(error);
   struct handler_t {
