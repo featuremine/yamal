@@ -411,6 +411,7 @@ endif()
 
 add_subdirectory(python)
 
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/output")
 add_custom_command(
     OUTPUT
     "${CMAKE_BINARY_DIR}/output/yamal-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}.tar.gz"
