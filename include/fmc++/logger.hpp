@@ -13,8 +13,8 @@
 
 #pragma once
 
-#include <fmc++/time.hpp>
 #include <fmc++/mpl.hpp>
+#include <fmc++/time.hpp>
 
 namespace fmc {
 
@@ -33,11 +33,10 @@ struct logger_t {
   std::ostream &out;
 };
 
-template <typename... Args>
-inline void notice(Args &&...args) {
+template <typename... Args> inline void notice(Args &&...args) {
   logger_t logger{std::cout};
   logger.info(std::forward<Args>(args)...);
-  std::cout << std::endl; 
+  std::cout << std::endl;
 }
 
 } // namespace fmc

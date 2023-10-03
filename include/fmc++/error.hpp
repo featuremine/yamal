@@ -13,8 +13,8 @@
 
 #pragma once
 
-#include "fmc/error.h"
 #include "fmc++/logger.hpp"
+#include "fmc/error.h"
 
 #include <ostream>
 #include <utility>
@@ -96,8 +96,8 @@ public:
   if (__builtin_expect((*ERR) != nullptr, 0)) {                                \
     std::ostringstream ss;                                                     \
     fmc::logger_t logger{ss};                                                  \
-    logger.write(__VA_ARGS__);                                                  \
-    fmc_error_add(ERR, ";", "%s", ss.str().c_str());                          \
+    logger.write(__VA_ARGS__);                                                 \
+    fmc_error_add(ERR, ";", "%s", ss.str().c_str());                           \
     return RET;                                                                \
   }
 
