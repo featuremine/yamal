@@ -16,10 +16,41 @@
  */
 
 #include <fmc++/error.hpp>
+#include <fmc++/logger.hpp>
 
 #include <fmc++/gtestwrap.hpp>
 
 #include <sstream>
+#include <string_view>
+
+TEST(logger, logger) {
+  std::ostringstream ss;
+  fmc::logger_t logger{ss};
+  logger.info('A', "BC", std::string_view("123"), 456);
+  EXPECT_EQ(ss.str().substr(32), "A BC 123 456");
+
+  fmc_error_t *err = nullptr;
+  auto test1 = [](fmc_error_t **error) {
+    RETURN_ERROR_UNLESS(false, error, , "return", 123);
+  };
+
+  auto test2 = [&](fmc_error_t **error) {
+    test1(error);
+    RETURN_ON_ERROR(error, , "added");
+  };
+  test1(&err);
+  std::string_view err1{fmc_error_msg(err)};
+  ASSERT_GE(err1.size(), 24);
+  err1 = err1.substr(err1.size() - 24);
+  ASSERT_EQ(err1, "error.cpp:34) return 123");
+
+  fmc_error_clear(&err);
+  test2(&err);
+  err1 = fmc_error_msg(err);
+  ASSERT_GE(err1.size(), 31);
+  err1 = err1.substr(err1.size() - 31);
+  ASSERT_EQ(err1, "error.cpp:34) return 123; added");
+}
 
 TEST(error, cat) {
   fmc::error error;

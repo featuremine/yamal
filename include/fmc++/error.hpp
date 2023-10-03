@@ -14,6 +14,7 @@
 #pragma once
 
 #include "fmc/error.h"
+#include "fmc++/logger.hpp"
 
 #include <ostream>
 #include <utility>
@@ -77,6 +78,37 @@ public:
 };
 
 } // namespace fmc
+
+#define STR(a) #a
+#define XSTR(a) STR(a)
+
+#define RETURN_ERROR_UNLESS(COND, ERR, RET, ...)                               \
+  if (__builtin_expect(!(COND), 0)) {                                          \
+    std::ostringstream ss;                                                     \
+    fmc::logger_t logger{ss};                                                  \
+    logger.info(std::string_view("(" __FILE__ ":" XSTR(__LINE__) ")"),         \
+                __VA_ARGS__);                                                  \
+    fmc_error_set(ERR, "%s", ss.str().c_str());                                \
+    return RET;                                                                \
+  }
+
+#define RETURN_ON_ERROR(ERR, RET, ...)                                         \
+  if (__builtin_expect((*ERR) != nullptr, 0)) {                                \
+    std::ostringstream ss;                                                     \
+    fmc::logger_t logger{ss};                                                  \
+    logger.write(__VA_ARGS__);                                                  \
+    fmc_error_add(ERR, ";", "%s", ss.str().c_str());                          \
+    return RET;                                                                \
+  }
+
+#define EXIT_ON_ERROR(ERR, ...)                                                \
+  if (__builtin_expect((*ERR) != nullptr, 0)) {                                \
+    fprintf(stderr, "%s\n", fmc_error_msg(error));                             \
+    return 1;                                                                  \
+  }
+
+#define RETURN_ERROR(ERR, RET, ...)                                            \
+  RETURN_ERROR_UNLESS(false, ERR, RET, __VA_ARGS__)
 
 namespace std {
 

@@ -14,21 +14,30 @@
 #pragma once
 
 #include <fmc++/time.hpp>
+#include <fmc++/mpl.hpp>
 
 namespace fmc {
 
 struct logger_t {
   template <typename... Args> void info(Args &&...args) {
+    out << '[';
     out << std::chrono::system_clock::now().time_since_epoch();
-
-    for_each(
+    out << ']';
+    write(std::forward<Args>(args)...);
+  }
+  template <typename... Args> void write(Args &&...args) {
+    fmc::for_each(
         [&](auto &&arg) { out << ' ' << std::forward<decltype(arg)>(arg); },
         std::forward<Args>(args)...);
-
-    out << std::endl;
   }
-
   std::ostream &out;
 };
+
+template <typename... Args>
+inline void notice(Args &&...args) {
+  logger_t logger{std::cout};
+  logger.info(std::forward<Args>(args)...);
+  std::cout << std::endl; 
+}
 
 } // namespace fmc
