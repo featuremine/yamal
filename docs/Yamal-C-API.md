@@ -323,6 +323,19 @@ Determines if a list is closed.
 bool ytp_yamal_closed(ytp_yamal_t *yamal, size_t lstidx, fmc_error_t **error)
 ```
 
+## ytp_yamal_closable
+
+Determines if a list is closable. 
+
+- yamal
+- lstidx
+
+**return value**: true if the list is closed, false otherwise
+
+```c
+bool ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error)
+```
+
 ## ytp_yamal_allocate_page
 
 Allocates a specific page. 

@@ -38,16 +38,27 @@ if (BUILD_DOCUMENTATION)
     )
 endif()
 
-if(BUILD_TESTING)
-    set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-    find_package(Subproject REQUIRED)
+set(Subproject_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+if(BUILD_TESTING)
+    find_package(Subproject REQUIRED)
     add_subproject(
         NAME libgtest
         GIT_REVISION "v1.14.0"
         GIT_URL "https://github.com/google/googletest.git"
         TARGETS gtest
     )
+endif()
+
+if (BUILD_TOOLS AND NOT TARGET tclap)
+    find_package(Subproject REQUIRED)
+    git_clone(
+        GIT_REVISION "v1.2.5"
+        GIT_URL "https://github.com/mirror/tclap.git"
+        DIR "${CMAKE_BINARY_DIR}/dependencies/src/tclap"
+    )
+    add_library(tclap INTERFACE IMPORTED GLOBAL)
+    target_include_directories(tclap INTERFACE "${CMAKE_BINARY_DIR}/dependencies/src/tclap/include")
 endif()
 
 set(YAMAL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -64,6 +75,10 @@ fm_config()
 find_library(DL_LIB dl)
 find_library(PTHREAD_LIB pthread)
 include(GNUInstallDirs)
+
+set(ReleaseTools_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(ReleaseTools REQUIRED)
+get_python_platform(PYTHON_PLATFORM)
 
 add_library(
     fmc++
@@ -373,39 +388,39 @@ if(BUILD_TOOLS)
     endfunction()
     add_tool(
         NAME yamal-run
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
     )
     add_tool(
         NAME yamal-latency
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
     )
     add_tool(
         NAME yamal-replay
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
     )
     add_tool(
         NAME yamal-cp
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
     )
     add_tool(
         NAME yamal-daemon
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
      )
     add_tool(
         NAME yamal-tail
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
      )
     add_tool(
         NAME yamal-local-perf
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
      )
     add_tool(
         NAME yamal-perf
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
      )
     add_tool(
         NAME yamal-stats
-        LINK_LIBRARIES PRIVATE ytp fmc++
+        LINK_LIBRARIES PRIVATE ytp fmc++ tclap
      )
 endif()
 
