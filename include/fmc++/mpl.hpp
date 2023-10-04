@@ -222,7 +222,7 @@ T *derived_by_name(string_view name, type_list<Ts...>, Args &&...args) {
         using Tt = decltype(t);
         using Tn = typename Tt::type;
         if (!result && type_name<Tn>() == name) {
-          result = new Tn(forward<Args>(args)...);
+          result = new Tn(std::forward<Args>(args)...);
         }
       },
       typify<Ts>()...);
@@ -238,7 +238,7 @@ std::unique_ptr<T> make_unique_by_name(string_view name, type_list<Ts...>,
         using Tt = decltype(t);
         using Tn = typename Tt::type;
         if (!result && type_name<Tn>() == name) {
-          result = new Tn(forward<Args>(args)...);
+          result = new Tn(std::forward<Args>(args)...);
         }
       },
       typify<Ts>()...);
@@ -282,7 +282,7 @@ void for_each_in_tuple(F &&f, Tuple &&tuple) {
 
 template <class Func, class... Ts, class... Args>
 void for_each_type(Func &&f, type_list<Ts...>, Args &&...args) {
-  for_each([&](auto t) { f(t, forward<Args>(args)...); }, typify<Ts>()...);
+  for_each([&](auto t) { f(t, std::forward<Args>(args)...); }, typify<Ts>()...);
 }
 
 template <class Tup> struct tuple_to_type_list;
@@ -307,14 +307,15 @@ template <class Op, class Func, class... Args>
 decltype(auto) apply_for_each(Op &&op, Func &&f, Args &&...args) {
   tuple<decltype(f(std::forward<Args>(args)))...> tup = {
       f(std::forward<Args>(args))...};
-  return apply(forward<Op>(op), move(tup));
+  return apply(std::forward<Op>(op), std::move(tup));
 }
 
 template <class Op, class Func, class... Ts, class... Args>
 decltype(auto) apply_for_each_type(Op &&op, Func &&f, type_list<Ts...>,
                                    Args &&...args) {
   return apply_for_each(
-      forward<Op>(op), [&](auto t) { return f(t, forward<Args>(args)...); },
+      std::forward<Op>(op),
+      [&](auto t) { return f(t, std::forward<Args>(args)...); },
       typify<Ts>()...);
 }
 
