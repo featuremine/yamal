@@ -553,16 +553,13 @@ void fmc_fview_remap(fmc_fview_t *view, fmc_fd fd, size_t old_size,
     FMC_ERROR_REPORT(error, fmc_syserror_msg());
   }
 #elif defined(FMC_SYS_MACH)
-  if (mmap(view->mem, new_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
-           fd, offset) == MAP_FAILED) {
-    if (auto *tmp = mmap(NULL, new_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                         offset);
-        tmp != MAP_FAILED) {
-      munmap(view->mem, old_size);
-      view->mem = tmp;
-    } else {
-      FMC_ERROR_REPORT(error, fmc_syserror_msg());
-    }
+  if (auto *tmp =
+          mmap(NULL, new_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
+      tmp != MAP_FAILED) {
+    munmap(view->mem, old_size);
+    view->mem = tmp;
+  } else {
+    FMC_ERROR_REPORT(error, fmc_syserror_msg());
   }
 #endif
 }
