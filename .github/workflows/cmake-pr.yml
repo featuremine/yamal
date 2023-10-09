@@ -69,9 +69,9 @@ jobs:
         wheel: true
         upload: ${{ needs.utility.outputs.release-check == 'release' }}
 
-  build-macos-12-arm:
+  build-macos-13-arm:
     needs: utility
-    runs-on: macos-12-xlarge
+    runs-on: macos-13-xlarge
 
     steps:
     - uses: actions/checkout@v3
