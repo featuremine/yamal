@@ -47,8 +47,33 @@ jobs:
         test_pypi_token: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
   build-macos:
+    if: needs.utility.outputs.release-check == 'release'
     needs: utility
     runs-on: macos-11
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: brew install pkg-config cmake googletest python doxygen
+
+    - name: Install sphinx
+      run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
+
+    - name: Build ${{ github.event.repository.name }} with fm gcc
+      uses: featuremine/actions/package/build@v2
+      with:
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
+        docs: false
+        wheel: true
+        upload: ${{ needs.utility.outputs.release-check == 'release' }}
+
+  build-macos-13-arm:
+    needs: utility
+    if: needs.utility.outputs.release-check == 'release'
+    runs-on: macos-13-xlarge
 
     steps:
     - uses: actions/checkout@v3
