@@ -71,6 +71,7 @@ jobs:
 
   build-macos-13-arm:
     needs: utility
+    if: needs.utility.outputs.release-check == 'release'
     runs-on: macos-13-xlarge
 
     steps:
