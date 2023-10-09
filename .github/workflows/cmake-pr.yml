@@ -47,6 +47,7 @@ jobs:
         test_pypi_token: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
   build-macos:
+    if: needs.utility.outputs.release-check == 'release'
     needs: utility
     runs-on: macos-11
 
