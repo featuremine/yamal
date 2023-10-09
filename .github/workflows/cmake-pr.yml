@@ -69,6 +69,29 @@ jobs:
         wheel: true
         upload: ${{ needs.utility.outputs.release-check == 'release' }}
 
+  build-macos-12-arm:
+    needs: utility
+    runs-on: macos-12-large
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: brew install pkg-config cmake googletest python doxygen
+
+    - name: Install sphinx
+      run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
+
+    - name: Build ${{ github.event.repository.name }} with fm gcc
+      uses: featuremine/actions/package/build@v2
+      with:
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
+        docs: false
+        wheel: true
+        upload: ${{ needs.utility.outputs.release-check == 'release' }}
+
   test-centos:
     needs: [utility, build-manylinux]
     if: needs.utility.outputs.release-check == 'release'
