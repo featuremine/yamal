@@ -71,7 +71,7 @@ jobs:
 
   build-macos-12-arm:
     needs: utility
-    runs-on: macos-12-large
+    runs-on: macos-12-xlarge
 
     steps:
     - uses: actions/checkout@v3
