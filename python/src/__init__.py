@@ -16,7 +16,7 @@ if system.platform != "darwin":
 import json
 from operator import getitem
 from .yamal8 import *
-from .ytp import __version__
+from yamal.ytp import __version__ as __version__
 
 class keydefaultdict(dict):
     def __init__(self, default_factory : Callable[[Any], Any]) -> None:
