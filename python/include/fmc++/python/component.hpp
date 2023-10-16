@@ -84,8 +84,6 @@ public:
 
     component_type.f_ = f; /* My_func */
 
-    PyDateTime_IMPORT;
-
     if (PyType_Ready(&component_type.type_) < 0) {
       PyErr_SetString(PyExc_RuntimeError,
                       "Unable to initialize component type");
