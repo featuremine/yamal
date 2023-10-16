@@ -397,8 +397,9 @@ class timedelta : public object {
 public:
   timedelta(object &&obj) : object(obj) {
     fmc_range_error_unless(
-        fmc::python::datetime::is_timedelta_type(get_ref()) || PyFloat_Check(get_ref()) ||
-        PyLong_Check(get_ref()) || is_pandas_timestamp_type(get_ref()))
+        fmc::python::datetime::is_timedelta_type(get_ref()) ||
+        PyFloat_Check(get_ref()) || PyLong_Check(get_ref()) ||
+        is_pandas_timestamp_type(get_ref()))
         << str() << ". Got type "
         << std::string(Py_TYPE(get_ref()) ? Py_TYPE(get_ref())->tp_name : "")
         << ". It should be of type timedelta, numeric or pandas.Timestamp";

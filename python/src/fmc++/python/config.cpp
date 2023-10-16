@@ -24,7 +24,7 @@
 
 #include <fmc++/python/wrapper.hpp>
 
-#include <Python.h>   // PyGILState_*
+#include <Python.h> // PyGILState_*
 
 #include <functional>  // std::function
 #include <optional>    // std::optional; std::make_optional
@@ -38,8 +38,7 @@ namespace configs {
 
 // *** node ***
 
-node::node(fmc::python::object &&obj) : obj_(obj) {
-}
+node::node(fmc::python::object &&obj) : obj_(obj) {}
 
 node &node::operator[](std::string_view key) { return as<section>()[key]; }
 
@@ -125,8 +124,7 @@ fmc::configs::interface::node::_type node::type() {
 section::section(fmc::python::object &&obj)
     : obj_(obj), table_([this](std::string_view key) {
         return new node(obj_.get_item(std::string(key)));
-      }) {
-}
+      }) {}
 
 node &section::operator[](std::string_view key) {
   return static_cast<node &>(get(key));
@@ -173,8 +171,7 @@ section::_mapping::operator()(
 array::array(fmc::python::object &&obj)
     : obj_(obj), table_([this](size_t key) {
         return new node(obj_.get_item(long(key)));
-      }) {
-}
+      }) {}
 
 node &array::operator[](size_t key) { return static_cast<node &>(get(key)); }
 
