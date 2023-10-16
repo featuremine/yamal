@@ -25,7 +25,6 @@
 #include <fmc++/python/wrapper.hpp>
 
 #include <Python.h>   // PyGILState_*
-#include <datetime.h> // PyDelta_Check()
 
 #include <functional>  // std::function
 #include <optional>    // std::optional; std::make_optional
@@ -40,8 +39,6 @@ namespace configs {
 // *** node ***
 
 node::node(fmc::python::object &&obj) : obj_(obj) {
-  if (!PyDateTimeAPI)
-    PyDateTime_IMPORT;
 }
 
 node &node::operator[](std::string_view key) { return as<section>()[key]; }
@@ -111,7 +108,7 @@ fmc::configs::interface::node::_type node::type() {
     return _type::INTEGER;
   } else if (PyFloat_Check(obj_.get_ref())) {
     return _type::FLOATING_POINT;
-  } else if (PyDelta_Check(obj_.get_ref())) {
+  } else if (fmc::python::datetime::is_timedelta_type(obj_.get_ref())) {
     return _type::TIME;
   } else if (PyUnicode_Check(obj_.get_ref())) {
     return _type::STRING;
@@ -129,8 +126,6 @@ section::section(fmc::python::object &&obj)
     : obj_(obj), table_([this](std::string_view key) {
         return new node(obj_.get_item(std::string(key)));
       }) {
-  if (!PyDateTimeAPI)
-    PyDateTime_IMPORT;
 }
 
 node &section::operator[](std::string_view key) {
@@ -179,8 +174,6 @@ array::array(fmc::python::object &&obj)
     : obj_(obj), table_([this](size_t key) {
         return new node(obj_.get_item(long(key)));
       }) {
-  if (!PyDateTimeAPI)
-    PyDateTime_IMPORT;
 }
 
 node &array::operator[](size_t key) { return static_cast<node &>(get(key)); }

@@ -23,7 +23,6 @@
 
 #include <Python.h>
 #include <chrono>
-#include <datetime.h>
 #include <map>
 #include <string>
 #include <string_view>
@@ -55,9 +54,6 @@ public:
     } else {
       external = false;
     }
-
-    if (!PyDateTimeAPI)
-      PyDateTime_IMPORT;
   }
   ~interpreter() {
     if (external)
@@ -340,63 +336,6 @@ public:
   }
 };
 
-class timedelta : public object {
-public:
-  timedelta(object &&obj) : object(obj) {
-    PyDateTime_IMPORT;
-
-    fmc_range_error_unless(
-        PyDelta_Check(get_ref()) || PyFloat_Check(get_ref()) ||
-        PyLong_Check(get_ref()) || is_pandas_timestamp_type(get_ref()))
-        << str() << ". Got type "
-        << std::string(Py_TYPE(get_ref()) ? Py_TYPE(get_ref())->tp_name : "")
-        << ". It should be of type timedelta, numeric or pandas.Timestamp";
-  }
-  timedelta(time t)
-      : object(object::from_new([=]() {
-          using namespace std::chrono;
-          auto us = duration_cast<microseconds>(t);
-          auto sec = duration_cast<seconds>(us);
-          auto tmp = duration_cast<microseconds>(sec);
-          auto rem = us - tmp;
-          return PyDelta_FromDSU(0, sec.count(), rem.count());
-        }())) {
-    if (!*this)
-      raise_python_error();
-  }
-  operator time() {
-    if (!PyDateTimeAPI)
-      PyDateTime_IMPORT;
-    using namespace std::chrono;
-    if (PyDelta_Check(get_ref())) {
-      auto h = hours(24 * long(py_int((*this)["days"])));
-      auto sec = seconds(long(py_int((*this)["seconds"])));
-      auto us = microseconds(long(py_int((*this)["microseconds"])));
-      return duration_cast<time>(h) + duration_cast<time>(sec) +
-             duration_cast<time>(us);
-    } else if (PyFloat_Check(get_ref())) {
-      auto fdur = duration<double>(PyFloat_AsDouble(get_ref()));
-      auto nanos = duration_cast<nanoseconds>(fdur);
-      return duration_cast<time>(nanos);
-    } else if (PyLong_Check(get_ref())) {
-      long long ns = PyLong_AsLongLong(get_ref());
-      raise_python_error();
-      return duration_cast<time>(nanoseconds(ns));
-    } else if (is_pandas_timestamp_type(get_ref())) {
-      auto ns = PyLong_AsLongLong((*this)["value"].get_ref());
-      return duration_cast<time>(nanoseconds(ns));
-    }
-    fmc_range_error_unless(false)
-        << str() << " must be timedelta, numeric or pandas.Timestamp";
-    return seconds(0);
-  }
-
-  static bool is_pandas_timestamp_type(PyObject *obj) {
-    return strcmp(Py_TYPE(obj)->tp_name, "Timestamp") == 0;
-  }
-};
-template <> struct _py_object_t<time> { using type = timedelta; };
-
 class datetime : public object {
 public:
   datetime(object &&obj) : object(obj) {}
@@ -453,6 +392,59 @@ public:
                       args.get_ref(), kwargs.get_ref()));
   }
 };
+
+class timedelta : public object {
+public:
+  timedelta(object &&obj) : object(obj) {
+    fmc_range_error_unless(
+        fmc::python::datetime::is_timedelta_type(get_ref()) || PyFloat_Check(get_ref()) ||
+        PyLong_Check(get_ref()) || is_pandas_timestamp_type(get_ref()))
+        << str() << ". Got type "
+        << std::string(Py_TYPE(get_ref()) ? Py_TYPE(get_ref())->tp_name : "")
+        << ". It should be of type timedelta, numeric or pandas.Timestamp";
+  }
+  timedelta(time t)
+      : object([=]() {
+          using namespace std::chrono;
+          auto us = duration_cast<microseconds>(t);
+          auto sec = duration_cast<seconds>(us);
+          auto tmp = duration_cast<microseconds>(sec);
+          auto rem = us - tmp;
+          return fmc::python::datetime::timedelta(0, sec.count(), rem.count());
+        }()) {
+    if (!*this)
+      raise_python_error();
+  }
+  operator time() {
+    using namespace std::chrono;
+    if (fmc::python::datetime::is_timedelta_type(get_ref())) {
+      auto h = hours(24 * long(py_int((*this)["days"])));
+      auto sec = seconds(long(py_int((*this)["seconds"])));
+      auto us = microseconds(long(py_int((*this)["microseconds"])));
+      return duration_cast<time>(h) + duration_cast<time>(sec) +
+             duration_cast<time>(us);
+    } else if (PyFloat_Check(get_ref())) {
+      auto fdur = duration<double>(PyFloat_AsDouble(get_ref()));
+      auto nanos = duration_cast<nanoseconds>(fdur);
+      return duration_cast<time>(nanos);
+    } else if (PyLong_Check(get_ref())) {
+      long long ns = PyLong_AsLongLong(get_ref());
+      raise_python_error();
+      return duration_cast<time>(nanoseconds(ns));
+    } else if (is_pandas_timestamp_type(get_ref())) {
+      auto ns = PyLong_AsLongLong((*this)["value"].get_ref());
+      return duration_cast<time>(nanoseconds(ns));
+    }
+    fmc_range_error_unless(false)
+        << str() << " must be timedelta, numeric or pandas.Timestamp";
+    return seconds(0);
+  }
+
+  static bool is_pandas_timestamp_type(PyObject *obj) {
+    return strcmp(Py_TYPE(obj)->tp_name, "Timestamp") == 0;
+  }
+};
+template <> struct _py_object_t<time> { using type = timedelta; };
 
 class tuple : public object {
 public:
