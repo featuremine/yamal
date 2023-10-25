@@ -23,6 +23,7 @@
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc++/strings.hpp>
 
 #include "iocomponent.h"
 #include "shutdowncomponent.h"
@@ -74,7 +75,9 @@ TEST(component, sys_paths) {
                 std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
   EXPECT_EQ(std::string(pdef->next->next->path),
             std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
-  ASSERT_EQ(pdef->next->next->next, nullptr);
+  EXPECT_TRUE(fmc::ends_with(std::string(pdef->next->next->next->path),
+                             "/test/lib/yamal/modules"));
+  ASSERT_EQ(pdef->next->next->next->next, nullptr);
   fmc_component_sys_destroy(&sys);
   ASSERT_EQ(sys.search_paths, nullptr);
   ASSERT_EQ(sys.modules, nullptr);
@@ -94,11 +97,13 @@ TEST(component, sys_paths) {
                 std::string("/" FMC_MOD_SEARCHPATH_USRLOCAL));
   EXPECT_EQ(std::string(pdef->next->next->path),
             std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
-  EXPECT_EQ(std::string(pdef->next->next->next->path),
-            std::string("/first/path"));
+  EXPECT_TRUE(fmc::ends_with(std::string(pdef->next->next->next->path),
+                             "/test/lib/yamal/modules"));
   EXPECT_EQ(std::string(pdef->next->next->next->next->path),
+            std::string("/first/path"));
+  EXPECT_EQ(std::string(pdef->next->next->next->next->next->path),
             std::string("/second/path"));
-  ASSERT_EQ(pdef->next->next->next->next->next, nullptr);
+  ASSERT_EQ(pdef->next->next->next->next->next->next, nullptr);
   fmc_component_sys_destroy(&sys);
   ASSERT_EQ(sys.search_paths, nullptr);
   ASSERT_EQ(sys.modules, nullptr);

@@ -89,6 +89,29 @@ FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1,
                             const char *p2);
 
 /**
+ * @brief Obtain the path of the parent directory
+ * If sz if 0, it resturns the size of the result string.
+ *
+ * @param dest buffer to store the string with the final path.
+ * @param sz size of dest buffer.
+ * @param src string with the source path.
+ * @return the number of characters that would have been written on the
+ * buffer, if ‘sz’ had been sufficiently large
+ */
+FMMODFUNC int fmc_path_parent(char *dest, size_t sz, const char *src);
+
+/**
+ * @brief Obtain path of current executable
+ * If sz if 0, it resturns the size of the result string.
+ *
+ * @param dest buffer to store the string with the final path.
+ * @param sz size of dest buffer.
+ * @return the number of characters that would have been written on the
+ * buffer, if ‘sz’ had been sufficiently large
+ */
+FMMODFUNC int fmc_exec_path_get(char *dest, size_t sz);
+
+/**
  * @brief Opens a process by creating a pipe, forking, and invoking the shell
  *
  * @param command a shell command line

@@ -19,10 +19,12 @@
 #include <fmc++/fs.hpp>
 #include <fmc/files.h>
 #include <fmc/platform.h>
+#include <cstring>
 
 #if defined(FMC_SYS_MACH)
 #include <fcntl.h>
 #include <limits.h>
+#include <mach-o/dyld.h>
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>
 #include <mach/machine.h>
@@ -30,7 +32,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #elif defined(FMC_SYS_UNIX)
-#include <cstring>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -93,6 +94,38 @@ int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
     return snprintf(dest, sz, "%s", p2);
   }
   return snprintf(dest, sz, "%s%c%s", p1, sep, p2);
+}
+
+int fmc_path_parent(char *dest, size_t sz, const char *src) {
+#ifdef FMC_SYS_UNIX
+  char sep = '/';
+#elif defined(FMC_SYS_WIN)
+  char sep = '\\';
+#else
+#error "Not supported"
+#endif
+  const char *cpos = std::strrchr(src, sep);
+  int pos = cpos - src;
+  if (pos < 0) {
+    return snprintf(dest, sz, ".");
+  }
+  return snprintf(dest, sz, "%.*s", pos, src);
+}
+
+int fmc_exec_path_get(char *dest, size_t sz) {
+#if defined(FMC_SYS_LINUX)
+  char buff[PATH_MAX];
+  ssize_t pathsz = readlink("/proc/self/exe", buff, PATH_MAX);
+  return snprintf(dest, sz, "%.*s", static_cast<int>(pathsz), buf);
+#elif defined(FMC_SYS_MACH)
+  uint32_t bufsz = sz;
+  if (_NSGetExecutablePath(dest, &bufsz) == 0 && bufsz < sz) {
+    dest[bufsz] = '\0';
+  }
+  return bufsz + 1;
+#else
+#error "operating system is not supported"
+#endif
 }
 
 FILE *fmc_popen(const char *command, const char *read_mode,

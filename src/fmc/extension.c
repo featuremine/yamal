@@ -239,7 +239,23 @@ fmc_ext_searchpath_set_default(struct fmc_ext_searchpath_t **head,
   char syspath[syspathsz];
   fmc_path_join(syspath, syspathsz, FMC_MOD_SEARCHPATH_SYSLOCAL, defaultpath);
 
-  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, homepath2, syspath, NULL};
+  int execpathsz = fmc_exec_path_get(NULL, 0);
+  char execpath[execpathsz];
+  fmc_exec_path_get(execpath, execpathsz);
+
+  int binpathsz = fmc_path_parent(NULL, 0, execpath);
+  char binpath[binpathsz];
+  fmc_path_parent(binpath, binpathsz, execpath);
+
+  int prefixpathsz = fmc_path_parent(NULL, 0, binpath);
+  char prefixpath[prefixpathsz];
+  fmc_path_parent(prefixpath, prefixpathsz, execpath);
+
+  int currpathsz = fmc_path_join(NULL, 0, prefixpath, defaultpath) + 1;
+  char currpath[currpathsz];
+  fmc_path_join(currpath, currpathsz, prefixpath, defaultpath);
+
+  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, homepath2, syspath, currpath, NULL};
 
   struct fmc_ext_searchpath_t *tmpls = NULL;
   fmc_ext_searchpath_set(&tmpls, defaults, error);
