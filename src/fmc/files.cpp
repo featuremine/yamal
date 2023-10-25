@@ -107,8 +107,8 @@ int fmc_path_parent(char *dest, size_t sz, const char *src) {
 
 int fmc_exec_path_get(char *dest, size_t sz) {
 #if defined(FMC_SYS_LINUX)
-  char buff[PATH_MAX];
-  ssize_t pathsz = readlink("/proc/self/exe", buff, PATH_MAX);
+  char buf[PATH_MAX];
+  ssize_t pathsz = readlink("/proc/self/exe", buf, PATH_MAX);
   return snprintf(dest, sz, "%.*s", static_cast<int>(pathsz), buf);
 #elif defined(FMC_SYS_MACH)
   uint32_t bufsz = sz;
