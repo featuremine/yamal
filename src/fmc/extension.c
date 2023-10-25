@@ -239,15 +239,15 @@ fmc_ext_searchpath_set_default(struct fmc_ext_searchpath_t **head,
   char syspath[syspathsz];
   fmc_path_join(syspath, syspathsz, FMC_MOD_SEARCHPATH_SYSLOCAL, defaultpath);
 
-  int execpathsz = fmc_exec_path_get(NULL, 0);
+  int execpathsz = fmc_exec_path_get(NULL, 0) + 1;
   char execpath[execpathsz];
   fmc_exec_path_get(execpath, execpathsz);
 
-  int binpathsz = fmc_path_parent(NULL, 0, execpath);
+  int binpathsz = fmc_path_parent(NULL, 0, execpath) + 1;
   char binpath[binpathsz];
   fmc_path_parent(binpath, binpathsz, execpath);
 
-  int prefixpathsz = fmc_path_parent(NULL, 0, binpath);
+  int prefixpathsz = fmc_path_parent(NULL, 0, binpath) + 1;
   char prefixpath[prefixpathsz];
   fmc_path_parent(prefixpath, prefixpathsz, execpath);
 

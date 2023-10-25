@@ -115,7 +115,7 @@ int fmc_exec_path_get(char *dest, size_t sz) {
   if (_NSGetExecutablePath(dest, &bufsz) == 0 && bufsz < sz) {
     dest[bufsz] = '\0';
   }
-  return bufsz + 1;
+  return bufsz;
 #else
 #error "operating system is not supported"
 #endif
