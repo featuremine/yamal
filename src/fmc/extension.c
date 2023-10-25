@@ -255,7 +255,8 @@ fmc_ext_searchpath_set_default(struct fmc_ext_searchpath_t **head,
   char currpath[currpathsz];
   fmc_path_join(currpath, currpathsz, prefixpath, defaultpath);
 
-  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, homepath2, syspath, currpath, NULL};
+  const char *defaults[] = {FMC_MOD_SEARCHPATH_CUR, homepath2, syspath,
+                            currpath, NULL};
 
   struct fmc_ext_searchpath_t *tmpls = NULL;
   fmc_ext_searchpath_set(&tmpls, defaults, error);

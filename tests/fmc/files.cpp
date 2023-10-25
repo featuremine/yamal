@@ -452,7 +452,6 @@ TEST(fmc, path_parent) {
   memset(outbuff, 0, sizeof(outbuff));
   ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_nest_dir), 11);
   ASSERT_EQ(strncmp(outbuff, "/dir/subdir", sizeof(outbuff)), 0);
-
 }
 
 GTEST_API_ int main(int argc, char **argv) {
