@@ -409,6 +409,52 @@ TEST(fmc, path_join) {
   ASSERT_EQ(strncmp(outbuff, "", sizeof(outbuff)), 0);
 }
 
+TEST(fmc, path_parent) {
+
+  char path_prefix_empty[] = "";
+  char path_root[] = "/";
+  char path_root_with_file[] = "/file.extension";
+  char path_root_with_dir[] = "/subdir";
+  char path_with_file[] = "/dir/file.extension";
+  char path_with_dir[] = "/dir/subdir";
+  char path_with_nest_file[] = "/dir/subdir/file.extension";
+  char path_with_nest_dir[] = "/dir/subdir/subdir";
+
+  char outbuff[100];
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_prefix_empty), -1);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_root), 1);
+  ASSERT_EQ(strncmp(outbuff, "/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_root_with_file), 1);
+  ASSERT_EQ(strncmp(outbuff, "/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_root_with_dir), 1);
+  ASSERT_EQ(strncmp(outbuff, "/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_file), 4);
+  ASSERT_EQ(strncmp(outbuff, "/dir", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_dir), 4);
+  ASSERT_EQ(strncmp(outbuff, "/dir", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_nest_file), 11);
+  ASSERT_EQ(strncmp(outbuff, "/dir/subdir", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_nest_dir), 11);
+  ASSERT_EQ(strncmp(outbuff, "/dir/subdir", sizeof(outbuff)), 0);
+
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

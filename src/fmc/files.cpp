@@ -97,19 +97,12 @@ int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
 }
 
 int fmc_path_parent(char *dest, size_t sz, const char *src) {
-#ifdef FMC_SYS_UNIX
-  char sep = '/';
-#elif defined(FMC_SYS_WIN)
-  char sep = '\\';
-#else
-#error "Not supported"
-#endif
-  const char *cpos = std::strrchr(src, sep);
-  int pos = cpos - src;
-  if (pos < 0) {
-    return snprintf(dest, sz, ".");
+  auto path = fs::path(src);
+  auto parent_path = path.parent_path();
+  if (parent_path.empty()) {
+    return -1;
   }
-  return snprintf(dest, sz, "%.*s", pos, src);
+  return snprintf(dest, sz, "%s", parent_path.c_str());
 }
 
 int fmc_exec_path_get(char *dest, size_t sz) {
