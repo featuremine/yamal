@@ -76,7 +76,7 @@ TEST(component, sys_paths) {
   EXPECT_EQ(std::string(pdef->next->next->path),
             std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
   EXPECT_TRUE(fmc::ends_with(std::string(pdef->next->next->next->path),
-                             "/test/lib/yamal/modules"));
+                             "/tests/lib/yamal/modules"));
   ASSERT_EQ(pdef->next->next->next->next, nullptr);
   fmc_component_sys_destroy(&sys);
   ASSERT_EQ(sys.search_paths, nullptr);
@@ -98,7 +98,7 @@ TEST(component, sys_paths) {
   EXPECT_EQ(std::string(pdef->next->next->path),
             std::string(FMC_MOD_SEARCHPATH_SYSLOCAL));
   EXPECT_TRUE(fmc::ends_with(std::string(pdef->next->next->next->path),
-                             "/test/lib/yamal/modules"));
+                             "/tests/lib/yamal/modules"));
   EXPECT_EQ(std::string(pdef->next->next->next->next->path),
             std::string("/first/path"));
   EXPECT_EQ(std::string(pdef->next->next->next->next->next->path),
