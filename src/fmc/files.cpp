@@ -19,7 +19,6 @@
 #include <fmc++/fs.hpp>
 #include <fmc/files.h>
 #include <fmc/platform.h>
-#include <cstring>
 
 #if defined(FMC_SYS_MACH)
 #include <fcntl.h>
@@ -32,6 +31,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #elif defined(FMC_SYS_UNIX)
+#include <cstring>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/mman.h>
