@@ -33,11 +33,11 @@
 #elif defined(FMC_SYS_UNIX)
 #include <cstring>
 #include <fcntl.h>
+#include <linux/limits.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <linux/limits.h>
 #elif defined(FMC_SYS_WIN)
 #include <io.h>
 #include <memoryapi.h>
