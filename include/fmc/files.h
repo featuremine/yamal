@@ -76,7 +76,7 @@ FMMODFUNC bool fmc_basedir_exists(const char *file_path, fmc_error_t **error);
 
 /**
  * @brief Join two paths.
- * If sz if 0, it resturns the size of the result string.
+ * If sz if 0, it returns the length of the result string, not including the null terminating character.
  *
  * @param dest buffer to store the string with the final path.
  * @param sz size of dest buffer.
@@ -90,7 +90,7 @@ FMMODFUNC int fmc_path_join(char *dest, size_t sz, const char *p1,
 
 /**
  * @brief Obtain the path of the parent directory
- * If sz if 0, it resturns the size of the result string.
+ * If sz if 0, it returns the length of the result string, not including the null terminating character.
  *
  * @param dest buffer to store the string with the final path.
  * @param sz size of dest buffer.
@@ -102,7 +102,7 @@ FMMODFUNC int fmc_path_parent(char *dest, size_t sz, const char *src);
 
 /**
  * @brief Obtain path of current executable
- * If sz if 0, it resturns the size of the result string.
+ * If sz if 0, it returns the length of the result string, not including the null terminating character.
  *
  * @param dest buffer to store the string with the final path.
  * @param sz size of dest buffer.

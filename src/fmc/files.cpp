@@ -112,10 +112,8 @@ int fmc_exec_path_get(char *dest, size_t sz) {
   return snprintf(dest, sz, "%.*s", static_cast<int>(pathsz), buf);
 #elif defined(FMC_SYS_MACH)
   uint32_t bufsz = sz;
-  if (_NSGetExecutablePath(dest, &bufsz) == 0 && bufsz <= sz) {
-    dest[bufsz] = '\0';
-  }
-  return bufsz;
+  _NSGetExecutablePath(dest, &bufsz);
+  return bufsz - 1;
 #else
 #error "operating system is not supported"
 #endif
