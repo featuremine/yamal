@@ -217,12 +217,13 @@ int main(int argc, char **argv) {
       "main", "section");
   cmd.add(mainArg);
 
-  TCLAP::UnlabeledValueArg<std::string> cfgArg("configuration", "Configuration path", false,
+  TCLAP::UnlabeledValueArg<std::string> cfgArg("configuration",
+                                               "Configuration path", false,
                                                "config.ini", "config_path");
   cmd.add(cfgArg);
 
-  TCLAP::ValueArg<std::string> backwardsCompatibilityCfgArg("c", "config", "Configuration path", false,
-                                                            "config.ini", "config_path");
+  TCLAP::ValueArg<std::string> backwardsCompatibilityCfgArg(
+      "c", "config", "Configuration path", false, "config.ini", "config_path");
   cmd.add(backwardsCompatibilityCfgArg);
 
   TCLAP::ValueArg<std::string> moduleArg("m", "module", "Module name", false,
@@ -296,10 +297,14 @@ int main(int argc, char **argv) {
     return buffer;
   };
 
-  fmc_runtime_error_unless(cfgArg.isSet() != backwardsCompatibilityCfgArg.isSet())
-    << "Please provide the configuration only as either a labeled or unlabeled argument";
+  fmc_runtime_error_unless(cfgArg.isSet() !=
+                           backwardsCompatibilityCfgArg.isSet())
+      << "Please provide the configuration only as either a labeled or "
+         "unlabeled argument";
 
-  const char * cfg_arg = cfgArg.isSet() ? cfgArg.getValue().c_str() : backwardsCompatibilityCfgArg.getValue().c_str();
+  const char *cfg_arg = cfgArg.isSet()
+                            ? cfgArg.getValue().c_str()
+                            : backwardsCompatibilityCfgArg.getValue().c_str();
 
   bool json_switch = jsonSwitch.getValue() || fmc::ends_with(cfg_arg, ".json");
 
