@@ -17,6 +17,7 @@
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc++/strings.hpp>
 #include <fmc/files.h>
 #include <fmc/platform.h>
 
@@ -452,6 +453,15 @@ TEST(fmc, path_parent) {
   memset(outbuff, 0, sizeof(outbuff));
   ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_nest_dir), 11);
   ASSERT_EQ(strncmp(outbuff, "/dir/subdir", sizeof(outbuff)), 0);
+}
+
+TEST(fmc, exec_path) {
+  int psz = fmc_exec_path_get(NULL, 0) + 1;
+  ASSERT_NE(psz, 1);
+  char buf[psz];
+  memset(buf, '1', psz);
+  ASSERT_NE(fmc_exec_path_get(buf, psz), 0);
+  ASSERT_TRUE(fmc::ends_with(buf, "files"));
 }
 
 GTEST_API_ int main(int argc, char **argv) {

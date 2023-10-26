@@ -15,6 +15,7 @@
 #include <fmc/signals.h>
 
 #include <fmc++/mpl.hpp>
+#include <fmc++/strings.hpp>
 
 #include <ytp/version.h>
 #include <ytp/yamal.h>
@@ -216,9 +217,13 @@ int main(int argc, char **argv) {
       "main", "section");
   cmd.add(mainArg);
 
-  TCLAP::ValueArg<std::string> cfgArg("c", "config", "Configuration path", true,
-                                      "config.ini", "config_path");
+  TCLAP::UnlabeledValueArg<std::string> cfgArg("configuration", "Configuration path", false,
+                                               "config.ini", "config_path");
   cmd.add(cfgArg);
+
+  TCLAP::ValueArg<std::string> backwardsCompatibilityCfgArg("c", "config", "Configuration path", false,
+                                                            "config.ini", "config_path");
+  cmd.add(backwardsCompatibilityCfgArg);
 
   TCLAP::ValueArg<std::string> moduleArg("m", "module", "Module name", false,
                                          "module", "module");
@@ -291,11 +296,18 @@ int main(int argc, char **argv) {
     return buffer;
   };
 
+  fmc_runtime_error_unless(cfgArg.isSet() != backwardsCompatibilityCfgArg.isSet())
+    << "Please provide the configuration only as either a labeled or unlabeled argument";
+
+  const char * cfg_arg = cfgArg.isSet() ? cfgArg.getValue().c_str() : backwardsCompatibilityCfgArg.getValue().c_str();
+
+  bool json_switch = jsonSwitch.getValue() || fmc::ends_with(cfg_arg, ".json");
+
   auto load_config = [&](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                          const char *section) {
     fmc_error_t *err;
-    if (jsonSwitch.getValue()) {
-      auto buffer = read_file(cfgArg.getValue().c_str(), &err);
+    if (json_switch) {
+      auto buffer = read_file(cfg_arg, &err);
       if (section) {
         auto sub_buffer = nlohmann::json::parse(buffer)[section].dump();
         cfg = config_ptr(fmc_cfg_sect_parse_json(type, sub_buffer.data(),
@@ -305,7 +317,7 @@ int main(int argc, char **argv) {
             fmc_cfg_sect_parse_json(type, buffer.data(), buffer.size(), &err));
       }
     } else {
-      file_ptr config_file(cfgArg.getValue().c_str());
+      file_ptr config_file(cfg_arg);
       cfg = config_ptr(
           fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
     }
@@ -346,8 +358,8 @@ int main(int argc, char **argv) {
         gen_component(
             moduleArg.getValue().c_str(), componentArg.getValue().c_str(),
             mainArg.isSet() ? mainArg.getValue().c_str() : nullptr, nullptr));
-  } else if (jsonSwitch.getValue()) {
-    auto buffer = read_file(cfgArg.getValue().c_str(), &err);
+  } else if (json_switch) {
+    auto buffer = read_file(cfg_arg, &err);
     nlohmann::json j_obj =
         nlohmann::json::parse(std::string_view(buffer.data(), buffer.size()));
 
