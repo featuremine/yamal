@@ -462,6 +462,7 @@ TEST(fmc, exec_path) {
   memset(buf, '1', psz);
   ASSERT_NE(fmc_exec_path_get(buf, psz), 0);
   ASSERT_TRUE(fmc::ends_with(buf, "files"));
+  ASSERT_EQ(strnlen(buf, psz), psz - 1);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
