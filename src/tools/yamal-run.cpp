@@ -266,8 +266,19 @@ int main(int argc, char **argv) {
       << "Invalid combination of arguments. module and component must either "
          "be provided through args or config.";
 
-  fmc_runtime_error_unless((jsonSwitch.getValue() && !mainArg.isSet()) ||
-                           (!jsonSwitch.getValue() && mainArg.isSet()))
+  fmc_runtime_error_unless(cfgArg.isSet() !=
+                           backwardsCompatibilityCfgArg.isSet())
+      << "Please provide the configuration only as either a labeled or "
+         "unlabeled argument";
+
+  const char *cfg_arg = cfgArg.isSet()
+                            ? cfgArg.getValue().c_str()
+                            : backwardsCompatibilityCfgArg.getValue().c_str();
+
+  bool json_switch = jsonSwitch.getValue() || fmc::ends_with(cfg_arg, ".json");
+
+  fmc_runtime_error_unless((json_switch && !mainArg.isSet()) ||
+                           (!json_switch && mainArg.isSet()))
       << "Invalid combination of arguments. main section argument must be "
          "provided only when ini config is used.";
 
@@ -296,17 +307,6 @@ int main(int argc, char **argv) {
     buffer.resize(cfgsz);
     return buffer;
   };
-
-  fmc_runtime_error_unless(cfgArg.isSet() !=
-                           backwardsCompatibilityCfgArg.isSet())
-      << "Please provide the configuration only as either a labeled or "
-         "unlabeled argument";
-
-  const char *cfg_arg = cfgArg.isSet()
-                            ? cfgArg.getValue().c_str()
-                            : backwardsCompatibilityCfgArg.getValue().c_str();
-
-  bool json_switch = jsonSwitch.getValue() || fmc::ends_with(cfg_arg, ".json");
 
   auto load_config = [&](config_ptr &cfg, struct fmc_cfg_node_spec *type,
                          const char *section) {
