@@ -404,7 +404,11 @@ done:
     FMC_ERROR_REPORT(error, fmc_syserror_msg());
     return;
   }
-  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, sz - sb.st_size};
+  off_t diff = sz - sb.st_size;
+  if (diff <= 0) {
+    return;
+  }
+  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, diff};
   // Try to get a continous chunk of disk space
   int ret = fcntl(fd, F_PREALLOCATE, &store);
   if (-1 == ret) {
