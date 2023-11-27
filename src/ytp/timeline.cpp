@@ -191,7 +191,11 @@ void ytp_timeline_prfx_cb_rm(ytp_timeline_t *timeline, size_t sz,
 
   auto c = ytp_timeline_data_cb_cl_t(cb, closure);
 
-  timeline->prfx_cb.erase(namestr);
+  if (auto it_data = timeline->prfx_cb.find(namestr);
+      it_data != timeline->prfx_cb.end()) {
+    auto &v = it_data->second;
+    std::erase_if(v, [&](const decltype(c) &item) { return c == item; });
+  }
 
   using V = decltype(timeline->idx_cb)::value_type;
   prfx_for_each(timeline, namestr, [&c](V &v) {
