@@ -17,6 +17,7 @@
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc++/strings.hpp>
 #include <fmc/files.h>
 #include <fmc/platform.h>
 
@@ -407,6 +408,61 @@ TEST(fmc, path_join) {
                           filename_empty),
             0);
   ASSERT_EQ(strncmp(outbuff, "", sizeof(outbuff)), 0);
+}
+
+TEST(fmc, path_parent) {
+
+  char path_prefix_empty[] = "";
+  char path_root[] = "/";
+  char path_root_with_file[] = "/file.extension";
+  char path_root_with_dir[] = "/subdir";
+  char path_with_file[] = "/dir/file.extension";
+  char path_with_dir[] = "/dir/subdir";
+  char path_with_nest_file[] = "/dir/subdir/file.extension";
+  char path_with_nest_dir[] = "/dir/subdir/subdir";
+
+  char outbuff[100];
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_prefix_empty), -1);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_root), 1);
+  ASSERT_EQ(strncmp(outbuff, "/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_root_with_file), 1);
+  ASSERT_EQ(strncmp(outbuff, "/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_root_with_dir), 1);
+  ASSERT_EQ(strncmp(outbuff, "/", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_file), 4);
+  ASSERT_EQ(strncmp(outbuff, "/dir", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_dir), 4);
+  ASSERT_EQ(strncmp(outbuff, "/dir", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_nest_file), 11);
+  ASSERT_EQ(strncmp(outbuff, "/dir/subdir", sizeof(outbuff)), 0);
+
+  memset(outbuff, 0, sizeof(outbuff));
+  ASSERT_EQ(fmc_path_parent(outbuff, sizeof(outbuff), path_with_nest_dir), 11);
+  ASSERT_EQ(strncmp(outbuff, "/dir/subdir", sizeof(outbuff)), 0);
+}
+
+TEST(fmc, exec_path) {
+  int psz = fmc_exec_path_get(NULL, 0) + 1;
+  ASSERT_NE(psz, 1);
+  char buf[psz];
+  memset(buf, '1', psz);
+  ASSERT_NE(fmc_exec_path_get(buf, psz), 0);
+  ASSERT_TRUE(fmc::ends_with(buf, "files"));
+  ASSERT_EQ(strnlen(buf, psz), psz - 1);
 }
 
 GTEST_API_ int main(int argc, char **argv) {

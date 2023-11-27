@@ -23,6 +23,7 @@
 #if defined(FMC_SYS_MACH)
 #include <fcntl.h>
 #include <limits.h>
+#include <mach-o/dyld.h>
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>
 #include <mach/machine.h>
@@ -32,11 +33,11 @@
 #elif defined(FMC_SYS_UNIX)
 #include <cstring>
 #include <fcntl.h>
+#include <linux/limits.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 #elif defined(FMC_SYS_WIN)
 #include <io.h>
 #include <memoryapi.h>
@@ -93,6 +94,29 @@ int fmc_path_join(char *dest, size_t sz, const char *p1, const char *p2) {
     return snprintf(dest, sz, "%s", p2);
   }
   return snprintf(dest, sz, "%s%c%s", p1, sep, p2);
+}
+
+int fmc_path_parent(char *dest, size_t sz, const char *src) {
+  auto path = fs::path(src);
+  auto parent_path = path.parent_path();
+  if (parent_path.empty()) {
+    return -1;
+  }
+  return snprintf(dest, sz, "%s", parent_path.c_str());
+}
+
+int fmc_exec_path_get(char *dest, size_t sz) {
+#if defined(FMC_SYS_LINUX)
+  char buf[PATH_MAX];
+  ssize_t pathsz = readlink("/proc/self/exe", buf, PATH_MAX);
+  return snprintf(dest, sz, "%.*s", static_cast<int>(pathsz), buf);
+#elif defined(FMC_SYS_MACH)
+  uint32_t bufsz = sz;
+  _NSGetExecutablePath(dest, &bufsz);
+  return bufsz - 1;
+#else
+#error "operating system is not supported"
+#endif
 }
 
 FILE *fmc_popen(const char *command, const char *read_mode,
@@ -375,7 +399,16 @@ done:
     FMC_ERROR_REPORT(error, fmc_syserror_msg());
   }
 #elif defined(FMC_SYS_MACH)
-  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, sz};
+  struct stat sb;
+  if (fstat(fd, &sb) != 0) {
+    FMC_ERROR_REPORT(error, fmc_syserror_msg());
+    return;
+  }
+  off_t diff = sz - sb.st_size;
+  if (diff <= 0) {
+    return;
+  }
+  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, diff};
   // Try to get a continous chunk of disk space
   int ret = fcntl(fd, F_PREALLOCATE, &store);
   if (-1 == ret) {
@@ -387,7 +420,6 @@ done:
       return;
     }
   }
-  struct stat sb;
   if (fstat(fd, &sb) == 0) {
     if (sb.st_size >= sz)
       return;
