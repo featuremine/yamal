@@ -399,7 +399,16 @@ done:
     FMC_ERROR_REPORT(error, fmc_syserror_msg());
   }
 #elif defined(FMC_SYS_MACH)
-  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, sz};
+  struct stat sb;
+  if (fstat(fd, &sb) != 0) {
+    FMC_ERROR_REPORT(error, fmc_syserror_msg());
+    return;
+  }
+  off_t diff = sz - sb.st_size;
+  if (diff <= 0) {
+    return;
+  }
+  fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, diff};
   // Try to get a continous chunk of disk space
   int ret = fcntl(fd, F_PREALLOCATE, &store);
   if (-1 == ret) {
@@ -411,7 +420,6 @@ done:
       return;
     }
   }
-  struct stat sb;
   if (fstat(fd, &sb) == 0) {
     if (sb.st_size >= sz)
       return;
