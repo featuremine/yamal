@@ -48,11 +48,12 @@ inline std::string_view trim(std::string_view s) {
   return ltrim(rtrim(s));
 }
 
-inline tuple<string_view, string_view, string_view> split(string_view a,
-                                                          string_view sep) {
+inline std::tuple<std::string_view, std::string_view, std::string_view>
+  split(std::string_view a, std::string_view sep)
+{
   auto pos = a.find_first_of(sep);
   if (pos >= a.size())
-    return {a, string_view(), string_view()};
+    return {a, std::string_view(), std::string_view()};
   return {a.substr(0, pos), a.substr(pos, 1), a.substr(pos + 1)};
 }
 

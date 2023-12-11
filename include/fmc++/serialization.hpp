@@ -111,8 +111,10 @@ inline bool cmp_file_init(cmp_file_t *cmp, const char *arg) {
   fmc_error_t *err;
   FILE *file = nullptr;
   auto pipe = fmc::ends_with_pipe(arg);
+  std::string name_str = std::string(pipe.second);
+  auto *name = name_str.c_str();
   if (pipe.first) {
-    file = fmc_popen(pipe.second.c_str(), "r", &err);
+    file = fmc_popen(name, "r", &err);
     if (!file) {
       return false;
     }
