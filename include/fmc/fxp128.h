@@ -22,72 +22,72 @@
 // 64-bit integer support
 // If your compiler does not have stdint.h, add appropriate defines for these macros.
 #if defined(_MSC_VER) && (_MSC_VER < 1600)
-#  define R128_S32 __int32
-#  define R128_U32 unsigned __int32
-#  define R128_S64 __int64
-#  define R128_U64 unsigned __int64
-#  define R128_LIT_S64(x) x##i64
-#  define R128_LIT_U64(x) x##ui64
+#  define FXPT128_S32 __int32
+#  define FXPT128_U32 unsigned __int32
+#  define FXPT128_S64 __int64
+#  define FXPT128_U64 unsigned __int64
+#  define FXPT128_LIT_S64(x) x##i64
+#  define FXPT128_LIT_U64(x) x##ui64
 #else
 #  include <stdint.h>
-#  define R128_S32 int32_t
-#  define R128_U32 uint32_t
-#  define R128_S64 long long
-#  define R128_U64 unsigned long long
-#  define R128_LIT_S64(x) x##ll
-#  define R128_LIT_U64(x) x##ull
+#  define FXPT128_S32 int32_t
+#  define FXPT128_U32 uint32_t
+#  define FXPT128_S64 long long
+#  define FXPT128_U64 unsigned long long
+#  define FXPT128_LIT_S64(x) x##ll
+#  define FXPT128_LIT_U64(x) x##ull
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct R128 {
-   R128_U64 lo;
-   R128_U64 hi;
-} R128;
+typedef struct {
+   FXPT128_U64 lo;
+   FXPT128_U64 hi;
+} fmc_fxpt128_t;
 
 // Type conversion
-FMMODFUNC void r128FromInt(R128 *dst, R128_S64 v);
-FMMODFUNC void r128FromFloat(R128 *dst, double v);
-FMMODFUNC R128_S64 r128ToInt(const R128 *v);
-FMMODFUNC double r128ToFloat(const R128 *v);
+FMMODFUNC void r128FromInt(struct fmc_fxpt128_t *dst, FXPT128_S64 v);
+FMMODFUNC void r128FromFloat(struct fmc_fxpt128_t *dst, double v);
+FMMODFUNC FXPT128_S64 r128ToInt(const struct fmc_fxpt128_t *v);
+FMMODFUNC double r128ToFloat(const struct fmc_fxpt128_t *v);
 
 // Copy
-FMMODFUNC void r128Copy(R128 *dst, const R128 *src);
+FMMODFUNC void r128Copy(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src);
 
 // Sign manipulation
-FMMODFUNC void r128Neg(R128 *dst, const R128 *v);   // -v
-FMMODFUNC void r128Abs(R128* dst, const R128* v);   // abs(v)
-FMMODFUNC void r128Nabs(R128* dst, const R128* v);  // -abs(v)
+FMMODFUNC void r128Neg(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v);   // -v
+FMMODFUNC void r128Abs(struct fmc_fxpt128_t* dst, const struct fmc_fxpt128_t* v);   // abs(v)
+FMMODFUNC void r128Nabs(struct fmc_fxpt128_t* dst, const struct fmc_fxpt128_t* v);  // -abs(v)
 
 // Bitwise operations
-FMMODFUNC void r128Not(R128 *dst, const R128 *src);               // ~a
-FMMODFUNC void r128Or(R128 *dst, const R128 *a, const R128 *b);   // a | b
-FMMODFUNC void r128And(R128 *dst, const R128 *a, const R128 *b);  // a & b
-FMMODFUNC void r128Xor(R128 *dst, const R128 *a, const R128 *b);  // a ^ b
-FMMODFUNC void r128Shl(R128 *dst, const R128 *src, int amount);   // shift left by amount mod 128
-FMMODFUNC void r128Shr(R128 *dst, const R128 *src, int amount);   // shift right logical by amount mod 128
-FMMODFUNC void r128Sar(R128 *dst, const R128 *src, int amount);   // shift right arithmetic by amount mod 128
+FMMODFUNC void r128Not(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src);               // ~a
+FMMODFUNC void r128Or(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);   // a | b
+FMMODFUNC void r128And(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a & b
+FMMODFUNC void r128Xor(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a ^ b
+FMMODFUNC void r128Shl(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src, int amount);   // shift left by amount mod 128
+FMMODFUNC void r128Shr(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src, int amount);   // shift right logical by amount mod 128
+FMMODFUNC void r128Sar(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src, int amount);   // shift right arithmetic by amount mod 128
 
 // Arithmetic
-FMMODFUNC void r128Add(R128 *dst, const R128 *a, const R128 *b);  // a + b
-FMMODFUNC void r128Sub(R128 *dst, const R128 *a, const R128 *b);  // a - b
-FMMODFUNC void r128Mul(R128 *dst, const R128 *a, const R128 *b);  // a * b
-FMMODFUNC void r128Div(R128 *dst, const R128 *a, const R128 *b);  // a / b
-FMMODFUNC void r128Mod(R128 *dst, const R128 *a, const R128 *b);  // a - toInt(a / b) * b
+FMMODFUNC void r128Add(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a + b
+FMMODFUNC void r128Sub(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a - b
+FMMODFUNC void r128Mul(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a * b
+FMMODFUNC void r128Div(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a / b
+FMMODFUNC void r128Mod(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // a - toInt(a / b) * b
 
-FMMODFUNC void r128Sqrt(R128 *dst, const R128 *v);  // sqrt(v)
-FMMODFUNC void r128Rsqrt(R128 *dst, const R128 *v); // 1 / sqrt(v)
+FMMODFUNC void r128Sqrt(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v);  // sqrt(v)
+FMMODFUNC void r128Rsqrt(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v); // 1 / sqrt(v)
 
 // Comparison
-FMMODFUNC int  r128Cmp(const R128 *a, const R128 *b);  // sign of a-b
-FMMODFUNC void r128Min(R128 *dst, const R128 *a, const R128 *b);
-FMMODFUNC void r128Max(R128 *dst, const R128 *a, const R128 *b);
-FMMODFUNC void r128Floor(R128 *dst, const R128 *v);
-FMMODFUNC void r128Ceil(R128 *dst, const R128 *v);
-FMMODFUNC void r128Round(R128 *dst, const R128 *v);    // round to nearest, rounding halfway values away from zero
-FMMODFUNC int  r128IsNeg(const R128 *v); // quick check for < 0
+FMMODFUNC int  r128Cmp(const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // sign of a-b
+FMMODFUNC void r128Min(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);
+FMMODFUNC void r128Max(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);
+FMMODFUNC void r128Floor(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v);
+FMMODFUNC void r128Ceil(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v);
+FMMODFUNC void r128Round(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v);    // round to nearest, rounding halfway values away from zero
+FMMODFUNC int  r128IsNeg(const struct fmc_fxpt128_t *v); // quick check for < 0
 
 // String conversion
 //
@@ -126,7 +126,7 @@ typedef struct R128ToStringFormat {
    int leftAlign;
 } R128ToStringFormat;
 
-// r128ToStringOpt: convert R128 to a decimal string, with formatting.
+// r128ToStringOpt: convert struct fmc_fxpt128_t to a decimal string, with formatting.
 //
 // dst and dstSize: specify the buffer to write into. At most dstSize bytes will be written
 // (including null terminator). No additional rounding is performed if dstSize is not large
@@ -134,7 +134,7 @@ typedef struct R128ToStringFormat {
 //
 // opt: an R128ToStringFormat struct (q.v.) with formatting options.
 //
-// Uses the R128_decimal global as the decimal point character.
+// Uses the FXPT128_decimal global as the decimal point character.
 // Always writes a null terminator, even if the destination buffer is not large enough.
 //
 // Number of bytes that will be written (i.e. how big does dst need to be?):
@@ -145,9 +145,9 @@ typedef struct R128ToStringFormat {
 // Returns the number of bytes that would have been written if dst was sufficiently large,
 // not including the final null terminator.
 //
-extern int r128ToStringOpt(char *dst, size_t dstSize, const R128 *v, const R128ToStringFormat *opt);
+extern int r128ToStringOpt(char *dst, size_t dstSize, const struct fmc_fxpt128_t *v, const R128ToStringFormat *opt);
 
-// r128ToStringf: convert R128 to a decimal string, with formatting.
+// r128ToStringf: convert struct fmc_fxpt128_t to a decimal string, with formatting.
 //
 // dst and dstSize: specify the buffer to write into. At most dstSize bytes will be written
 // (including null terminator).
@@ -157,7 +157,7 @@ extern int r128ToStringOpt(char *dst, size_t dstSize, const R128 *v, const R128T
 //    NOTE: This is NOT a full replacement for sprintf. Any characters in the format string
 //       that do not correspond to a format placeholder are ignored.
 //
-// Uses the R128_decimal global as the decimal point character.
+// Uses the FXPT128_decimal global as the decimal point character.
 // Always writes a null terminator, even if the destination buffer is not large enough.
 //
 // Number of bytes that will be written (i.e. how big does dst need to be?):
@@ -167,12 +167,12 @@ extern int r128ToStringOpt(char *dst, size_t dstSize, const R128 *v, const R128T
 // Returns the number of bytes that would have been written if dst was sufficiently large,
 // not including the final null terminator.
 //
-extern int r128ToStringf(char *dst, size_t dstSize, const char *format, const R128 *v);
+extern int r128ToStringf(char *dst, size_t dstSize, const char *format, const struct fmc_fxpt128_t *v);
 
-// r128ToString: convert R128 to a decimal string, with default formatting.
+// r128ToString: convert struct fmc_fxpt128_t to a decimal string, with default formatting.
 // Equivalent to r128ToStringf(dst, dstSize, "%f", v).
 //
-// Uses the R128_decimal global as the decimal point character.
+// Uses the FXPT128_decimal global as the decimal point character.
 // Always writes a null terminator, even if the destination buffer is not large enough.
 //
 // Will write at most 42 bytes (including NUL) to dst.
@@ -180,9 +180,9 @@ extern int r128ToStringf(char *dst, size_t dstSize, const char *format, const R1
 // Returns the number of bytes that would have been written if dst was sufficiently large,
 // not including the final null terminator.
 //
-extern int r128ToString(char *dst, size_t dstSize, const R128 *v);
+extern int r128ToString(char *dst, size_t dstSize, const struct fmc_fxpt128_t *v);
 
-// r128FromString: Convert string to R128.
+// r128FromString: Convert string to struct fmc_fxpt128_t.
 //
 // The string can be formatted either as a decimal number with optional sign
 // or as hexadecimal with a prefix of 0x or 0X.
@@ -190,16 +190,16 @@ extern int r128ToString(char *dst, size_t dstSize, const R128 *v);
 // endptr, if not NULL, is set to the character following the last character
 //   used in the conversion.
 //
-extern void r128FromString(R128 *dst, const char *s, char **endptr);
+extern void r128FromString(struct fmc_fxpt128_t *dst, const char *s, char **endptr);
 
 // Constants
-extern const R128 R128_min;      // minimum (most negative) value
-extern const R128 R128_max;      // maximum (most positive) value
-extern const R128 R128_smallest; // smallest positive value
-extern const R128 R128_zero;     // zero
-extern const R128 R128_one;      // 1.0
+extern const struct fmc_fxpt128_t FXPT128_min;      // minimum (most negative) value
+extern const struct fmc_fxpt128_t FXPT128_max;      // maximum (most positive) value
+extern const struct fmc_fxpt128_t FXPT128_smallest; // smallest positive value
+extern const struct fmc_fxpt128_t FXPT128_zero;     // zero
+extern const struct fmc_fxpt128_t FXPT128_one;      // 1.0
 
-extern char R128_decimal;        // decimal point character used by r128From/ToString. defaults to '.'
+extern char FXPT128_decimal;        // decimal point character used by r128From/ToString. defaults to '.'
 
 #ifdef __cplusplus
 }
@@ -207,12 +207,12 @@ extern char R128_decimal;        // decimal point character used by r128From/ToS
 #include <limits>
 namespace std {
 template<>
-struct numeric_limits<R128>
+struct numeric_limits<struct fmc_fxpt128_t>
 {
    static const bool is_specialized = true;
 
-   static R128 min() throw() { return R128_min; }
-   static R128 max() throw() { return R128_max; }
+   static struct fmc_fxpt128_t min() throw() { return FXPT128_min; }
+   static struct fmc_fxpt128_t max() throw() { return FXPT128_max; }
 
    static const int digits = 127;
    static const int digits10 = 38;
@@ -220,8 +220,8 @@ struct numeric_limits<R128>
    static const bool is_integer = false;
    static const bool is_exact = false;
    static const int radix = 2;
-   static R128 epsilon() throw() { return R128_smallest; }
-   static R128 round_error() throw() { return R128_one; }
+   static struct fmc_fxpt128_t epsilon() throw() { return FXPT128_smallest; }
+   static struct fmc_fxpt128_t round_error() throw() { return FXPT128_one; }
 
    static const int min_exponent = 0;
    static const int min_exponent10 = 0;
@@ -234,315 +234,315 @@ struct numeric_limits<R128>
    static const float_denorm_style has_denorm = denorm_absent;
    static const bool has_denorm_loss = false;
 
-   static R128 infinity() throw() { return R128_zero; }
-   static R128 quiet_NaN() throw() { return R128_zero; }
-   static R128 signaling_NaN() throw() { return R128_zero; }
-   static R128 denorm_min() throw() { return R128_zero; }
+   static struct fmc_fxpt128_t infinity() throw() { return FXPT128_zero; }
+   static struct fmc_fxpt128_t quiet_NaN() throw() { return FXPT128_zero; }
+   static struct fmc_fxpt128_t signaling_NaN() throw() { return FXPT128_zero; }
+   static struct fmc_fxpt128_t denorm_min() throw() { return FXPT128_zero; }
 
    static const bool is_iec559 = false;
    static const bool is_bounded = true;
    static const bool is_modulo = true;
 
-   static const bool traps = numeric_limits<R128_U64>::traps;
+   static const bool traps = numeric_limits<FXPT128_U64>::traps;
    static const bool tinyness_before = false;
    static const float_round_style round_style = round_toward_zero;
 };
 }  //namespace std
 
-inline R128::R128() {}
+inline struct fmc_fxpt128_t::struct fmc_fxpt128_t() {}
 
-inline R128::R128(double v)
+inline struct fmc_fxpt128_t::struct fmc_fxpt128_t(double v)
 {
    r128FromFloat(this, v);
 }
 
-inline R128::R128(int v)
+inline struct fmc_fxpt128_t::struct fmc_fxpt128_t(int v)
 {
    r128FromInt(this, v);
 }
 
-inline R128::R128(R128_S64 v)
+inline struct fmc_fxpt128_t::struct fmc_fxpt128_t(FXPT128_S64 v)
 {
    r128FromInt(this, v);
 }
 
-inline R128::R128(R128_U64 low, R128_U64 high)
+inline struct fmc_fxpt128_t::struct fmc_fxpt128_t(FXPT128_U64 low, FXPT128_U64 high)
 {
    lo = low;
    hi = high;
 }
 
-inline R128::operator double() const
+inline struct fmc_fxpt128_t::operator double() const
 {
    return r128ToFloat(this);
 }
 
-inline R128::operator R128_S64() const
+inline struct fmc_fxpt128_t::operator FXPT128_S64() const
 {
    return r128ToInt(this);
 }
 
-inline R128::operator int() const
+inline struct fmc_fxpt128_t::operator int() const
 {
    return (int) r128ToInt(this);
 }
 
-inline R128::operator bool() const
+inline struct fmc_fxpt128_t::operator bool() const
 {
    return lo || hi;
 }
 
-inline bool R128::operator!() const
+inline bool struct fmc_fxpt128_t::operator!() const
 {
    return !lo && !hi;
 }
 
-inline R128 R128::operator~() const
+inline struct fmc_fxpt128_t struct fmc_fxpt128_t::operator~() const
 {
-   R128 r;
+   struct fmc_fxpt128_t r;
    r128Not(&r, this);
    return r;
 }
 
-inline R128 R128::operator-() const
+inline struct fmc_fxpt128_t struct fmc_fxpt128_t::operator-() const
 {
-   R128 r;
+   struct fmc_fxpt128_t r;
    r128Neg(&r, this);
    return r;
 }
 
-inline R128 &R128::operator|=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator|=(const struct fmc_fxpt128_t &rhs)
 {
    r128Or(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator&=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator&=(const struct fmc_fxpt128_t &rhs)
 {
    r128And(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator^=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator^=(const struct fmc_fxpt128_t &rhs)
 {
    r128Xor(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator+=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator+=(const struct fmc_fxpt128_t &rhs)
 {
    r128Add(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator-=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator-=(const struct fmc_fxpt128_t &rhs)
 {
    r128Sub(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator*=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator*=(const struct fmc_fxpt128_t &rhs)
 {
    r128Mul(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator/=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator/=(const struct fmc_fxpt128_t &rhs)
 {
    r128Div(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator%=(const R128 &rhs)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator%=(const struct fmc_fxpt128_t &rhs)
 {
    r128Mod(this, this, &rhs);
    return *this;
 }
 
-inline R128 &R128::operator<<=(int amount)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator<<=(int amount)
 {
    r128Shl(this, this, amount);
    return *this;
 }
 
-inline R128 &R128::operator>>=(int amount)
+inline struct fmc_fxpt128_t &struct fmc_fxpt128_t::operator>>=(int amount)
 {
    r128Sar(this, this, amount);
    return *this;
 }
 
-static inline R128 operator|(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator|(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r |= rhs;
 }
 
-static inline R128 operator&(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator&(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r &= rhs;
 }
 
-static inline R128 operator^(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator^(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r ^= rhs;
 }
 
-static inline R128 operator+(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator+(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r += rhs;
 }
 
-static inline R128 operator-(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator-(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r -= rhs;
 }
 
-static inline R128 operator*(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator*(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r *= rhs;
 }
 
-static inline R128 operator/(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator/(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r /= rhs;
 }
 
-static inline R128 operator%(const R128 &lhs, const R128 &rhs)
+static inline struct fmc_fxpt128_t operator%(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r %= rhs;
 }
 
-static inline R128 operator<<(const R128 &lhs, int amount)
+static inline struct fmc_fxpt128_t operator<<(const struct fmc_fxpt128_t &lhs, int amount)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r <<= amount;
 }
 
-static inline R128 operator>>(const R128 &lhs, int amount)
+static inline struct fmc_fxpt128_t operator>>(const struct fmc_fxpt128_t &lhs, int amount)
 {
-   R128 r(lhs);
+   struct fmc_fxpt128_t r(lhs);
    return r >>= amount;
 }
 
-static inline bool operator<(const R128 &lhs, const R128 &rhs)
+static inline bool operator<(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
    return r128Cmp(&lhs, &rhs) < 0;
 }
 
-static inline bool operator>(const R128 &lhs, const R128 &rhs)
+static inline bool operator>(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
    return r128Cmp(&lhs, &rhs) > 0;
 }
 
-static inline bool operator<=(const R128 &lhs, const R128 &rhs)
+static inline bool operator<=(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
    return r128Cmp(&lhs, &rhs) <= 0;
 }
 
-static inline bool operator>=(const R128 &lhs, const R128 &rhs)
+static inline bool operator>=(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
    return r128Cmp(&lhs, &rhs) >= 0;
 }
 
-static inline bool operator==(const R128 &lhs, const R128 &rhs)
+static inline bool operator==(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
    return lhs.lo == rhs.lo && lhs.hi == rhs.hi;
 }
 
-static inline bool operator!=(const R128 &lhs, const R128 &rhs)
+static inline bool operator!=(const struct fmc_fxpt128_t &lhs, const struct fmc_fxpt128_t &rhs)
 {
    return lhs.lo != rhs.lo || lhs.hi != rhs.hi;
 }
 
 #endif   //__cplusplus
-#endif   //H_R128_H
+#endif   //H_FXPT128_H
 
-#ifdef R128_IMPLEMENTATION
+#ifdef FXPT128_IMPLEMENTATION
 
-#ifdef R128_DEBUG_VIS
-#  define R128_DEBUG_SET(x)   r128ToString(R128_last, sizeof(R128_last), x)
+#ifdef FXPT128_DEBUG_VIS
+#  define FXPT128_DEBUG_SET(x)   r128ToString(FXPT128_last, sizeof(FXPT128_last), x)
 #else
-#  define R128_DEBUG_SET(x)
+#  define FXPT128_DEBUG_SET(x)
 #endif
 
-#define R128_SET2(x, l, h) do { (x)->lo = (R128_U64)(l); (x)->hi = (R128_U64)(h); } while(0)
-#define R128_R0(x) ((R128_U32)(x)->lo)
-#define R128_R2(x) ((R128_U32)(x)->hi)
+#define FXPT128_SET2(x, l, h) do { (x)->lo = (FXPT128_U64)(l); (x)->hi = (FXPT128_U64)(h); } while(0)
+#define FXPT128_R0(x) ((FXPT128_U32)(x)->lo)
+#define FXPT128_R2(x) ((FXPT128_U32)(x)->hi)
 #if defined(_M_IX86)
 // workaround: MSVC x86's handling of 64-bit values is not great
-#  define R128_SET4(x, r0, r1, r2, r3) do { \
-      ((R128_U32*)&(x)->lo)[0] = (R128_U32)(r0); \
-      ((R128_U32*)&(x)->lo)[1] = (R128_U32)(r1); \
-      ((R128_U32*)&(x)->hi)[0] = (R128_U32)(r2); \
-      ((R128_U32*)&(x)->hi)[1] = (R128_U32)(r3); \
+#  define FXPT128_SET4(x, r0, r1, r2, r3) do { \
+      ((FXPT128_U32*)&(x)->lo)[0] = (FXPT128_U32)(r0); \
+      ((FXPT128_U32*)&(x)->lo)[1] = (FXPT128_U32)(r1); \
+      ((FXPT128_U32*)&(x)->hi)[0] = (FXPT128_U32)(r2); \
+      ((FXPT128_U32*)&(x)->hi)[1] = (FXPT128_U32)(r3); \
       } while(0)
-#  define R128_R1(x) (((R128_U32*)&(x)->lo)[1])
-#  define R128_R3(x) (((R128_U32*)&(x)->hi)[1])
+#  define FXPT128_R1(x) (((FXPT128_U32*)&(x)->lo)[1])
+#  define FXPT128_R3(x) (((FXPT128_U32*)&(x)->hi)[1])
 #else
-#  define R128_SET4(x, r0, r1, r2, r3) do { (x)->lo = (R128_U64)(r0) | ((R128_U64)(r1) << 32); \
-      (x)->hi = (R128_U64)(r2) | ((R128_U64)(r3) << 32); } while(0)
-#  define R128_R1(x) ((R128_U32)((x)->lo >> 32))
-#  define R128_R3(x) ((R128_U32)((x)->hi >> 32))
+#  define FXPT128_SET4(x, r0, r1, r2, r3) do { (x)->lo = (FXPT128_U64)(r0) | ((FXPT128_U64)(r1) << 32); \
+      (x)->hi = (FXPT128_U64)(r2) | ((FXPT128_U64)(r3) << 32); } while(0)
+#  define FXPT128_R1(x) ((FXPT128_U32)((x)->lo >> 32))
+#  define FXPT128_R3(x) ((FXPT128_U32)((x)->hi >> 32))
 #endif
 
 #if defined(_M_X64)
-#  define R128_INTEL 1
-#  define R128_64BIT 1
-#  ifndef R128_STDC_ONLY
+#  define FXPT128_INTEL 1
+#  define FXPT128_64BIT 1
+#  ifndef FXPT128_STDC_ONLY
 #     include <intrin.h>
 #  endif
 #elif defined(__x86_64__)
-#  define R128_INTEL 1
-#  define R128_64BIT 1
-#  ifndef R128_STDC_ONLY
+#  define FXPT128_INTEL 1
+#  define FXPT128_64BIT 1
+#  ifndef FXPT128_STDC_ONLY
 #     include <x86intrin.h>
 #  endif
 #elif defined(_M_IX86)
-#  define R128_INTEL 1
-#  ifndef R128_STDC_ONLY
+#  define FXPT128_INTEL 1
+#  ifndef FXPT128_STDC_ONLY
 #     include <intrin.h>
 #  endif
 #elif defined(__i386__)
-#  define R128_INTEL 1
-#  ifndef R128_STDC_ONLY
+#  define FXPT128_INTEL 1
+#  ifndef FXPT128_STDC_ONLY
 #     include <x86intrin.h>
 #  endif
 #elif defined(_M_ARM)
-#  ifndef R128_STDC_ONLY
+#  ifndef FXPT128_STDC_ONLY
 #     include <intrin.h>
 #  endif
 #elif defined(_M_ARM64)
-#  define R128_64BIT 1
-#  ifndef R128_STDC_ONLY
+#  define FXPT128_64BIT 1
+#  ifndef FXPT128_STDC_ONLY
 #     include <intrin.h>
 #  endif
 #elif defined(__aarch64__)
-#  define R128_64BIT 1
+#  define FXPT128_64BIT 1
 #endif
 
-#ifndef R128_INTEL
-#  define R128_INTEL 0
+#ifndef FXPT128_INTEL
+#  define FXPT128_INTEL 0
 #endif
 
-#ifndef R128_64BIT
-#  define R128_64BIT 0
+#ifndef FXPT128_64BIT
+#  define FXPT128_64BIT 0
 #endif
 
-#ifndef R128_ASSERT
+#ifndef FXPT128_ASSERT
 #  include <assert.h>
-#  define R128_ASSERT(x) assert(x)
+#  define FXPT128_ASSERT(x) assert(x)
 #endif
 
 #include <stdlib.h>  // for NULL
 
-static const R128ToStringFormat R128__defaultFormat = {
+static const R128ToStringFormat FXPT128__defaultFormat = {
    R128ToStringSign_Default,
    0,
    -1,
@@ -551,20 +551,20 @@ static const R128ToStringFormat R128__defaultFormat = {
    0
 };
 
-const R128 R128_min = { 0, R128_LIT_U64(0x8000000000000000) };
-const R128 R128_max = { R128_LIT_U64(0xffffffffffffffff), R128_LIT_U64(0x7fffffffffffffff) };
-const R128 R128_smallest = { 1, 0 };
-const R128 R128_zero = { 0, 0 };
-const R128 R128_one = { 0, 1 };
-char R128_decimal = '.';
-#ifdef R128_DEBUG_VIS
-char R128_last[42];
+const struct fmc_fxpt128_t FXPT128_min = { 0, FXPT128_LIT_U64(0x8000000000000000) };
+const struct fmc_fxpt128_t FXPT128_max = { FXPT128_LIT_U64(0xffffffffffffffff), FXPT128_LIT_U64(0x7fffffffffffffff) };
+const struct fmc_fxpt128_t FXPT128_smallest = { 1, 0 };
+const struct fmc_fxpt128_t FXPT128_zero = { 0, 0 };
+const struct fmc_fxpt128_t FXPT128_one = { 0, 1 };
+char FXPT128_decimal = '.';
+#ifdef FXPT128_DEBUG_VIS
+char FXPT128_last[42];
 #endif
 
-static int r128__clz64(R128_U64 x)
+static int r128__clz64(FXPT128_U64 x)
 {
-#if defined(R128_STDC_ONLY)
-   R128_U64 n = 64, y;
+#if defined(FXPT128_STDC_ONLY)
+   FXPT128_U64 n = 64, y;
    y = x >> 32; if (y) { n -= 32; x = y; }
    y = x >> 16; if (y) { n -= 16; x = y; }
    y = x >>  8; if (y) { n -=  8; x = y; }
@@ -581,9 +581,9 @@ static int r128__clz64(R128_U64 x)
    }
 #elif defined(_MSC_VER)
    unsigned long idx;
-   if (_BitScanReverse(&idx, (R128_U32)(x >> 32))) {
+   if (_BitScanReverse(&idx, (FXPT128_U32)(x >> 32))) {
       return 31 - (int)idx;
-   } else if (_BitScanReverse(&idx, (R128_U32)x)) {
+   } else if (_BitScanReverse(&idx, (FXPT128_U32)x)) {
       return 63 - (int)idx;
    } else {
       return 64;
@@ -593,26 +593,26 @@ static int r128__clz64(R128_U64 x)
 #endif
 }
 
-#if !R128_64BIT
+#if !FXPT128_64BIT
 // 32*32->64
-static R128_U64 r128__umul64(R128_U32 a, R128_U32 b)
+static FXPT128_U64 r128__umul64(FXPT128_U32 a, FXPT128_U32 b)
 {
-#  if defined(_M_IX86) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#  if defined(_M_IX86) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
    return __emulu(a, b);
-#  elif defined(_M_ARM) && !defined(R128_STDC_ONLY)
+#  elif defined(_M_ARM) && !defined(FXPT128_STDC_ONLY)
    return _arm_umull(a, b);
 #  else
-   return a * (R128_U64)b;
+   return a * (FXPT128_U64)b;
 #  endif
 }
 
 // 64/32->32
-static R128_U32 r128__udiv64(R128_U32 nlo, R128_U32 nhi, R128_U32 d, R128_U32 *rem)
+static FXPT128_U32 r128__udiv64(FXPT128_U32 nlo, FXPT128_U32 nhi, FXPT128_U32 d, FXPT128_U32 *rem)
 {
-#  if defined(_M_IX86) && (_MSC_VER >= 1920) && !defined(R128_STDC_ONLY)
+#  if defined(_M_IX86) && (_MSC_VER >= 1920) && !defined(FXPT128_STDC_ONLY)
    unsigned __int64 n = ((unsigned __int64)nhi << 32) | nlo;
    return _udiv64(n, d, rem);
-#  elif defined(_M_IX86) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#  elif defined(_M_IX86) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
    __asm {
       mov eax, nlo
       mov edx, nhi
@@ -620,48 +620,48 @@ static R128_U32 r128__udiv64(R128_U32 nlo, R128_U32 nhi, R128_U32 d, R128_U32 *r
       mov ecx, rem
       mov dword ptr [ecx], edx
    }
-#  elif defined(__i386__) && !defined(R128_STDC_ONLY)
-   R128_U32 q, r;
+#  elif defined(__i386__) && !defined(FXPT128_STDC_ONLY)
+   FXPT128_U32 q, r;
    __asm("divl %4"
       : "=a"(q), "=d"(r)
       : "a"(nlo), "d"(nhi), "X"(d));
    *rem = r;
    return q;
 #  else
-   R128_U64 n64 = ((R128_U64)nhi << 32) | nlo;
-   *rem = (R128_U32)(n64 % d);
-   return (R128_U32)(n64 / d);
+   FXPT128_U64 n64 = ((FXPT128_U64)nhi << 32) | nlo;
+   *rem = (FXPT128_U32)(n64 % d);
+   return (FXPT128_U32)(n64 / d);
 #  endif
 }
-#elif defined(R128_STDC_ONLY) || !R128_INTEL
-#define r128__umul64(a, b) ((a) * (R128_U64)(b))
-static R128_U32 r128__udiv64(R128_U32 nlo, R128_U32 nhi, R128_U32 d, R128_U32 *rem)
+#elif defined(FXPT128_STDC_ONLY) || !FXPT128_INTEL
+#define r128__umul64(a, b) ((a) * (FXPT128_U64)(b))
+static FXPT128_U32 r128__udiv64(FXPT128_U32 nlo, FXPT128_U32 nhi, FXPT128_U32 d, FXPT128_U32 *rem)
 {
-   R128_U64 n64 = ((R128_U64)nhi << 32) | nlo;
-   *rem = (R128_U32)(n64 % d);
-   return (R128_U32)(n64 / d);
+   FXPT128_U64 n64 = ((FXPT128_U64)nhi << 32) | nlo;
+   *rem = (FXPT128_U32)(n64 % d);
+   return (FXPT128_U32)(n64 / d);
 }
-#endif   //!R128_64BIT
+#endif   //!FXPT128_64BIT
 
-static void r128__neg(R128 *dst, const R128 *src)
+static void r128__neg(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(src != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(src != NULL);
 
-#if R128_INTEL && !defined(R128_STDC_ONLY)
+#if FXPT128_INTEL && !defined(FXPT128_STDC_ONLY)
    {
       unsigned char carry = 0;
-#  if R128_64BIT
+#  if FXPT128_64BIT
       carry = _addcarry_u64(carry, ~src->lo, 1, &dst->lo);
       carry = _addcarry_u64(carry, ~src->hi, 0, &dst->hi);
 #  else
-      R128_U32 r0, r1, r2, r3;
-      carry = _addcarry_u32(carry, ~R128_R0(src), 1, &r0);
-      carry = _addcarry_u32(carry, ~R128_R1(src), 0, &r1);
-      carry = _addcarry_u32(carry, ~R128_R2(src), 0, &r2);
-      carry = _addcarry_u32(carry, ~R128_R3(src), 0, &r3);
-      R128_SET4(dst, r0, r1, r2, r3);
-#  endif //R128_64BIT
+      FXPT128_U32 r0, r1, r2, r3;
+      carry = _addcarry_u32(carry, ~FXPT128_R0(src), 1, &r0);
+      carry = _addcarry_u32(carry, ~FXPT128_R1(src), 0, &r1);
+      carry = _addcarry_u32(carry, ~FXPT128_R2(src), 0, &r2);
+      carry = _addcarry_u32(carry, ~FXPT128_R3(src), 0, &r3);
+      FXPT128_SET4(dst, r0, r1, r2, r3);
+#  endif //FXPT128_64BIT
    }
 #else
    if (src->lo) {
@@ -671,24 +671,24 @@ static void r128__neg(R128 *dst, const R128 *src)
       dst->lo = 0;
       dst->hi = ~src->hi + 1;
    }
-#endif   //R128_INTEL
+#endif   //FXPT128_INTEL
 }
 
 // 64*64->128
-static void r128__umul128(R128 *dst, R128_U64 a, R128_U64 b)
+static void r128__umul128(struct fmc_fxpt128_t *dst, FXPT128_U64 a, FXPT128_U64 b)
 {
-#if defined(_M_X64) && !defined(R128_STDC_ONLY)
+#if defined(_M_X64) && !defined(FXPT128_STDC_ONLY)
    dst->lo = _umul128(a, b, &dst->hi);
-#elif R128_64BIT && !defined(_MSC_VER) && !defined(R128_STDC_ONLY)
+#elif FXPT128_64BIT && !defined(_MSC_VER) && !defined(FXPT128_STDC_ONLY)
    unsigned __int128 p0 = a * (unsigned __int128)b;
-   dst->hi = (R128_U64)(p0 >> 64);
-   dst->lo = (R128_U64)p0;
+   dst->hi = (FXPT128_U64)(p0 >> 64);
+   dst->lo = (FXPT128_U64)p0;
 #else
-   R128_U32 alo = (R128_U32)a;
-   R128_U32 ahi = (R128_U32)(a >> 32);
-   R128_U32 blo = (R128_U32)b;
-   R128_U32 bhi = (R128_U32)(b >> 32);
-   R128_U64 p0, p1, p2, p3;
+   FXPT128_U32 alo = (FXPT128_U32)a;
+   FXPT128_U32 ahi = (FXPT128_U32)(a >> 32);
+   FXPT128_U32 blo = (FXPT128_U32)b;
+   FXPT128_U32 bhi = (FXPT128_U32)(b >> 32);
+   FXPT128_U64 p0, p1, p2, p3;
 
    p0 = r128__umul64(alo, blo);
    p1 = r128__umul64(alo, bhi);
@@ -696,38 +696,38 @@ static void r128__umul128(R128 *dst, R128_U64 a, R128_U64 b)
    p3 = r128__umul64(ahi, bhi);
 
    {
-#if R128_INTEL && !defined(R128_STDC_ONLY)
-      R128_U32 r0, r1, r2, r3;
+#if FXPT128_INTEL && !defined(FXPT128_STDC_ONLY)
+      FXPT128_U32 r0, r1, r2, r3;
       unsigned char carry;
 
-      r0 = (R128_U32)(p0);
-      r1 = (R128_U32)(p0 >> 32);
-      r2 = (R128_U32)(p1 >> 32);
-      r3 = (R128_U32)(p3 >> 32);
+      r0 = (FXPT128_U32)(p0);
+      r1 = (FXPT128_U32)(p0 >> 32);
+      r2 = (FXPT128_U32)(p1 >> 32);
+      r3 = (FXPT128_U32)(p3 >> 32);
 
-      carry = _addcarry_u32(0, r1, (R128_U32)p1, &r1);
-      carry = _addcarry_u32(carry, r2, (R128_U32)(p2 >> 32), &r2);
+      carry = _addcarry_u32(0, r1, (FXPT128_U32)p1, &r1);
+      carry = _addcarry_u32(carry, r2, (FXPT128_U32)(p2 >> 32), &r2);
       _addcarry_u32(carry, r3, 0, &r3);
-      carry = _addcarry_u32(0, r1, (R128_U32)p2, &r1);
-      carry = _addcarry_u32(carry, r2, (R128_U32)p3, &r2);
+      carry = _addcarry_u32(0, r1, (FXPT128_U32)p2, &r1);
+      carry = _addcarry_u32(carry, r2, (FXPT128_U32)p3, &r2);
       _addcarry_u32(carry, r3, 0, &r3);
 
-      R128_SET4(dst, r0, r1, r2, r3);
+      FXPT128_SET4(dst, r0, r1, r2, r3);
 #else
-      R128_U64 carry, lo, hi;
-      carry = ((R128_U64)(R128_U32)p1 + (R128_U64)(R128_U32)p2 + (p0 >> 32)) >> 32;
+      FXPT128_U64 carry, lo, hi;
+      carry = ((FXPT128_U64)(FXPT128_U32)p1 + (FXPT128_U64)(FXPT128_U32)p2 + (p0 >> 32)) >> 32;
 
       lo = p0 + ((p1 + p2) << 32);
-      hi = p3 + ((R128_U32)(p1 >> 32) + (R128_U32)(p2 >> 32)) + carry;
+      hi = p3 + ((FXPT128_U32)(p1 >> 32) + (FXPT128_U32)(p2 >> 32)) + carry;
 
-      R128_SET2(dst, lo, hi);
+      FXPT128_SET2(dst, lo, hi);
 #endif
    }
 #endif
 }
 
 // 128/64->64
-#if defined(_M_X64) && (_MSC_VER < 1920) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#if defined(_M_X64) && (_MSC_VER < 1920) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
 // MSVC x64 provides neither inline assembly nor (pre-2019) a div intrinsic, so we do fake
 // "inline assembly" to avoid long division or outline assembly.
 #pragma code_seg(".text")
@@ -737,55 +737,55 @@ __declspec(allocate(".text") align(16)) static const unsigned char r128__udiv128
    0x49, 0x89, 0x11,       //mov  qword ptr [r9], rdx
    0xC3                    //ret
 };
-typedef R128_U64 (*r128__udiv128Proc)(R128_U64 nlo, R128_U64 nhi, R128_U64 d, R128_U64 *rem);
+typedef FXPT128_U64 (*r128__udiv128Proc)(FXPT128_U64 nlo, FXPT128_U64 nhi, FXPT128_U64 d, FXPT128_U64 *rem);
 static const r128__udiv128Proc r128__udiv128 = (r128__udiv128Proc)(void*)r128__udiv128Code;
 #else
-static R128_U64 r128__udiv128(R128_U64 nlo, R128_U64 nhi, R128_U64 d, R128_U64 *rem)
+static FXPT128_U64 r128__udiv128(FXPT128_U64 nlo, FXPT128_U64 nhi, FXPT128_U64 d, FXPT128_U64 *rem)
 {
-#if defined(_M_X64) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#if defined(_M_X64) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
    return _udiv128(nhi, nlo, d, rem);
-#elif defined(__x86_64__) && !defined(R128_STDC_ONLY)
-   R128_U64 q, r;
+#elif defined(__x86_64__) && !defined(FXPT128_STDC_ONLY)
+   FXPT128_U64 q, r;
    __asm("divq %4"
       : "=a"(q), "=d"(r)
       : "a"(nlo), "d"(nhi), "X"(d));
    *rem = r;
    return q;
 #else
-   R128_U64 tmp;
-   R128_U32 d0, d1;
-   R128_U32 n3, n2, n1, n0;
-   R128_U32 q0, q1;
-   R128_U32 r;
+   FXPT128_U64 tmp;
+   FXPT128_U32 d0, d1;
+   FXPT128_U32 n3, n2, n1, n0;
+   FXPT128_U32 q0, q1;
+   FXPT128_U32 r;
    int shift;
 
-   R128_ASSERT(d != 0);    //division by zero
-   R128_ASSERT(nhi < d);   //overflow
+   FXPT128_ASSERT(d != 0);    //division by zero
+   FXPT128_ASSERT(nhi < d);   //overflow
 
    // normalize
    shift = r128__clz64(d);
 
    if (shift) {
-      R128 tmp128;
-      R128_SET2(&tmp128, nlo, nhi);
+      struct fmc_fxpt128_t tmp128;
+      FXPT128_SET2(&tmp128, nlo, nhi);
       r128Shl(&tmp128, &tmp128, shift);
-      n3 = R128_R3(&tmp128);
-      n2 = R128_R2(&tmp128);
-      n1 = R128_R1(&tmp128);
-      n0 = R128_R0(&tmp128);
+      n3 = FXPT128_R3(&tmp128);
+      n2 = FXPT128_R2(&tmp128);
+      n1 = FXPT128_R1(&tmp128);
+      n0 = FXPT128_R0(&tmp128);
       d <<= shift;
    } else {
-      n3 = (R128_U32)(nhi >> 32);
-      n2 = (R128_U32)nhi;
-      n1 = (R128_U32)(nlo >> 32);
-      n0 = (R128_U32)nlo;
+      n3 = (FXPT128_U32)(nhi >> 32);
+      n2 = (FXPT128_U32)nhi;
+      n1 = (FXPT128_U32)(nlo >> 32);
+      n0 = (FXPT128_U32)nlo;
    }
 
-   d1 = (R128_U32)(d >> 32);
-   d0 = (R128_U32)d;
+   d1 = (FXPT128_U32)(d >> 32);
+   d0 = (FXPT128_U32)d;
 
    // first digit
-   R128_ASSERT(n3 <= d1);
+   FXPT128_ASSERT(n3 <= d1);
    if (n3 < d1) {
       q1 = r128__udiv64(n2, n3, d1, &r);
    } else {
@@ -793,7 +793,7 @@ static R128_U64 r128__udiv128(R128_U64 nlo, R128_U64 nhi, R128_U64 d, R128_U64 *
       r = n2 + d1;
    }
 refine1:
-   if (r128__umul64(q1, d0) > ((R128_U64)r << 32) + n1) {
+   if (r128__umul64(q1, d0) > ((FXPT128_U64)r << 32) + n1) {
       --q1;
       if (r < ~d1 + 1) {
          r += d1;
@@ -801,12 +801,12 @@ refine1:
       }
    }
 
-   tmp = ((R128_U64)n2 << 32) + n1 - (r128__umul64(q1, d0) + (r128__umul64(q1, d1) << 32));
-   n2 = (R128_U32)(tmp >> 32);
-   n1 = (R128_U32)tmp;
+   tmp = ((FXPT128_U64)n2 << 32) + n1 - (r128__umul64(q1, d0) + (r128__umul64(q1, d1) << 32));
+   n2 = (FXPT128_U32)(tmp >> 32);
+   n1 = (FXPT128_U32)tmp;
 
    // second digit
-   R128_ASSERT(n2 <= d1);
+   FXPT128_ASSERT(n2 <= d1);
    if (n2 < d1) {
       q0 = r128__udiv64(n1, n2, d1, &r);
    } else {
@@ -814,7 +814,7 @@ refine1:
       r = n1 + d1;
    }
 refine0:
-   if (r128__umul64(q0, d0) > ((R128_U64)r << 32) + n0) {
+   if (r128__umul64(q0, d0) > ((FXPT128_U64)r << 32) + n0) {
       --q0;
       if (r < ~d1 + 1) {
          r += d1;
@@ -822,17 +822,17 @@ refine0:
       }
    }
 
-   tmp = ((R128_U64)n1 << 32) + n0 - (r128__umul64(q0, d0) + (r128__umul64(q0, d1) << 32));
-   n1 = (R128_U32)(tmp >> 32);
-   n0 = (R128_U32)tmp;
+   tmp = ((FXPT128_U64)n1 << 32) + n0 - (r128__umul64(q0, d0) + (r128__umul64(q0, d1) << 32));
+   n1 = (FXPT128_U32)(tmp >> 32);
+   n0 = (FXPT128_U32)tmp;
 
-   *rem = (((R128_U64)n1 << 32) + n0) >> shift;
-   return ((R128_U64)q1 << 32) + q0;
+   *rem = (((FXPT128_U64)n1 << 32) + n0) >> shift;
+   return ((FXPT128_U64)q1 << 32) + q0;
 #endif
 }
 #endif
 
-static int r128__ucmp(const R128 *a, const R128 *b)
+static int r128__ucmp(const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
    if (a->hi != b->hi) {
       if (a->hi > b->hi) {
@@ -851,11 +851,11 @@ static int r128__ucmp(const R128 *a, const R128 *b)
    }
 }
 
-static void r128__umul(R128 *dst, const R128 *a, const R128 *b)
+static void r128__umul(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-#if defined(_M_X64) && !defined(R128_STDC_ONLY)
-   R128_U64 t0, t1;
-   R128_U64 lo, hi = 0;
+#if defined(_M_X64) && !defined(FXPT128_STDC_ONLY)
+   FXPT128_U64 t0, t1;
+   FXPT128_U64 lo, hi = 0;
    unsigned char carry;
 
    t0 = _umul128(a->lo, b->lo, &t1);
@@ -873,19 +873,19 @@ static void r128__umul(R128 *dst, const R128 *a, const R128 *b)
    t0 = _umul128(a->hi, b->hi, &t1);
    hi += t0;
 
-   R128_SET2(dst, lo, hi);
-#elif defined(__x86_64__) && !defined(R128_STDC_ONLY)
+   FXPT128_SET2(dst, lo, hi);
+#elif defined(__x86_64__) && !defined(FXPT128_STDC_ONLY)
    unsigned __int128 p0, p1, p2, p3;
    p0 = a->lo * (unsigned __int128)b->lo;
    p1 = a->lo * (unsigned __int128)b->hi;
    p2 = a->hi * (unsigned __int128)b->lo;
    p3 = a->hi * (unsigned __int128)b->hi;
 
-   p0 = (p3 << 64) + p2 + p1 + (p0 >> 64) + ((R128_U64)p0 >> 63);
-   dst->lo = (R128_U64)p0;
-   dst->hi = (R128_U64)(p0 >> 64);
+   p0 = (p3 << 64) + p2 + p1 + (p0 >> 64) + ((FXPT128_U64)p0 >> 63);
+   dst->lo = (FXPT128_U64)p0;
+   dst->hi = (FXPT128_U64)(p0 >> 64);
 #else
-   R128 p0, p1, p2, p3, round;
+   struct fmc_fxpt128_t p0, p1, p2, p3, round;
 
    r128__umul128(&p0, a->lo, b->lo);
    round.hi = 0; round.lo = p0.lo >> 63;
@@ -902,16 +902,16 @@ static void r128__umul(R128 *dst, const R128 *a, const R128 *b)
    p3.hi = p3.lo; p3.lo = 0; //r128Shl(&p3, &p3, 64);
    r128Add(&p0, &p0, &p3);
 
-   R128_SET2(dst, p0.lo, p0.hi);
+   FXPT128_SET2(dst, p0.lo, p0.hi);
 #endif
 }
 
 // Shift d left until the high bit is set, and shift n left by the same amount.
 // returns non-zero on overflow.
-static int r128__norm(R128 *n, R128 *d, R128_U64 *n2)
+static int r128__norm(struct fmc_fxpt128_t *n, struct fmc_fxpt128_t *d, FXPT128_U64 *n2)
 {
-   R128_U64 d0, d1;
-   R128_U64 n0, n1;
+   FXPT128_U64 d0, d1;
+   FXPT128_U64 n0, n1;
    int shift;
 
    d1 = d->hi;
@@ -951,30 +951,30 @@ static int r128__norm(R128 *n, R128 *d, R128_U64 *n2)
       }
    }
 
-   R128_SET2(n, n0, n1);
-   R128_SET2(d, d0, d1);
+   FXPT128_SET2(n, n0, n1);
+   FXPT128_SET2(d, d0, d1);
    return 0;
 }
 
-static void r128__udiv(R128 *quotient, const R128 *dividend, const R128 *divisor)
+static void r128__udiv(struct fmc_fxpt128_t *quotient, const struct fmc_fxpt128_t *dividend, const struct fmc_fxpt128_t *divisor)
 {
-   R128 tmp;
-   R128_U64 d0, d1;
-   R128_U64 n1, n2, n3;
-   R128 q;
+   struct fmc_fxpt128_t tmp;
+   FXPT128_U64 d0, d1;
+   FXPT128_U64 n1, n2, n3;
+   struct fmc_fxpt128_t q;
 
-   R128_ASSERT(dividend != NULL);
-   R128_ASSERT(divisor != NULL);
-   R128_ASSERT(quotient != NULL);
-   R128_ASSERT(divisor->hi != 0 || divisor->lo != 0);  // divide by zero
+   FXPT128_ASSERT(dividend != NULL);
+   FXPT128_ASSERT(divisor != NULL);
+   FXPT128_ASSERT(quotient != NULL);
+   FXPT128_ASSERT(divisor->hi != 0 || divisor->lo != 0);  // divide by zero
 
    // scale dividend and normalize
    {
-      R128 n, d;
-      R128_SET2(&n, dividend->lo, dividend->hi);
-      R128_SET2(&d, divisor->lo, divisor->hi);
+      struct fmc_fxpt128_t n, d;
+      FXPT128_SET2(&n, dividend->lo, dividend->hi);
+      FXPT128_SET2(&d, divisor->lo, divisor->hi);
       if (r128__norm(&n, &d, &n3)) {
-         R128_SET2(quotient, R128_max.lo, R128_max.hi);
+         FXPT128_SET2(quotient, FXPT128_max.lo, FXPT128_max.hi);
          return;
       }
 
@@ -985,14 +985,14 @@ static void r128__udiv(R128 *quotient, const R128 *dividend, const R128 *divisor
    }
 
    // first digit
-   R128_ASSERT(n3 <= d1);
+   FXPT128_ASSERT(n3 <= d1);
    {
-      R128 t0, t1;
+      struct fmc_fxpt128_t t0, t1;
       t0.lo = n1;
       if (n3 < d1) {
          q.hi = r128__udiv128(n2, n3, d1, &t0.hi);
       } else {
-         q.hi = R128_LIT_U64(0xffffffffffffffff);
+         q.hi = FXPT128_LIT_U64(0xffffffffffffffff);
          t0.hi = n2 + d1;
       }
 
@@ -1008,7 +1008,7 @@ refine1:
    }
 
    {
-      R128 t0, t1, t2;
+      struct fmc_fxpt128_t t0, t1, t2;
       t0.hi = n2;
       t0.lo = n1;
 
@@ -1023,14 +1023,14 @@ refine1:
    n1 = tmp.lo;
 
    // second digit
-   R128_ASSERT(n2 <= d1);
+   FXPT128_ASSERT(n2 <= d1);
    {
-      R128 t0, t1;
+      struct fmc_fxpt128_t t0, t1;
       t0.lo = 0;
       if (n2 < d1) {
          q.lo = r128__udiv128(n1, n2, d1, &t0.hi);
       } else {
-         q.lo = R128_LIT_U64(0xffffffffffffffff);
+         q.lo = FXPT128_LIT_U64(0xffffffffffffffff);
          t0.hi = n1 + d1;
       }
 
@@ -1045,21 +1045,21 @@ refine1:
       }
    }
 
-   R128_SET2(quotient, q.lo, q.hi);
+   FXPT128_SET2(quotient, q.lo, q.hi);
 }
 
-static R128_U64 r128__umod(R128 *n, R128 *d)
+static FXPT128_U64 r128__umod(struct fmc_fxpt128_t *n, struct fmc_fxpt128_t *d)
 {
-   R128_U64 d0, d1;
-   R128_U64 n3, n2, n1;
-   R128_U64 q;
+   FXPT128_U64 d0, d1;
+   FXPT128_U64 n3, n2, n1;
+   FXPT128_U64 q;
 
-   R128_ASSERT(d != NULL);
-   R128_ASSERT(n != NULL);
-   R128_ASSERT(d->hi != 0 || d->lo != 0);  // divide by zero
+   FXPT128_ASSERT(d != NULL);
+   FXPT128_ASSERT(n != NULL);
+   FXPT128_ASSERT(d->hi != 0 || d->lo != 0);  // divide by zero
 
    if (r128__norm(n, d, &n3)) {
-      return R128_LIT_U64(0xffffffffffffffff);
+      return FXPT128_LIT_U64(0xffffffffffffffff);
    }
 
    d1 = d->hi;
@@ -1067,9 +1067,9 @@ static R128_U64 r128__umod(R128 *n, R128 *d)
    n2 = n->hi;
    n1 = n->lo;
 
-   R128_ASSERT(n3 < d1);
+   FXPT128_ASSERT(n3 < d1);
    {
-      R128 t0, t1;
+      struct fmc_fxpt128_t t0, t1;
       t0.lo = n1;
       q = r128__udiv128(n2, n3, d1, &t0.hi);
 
@@ -1087,24 +1087,24 @@ static R128_U64 r128__umod(R128 *n, R128 *d)
    return q;
 }
 
-static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToStringFormat *format)
+static int r128__format(char *dst, size_t dstSize, const struct fmc_fxpt128_t *v, const R128ToStringFormat *format)
 {
    char buf[128];
-   R128 tmp;
-   R128_U64 whole;
+   struct fmc_fxpt128_t tmp;
+   FXPT128_U64 whole;
    char *cursor, *decimal, *dstp = dst;
    int sign = 0;
    int fullPrecision = 1;
    int width, precision;
    int padCnt, trail = 0;
 
-   R128_ASSERT(dst != NULL && dstSize > 0);
-   R128_ASSERT(v != NULL);
-   R128_ASSERT(format != NULL);
+   FXPT128_ASSERT(dst != NULL && dstSize > 0);
+   FXPT128_ASSERT(v != NULL);
+   FXPT128_ASSERT(format != NULL);
 
    --dstSize;
 
-   R128_SET2(&tmp, v->lo, v->hi);
+   FXPT128_SET2(&tmp, v->lo, v->hi);
    if (r128IsNeg(&tmp)) {
       r128__neg(&tmp, &tmp);
       sign = 1;
@@ -1132,7 +1132,7 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
    if (tmp.lo || format->decimal) {
       while (tmp.lo || (fullPrecision && precision)) {
          if ((int)(cursor - buf) == precision) {
-            if ((R128_S64)tmp.lo < 0) {
+            if ((FXPT128_S64)tmp.lo < 0) {
                // round up, propagate carry backwards
                char *c;
                for (c = cursor - 1; c >= buf; --c) {
@@ -1158,7 +1158,7 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
    endfrac:
       if (format->decimal || precision) {
          decimal = cursor;
-         *cursor++ = R128_decimal;
+         *cursor++ = FXPT128_decimal;
       }
    }
 
@@ -1169,7 +1169,7 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
       *cursor++ = digit + '0';
    } while (whole);
 
-#define R128__WRITE(c) do { if (dstp < dst + dstSize) *dstp = c; ++dstp; } while(0)
+#define FXPT128__WRITE(c) do { if (dstp < dst + dstSize) *dstp = c; ++dstp; } while(0)
 
    padCnt = width - (int)(cursor - buf) - 1;
 
@@ -1178,28 +1178,28 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
       char padChar = format->zeroPad ? '0' : ' ';
       if (format->zeroPad) {
          if (sign) {
-            R128__WRITE('-');
+            FXPT128__WRITE('-');
          } else if (format->sign == R128ToStringSign_Plus) {
-            R128__WRITE('+');
+            FXPT128__WRITE('+');
          } else if (format->sign == R128ToStringSign_Space) {
-            R128__WRITE(' ');
+            FXPT128__WRITE(' ');
          } else {
             ++padCnt;
          }
       }
 
       for (; padCnt > 0; --padCnt) {
-         R128__WRITE(padChar);
+         FXPT128__WRITE(padChar);
       }
    }
 
    if (format->leftAlign || !format->zeroPad) {
       if (sign) {
-         R128__WRITE('-');
+         FXPT128__WRITE('-');
       } else if (format->sign == R128ToStringSign_Plus) {
-         R128__WRITE('+');
+         FXPT128__WRITE('+');
       } else if (format->sign == R128ToStringSign_Space) {
-         R128__WRITE(' ');
+         FXPT128__WRITE(' ');
       } else {
          ++padCnt;
       }
@@ -1210,12 +1210,12 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
 
       // reverse the whole part
       for (i = cursor - 1; i >= decimal; --i) {
-         R128__WRITE(*i);
+         FXPT128__WRITE(*i);
       }
 
       // copy the fractional part
       for (i = buf; i < decimal; ++i) {
-         R128__WRITE(*i);
+         FXPT128__WRITE(*i);
       }
    }
 
@@ -1223,16 +1223,16 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
    if (format->leftAlign) {
       char padChar = format->zeroPad ? '0' : ' ';
       for (; padCnt > 0; --padCnt) {
-         R128__WRITE(padChar);
+         FXPT128__WRITE(padChar);
       }
    }
 
    // trailing zeroes for very large precision
    while (trail--) {
-      R128__WRITE('0');
+      FXPT128__WRITE('0');
    }
 
-#undef R128__WRITE
+#undef FXPT128__WRITE
 
    if (dstp <= dst + dstSize) {
       *dstp = '\0';
@@ -1242,24 +1242,24 @@ static int r128__format(char *dst, size_t dstSize, const R128 *v, const R128ToSt
    return (int)(dstp - dst);
 }
 
-void r128FromInt(R128 *dst, R128_S64 v)
+void r128FromInt(struct fmc_fxpt128_t *dst, FXPT128_S64 v)
 {
-   R128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(dst != NULL);
    dst->lo = 0;
-   dst->hi = (R128_U64)v;
-   R128_DEBUG_SET(dst);
+   dst->hi = (FXPT128_U64)v;
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128FromFloat(R128 *dst, double v)
+void r128FromFloat(struct fmc_fxpt128_t *dst, double v)
 {
-   R128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(dst != NULL);
 
    if (v < -9223372036854775808.0) {
-      r128Copy(dst, &R128_min);
+      r128Copy(dst, &FXPT128_min);
    } else if (v >= 9223372036854775808.0) {
-      r128Copy(dst, &R128_max);
+      r128Copy(dst, &FXPT128_max);
    } else {
-      R128 r;
+      struct fmc_fxpt128_t r;
       int sign = 0;
 
       if (v < 0) {
@@ -1267,9 +1267,9 @@ void r128FromFloat(R128 *dst, double v)
          sign = 1;
       }
 
-      r.hi = (R128_U64)(R128_S64)v;
-      v -= (R128_S64)v;
-      r.lo = (R128_U64)(v * 18446744073709551616.0);
+      r.hi = (FXPT128_U64)(FXPT128_S64)v;
+      v -= (FXPT128_S64)v;
+      r.lo = (FXPT128_U64)(v * 18446744073709551616.0);
 
       if (sign) {
          r128__neg(&r, &r);
@@ -1279,17 +1279,17 @@ void r128FromFloat(R128 *dst, double v)
    }
 }
 
-void r128FromString(R128 *dst, const char *s, char **endptr)
+void r128FromString(struct fmc_fxpt128_t *dst, const char *s, char **endptr)
 {
-   R128_U64 lo = 0, hi = 0;
-   R128_U64 base = 10;
+   FXPT128_U64 lo = 0, hi = 0;
+   FXPT128_U64 base = 10;
 
    int sign = 0;
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(s != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(s != NULL);
 
-   R128_SET2(dst, 0, 0);
+   FXPT128_SET2(dst, 0, 0);
 
    // consume whitespace
    for (;;) {
@@ -1316,7 +1316,7 @@ void r128FromString(R128 *dst, const char *s, char **endptr)
 
    // whole part
    for (;; ++s) {
-      R128_U64 digit;
+      FXPT128_U64 digit;
 
       if ('0' <= *s && *s <= '9') {
          digit = *s - '0';
@@ -1332,7 +1332,7 @@ void r128FromString(R128 *dst, const char *s, char **endptr)
    }
 
    // fractional part
-   if (*s == R128_decimal) {
+   if (*s == FXPT128_decimal) {
       const char *exp = ++s;
 
       // find the last digit and work backwards
@@ -1346,7 +1346,7 @@ void r128FromString(R128 *dst, const char *s, char **endptr)
       }
 
       for (const char *c = s - 1; c >= exp; --c) {
-         R128_U64 digit, unused;
+         FXPT128_U64 digit, unused;
 
          if ('0' <= *c && *c <= '9') {
             digit = *c - '0';
@@ -1360,7 +1360,7 @@ void r128FromString(R128 *dst, const char *s, char **endptr)
       }
    }
 
-   R128_SET2(dst, lo, hi);
+   FXPT128_SET2(dst, lo, hi);
    if (sign) {
       r128__neg(dst, dst);
    }
@@ -1370,25 +1370,25 @@ void r128FromString(R128 *dst, const char *s, char **endptr)
    }
 }
 
-R128_S64 r128ToInt(const R128 *v)
+FXPT128_S64 r128ToInt(const struct fmc_fxpt128_t *v)
 {
-   R128_ASSERT(v != NULL);
-   if ((R128_S64)v->hi < 0) {
-      return (R128_S64)v->hi + (v->lo != 0);
+   FXPT128_ASSERT(v != NULL);
+   if ((FXPT128_S64)v->hi < 0) {
+      return (FXPT128_S64)v->hi + (v->lo != 0);
    } else {
-      return (R128_S64)v->hi;
+      return (FXPT128_S64)v->hi;
    }
 }
 
-double r128ToFloat(const R128 *v)
+double r128ToFloat(const struct fmc_fxpt128_t *v)
 {
-   R128 tmp;
+   struct fmc_fxpt128_t tmp;
    int sign = 0;
    double d;
 
-   R128_ASSERT(v != NULL);
+   FXPT128_ASSERT(v != NULL);
 
-   R128_SET2(&tmp, v->lo, v->hi);
+   FXPT128_SET2(&tmp, v->lo, v->hi);
    if (r128IsNeg(&tmp)) {
       r128__neg(&tmp, &tmp);
       sign = 1;
@@ -1402,24 +1402,24 @@ double r128ToFloat(const R128 *v)
    return d;
 }
 
-int r128ToStringOpt(char *dst, size_t dstSize, const R128 *v, const R128ToStringFormat *opt)
+int r128ToStringOpt(char *dst, size_t dstSize, const struct fmc_fxpt128_t *v, const R128ToStringFormat *opt)
 {
    return r128__format(dst, dstSize, v, opt);
 }
 
-int r128ToStringf(char *dst, size_t dstSize, const char *format, const R128 *v)
+int r128ToStringf(char *dst, size_t dstSize, const char *format, const struct fmc_fxpt128_t *v)
 {
    R128ToStringFormat opts;
 
-   R128_ASSERT(dst != NULL && dstSize);
-   R128_ASSERT(format != NULL);
-   R128_ASSERT(v != NULL);
+   FXPT128_ASSERT(dst != NULL && dstSize);
+   FXPT128_ASSERT(format != NULL);
+   FXPT128_ASSERT(v != NULL);
 
-   opts.sign = R128__defaultFormat.sign;
-   opts.precision = R128__defaultFormat.precision;
-   opts.zeroPad = R128__defaultFormat.zeroPad;
-   opts.decimal = R128__defaultFormat.decimal;
-   opts.leftAlign = R128__defaultFormat.leftAlign;
+   opts.sign = FXPT128__defaultFormat.sign;
+   opts.precision = FXPT128__defaultFormat.precision;
+   opts.zeroPad = FXPT128__defaultFormat.zeroPad;
+   opts.decimal = FXPT128__defaultFormat.decimal;
+   opts.leftAlign = FXPT128__defaultFormat.leftAlign;
 
    if (*format == '%') {
       ++format;
@@ -1468,105 +1468,105 @@ int r128ToStringf(char *dst, size_t dstSize, const char *format, const R128 *v)
    return r128__format(dst, dstSize, v, &opts);
 }
 
-int r128ToString(char *dst, size_t dstSize, const R128 *v)
+int r128ToString(char *dst, size_t dstSize, const struct fmc_fxpt128_t *v)
 {
-   return r128__format(dst, dstSize, v, &R128__defaultFormat);
+   return r128__format(dst, dstSize, v, &FXPT128__defaultFormat);
 }
 
-void r128Copy(R128 *dst, const R128 *src)
+void r128Copy(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(src != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(src != NULL);
    dst->lo = src->lo;
    dst->hi = src->hi;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Neg(R128 *dst, const R128 *v)
+void r128Neg(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v)
 {
    r128__neg(dst, v);
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Abs(R128* dst, const R128* v)
+void r128Abs(struct fmc_fxpt128_t* dst, const struct fmc_fxpt128_t* v)
 {
-    R128 sign, inv;
+    struct fmc_fxpt128_t sign, inv;
 
-    R128_ASSERT(dst != NULL);
-    R128_ASSERT(v != NULL);
+    FXPT128_ASSERT(dst != NULL);
+    FXPT128_ASSERT(v != NULL);
 
-    sign.lo = sign.hi = (R128_U64)(((R128_S64)v->hi) >> 63);
+    sign.lo = sign.hi = (FXPT128_U64)(((FXPT128_S64)v->hi) >> 63);
     inv.lo = v->lo ^ sign.lo;
     inv.hi = v->hi ^ sign.hi;
 
     r128Sub(dst, &inv, &sign);
 }
 
-void r128Nabs(R128* dst, const R128* v)
+void r128Nabs(struct fmc_fxpt128_t* dst, const struct fmc_fxpt128_t* v)
 {
-    R128 sign, inv;
+    struct fmc_fxpt128_t sign, inv;
 
-    R128_ASSERT(dst != NULL);
-    R128_ASSERT(v != NULL);
+    FXPT128_ASSERT(dst != NULL);
+    FXPT128_ASSERT(v != NULL);
 
-    sign.lo = sign.hi = (R128_U64)(((R128_S64)v->hi) >> 63);
+    sign.lo = sign.hi = (FXPT128_U64)(((FXPT128_S64)v->hi) >> 63);
     inv.lo = v->lo ^ sign.lo;
     inv.hi = v->hi ^ sign.hi;
 
     r128Sub(dst, &sign, &inv);
 }
 
-void r128Not(R128 *dst, const R128 *src)
+void r128Not(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(src != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(src != NULL);
 
    dst->lo = ~src->lo;
    dst->hi = ~src->hi;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Or(R128 *dst, const R128 *a, const R128 *b)
+void r128Or(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
    dst->lo = a->lo | b->lo;
    dst->hi = a->hi | b->hi;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128And(R128 *dst, const R128 *a, const R128 *b)
+void r128And(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
    dst->lo = a->lo & b->lo;
    dst->hi = a->hi & b->hi;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Xor(R128 *dst, const R128 *a, const R128 *b)
+void r128Xor(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
    dst->lo = a->lo ^ b->lo;
    dst->hi = a->hi ^ b->hi;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Shl(R128 *dst, const R128 *src, int amount)
+void r128Shl(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src, int amount)
 {
-   R128_U64 r[4];
+   FXPT128_U64 r[4];
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(src != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(src != NULL);
 
-#if defined(_M_IX86) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#if defined(_M_IX86) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
    __asm {
       // load src
       mov edx, dword ptr[src]
@@ -1607,7 +1607,7 @@ void r128Shl(R128 *dst, const R128 *src, int amount)
       r[1] = r[0] << (amount - 64);
       r[0] = 0;
    } else if (amount) {
-#  if defined(_M_X64) && !defined(R128_STDC_ONLY)
+#  if defined(_M_X64) && !defined(FXPT128_STDC_ONLY)
       r[1] = __shiftleft128(r[0], r[1], (char) amount);
 #  else
       r[1] = (r[1] << amount) | (r[0] >> (64 - amount));
@@ -1618,17 +1618,17 @@ void r128Shl(R128 *dst, const R128 *src, int amount)
 
    dst->lo = r[0];
    dst->hi = r[1];
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Shr(R128 *dst, const R128 *src, int amount)
+void r128Shr(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src, int amount)
 {
-   R128_U64 r[4];
+   FXPT128_U64 r[4];
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(src != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(src != NULL);
 
-#if defined(_M_IX86) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#if defined(_M_IX86) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
    __asm {
       // load src
       mov edx, dword ptr[src]
@@ -1669,7 +1669,7 @@ void r128Shr(R128 *dst, const R128 *src, int amount)
       r[2] = r[3] >> (amount - 64);
       r[3] = 0;
    } else if (amount) {
-#if defined(_M_X64) && !defined(R128_STDC_ONLY)
+#if defined(_M_X64) && !defined(FXPT128_STDC_ONLY)
       r[2] = __shiftright128(r[2], r[3], (char) amount);
 #else
       r[2] = (r[2] >> amount) | (r[3] << (64 - amount));
@@ -1680,17 +1680,17 @@ void r128Shr(R128 *dst, const R128 *src, int amount)
 
    dst->lo = r[2];
    dst->hi = r[3];
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Sar(R128 *dst, const R128 *src, int amount)
+void r128Sar(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src, int amount)
 {
-   R128_U64 r[4];
+   FXPT128_U64 r[4];
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(src != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(src != NULL);
 
-#if defined(_M_IX86) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#if defined(_M_IX86) && !defined(FXPT128_STDC_ONLY) && !defined(__MINGW32__)
    __asm {
       // load src
       mov edx, dword ptr[src]
@@ -1728,92 +1728,92 @@ void r128Sar(R128 *dst, const R128 *src, int amount)
 
    amount &= 127;
    if (amount >= 64) {
-      r[2] = (R128_U64)((R128_S64)r[3] >> (amount - 64));
-      r[3] = (R128_U64)((R128_S64)r[3] >> 63);
+      r[2] = (FXPT128_U64)((FXPT128_S64)r[3] >> (amount - 64));
+      r[3] = (FXPT128_U64)((FXPT128_S64)r[3] >> 63);
    } else if (amount) {
-      r[2] = (r[2] >> amount) | (R128_U64)((R128_S64)r[3] << (64 - amount));
-      r[3] = (R128_U64)((R128_S64)r[3] >> amount);
+      r[2] = (r[2] >> amount) | (FXPT128_U64)((FXPT128_S64)r[3] << (64 - amount));
+      r[3] = (FXPT128_U64)((FXPT128_S64)r[3] >> amount);
    }
 #endif
 
    dst->lo = r[2];
    dst->hi = r[3];
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Add(R128 *dst, const R128 *a, const R128 *b)
+void r128Add(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
    unsigned char carry = 0;
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
-#if R128_INTEL && !defined(R128_STDC_ONLY)
-#  if R128_64BIT
+#if FXPT128_INTEL && !defined(FXPT128_STDC_ONLY)
+#  if FXPT128_64BIT
    carry = _addcarry_u64(carry, a->lo, b->lo, &dst->lo);
    carry = _addcarry_u64(carry, a->hi, b->hi, &dst->hi);
 #  else
-   R128_U32 r0, r1, r2, r3;
-   carry = _addcarry_u32(carry, R128_R0(a), R128_R0(b), &r0);
-   carry = _addcarry_u32(carry, R128_R1(a), R128_R1(b), &r1);
-   carry = _addcarry_u32(carry, R128_R2(a), R128_R2(b), &r2);
-   carry = _addcarry_u32(carry, R128_R3(a), R128_R3(b), &r3);
-   R128_SET4(dst, r0, r1, r2, r3);
-#  endif //R128_64BIT
+   FXPT128_U32 r0, r1, r2, r3;
+   carry = _addcarry_u32(carry, FXPT128_R0(a), FXPT128_R0(b), &r0);
+   carry = _addcarry_u32(carry, FXPT128_R1(a), FXPT128_R1(b), &r1);
+   carry = _addcarry_u32(carry, FXPT128_R2(a), FXPT128_R2(b), &r2);
+   carry = _addcarry_u32(carry, FXPT128_R3(a), FXPT128_R3(b), &r3);
+   FXPT128_SET4(dst, r0, r1, r2, r3);
+#  endif //FXPT128_64BIT
 #else
    {
-      R128_U64 r = a->lo + b->lo;
+      FXPT128_U64 r = a->lo + b->lo;
       carry = r < a->lo;
       dst->lo = r;
       dst->hi = a->hi + b->hi + carry;
    }
-#endif   //R128_INTEL
+#endif   //FXPT128_INTEL
 
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Sub(R128 *dst, const R128 *a, const R128 *b)
+void r128Sub(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
    unsigned char borrow = 0;
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
-#if R128_INTEL && !defined(R128_STDC_ONLY)
-#  if R128_64BIT
+#if FXPT128_INTEL && !defined(FXPT128_STDC_ONLY)
+#  if FXPT128_64BIT
    borrow = _subborrow_u64(borrow, a->lo, b->lo, &dst->lo);
    borrow = _subborrow_u64(borrow, a->hi, b->hi, &dst->hi);
 #  else
-   R128_U32 r0, r1, r2, r3;
-   borrow = _subborrow_u32(borrow, R128_R0(a), R128_R0(b), &r0);
-   borrow = _subborrow_u32(borrow, R128_R1(a), R128_R1(b), &r1);
-   borrow = _subborrow_u32(borrow, R128_R2(a), R128_R2(b), &r2);
-   borrow = _subborrow_u32(borrow, R128_R3(a), R128_R3(b), &r3);
-   R128_SET4(dst, r0, r1, r2, r3);
-#  endif //R128_64BIT
+   FXPT128_U32 r0, r1, r2, r3;
+   borrow = _subborrow_u32(borrow, FXPT128_R0(a), FXPT128_R0(b), &r0);
+   borrow = _subborrow_u32(borrow, FXPT128_R1(a), FXPT128_R1(b), &r1);
+   borrow = _subborrow_u32(borrow, FXPT128_R2(a), FXPT128_R2(b), &r2);
+   borrow = _subborrow_u32(borrow, FXPT128_R3(a), FXPT128_R3(b), &r3);
+   FXPT128_SET4(dst, r0, r1, r2, r3);
+#  endif //FXPT128_64BIT
 #else
    {
-      R128_U64 r = a->lo - b->lo;
+      FXPT128_U64 r = a->lo - b->lo;
       borrow = r > a->lo;
       dst->lo = r;
       dst->hi = a->hi - b->hi - borrow;
    }
-#endif   //R128_INTEL
+#endif   //FXPT128_INTEL
 
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Mul(R128 *dst, const R128 *a, const R128 *b)
+void r128Mul(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
    int sign = 0;
-   R128 ta, tb, tc;
+   struct fmc_fxpt128_t ta, tb, tc;
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
-   R128_SET2(&ta, a->lo, a->hi);
-   R128_SET2(&tb, b->lo, b->hi);
+   FXPT128_SET2(&ta, a->lo, a->hi);
+   FXPT128_SET2(&tb, b->lo, b->hi);
 
    if (r128IsNeg(&ta)) {
       r128__neg(&ta, &ta);
@@ -1832,17 +1832,17 @@ void r128Mul(R128 *dst, const R128 *a, const R128 *b)
    r128Copy(dst, &tc);
 }
 
-void r128Div(R128 *dst, const R128 *a, const R128 *b)
+void r128Div(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
    int sign = 0;
-   R128 tn, td, tq;
+   struct fmc_fxpt128_t tn, td, tq;
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
-   R128_SET2(&tn, a->lo, a->hi);
-   R128_SET2(&td, b->lo, b->hi);
+   FXPT128_SET2(&tn, a->lo, a->hi);
+   FXPT128_SET2(&td, b->lo, b->hi);
 
    if (r128IsNeg(&tn)) {
       r128__neg(&tn, &tn);
@@ -1852,9 +1852,9 @@ void r128Div(R128 *dst, const R128 *a, const R128 *b)
    if (td.lo == 0 && td.hi == 0) {
       // divide by zero
       if (sign) {
-         r128Copy(dst, &R128_min);
+         r128Copy(dst, &FXPT128_min);
       } else {
-         r128Copy(dst, &R128_max);
+         r128Copy(dst, &FXPT128_max);
       }
       return;
    } else if (r128IsNeg(&td)) {
@@ -1871,17 +1871,17 @@ void r128Div(R128 *dst, const R128 *a, const R128 *b)
    r128Copy(dst, &tq);
 }
 
-void r128Mod(R128 *dst, const R128 *a, const R128 *b)
+void r128Mod(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
    int sign = 0;
-   R128 tn, td, tq;
+   struct fmc_fxpt128_t tn, td, tq;
 
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
-   R128_SET2(&tn, a->lo, a->hi);
-   R128_SET2(&td, b->lo, b->hi);
+   FXPT128_SET2(&tn, a->lo, a->hi);
+   FXPT128_SET2(&td, b->lo, b->hi);
 
    if (r128IsNeg(&tn)) {
       r128__neg(&tn, &tn);
@@ -1891,9 +1891,9 @@ void r128Mod(R128 *dst, const R128 *a, const R128 *b)
    if (td.lo == 0 && td.hi == 0) {
       // divide by zero
       if (sign) {
-         r128Copy(dst, &R128_min);
+         r128Copy(dst, &FXPT128_min);
       } else {
-         r128Copy(dst, &R128_max);
+         r128Copy(dst, &FXPT128_max);
       }
       return;
    } else if (r128IsNeg(&td)) {
@@ -1912,30 +1912,30 @@ void r128Mod(R128 *dst, const R128 *a, const R128 *b)
    r128Sub(dst, a, &tq);
 }
 
-void r128Rsqrt(R128 *dst, const R128 *v)
+void r128Rsqrt(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v)
 {
-   static const R128 threeHalves = { R128_LIT_U64(0x8000000000000000), 1 };
-   R128 x, est;
+   static const struct fmc_fxpt128_t threeHalves = { FXPT128_LIT_U64(0x8000000000000000), 1 };
+   struct fmc_fxpt128_t x, est;
    int i;
 
-   if ((R128_S64)v->hi < 0) {
-      r128Copy(dst, &R128_min);
+   if ((FXPT128_S64)v->hi < 0) {
+      r128Copy(dst, &FXPT128_min);
       return;
    }
 
-   R128_SET2(&x, v->lo, v->hi);
+   FXPT128_SET2(&x, v->lo, v->hi);
 
    // get initial estimate
    if (x.hi) {
       int shift = (64 + r128__clz64(x.hi)) >> 1;
-      est.lo = R128_LIT_U64(1) << shift;
+      est.lo = FXPT128_LIT_U64(1) << shift;
       est.hi = 0;
    } else if (x.lo) {
       int shift = r128__clz64(x.lo) >> 1;
-      est.hi = R128_LIT_U64(1) << shift;
+      est.hi = FXPT128_LIT_U64(1) << shift;
       est.lo = 0;
    } else {
-      R128_SET2(dst, 0, 0);
+      FXPT128_SET2(dst, 0, 0);
       return;
    }
 
@@ -1944,7 +1944,7 @@ void r128Rsqrt(R128 *dst, const R128 *v)
 
    // Newton-Raphson iterate
    for (i = 0; i < 7; ++i) {
-      R128 newEst;
+      struct fmc_fxpt128_t newEst;
 
       // newEst = est * (threeHalves - (x / 2) * est * est);
       r128__umul(&newEst, &est, &est);
@@ -1955,23 +1955,23 @@ void r128Rsqrt(R128 *dst, const R128 *v)
       if (newEst.lo == est.lo && newEst.hi == est.hi) {
          break;
       }
-      R128_SET2(&est, newEst.lo, newEst.hi);
+      FXPT128_SET2(&est, newEst.lo, newEst.hi);
    }
 
    r128Copy(dst, &est);
 }
 
-void r128Sqrt(R128 *dst, const R128 *v)
+void r128Sqrt(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v)
 {
-   R128 x, est;
+   struct fmc_fxpt128_t x, est;
    int i;
 
-   if ((R128_S64)v->hi < 0) {
-      r128Copy(dst, &R128_min);
+   if ((FXPT128_S64)v->hi < 0) {
+      r128Copy(dst, &FXPT128_min);
       return;
    }
 
-   R128_SET2(&x, v->lo, v->hi);
+   FXPT128_SET2(&x, v->lo, v->hi);
 
    // get initial estimate
    if (x.hi) {
@@ -1981,13 +1981,13 @@ void r128Sqrt(R128 *dst, const R128 *v)
       int shift = (1 + r128__clz64(x.lo)) >> 1;
       r128Shl(&est, &x, shift);
    } else {
-      R128_SET2(dst, 0, 0);
+      FXPT128_SET2(dst, 0, 0);
       return;
    }
 
    // Newton-Raphson iterate
    for (i = 0; i < 7; ++i) {
-      R128 newEst;
+      struct fmc_fxpt128_t newEst;
 
       // newEst = (est + x / est) / 2
       r128__udiv(&newEst, &x, &est);
@@ -1997,16 +1997,16 @@ void r128Sqrt(R128 *dst, const R128 *v)
       if (newEst.lo == est.lo && newEst.hi == est.hi) {
          break;
       }
-      R128_SET2(&est, newEst.lo, newEst.hi);
+      FXPT128_SET2(&est, newEst.lo, newEst.hi);
    }
 
    r128Copy(dst, &est);
 }
 
-int r128Cmp(const R128 *a, const R128 *b)
+int r128Cmp(const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
    if (a->hi == b->hi) {
       if (a->lo == b->lo) {
@@ -2016,25 +2016,25 @@ int r128Cmp(const R128 *a, const R128 *b)
       } else {
          return -1;
       }
-   } else if ((R128_S64)a->hi > (R128_S64)b->hi) {
+   } else if ((FXPT128_S64)a->hi > (FXPT128_S64)b->hi) {
       return 1;
    } else {
       return -1;
    }
 }
 
-int r128IsNeg(const R128 *v)
+int r128IsNeg(const struct fmc_fxpt128_t *v)
 {
-   R128_ASSERT(v != NULL);
+   FXPT128_ASSERT(v != NULL);
 
-   return (R128_S64)v->hi < 0;
+   return (FXPT128_S64)v->hi < 0;
 }
 
-void r128Min(R128 *dst, const R128 *a, const R128 *b)
+void r128Min(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
    if (r128Cmp(a, b) < 0) {
       r128Copy(dst, a);
@@ -2043,11 +2043,11 @@ void r128Min(R128 *dst, const R128 *a, const R128 *b)
    }
 }
 
-void r128Max(R128 *dst, const R128 *a, const R128 *b)
+void r128Max(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(a != NULL);
-   R128_ASSERT(b != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(a != NULL);
+   FXPT128_ASSERT(b != NULL);
 
    if (r128Cmp(a, b) > 0) {
       r128Copy(dst, a);
@@ -2056,34 +2056,34 @@ void r128Max(R128 *dst, const R128 *a, const R128 *b)
    }
 }
 
-void r128Floor(R128 *dst, const R128 *v)
+void r128Floor(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(v != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(v != NULL);
 
    dst->hi = v->hi;
    dst->lo = 0;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Ceil(R128 *dst, const R128 *v)
+void r128Ceil(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(v != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(v != NULL);
 
    dst->hi = v->hi + (v->lo != 0);
    dst->lo = 0;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-void r128Round(R128* dst, const R128* v)
+void r128Round(struct fmc_fxpt128_t* dst, const struct fmc_fxpt128_t* v)
 {
-   R128_ASSERT(dst != NULL);
-   R128_ASSERT(v != NULL);
+   FXPT128_ASSERT(dst != NULL);
+   FXPT128_ASSERT(v != NULL);
 
-   dst->hi = v->hi + (v->lo >= R128_LIT_U64(0x8000000000000000) + (R128_U64)((R128_S64)v->hi < 0));
+   dst->hi = v->hi + (v->lo >= FXPT128_LIT_U64(0x8000000000000000) + (FXPT128_U64)((FXPT128_S64)v->hi < 0));
    dst->lo = 0;
-   R128_DEBUG_SET(dst);
+   FXPT128_DEBUG_SET(dst);
 }
 
-#endif   //R128_IMPLEMENTATION
+#endif   //FXPT128_IMPLEMENTATION
