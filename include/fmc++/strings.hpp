@@ -34,37 +34,34 @@
 namespace fmc {
 
 // Remove starting trailing blanks
-inline void ltrim(std::string &s) {
-  s.erase(s.begin(),
-          find_if(s.begin(), s.end(), [](int c) { return !isspace(c); }));
+inline std::string_view ltrim(std::string_view s) {
+  return s.substr(s.find_first_not_of("\t\n\v\f\r "));
 }
 
 // Remove ending trailing blanks
-inline void rtrim(std::string &s) {
-  s.erase(
-      find_if(s.rbegin(), s.rend(), [](int c) { return !isspace(c); }).base(),
-      s.end());
+inline std::string_view rtrim(std::string_view s) {
+  return s.substr(0, 1 + std::min(s.size(), s.find_last_not_of("\t\n\v\f\r ")));
 }
 
 // Remove starting and ending blanks
-inline void trim(std::string &s) {
-  ltrim(s);
-  rtrim(s);
+inline std::string_view trim(std::string_view s) {
+  return ltrim(rtrim(s));
 }
 
-// Return true is s ends with suffix.
-// This function emulates equivalent in C++20 (that will be a method
-// of string class)
-inline bool ends_with(const std::string &s, const std::string &suffix) {
-  return s.size() >= suffix.size() &&
-         0 == s.compare(s.size() - suffix.size(), suffix.size(), suffix);
+inline tuple<string_view, string_view, string_view> split(string_view a,
+                                                          string_view sep) {
+  auto pos = a.find_first_of(sep);
+  if (pos >= a.size())
+    return {a, string_view(), string_view()};
+  return {a.substr(0, pos), a.substr(pos, 1), a.substr(pos + 1)};
 }
 
-// Return true is s starts with prefix.
-// This function emulates equivalent in C++20 (that will be a method
-// of string class)
-inline bool starts_with(const std::string &s, const std::string &prefix) {
-  return s.size() >= prefix.size() && 0 == s.compare(0, prefix.size(), prefix);
+inline bool ends_with(std::string_view a, std::string_view b) {
+  return a.size() >= b.size() && a.substr(a.size() - b.size()) == b;
+}
+
+inline bool starts_with(std::string_view a, std::string_view b) {
+  return a.substr(0, b.size()) == b;
 }
 
 // Determines if name is a file name or a command to be executed and
@@ -75,20 +72,18 @@ inline bool starts_with(const std::string &s, const std::string &prefix) {
 // If the command is detected, then second contain the command to be
 // executed (without trailing blanks and '|'). Otherwise, second is a
 // file name.
-inline std::pair<bool, std::string> ends_with_pipe(std::string name) {
-  trim(name); // removes all trailing blanks
-  if (ends_with(name, "|")) {
-    return {true, name.erase(name.size() - 1, 1)}; // remove '|'
+inline std::pair<bool, std::string_view> ends_with_pipe(std::string_view name) {
+  if (auto sv = trim(name); ends_with(sv, "|")) {
+    return {true, sv.substr(0, sv.size() - 1)}; // remove '|'
   }
-  return {false, std::move(name)};
+  return {false, name};
 }
 
-inline std::pair<bool, std::string> begins_with_pipe(std::string name) {
-  trim(name); // removes all trailing blanks
-  if (starts_with(name, "|")) {
-    return {true, name.erase(0, 1)}; // remove '|'
+inline std::pair<bool, std::string_view> begins_with_pipe(std::string_view name) {
+  if (auto sv = trim(name); starts_with(sv, "|")) {
+    return {true, sv.substr(1)}; // remove '|'
   }
-  return {false, std::move(name)};
+  return {false, name};
 }
 
 template <class T>
