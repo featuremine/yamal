@@ -25,7 +25,39 @@
 #include <pthread.h>
 #include <sched.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #endif
+
+pid_t fmc_exec(const char *cmd, fmc_error_t **err) {
+  fmc_error_clear(err);
+  pid_t cpid;
+
+  if ((cpid = fork()) == -1) {
+    fmc_error_set(err, "could not fork: %s", strerror(errno));
+    return -1;
+  }
+
+  if (cpid == 0) {
+    execl("/bin/sh", "/bin/sh", "-c", cmd, (char *)NULL);
+    fprintf(stderr, "failed to execute %s with error: %s", cmd,
+            strerror(errno));
+    _exit(EXIT_FAILURE);
+  }
+
+  return cpid;
+}
+
+int fmc_waitpid(pid_t pid, fmc_error_t **err) {
+  fmc_error_clear(err);
+  int status;
+  if (waitpid(pid, &status, 0) < 0) {
+    fmc_error_set(err, "failed to wait for the process %d with error: %s", pid,
+                  strerror(errno));
+    return -1;
+  }
+  return status;
+}
 
 fmc_tid fmc_tid_cur(fmc_error_t **error) {
   fmc_error_clear(error);
