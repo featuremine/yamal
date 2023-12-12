@@ -14,8 +14,10 @@
 #pragma once
 
 #include "fmc++/convert.hpp"
+#include "fmc++/memory.hpp"
 #include "fmc++/mpl.hpp"
 #include "fmc++/rational64.hpp"
+#include "fmc++/decimal128.hpp"
 #include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
 
@@ -35,18 +37,20 @@ class fxpt128 : public fmc_fxpt128_t {
 public:
    fxpt128();
    fxpt128(const fmc_fxpt128_t &c);
-   fxpt128(double);
-   fxpt128(int);
-   fxpt128(FXPT128_S64);
-   fxpt128(FXPT128_U64 low, FXPT128_U64 high);
-   // fxpt128(std::string_view sv);
+   explicit fxpt128(double);
+   explicit fxpt128(int);
+   explicit fxpt128(FXPT128_S64);
+   explicit fxpt128(FXPT128_U64 low, FXPT128_U64 high);
+   explicit fxpt128(const decimal128 &) {}
+   explicit fxpt128(const fmc_decimal128_t &) {}
+   explicit fxpt128(std::string_view sv) {}
 
-   operator double() const;
-   operator FXPT128_S64() const;
-   operator int() const;
-   operator bool() const;
+   explicit operator double() const;
+   explicit operator FXPT128_S64() const;
+   explicit operator int() const;
+   explicit operator bool() const;
 
-   // std::string_view to_string_view(fmc::buffer buf);
+   std::string_view to_string_view(fmc::buffer buf) {}
 
    bool operator!() const;
    fxpt128 operator~() const;
@@ -61,6 +65,12 @@ public:
    fxpt128 &operator%=(const fxpt128 &rhs);
    fxpt128 &operator<<=(int amount);
    fxpt128 &operator>>=(int amount);
+   fxpt128 &operator=(const decimal128 &a) noexcept {
+      return *this;
+   }
+   fxpt128 &operator=(const fmc_decimal128_t &a) noexcept {
+      return *this;
+   }
 };
 
 inline fxpt128::fxpt128() {}
@@ -226,9 +236,51 @@ static inline fxpt128 operator*(const fxpt128 &lhs, const fxpt128 &rhs)
    return r *= rhs;
 }
 
+static inline fxpt128 operator*(const int64_t lhs, const fxpt128 &rhs)
+{
+   fxpt128 r(lhs);
+   return r *= rhs;
+}
+
+static inline fxpt128 operator*(const uint64_t lhs, const fxpt128 &rhs)
+{
+   fxpt128 r(lhs, 0);
+   return r *= rhs;
+}
+
+static inline fxpt128 operator*(const fxpt128 &rhs, const uint64_t lhs)
+{
+   fxpt128 r(lhs, 0);
+   return r *= rhs;
+}
+
 static inline fxpt128 operator/(const fxpt128 &lhs, const fxpt128 &rhs)
 {
    fxpt128 r(lhs);
+   return r /= rhs;
+}
+
+static inline fxpt128 operator/(const int32_t lhs, const fxpt128 &rhs)
+{
+   fxpt128 r(lhs);
+   return r /= rhs;
+}
+
+static inline fxpt128 operator/(const int64_t lhs, const fxpt128 &rhs)
+{
+   fxpt128 r(lhs);
+   return r /= rhs;
+}
+
+static inline fxpt128 operator/(const uint32_t lhs, const fxpt128 &rhs)
+{
+   fxpt128 r(lhs, 0);
+   return r /= rhs;
+}
+
+static inline fxpt128 operator/(const uint64_t lhs, const fxpt128 &rhs)
+{
+   fxpt128 r(lhs, 0);
    return r /= rhs;
 }
 
@@ -368,6 +420,22 @@ abs(T x) {
   fmc::fxpt128 res;
   fmc_fxpt128_abs(&res, &x);
   return res;
+}
+
+template <typename T>
+inline typename std::enable_if_t<std::is_base_of_v<fmc_fxpt128_t, T>,
+                                 fmc::fxpt128>
+pow(T x, uint64_t n) {
+  fmc::fxpt128 res;
+  //TODO: Implement
+  return res;
+}
+
+template <typename T>
+inline typename std::enable_if_t<std::is_base_of_v<fmc_fxpt128_t, T>, bool>
+isnan(T x) {
+  //TODO: Implement
+  return false;
 }
 
 }  //namespace std
