@@ -37,6 +37,7 @@ class buffer {
 public:
   buffer() : data_(nullptr), sz_(0) {}
   buffer(void *data, size_t sz) : data_(data), sz_(sz) {}
+  template <size_t SZ> buffer(char a[SZ]) : data_(a), sz_(SZ) {}
   operator std::string_view() { return std::string_view((char *)data_, sz_); }
   void *data() { return data_; }
   size_t size() { return sz_; }
@@ -44,6 +45,19 @@ public:
 private:
   void *data_;
   size_t sz_;
+};
+
+template<size_t SZ>
+class memory {
+public:
+  memory() {}
+  operator std::string_view() const { return std::string_view(buf_, SZ); }
+  operator buffer() { return buffer(buf_, SZ); }
+  size_t size() const { return SZ; }
+  const char *data() const { return buf_; }
+  char *data() { return buf_; }
+private:
+  char buf_[SZ] = {0};
 };
 
 } // namespace fmc

@@ -34,15 +34,19 @@ namespace fmc {
 class fxpt128 : public fmc_fxpt128_t {
 public:
    fxpt128();
+   fxpt128(const fmc_fxpt128_t &c);
    fxpt128(double);
    fxpt128(int);
    fxpt128(FXPT128_S64);
    fxpt128(FXPT128_U64 low, FXPT128_U64 high);
+   // fxpt128(std::string_view sv);
 
    operator double() const;
    operator FXPT128_S64() const;
    operator int() const;
    operator bool() const;
+
+   // std::string_view to_string_view(fmc::buffer buf);
 
    bool operator!() const;
    fxpt128 operator~() const;
@@ -61,9 +65,14 @@ public:
 
 inline fxpt128::fxpt128() {}
 
+inline fxpt128::fxpt128(const fmc_fxpt128_t &c)
+: fmc_fxpt128_t{c}
+{
+}
+
 inline fxpt128::fxpt128(double v)
 {
-   fmc_fxpt128_from_float(this, v);
+   fmc_fxpt128_from_double(this, v);
 }
 
 inline fxpt128::fxpt128(int v)
@@ -84,7 +93,7 @@ inline fxpt128::fxpt128(FXPT128_U64 low, FXPT128_U64 high)
 
 inline fxpt128::operator double() const
 {
-   return fmc_fxpt128_to_float(this);
+   return fmc_fxpt128_to_double(this);
 }
 
 inline fxpt128::operator FXPT128_S64() const
@@ -276,12 +285,12 @@ static inline bool operator!=(const fxpt128 &lhs, const fxpt128 &rhs)
 
 namespace std {
 template<>
-struct numeric_limits<fxpt128>
+struct numeric_limits<fmc::fxpt128>
 {
    static const bool is_specialized = true;
 
-   static fxpt128 min() throw() { return FXPT128_min; }
-   static fxpt128 max() throw() { return FXPT128_max; }
+   static fmc::fxpt128 min() throw() { return FXPT128_min; }
+   static fmc::fxpt128 max() throw() { return FXPT128_max; }
 
    static const int digits = 127;
    static const int digits10 = 38;
@@ -289,8 +298,8 @@ struct numeric_limits<fxpt128>
    static const bool is_integer = false;
    static const bool is_exact = false;
    static const int radix = 2;
-   static fxpt128 epsilon() throw() { return FXPT128_smallest; }
-   static fxpt128 round_error() throw() { return FXPT128_one; }
+   static fmc::fxpt128 epsilon() throw() { return FXPT128_smallest; }
+   static fmc::fxpt128 round_error() throw() { return FXPT128_one; }
 
    static const int min_exponent = 0;
    static const int min_exponent10 = 0;
@@ -303,10 +312,10 @@ struct numeric_limits<fxpt128>
    static const float_denorm_style has_denorm = denorm_absent;
    static const bool has_denorm_loss = false;
 
-   static fxpt128 infinity() throw() { return FXPT128_zero; }
-   static fxpt128 quiet_NaN() throw() { return FXPT128_zero; }
-   static fxpt128 signaling_NaN() throw() { return FXPT128_zero; }
-   static fxpt128 denorm_min() throw() { return FXPT128_zero; }
+   static fmc::fxpt128 infinity() throw() { return FXPT128_zero; }
+   static fmc::fxpt128 quiet_NaN() throw() { return FXPT128_zero; }
+   static fmc::fxpt128 signaling_NaN() throw() { return FXPT128_zero; }
+   static fmc::fxpt128 denorm_min() throw() { return FXPT128_zero; }
 
    static const bool is_iec559 = false;
    static const bool is_bounded = true;
@@ -334,7 +343,7 @@ inline istream &operator>>(istream &os, fmc_fxpt128_t &r) {
    string str;
    os >> str;
    fmc_error_t *err;
-   fmc_fxpt128_from_str(&r, str.c_str(), &err)
+   fmc_fxpt128_from_str(&r, str.c_str(), &err);
    fmc_runtime_error_unless(!err)
       << "unable to build fixed point from string";
    return os;
@@ -354,9 +363,9 @@ isfinite(T x) {
 
 template <typename T>
 inline typename std::enable_if_t<std::is_base_of_v<fmc_fxpt128_t, T>,
-                                 fmc::decimal128>
+                                 fmc::fxpt128>
 abs(T x) {
-  fmc::decimal128 res;
+  fmc::fxpt128 res;
   fmc_fxpt128_abs(&res, &x);
   return res;
 }

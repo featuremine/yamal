@@ -45,16 +45,16 @@
 extern "C" {
 #endif
 
-typedef struct {
+struct fmc_fxpt128_t{
    FXPT128_U64 lo;
    FXPT128_U64 hi;
-} fmc_fxpt128_t;
+};
 
 // Type conversion
 FMMODFUNC void fmc_fxpt128_from_int(struct fmc_fxpt128_t *dst, FXPT128_S64 v);
-FMMODFUNC void fmc_fxpt128_from_float(struct fmc_fxpt128_t *dst, double v);
+FMMODFUNC void fmc_fxpt128_from_double(struct fmc_fxpt128_t *dst, double v);
 FMMODFUNC FXPT128_S64 fmc_fxpt128_to_int(const struct fmc_fxpt128_t *v);
-FMMODFUNC double fmc_fxpt128_to_float(const struct fmc_fxpt128_t *v);
+FMMODFUNC double fmc_fxpt128_to_double(const struct fmc_fxpt128_t *v);
 
 // Copy
 FMMODFUNC void fmc_fxpt128_copy(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src);
@@ -184,6 +184,19 @@ FMMODFUNC int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *form
 // not including the final null terminator.
 //
 FMMODFUNC int fmc_fxpt128_to_string(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v);
+
+// fmc_fxpt128_to_str: convert struct fmc_fxpt128_t to a decimal string, with default formatting.
+// Equivalent to fmc_fxpt128_to_stringf(dst, dstsize, "%f", v).
+//
+// Uses the FXPT128_decimal global as the decimal point character.
+// Always writes a null terminator, even if the destination buffer is not large enough.
+//
+// Will write at most 42 bytes (including NUL) to dst.
+//
+// Returns the number of bytes that would have been written if dst was sufficiently large,
+// not including the final null terminator.
+//
+FMMODFUNC int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v);
 
 // fmc_fxpt128_from_string: Convert string to struct fmc_fxpt128_t.
 //

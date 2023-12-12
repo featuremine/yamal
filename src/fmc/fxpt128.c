@@ -16,6 +16,7 @@
 
 
 #include <stddef.h>
+#include <string.h>
 #include <fmc/fxpt128.h>
 
 #ifdef FXPT128_DEBUG_VIS
@@ -802,7 +803,7 @@ void fmc_fxpt128_from_int(struct fmc_fxpt128_t *dst, FXPT128_S64 v)
    FXPT128_DEBUG_SET(dst);
 }
 
-void fmc_fxpt128_from_float(struct fmc_fxpt128_t *dst, double v)
+void fmc_fxpt128_from_double(struct fmc_fxpt128_t *dst, double v)
 {
    FXPT128_ASSERT(dst != NULL);
 
@@ -941,7 +942,7 @@ FXPT128_S64 fmc_fxpt128_to_int(const struct fmc_fxpt128_t *v)
    }
 }
 
-double fmc_fxpt128_to_float(const struct fmc_fxpt128_t *v)
+double fmc_fxpt128_to_double(const struct fmc_fxpt128_t *v)
 {
    struct fmc_fxpt128_t tmp;
    int sign = 0;
@@ -1032,6 +1033,11 @@ int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *format, const 
 int fmc_fxpt128_to_string(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v)
 {
    return fmc_fxpt128__format(dst, dstsize, v, &FXPT128_default_format);
+}
+
+int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v)
+{
+    return fmc_fxpt128_to_string(dst, FMC_FXPT128_STR_SIZE, v);
 }
 
 void fmc_fxpt128_copy(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src)
