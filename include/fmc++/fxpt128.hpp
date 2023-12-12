@@ -243,22 +243,22 @@ static inline fxpt128 operator>>(const fxpt128 &lhs, int amount)
 
 static inline bool operator<(const fxpt128 &lhs, const fxpt128 &rhs)
 {
-   return fmc_fxpt_cmp(&lhs, &rhs) < 0;
+   return fmc_fxpt128_cmp(&lhs, &rhs) < 0;
 }
 
 static inline bool operator>(const fxpt128 &lhs, const fxpt128 &rhs)
 {
-   return fmc_fxpt_cmp(&lhs, &rhs) > 0;
+   return fmc_fxpt128_cmp(&lhs, &rhs) > 0;
 }
 
 static inline bool operator<=(const fxpt128 &lhs, const fxpt128 &rhs)
 {
-   return fmc_fxpt_cmp(&lhs, &rhs) <= 0;
+   return fmc_fxpt128_cmp(&lhs, &rhs) <= 0;
 }
 
 static inline bool operator>=(const fxpt128 &lhs, const fxpt128 &rhs)
 {
-   return fmc_fxpt_cmp(&lhs, &rhs) >= 0;
+   return fmc_fxpt128_cmp(&lhs, &rhs) >= 0;
 }
 
 static inline bool operator==(const fxpt128 &lhs, const fxpt128 &rhs)
