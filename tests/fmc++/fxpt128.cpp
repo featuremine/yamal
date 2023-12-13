@@ -25,6 +25,7 @@
 #include <inttypes.h>
 #include <random>
 #include <string.h>
+#include <inttypes.h>
 
 #include <tuple>
 
@@ -126,15 +127,21 @@ TEST(fxpt128, string_fxpt_string) {
     for (uint x = 0; x < 6000ULL; ++x) {
         char buf[FMC_FXPT128_STR_SIZE] = {0};
         char res[FMC_FXPT128_STR_SIZE] = {0};
-
+        uint64_t whole;
         sprintf(buf, "%.0f", base);
-        printf("%s\n", buf);
+        sscanf(buf, "%" PRId64, &whole);
         auto len = strlen(buf);
         buf[len] = '.';
         strncpy(buf + len + 1, buf, len);
         printf("%s\n", buf);
 
-        fmc_fxpt128_from_string(&test, buf, nullptr);
+        const char *end = buf + len;
+        fmc_fxpt128_from_string(&test, buf, &end);
+        ASSERT_EQ(whole, test.hi);
+
+        end = nullptr;
+        fmc_fxpt128_from_string(&test, buf, &end);
+        ASSERT_EQ(end, buf + 2 * len + 1);
         fmc_fxpt128_to_string(res, FMC_FXPT128_STR_SIZE, &test);
 
         printf("%s\n", res);

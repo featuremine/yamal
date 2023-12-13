@@ -209,15 +209,6 @@ FMMODFUNC int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v);
 //
 FMMODFUNC void fmc_fxpt128_from_string(struct fmc_fxpt128_t *dst, const char *s, const char **endptr);
 
-// fmc_fxpt128_from_str: Convert string to struct fmc_fxpt128_t.
-//
-// The string can be formatted either as a decimal number with optional sign
-// or as hexadecimal with a prefix of 0x or 0X.
-//
-// err, is set to fmc_error_t upon error.
-//
-FMMODFUNC void fmc_fxpt128_from_str(struct fmc_fxpt128_t *dst, const char *s, fmc_error_t **err);
-
 // Constants
 extern const struct fmc_fxpt128_t FXPT128_min;      // minimum (most negative) value
 extern const struct fmc_fxpt128_t FXPT128_max;      // maximum (most positive) value
