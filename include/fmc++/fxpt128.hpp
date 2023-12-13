@@ -92,7 +92,7 @@ inline fxpt128::fxpt128(FXPT128_U64 low, FXPT128_U64 high)
    hi = high;
 }
 
-// TODO: need to fix fmc_fxpt128_from_string
+// TODO: need to fix fmc_fxpt128_from_string to stop at endptr
 std::pair<fxpt128, std::string_view> fxpt128::from_string_view(fmc::string_view buf)
 {
    fxpt128 res;
