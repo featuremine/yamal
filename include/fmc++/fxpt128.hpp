@@ -43,6 +43,10 @@ public:
    fxpt128(FXPT128_S64);
    fxpt128(FXPT128_U64 low, FXPT128_U64 high);
 
+   //TODO: Remove after changes for extractor
+   explicit fxpt128(const decimal128 &) {}
+   explicit fxpt128(const fmc_decimal128_t &) {}
+
    static std::pair<fxpt128, std::string_view> from_string_view(fmc::string_view buf);
    std::string_view to_string_view(fmc::buffer buf);
 
@@ -101,7 +105,7 @@ inline fxpt128::fxpt128(FXPT128_U64 low, FXPT128_U64 high)
 }
 
 // TODO: need to fix fmc_fxpt128_from_string
-std::pair<fxpt128, std::string_view> fxpt128::from_string_view(fmc::string_view buf)
+inline std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::string_view buf)
 {
    fxpt128 res;
    const char *endptr = buf.data() + buf.size();
@@ -109,7 +113,7 @@ std::pair<fxpt128, std::string_view> fxpt128::from_string_view(fmc::string_view 
    return make_pair(res, std::string_view(buf.data(), endptr - buf.data()));
 }
 
-std::string_view fxpt128::to_string_view(fmc::buffer buf)
+inline std::string_view fxpt128::to_string_view(fmc::buffer buf)
 {
    return std::string_view(buf.data(), fmc_fxpt128_to_string(buf.data(), buf.size(), this));
 }
