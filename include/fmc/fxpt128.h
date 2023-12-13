@@ -207,7 +207,7 @@ FMMODFUNC int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v);
 // endptr, if not NULL, is set to the character following the last character
 //   used in the conversion.
 //
-FMMODFUNC void fmc_fxpt128_from_string(struct fmc_fxpt128_t *dst, const char *s, char **endptr);
+FMMODFUNC void fmc_fxpt128_from_string(struct fmc_fxpt128_t *dst, const char *s, const char **endptr);
 
 // fmc_fxpt128_from_str: Convert string to struct fmc_fxpt128_t.
 //

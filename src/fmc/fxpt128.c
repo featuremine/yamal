@@ -837,7 +837,7 @@ void fmc_fxpt128_from_double(struct fmc_fxpt128_t *dst, double v)
    }
 }
 
-void fmc_fxpt128_from_string(struct fmc_fxpt128_t *dst, const char *s, char **endptr)
+void fmc_fxpt128_from_string(struct fmc_fxpt128_t *dst, const char *s, const char **endptr)
 {
    FXPT128_U64 lo = 0, hi = 0;
    FXPT128_U64 base = 10;
