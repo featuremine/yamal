@@ -20,6 +20,7 @@
 #include "fmc++/decimal128.hpp"
 #include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
+#include "fmc++/memory.hpp"
 
 #include "fmc/alignment.h"
 #include "fmc/fxpt128.h"
@@ -37,20 +38,18 @@ class fxpt128 : public fmc_fxpt128_t {
 public:
    fxpt128();
    fxpt128(const fmc_fxpt128_t &c);
-   explicit fxpt128(double);
-   explicit fxpt128(int);
-   explicit fxpt128(FXPT128_S64);
-   explicit fxpt128(FXPT128_U64 low, FXPT128_U64 high);
-   explicit fxpt128(const decimal128 &) {}
-   explicit fxpt128(const fmc_decimal128_t &) {}
-   explicit fxpt128(std::string_view sv) {}
+   fxpt128(double);
+   fxpt128(int);
+   fxpt128(FXPT128_S64);
+   fxpt128(FXPT128_U64 low, FXPT128_U64 high);
+
+   static std::pair<fxpt128, std::string_view> from_string_view(fmc::string_view buf);
+   std::string_view to_string_view(fmc::buffer buf);
 
    explicit operator double() const;
    explicit operator FXPT128_S64() const;
    explicit operator int() const;
    explicit operator bool() const;
-
-   std::string_view to_string_view(fmc::buffer buf) {}
 
    bool operator!() const;
    fxpt128 operator~() const;
@@ -100,6 +99,21 @@ inline fxpt128::fxpt128(FXPT128_U64 low, FXPT128_U64 high)
    lo = low;
    hi = high;
 }
+
+// TODO: need to fix fmc_fxpt128_from_string
+std::pair<fxpt128, std::string_view> fxpt128::from_string_view(fmc::string_view buf)
+{
+   fxpt128 res;
+   const char *endptr = buf.data() + buf.size();
+   fmc_fxpt128_from_string(&res, buf.data(), &endptr);
+   return make_pair(res, std::string_view(buf.data(), endptr - buf.data()));
+}
+
+std::string_view fxpt128::to_string_view(fmc::buffer buf)
+{
+   return std::string_view(buf.data(), fmc_fxpt128_to_string(buf.data(), buf.size(), this));
+}
+
 
 inline fxpt128::operator double() const
 {
