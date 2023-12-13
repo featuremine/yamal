@@ -107,7 +107,7 @@
 
 #include <stdlib.h> // for NULL
 
-static const fmc_fxpt128_to_string_format FXPT128_default_format = {
+const struct fmc_fxpt128_format_t FXPT128_default_format = {
     fmc_fxpt128_to_string_sign_default,
     0,
     -1,
@@ -744,7 +744,7 @@ static FXPT128_U64 fmc_fxpt128__umod(struct fmc_fxpt128_t *n, struct fmc_fxpt128
     return q;
 }
 
-static int fmc_fxpt128__format(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const fmc_fxpt128_to_string_format *format)
+static int fmc_fxpt128__format(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const struct fmc_fxpt128_format_t *format)
 {
     char buf[128];
     struct fmc_fxpt128_t tmp;
@@ -852,10 +852,10 @@ static int fmc_fxpt128__format(char *dst, size_t dstsize, const struct fmc_fxpt1
     padCnt = width - (int)(cursor - buf) - 1;
 
     // left padding
-    if (!format->leftAlign)
+    if (!format->left_align)
     {
-        char padChar = format->zeroPad ? '0' : ' ';
-        if (format->zeroPad)
+        char padChar = format->zero_pad ? '0' : ' ';
+        if (format->zero_pad)
         {
             if (sign)
             {
@@ -881,7 +881,7 @@ static int fmc_fxpt128__format(char *dst, size_t dstsize, const struct fmc_fxpt1
         }
     }
 
-    if (format->leftAlign || !format->zeroPad)
+    if (format->left_align || !format->zero_pad)
     {
         if (sign)
         {
@@ -918,9 +918,9 @@ static int fmc_fxpt128__format(char *dst, size_t dstsize, const struct fmc_fxpt1
     }
 
     // right padding
-    if (format->leftAlign)
+    if (format->left_align)
     {
-        char padChar = format->zeroPad ? '0' : ' ';
+        char padChar = format->zero_pad ? '0' : ' ';
         for (; padCnt > 0; --padCnt)
         {
             FXPT128__WRITE(padChar);
@@ -1177,14 +1177,14 @@ double fmc_fxpt128_to_double(const struct fmc_fxpt128_t *v)
     return fmc_double_make(tmp.hi + round, 959 + log2, sign);
 }
 
-int fmc_fxpt128_to_string_opt(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const fmc_fxpt128_to_string_format *opt)
+int fmc_fxpt128_to_string_opt(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const struct fmc_fxpt128_format_t *opt)
 {
     return fmc_fxpt128__format(dst, dstsize, v, opt);
 }
 
 int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *format, const struct fmc_fxpt128_t *v)
 {
-    fmc_fxpt128_to_string_format opts;
+    struct fmc_fxpt128_format_t opts;
 
     FXPT128_ASSERT(dst != NULL && dstsize);
     FXPT128_ASSERT(format != NULL);
@@ -1192,9 +1192,9 @@ int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *format, const 
 
     opts.sign = FXPT128_default_format.sign;
     opts.precision = FXPT128_default_format.precision;
-    opts.zeroPad = FXPT128_default_format.zeroPad;
+    opts.zero_pad = FXPT128_default_format.zero_pad;
     opts.decimal = FXPT128_default_format.decimal;
-    opts.leftAlign = FXPT128_default_format.leftAlign;
+    opts.left_align = FXPT128_default_format.left_align;
 
     if (*format == '%')
     {
@@ -1214,11 +1214,11 @@ int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *format, const 
         }
         else if (*format == '0')
         {
-            opts.zeroPad = 1;
+            opts.zero_pad = 1;
         }
         else if (*format == '-')
         {
-            opts.leftAlign = 1;
+            opts.left_align = 1;
         }
         else if (*format == '#')
         {
@@ -1268,11 +1268,6 @@ int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *format, const 
 int fmc_fxpt128_to_string(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v)
 {
     return fmc_fxpt128__format(dst, dstsize, v, &FXPT128_default_format);
-}
-
-int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v)
-{
-    return fmc_fxpt128_to_string(dst, FMC_FXPT128_STR_SIZE, v);
 }
 
 void fmc_fxpt128_copy(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *src)

@@ -42,7 +42,7 @@ public:
    fxpt128(FXPT128_U64 low, FXPT128_U64 high);
 
    static std::pair<fxpt128, std::string_view> from_string_view(fmc::string_view buf);
-   std::string_view to_string_view(fmc::buffer buf) const;
+   std::string_view to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format = &FXPT128_default_format) const;
 
    operator double() const;
    operator FXPT128_S64() const;
@@ -100,9 +100,9 @@ std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::string_view 
    return make_pair(res, std::string_view(buf.data(), endptr - buf.data()));
 }
 
-std::string_view fxpt128::to_string_view(fmc::buffer buf) const
+std::string_view fxpt128::to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format) const
 {
-   return std::string_view(buf.data(), fmc_fxpt128_to_string(buf.data(), buf.size(), this));
+   return std::string_view(buf.data(), fmc_fxpt128_to_string_opt(buf.data(), buf.size(), this, format));
 }
 
 inline fxpt128::operator double() const
