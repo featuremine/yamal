@@ -18,6 +18,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <fmc/fxpt128.h>
+#include <fmc/math.h>
+#include <fmc/alignment.h>
 
 #ifdef FXPT128_DEBUG_VIS
 #  define FXPT128_DEBUG_SET(x)   fmc_fxpt128_to_string(FXPT128_last, sizeof(FXPT128_last), x)
@@ -813,16 +815,19 @@ void fmc_fxpt128_from_double(struct fmc_fxpt128_t *dst, double v)
       fmc_fxpt128_copy(dst, &FXPT128_max);
    } else {
       struct fmc_fxpt128_t r;
-      int sign = 0;
+      int sign = fmc_double_sign(v);
 
-      if (v < 0) {
-         v = -v;
-         sign = 1;
+      uint64_t exp = fmc_double_exp(v);
+      if (!exp) {
+        FXPT128_SET2(dst, 0, 0);
+        return;
       }
-
-      r.hi = (FXPT128_U64)(FXPT128_S64)v;
-      v -= (FXPT128_S64)v;
-      r.lo = (FXPT128_U64)(v * 18446744073709551616.0);
+      uint64_t mantissa = (!!exp)*(fmc_double_mantissa(v) | (1ull << 52ull));
+      FXPT128_SET2(&r, 0, mantissa);
+      if (exp <= 1075)
+        fmc_fxpt128_shr(&r, &r, 1075 - exp);
+      else
+        fmc_fxpt128_shl(&r, &r, exp - 1075);
 
       if (sign) {
          fmc_fxpt128__neg(&r, &r);
@@ -942,26 +947,43 @@ FXPT128_S64 fmc_fxpt128_to_int(const struct fmc_fxpt128_t *v)
    }
 }
 
-double fmc_fxpt128_to_double(const struct fmc_fxpt128_t *v)
+unsigned fmc_fxpt128_floorlog2(const struct fmc_fxpt128_t *v)
 {
    struct fmc_fxpt128_t tmp;
-   int sign = 0;
-   double d;
 
    FXPT128_ASSERT(v != NULL);
 
    FXPT128_SET2(&tmp, v->lo, v->hi);
+   return (!tmp.hi) * FMC_FLOORLOG2(tmp.lo) + (!!tmp.hi) * (FMC_FLOORLOG2(tmp.hi) + 64);
+}
+
+double fmc_fxpt128_to_double(const struct fmc_fxpt128_t *v)
+{
+   struct fmc_fxpt128_t tmp;
+   int sign = 0;
+
+   FXPT128_ASSERT(v != NULL);
+
+   FXPT128_SET2(&tmp, v->lo, v->hi);
+   if ((tmp.lo == 0) & (tmp.hi == 0))
+      return 0.0;
+
    if (fmc_fxpt128_isneg(&tmp)) {
       fmc_fxpt128__neg(&tmp, &tmp);
       sign = 1;
    }
 
-   d = tmp.hi + tmp.lo * (1 / 18446744073709551616.0);
-   if (sign) {
-      d = -d;
-   }
+   int log2 = fmc_fxpt128_floorlog2(&tmp);
+   if (log2 > 116)
+     fmc_fxpt128_shr(&tmp, &tmp, log2 - 116);
+   else
+     fmc_fxpt128_shl(&tmp, &tmp, 116 - log2);
 
-   return d;
+   unsigned lbit = (tmp.hi & 1ULL);
+   unsigned gbit = !!(tmp.lo & (1ULL << 63ULL));
+   unsigned rsbit = !!(tmp.lo & (3ULL << 61ULL));
+   uint64_t round = (gbit & rsbit) | (gbit & lbit);
+   return fmc_double_make(tmp.hi + round, 959 + log2, sign);
 }
 
 int fmc_fxpt128_to_string_opt(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const fmc_fxpt128_to_string_format *opt)

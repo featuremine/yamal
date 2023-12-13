@@ -113,7 +113,7 @@ FMMODFUNC double fmc_remainder(double x);
 #define fmc_double_make(mantissa, exp, sign)                                   \
   ({                                                                           \
     double _res;                                                               \
-    *(uint64_t *)&_res = ((uint64_t)(mantissa) & ((1ull << 52ull) - 1)) |      \
+    *(uint64_t *)&_res = ((uint64_t)(mantissa) & ((1ull << 52ull) - 1ull)) |   \
                          ((uint64_t)(exp) << 52ull) |                          \
                          ((uint64_t)(!!(sign)) << 63ull);                      \
     _res;                                                                      \

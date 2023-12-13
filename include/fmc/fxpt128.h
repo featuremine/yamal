@@ -82,6 +82,7 @@ FMMODFUNC void fmc_fxpt128_mod(struct fmc_fxpt128_t *dst, const struct fmc_fxpt1
 
 FMMODFUNC void fmc_fxpt128_sqrt(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v);  // sqrt(v)
 FMMODFUNC void fmc_fxpt128_rsqrt(struct fmc_fxpt128_t *dst, const struct fmc_fxpt128_t *v); // 1 / sqrt(v)
+FMMODFUNC unsigned fmc_fxpt128_floorlog2(const struct fmc_fxpt128_t *v); // floor(log2(v)) for v > 0
 
 // Comparison
 FMMODFUNC int  fmc_fxpt128_cmp(const struct fmc_fxpt128_t *a, const struct fmc_fxpt128_t *b);  // sign of a-b
