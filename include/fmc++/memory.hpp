@@ -22,6 +22,7 @@
 #include <memory>
 #include <stdlib.h>
 #include <string_view>
+#include <string>
 
 namespace fmc {
 namespace hidden {
@@ -38,6 +39,7 @@ public:
   buffer() : data_(nullptr), sz_(0) {}
   buffer(const buffer &sv) = default;
   buffer(void *data, size_t sz) : data_((char *)data), sz_(sz) {}
+  buffer(std::string &s) : data_(&s[0]), sz_(s.size()) {}
   template <size_t SZ> buffer(char a[SZ]) : data_(a), sz_(SZ) {}
   operator std::string_view() { return std::string_view((char *)data_, sz_); }
   char *data() { return data_; }

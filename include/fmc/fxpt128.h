@@ -104,7 +104,7 @@ typedef enum fmc_fxpt128_to_string_sign {
 // Formatting options for use with fmc_fxpt128_to_string_opt. The "defaults" correspond
 // to a format string of "%f".
 //
-typedef struct fmc_fxpt128_to_string_format {
+struct fmc_fxpt128_format_t {
    // sign character for positive values. Default is fmc_fxpt128_to_string_sign_default.
    fmc_fxpt128_to_string_sign sign;
 
@@ -120,15 +120,15 @@ typedef struct fmc_fxpt128_to_string_format {
 
    // If non-zero, pads the output string with leading zeroes if the final result is
    // fewer than width characters. Otherwise, leading spaces are used. Default is 0.
-   int zeroPad;
+   int zero_pad;
 
    // Always print a decimal point, even if the value is an integer. Default is 0.
    int decimal;
 
    // Left-align output if width specifier requires padding.
    // Default is 0 (right align).
-   int leftAlign;
-} fmc_fxpt128_to_string_format;
+   int left_align;
+};
 
 // fmc_fxpt128_to_string_opt: convert struct fmc_fxpt128_t to a decimal string, with formatting.
 //
@@ -136,7 +136,7 @@ typedef struct fmc_fxpt128_to_string_format {
 // (including null terminator). No additional rounding is performed if dstsize is not large
 // enough to hold the entire string.
 //
-// opt: an fmc_fxpt128_to_string_format struct (q.v.) with formatting options.
+// opt: an fmc_fxpt128_format_t struct (q.v.) with formatting options.
 //
 // Uses the FXPT128_decimal global as the decimal point character.
 // Always writes a null terminator, even if the destination buffer is not large enough.
@@ -149,7 +149,7 @@ typedef struct fmc_fxpt128_to_string_format {
 // Returns the number of bytes that would have been written if dst was sufficiently large,
 // not including the final null terminator.
 //
-FMMODFUNC int fmc_fxpt128_to_string_opt(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const fmc_fxpt128_to_string_format *opt);
+FMMODFUNC int fmc_fxpt128_to_string_opt(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v, const struct fmc_fxpt128_format_t *opt);
 
 // fmc_fxpt128_to_stringf: convert struct fmc_fxpt128_t to a decimal string, with formatting.
 //
@@ -186,19 +186,6 @@ FMMODFUNC int fmc_fxpt128_to_stringf(char *dst, size_t dstsize, const char *form
 //
 FMMODFUNC int fmc_fxpt128_to_string(char *dst, size_t dstsize, const struct fmc_fxpt128_t *v);
 
-// fmc_fxpt128_to_str: convert struct fmc_fxpt128_t to a decimal string, with default formatting.
-// Equivalent to fmc_fxpt128_to_stringf(dst, dstsize, "%f", v).
-//
-// Uses the FXPT128_decimal global as the decimal point character.
-// Always writes a null terminator, even if the destination buffer is not large enough.
-//
-// Will write at most 42 bytes (including NUL) to dst.
-//
-// Returns the number of bytes that would have been written if dst was sufficiently large,
-// not including the final null terminator.
-//
-FMMODFUNC int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v);
-
 // fmc_fxpt128_from_string: Convert string to struct fmc_fxpt128_t.
 //
 // The string can be formatted either as a decimal number with optional sign
@@ -209,21 +196,13 @@ FMMODFUNC int fmc_fxpt128_to_str(char *dst, const struct fmc_fxpt128_t *v);
 //
 FMMODFUNC void fmc_fxpt128_from_string(struct fmc_fxpt128_t *dst, const char *s, const char **endptr);
 
-// fmc_fxpt128_from_str: Convert string to struct fmc_fxpt128_t.
-//
-// The string can be formatted either as a decimal number with optional sign
-// or as hexadecimal with a prefix of 0x or 0X.
-//
-// err, is set to fmc_error_t upon error.
-//
-FMMODFUNC void fmc_fxpt128_from_str(struct fmc_fxpt128_t *dst, const char *s, fmc_error_t **err);
-
 // Constants
 extern const struct fmc_fxpt128_t FXPT128_min;      // minimum (most negative) value
 extern const struct fmc_fxpt128_t FXPT128_max;      // maximum (most positive) value
 extern const struct fmc_fxpt128_t FXPT128_smallest; // smallest positive value
 extern const struct fmc_fxpt128_t FXPT128_zero;     // zero
 extern const struct fmc_fxpt128_t FXPT128_one;      // 1.0
+extern const struct fmc_fxpt128_format_t FXPT128_default_format;
 
 extern char FXPT128_decimal;        // decimal point character used by fmc_fxpt128_from/to_string. defaults to '.'
 

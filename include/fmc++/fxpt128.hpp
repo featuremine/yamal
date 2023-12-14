@@ -48,7 +48,7 @@ public:
    explicit fxpt128(const fmc_decimal128_t &) {}
 
    static std::pair<fxpt128, std::string_view> from_string_view(fmc::string_view buf);
-   std::string_view to_string_view(fmc::buffer buf);
+   std::string_view to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format = &FXPT128_default_format) const;
 
    explicit operator double() const;
    explicit operator FXPT128_S64() const;
@@ -104,7 +104,6 @@ inline fxpt128::fxpt128(FXPT128_U64 low, FXPT128_U64 high)
    hi = high;
 }
 
-// TODO: need to fix fmc_fxpt128_from_string
 inline std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::string_view buf)
 {
    fxpt128 res;
@@ -113,11 +112,10 @@ inline std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::strin
    return make_pair(res, std::string_view(buf.data(), endptr - buf.data()));
 }
 
-inline std::string_view fxpt128::to_string_view(fmc::buffer buf)
+inline std::string_view fxpt128::to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format) const
 {
-   return std::string_view(buf.data(), fmc_fxpt128_to_string(buf.data(), buf.size(), this));
+   return std::string_view(buf.data(), fmc_fxpt128_to_string_opt(buf.data(), buf.size(), this, format));
 }
-
 
 inline fxpt128::operator double() const
 {
@@ -397,25 +395,23 @@ struct numeric_limits<fmc::fxpt128>
 };
 
 inline ostream &operator<<(ostream &os, const fmc_fxpt128_t &r) {
-  char str[FMC_FXPT128_STR_SIZE] = {0};
-  fmc_fxpt128_to_string(str, FMC_FXPT128_STR_SIZE, &r);
-  os << str;
+  fmc::static_buffer<FMC_FXPT128_STR_SIZE> buf;
+  os << static_cast<const fmc::fxpt128 &>(r).to_string_view(buf);
   return os;
 }
 
 inline string to_string(const fmc_fxpt128_t &r) {
-  char str[FMC_FXPT128_STR_SIZE] = {0};
-  fmc_fxpt128_to_string(str, FMC_FXPT128_STR_SIZE, &r);
-  return string(str);
+  fmc::static_buffer<FMC_FXPT128_STR_SIZE> buf;
+  return string(static_cast<const fmc::fxpt128 &>(r).to_string_view(buf));
 }
 
 inline istream &operator>>(istream &os, fmc_fxpt128_t &r) {
    string str;
    os >> str;
-   fmc_error_t *err;
-   fmc_fxpt128_from_str(&r, str.c_str(), &err);
-   fmc_runtime_error_unless(!err)
+   auto res = fmc::fxpt128::from_string_view(str);
+   fmc_runtime_error_unless(res.second == string_view(str))
       << "unable to build fixed point from string";
+   fmc_fxpt128_copy(&r, &res.first);
    return os;
 }
 

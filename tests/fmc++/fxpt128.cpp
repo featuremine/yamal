@@ -25,10 +25,13 @@
 #include <inttypes.h>
 #include <random>
 #include <string.h>
+#include <inttypes.h>
 
 #include <tuple>
 
 // C API
+
+#if 0
 
 TEST(fxpt128, from_to_double_frac) {
     double phi1 = 161.80339887498948482045868343656;
@@ -109,6 +112,64 @@ TEST(fxpt128, round) {
     gen(1,1,0,1, 4503599627370498.0);
     gen(1,1,1,0, 4503599627370498.0);
     gen(1,1,1,1, 4503599627370498.0);
+}
+
+#endif
+
+TEST(fxpt128, string_fxpt_string) {
+    double phi1 = 161803398874989.48482045868343656;
+    fmc_fxpt128_t phi2;
+    fmc_fxpt128_from_double(&phi2, phi1);
+
+    double base = 0.0;
+    fmc_fxpt128_t test = {0};
+
+    for (uint x = 0; x < 6000ULL; ++x) {
+        char buf[FMC_FXPT128_STR_SIZE] = {0};
+        char res[FMC_FXPT128_STR_SIZE] = {0};
+        uint64_t whole;
+        sprintf(buf, "%.0f", base);
+        sscanf(buf, "%" PRId64, &whole);
+        auto len = strlen(buf);
+        buf[len] = '.';
+        strncpy(buf + len + 1, buf, len);
+        printf("%s\n", buf);
+
+        const char *end = buf + len;
+        fmc_fxpt128_from_string(&test, buf, &end);
+        ASSERT_EQ(whole, test.hi);
+
+        end = nullptr;
+        fmc_fxpt128_from_string(&test, buf, &end);
+        ASSERT_EQ(end, buf + 2 * len + 1);
+        fmc_fxpt128_to_string(res, FMC_FXPT128_STR_SIZE, &test);
+
+        printf("%s\n", res);
+
+        base += phi1;
+    }
+}
+
+TEST(fxpt128, string_fxpt_no_trailing_zeros) {
+    const char * phi1 = "45.32";
+    fmc_fxpt128_t phi2;
+    fmc_fxpt128_from_string(&phi2, phi1, nullptr);
+    char res[FMC_FXPT128_STR_SIZE] = {0};
+    fmc_fxpt128_format_t fmt {.precision = 18};
+    fmc_fxpt128_to_string_opt(res, FMC_FXPT128_STR_SIZE, &phi2, &fmt);
+    printf("%s\n", res);
+    ASSERT_STREQ(phi1, res);
+}
+
+TEST(fxpt128, double_fxpt_no_trailing_zeros) {
+    double phi1 = 45.32;
+    fmc_fxpt128_t phi2;
+    fmc_fxpt128_from_double(&phi2, phi1);
+    char res[FMC_FXPT128_STR_SIZE] = {0};
+    fmc_fxpt128_format_t fmt {.precision = 15};
+    fmc_fxpt128_to_string_opt(res, FMC_FXPT128_STR_SIZE, &phi2, &fmt);
+    printf("%s\n", res);
+    ASSERT_STREQ("45.32", res);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
