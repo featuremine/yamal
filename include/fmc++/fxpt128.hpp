@@ -16,8 +16,6 @@
 #include "fmc++/convert.hpp"
 #include "fmc++/memory.hpp"
 #include "fmc++/mpl.hpp"
-#include "fmc++/rational64.hpp"
-#include "fmc++/decimal128.hpp"
 #include "fmc++/rprice.hpp"
 #include "fmc++/side.hpp"
 #include "fmc++/memory.hpp"
@@ -43,17 +41,16 @@ public:
    fxpt128(FXPT128_S64);
    fxpt128(FXPT128_U64 low, FXPT128_U64 high);
 
-   //TODO: Remove after changes for extractor
-   explicit fxpt128(const decimal128 &) {}
-   explicit fxpt128(const fmc_decimal128_t &) {}
-
    static std::pair<fxpt128, std::string_view> from_string_view(fmc::string_view buf);
    std::string_view to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format = &FXPT128_default_format) const;
 
-   explicit operator double() const;
-   explicit operator FXPT128_S64() const;
-   explicit operator int() const;
-   explicit operator bool() const;
+   constexpr fxpt128 &upcast(fmc_fxpt128_t &a) noexcept;
+   constexpr const fxpt128 &upcast(const fmc_fxpt128_t &a) noexcept;
+
+   operator double() const;
+   operator FXPT128_S64() const;
+   operator int() const;
+   operator bool() const;
 
    bool operator!() const;
    fxpt128 operator~() const;
@@ -68,12 +65,6 @@ public:
    fxpt128 &operator%=(const fxpt128 &rhs);
    fxpt128 &operator<<=(int amount);
    fxpt128 &operator>>=(int amount);
-   fxpt128 &operator=(const decimal128 &a) noexcept {
-      return *this;
-   }
-   fxpt128 &operator=(const fmc_decimal128_t &a) noexcept {
-      return *this;
-   }
 };
 
 inline fxpt128::fxpt128() {}
@@ -114,7 +105,15 @@ inline std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::strin
 
 inline std::string_view fxpt128::to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format) const
 {
-   return std::string_view(buf.data(), fmc_fxpt128_to_string_opt(buf.data(), buf.size(), this, format));
+   return std::string_view(buf.data(), fmc_fxpt128_to_string_opt(buf.data(), buf.size() - 1, this, format));
+}
+
+inline constexpr fxpt128 &fxpt128::upcast(fmc_fxpt128_t &a) noexcept {
+   return static_cast<fxpt128 &>(a);
+}
+
+inline constexpr const fxpt128 &fxpt128::upcast(const fmc_fxpt128_t &a) noexcept {
+   return static_cast<const fxpt128 &>(a);
 }
 
 inline fxpt128::operator double() const
@@ -451,5 +450,12 @@ isnan(T x) {
   //TODO: Implement
   return false;
 }
+
+template <> struct hash<fmc::fxpt128> {
+  size_t operator()(const fmc::fxpt128 &k) const noexcept {
+    return fmc_hash_combine(std::hash<uint64_t>{}(*(uint64_t *)&k.hi),
+                            std::hash<uint64_t>{}(*(uint64_t *)&k.lo));
+  }
+};
 
 }  //namespace std

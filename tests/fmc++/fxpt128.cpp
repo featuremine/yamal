@@ -128,7 +128,7 @@ TEST(fxpt128, string_fxpt_string) {
         char buf[FMC_FXPT128_STR_SIZE] = {0};
         char res[FMC_FXPT128_STR_SIZE] = {0};
         uint64_t whole;
-        sprintf(buf, "%.0f", base);
+        snprintf(buf, sizeof(buf), "%.0f", base);
         sscanf(buf, "%" PRId64, &whole);
         auto len = strlen(buf);
         buf[len] = '.';
