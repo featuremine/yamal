@@ -67,7 +67,7 @@ public:
    fxpt128 &operator>>=(int amount);
 };
 
-inline fxpt128::fxpt128() {}
+inline fxpt128::fxpt128() : fmc_fxpt128_t{0} {}
 
 inline fxpt128::fxpt128(const fmc_fxpt128_t &c)
 : fmc_fxpt128_t{c}
