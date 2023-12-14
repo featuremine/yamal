@@ -44,6 +44,9 @@ public:
    static std::pair<fxpt128, std::string_view> from_string_view(fmc::string_view buf);
    std::string_view to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format = &FXPT128_default_format) const;
 
+   constexpr fxpt128 &upcast(fmc_fxpt128_t &a) noexcept;
+   constexpr const fxpt128 &upcast(const fmc_fxpt128_t &a) noexcept;
+
    operator double() const;
    operator FXPT128_S64() const;
    operator int() const;
@@ -92,7 +95,7 @@ inline fxpt128::fxpt128(FXPT128_U64 low, FXPT128_U64 high)
    hi = high;
 }
 
-std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::string_view buf)
+inline std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::string_view buf)
 {
    fxpt128 res;
    const char *endptr = buf.data() + buf.size();
@@ -100,9 +103,17 @@ std::pair<fxpt128, std::string_view> fxpt128::from_string_view(std::string_view 
    return make_pair(res, std::string_view(buf.data(), endptr - buf.data()));
 }
 
-std::string_view fxpt128::to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format) const
+inline std::string_view fxpt128::to_string_view(fmc::buffer buf, const fmc_fxpt128_format_t *format) const
 {
-   return std::string_view(buf.data(), fmc_fxpt128_to_string_opt(buf.data(), buf.size(), this, format));
+   return std::string_view(buf.data(), fmc_fxpt128_to_string_opt(buf.data(), buf.size() - 1, this, format));
+}
+
+inline constexpr fxpt128 &fxpt128::upcast(fmc_fxpt128_t &a) noexcept {
+   return static_cast<fxpt128 &>(a);
+}
+
+inline constexpr const fxpt128 &fxpt128::upcast(const fmc_fxpt128_t &a) noexcept {
+   return static_cast<const fxpt128 &>(a);
 }
 
 inline fxpt128::operator double() const
@@ -381,5 +392,12 @@ abs(T x) {
   fmc_fxpt128_abs(&res, &x);
   return res;
 }
+
+template <> struct hash<fmc::fxpt128> {
+  size_t operator()(const fmc::fxpt128 &k) const noexcept {
+    return fmc_hash_combine(std::hash<uint64_t>{}(*(uint64_t *)&k.hi),
+                            std::hash<uint64_t>{}(*(uint64_t *)&k.lo));
+  }
+};
 
 }  //namespace std
