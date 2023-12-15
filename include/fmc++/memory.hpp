@@ -21,8 +21,8 @@
 #include <fmc/platform.h>
 #include <memory>
 #include <stdlib.h>
-#include <string_view>
 #include <string>
+#include <string_view>
 
 namespace fmc {
 namespace hidden {
@@ -50,8 +50,7 @@ private:
   size_t sz_;
 };
 
-template<size_t SZ>
-class static_buffer {
+template <size_t SZ> class static_buffer {
 public:
   static_buffer() {}
   operator std::string_view() const { return std::string_view(buf_, SZ); }
@@ -59,6 +58,7 @@ public:
   size_t size() const { return SZ; }
   const char *data() const { return buf_; }
   char *data() { return buf_; }
+
 private:
   char buf_[SZ] = {0};
 };
