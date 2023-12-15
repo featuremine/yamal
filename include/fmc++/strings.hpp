@@ -44,13 +44,10 @@ inline std::string_view rtrim(std::string_view s) {
 }
 
 // Remove starting and ending blanks
-inline std::string_view trim(std::string_view s) {
-  return ltrim(rtrim(s));
-}
+inline std::string_view trim(std::string_view s) { return ltrim(rtrim(s)); }
 
 inline std::tuple<std::string_view, std::string_view, std::string_view>
-  split(std::string_view a, std::string_view sep)
-{
+split(std::string_view a, std::string_view sep) {
   auto pos = a.find_first_of(sep);
   if (pos >= a.size())
     return {a, std::string_view(), std::string_view()};
@@ -80,7 +77,8 @@ inline std::pair<bool, std::string_view> ends_with_pipe(std::string_view name) {
   return {false, name};
 }
 
-inline std::pair<bool, std::string_view> begins_with_pipe(std::string_view name) {
+inline std::pair<bool, std::string_view>
+begins_with_pipe(std::string_view name) {
   if (auto sv = trim(name); starts_with(sv, "|")) {
     return {true, sv.substr(1)}; // remove '|'
   }
