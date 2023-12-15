@@ -69,6 +69,9 @@ public:
     fmc_rprice_from_double(this, a);
     return *this;
   }
+  static rprice from_raw(int64_t a) {
+    return rprice(fmc_rprice_t{a});
+  }
   static constexpr rprice &upcast(fmc_rprice_t &a) noexcept {
     return static_cast<rprice &>(a);
   }
