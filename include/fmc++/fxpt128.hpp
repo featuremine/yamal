@@ -427,8 +427,8 @@ namespace std {
 template <> struct numeric_limits<fmc::fxpt128> {
   static const bool is_specialized = true;
 
-  static fmc::fxpt128 min() throw() { return FXPT128_min; }
-  static fmc::fxpt128 max() throw() { return FXPT128_max; }
+  static fmc::fxpt128 min() noexcept { return FXPT128_min; }
+  static fmc::fxpt128 max() noexcept { return FXPT128_max; }
 
   static const int digits = 127;
   static const int digits10 = 38;
@@ -436,8 +436,8 @@ template <> struct numeric_limits<fmc::fxpt128> {
   static const bool is_integer = false;
   static const bool is_exact = false;
   static const int radix = 2;
-  static fmc::fxpt128 epsilon() throw() { return FXPT128_smallest; }
-  static fmc::fxpt128 round_error() throw() { return FXPT128_one; }
+  static fmc::fxpt128 epsilon() noexcept { return FXPT128_smallest; }
+  static fmc::fxpt128 round_error() noexcept { return FXPT128_one; }
 
   static const int min_exponent = 0;
   static const int min_exponent10 = 0;
@@ -450,10 +450,10 @@ template <> struct numeric_limits<fmc::fxpt128> {
   static const float_denorm_style has_denorm = denorm_absent;
   static const bool has_denorm_loss = false;
 
-  static fmc::fxpt128 infinity() throw() { return FXPT128_zero; }
-  static fmc::fxpt128 quiet_NaN() throw() { return FXPT128_zero; }
-  static fmc::fxpt128 signaling_NaN() throw() { return FXPT128_zero; }
-  static fmc::fxpt128 denorm_min() throw() { return FXPT128_zero; }
+  static fmc::fxpt128 infinity() noexcept { return FXPT128_zero; }
+  static fmc::fxpt128 quiet_NaN() noexcept { return FXPT128_zero; }
+  static fmc::fxpt128 signaling_NaN() noexcept { return FXPT128_zero; }
+  static fmc::fxpt128 denorm_min() noexcept { return FXPT128_zero; }
 
   static const bool is_iec559 = false;
   static const bool is_bounded = true;
@@ -534,3 +534,12 @@ struct is_floating_point<fmc::fxpt128>
      : std::integral_constant<bool, true> {};
 
 } // namespace std
+
+namespace fmc {
+template <> struct sided_initializer<fmc::fxpt128> {
+  static constexpr bool is_specialized = true;
+  static fmc::fxpt128 min() noexcept { return std::numeric_limits<fmc::fxpt128>::min(); }
+  static fmc::fxpt128 max() noexcept { return std::numeric_limits<fmc::fxpt128>::max(); }
+};
+} // namespace fmc
+
