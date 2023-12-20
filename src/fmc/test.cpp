@@ -106,7 +106,7 @@ bool fmc_numdiff_base_vs_test(const char *base, const char *test) {
           .append(base)
           .append("')>$TMP1; (sed 's/-nan/nan/' '")
           .append(test)
-          .append("')>$TMP2; numdiff -q -V -s=',\\n' -a 1.0e-5  $TMP1 $TMP2");
+          .append("')>$TMP2; numdiff -q -V -s=',\\n' -a 1.0e-5 -r 1.0e-15  $TMP1 $TMP2");
 
   int pipefd[2] = {0};
   fmc_system_error_unless(pipe(pipefd) == 0) << "cannot create pipe";

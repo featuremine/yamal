@@ -749,9 +749,9 @@ static int fmc_fxpt128__format(char *dst, size_t dstsize,
     }
 
   endfrac:
-    for (; cursor > buf && *(cursor - 1) == '0'; --cursor)
+    for (; cursor > (buf + format->decimal) && *(cursor - 1) == '0'; --cursor)
       ;
-    if (format->decimal || precision) {
+    if (cursor > buf) {
       decimal = cursor;
       *cursor++ = FXPT128_decimal;
     }
@@ -840,6 +840,13 @@ static int fmc_fxpt128__format(char *dst, size_t dstsize,
     dst[dstsize] = '\0';
   }
   return (int)(dstp - dst);
+}
+
+void fmc_fxpt128_from_rprice(struct fmc_fxpt128_t *dst, const fmc_rprice_t *v) {
+  FXPT128_ASSERT(dst != NULL);
+  struct fmc_fxpt128_t num = {0, (uint64_t)v->value};
+  struct fmc_fxpt128_t div = {0, (uint64_t)FMC_RPRICE_FRACTION};
+  fmc_fxpt128_div(dst, &num, &div);
 }
 
 void fmc_fxpt128_from_int(struct fmc_fxpt128_t *dst, FXPT128_S64 v) {

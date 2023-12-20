@@ -30,6 +30,7 @@
 #include <utility>
 
 #include <fmc/platform.h>
+#include <fmc/fxpt128.h>
 
 namespace fmc {
 
@@ -247,8 +248,9 @@ inline std::string_view to_string_view_signed(char *buf, T value) {
   return std::string_view(buf, view.size() + 1);
 }
 
+
 inline std::string_view to_string_view_double_unsigned(char *buf, double value,
-                                                       size_t precision) {
+                                                       int precision) {
   if (isnan(value)) {
     std::memcpy(buf, "nan", 3);
     return std::string_view(buf, 3);
@@ -259,34 +261,16 @@ inline std::string_view to_string_view_double_unsigned(char *buf, double value,
     return std::string_view(buf, 3);
   }
 
-  int64_t factor = int64_t(pow(10, precision));
-  int64_t very_big_int = int64_t(round(value * factor));
+  fmc_fxpt128_t x;
+  fmc_fxpt128_from_double(&x, value);
+  struct fmc_fxpt128_format_t format = {.precision = (int)precision};
+  auto sz = fmc_fxpt128_to_string_opt(buf, FMC_FXPT128_STR_SIZE, &x, &format);
 
-  const unsigned MAX_LEN = 21;
-  char tmp[MAX_LEN] = {'0'};
-  auto ptr = &tmp[MAX_LEN];
-  auto j = very_big_int;
-  int64_t count = precision;
-  auto trailing = true;
-  do {
-    if (!count--) {
-      *(--ptr) = '.';
-      continue;
-    }
-    auto digit = j % 10;
-    if (digit || !trailing || count == 0) {
-      *(--ptr) = digit + '0';
-      trailing = false;
-    }
-    j = j / 10;
-  } while (j != 0 || count >= -1);
-  auto sz = unsigned(&tmp[MAX_LEN] - ptr);
-  memcpy(buf, ptr, sz);
   return std::string_view(buf, sz);
 }
 
 inline std::string_view to_string_view_double(char *buf, double value,
-                                              size_t precision) {
+                                              int precision) {
   if (value >= 0.0) {
     return to_string_view_double_unsigned(buf, value, precision);
   }

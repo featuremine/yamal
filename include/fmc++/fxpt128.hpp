@@ -75,9 +75,7 @@ inline fxpt128::fxpt128() : fmc_fxpt128_t{0} {}
 inline fxpt128::fxpt128(const fmc_fxpt128_t &c) : fmc_fxpt128_t{c} {}
 
 inline fxpt128::fxpt128(const fmc_rprice_t &c) {
-  fmc_fxpt128_t num{0, (uint64_t)c.value};
-  fmc_fxpt128_t div{0, (uint64_t)FMC_RPRICE_FRACTION};
-  fmc_fxpt128_div(this, &num, &div);
+  fmc_fxpt128_from_rprice(this, &c);
 }
 
 inline fxpt128::fxpt128(int v) { fmc_fxpt128_from_int(this, v); }
