@@ -21,6 +21,7 @@
 #include <fmc/rprice.h>
 #include <stddef.h>
 
+#define FMC_FXPT128
 #define FMC_FXPT128_STR_SIZE 43
 
 // 64-bit integer support
