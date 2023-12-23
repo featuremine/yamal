@@ -539,5 +539,18 @@ template <> struct sided_initializer<fmc::fxpt128> {
   static fmc::fxpt128 min() noexcept { return std::numeric_limits<fmc::fxpt128>::min(); }
   static fmc::fxpt128 max() noexcept { return std::numeric_limits<fmc::fxpt128>::max(); }
 };
+
+static inline fxpt128 safe_add(const fxpt128 &lhs, const fxpt128 &rhs) {
+  auto max_bound = std::numeric_limits<fxpt128>::max() - max(rhs, fxpt128{});
+  auto min_bound = std::numeric_limits<fxpt128>::min() - min(rhs, fxpt128{});
+  return std::max(std::min(lhs, max_bound), min_bound) + rhs;
+}
+
+static inline fxpt128 safe_sub(const fxpt128 &lhs, const fxpt128 &rhs) {
+  auto max_bound = std::numeric_limits<fxpt128>::max() + min(rhs, fxpt128{});
+  auto min_bound = std::numeric_limits<fxpt128>::min() + max(rhs, fxpt128{});
+  return std::max(std::min(lhs, max_bound), min_bound) - rhs;
+}
+
 } // namespace fmc
 
