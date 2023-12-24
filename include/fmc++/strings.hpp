@@ -271,7 +271,22 @@ inline std::string_view to_string_view_double_unsigned(char *buf, double value,
 
 inline std::string_view to_string_view_double(char *buf, double value,
                                               int precision) {
-  if (value >= 0.0) {
+  if (!isfinite(value)) {
+    if (!isinf(value)) {
+      constexpr std::string_view rep{"nan"};
+      memcpy(buf, rep.data(), rep.size());
+      return std::string_view{buf, rep.size()};
+    }
+    if (value > 0.0) {
+      constexpr std::string_view rep{"inf"};
+      memcpy(buf, rep.data(), rep.size());
+      return std::string_view{buf, rep.size()};
+    } else {
+      constexpr std::string_view rep{"-inf"};
+      memcpy(buf, rep.data(), rep.size());
+      return std::string_view{buf, rep.size()};
+    }
+  } else if (value >= 0.0) {
     return to_string_view_double_unsigned(buf, value, precision);
   }
   *buf = '-';
