@@ -248,27 +248,6 @@ inline std::string_view to_string_view_signed(char *buf, T value) {
   return std::string_view(buf, view.size() + 1);
 }
 
-
-inline std::string_view to_string_view_double_unsigned(char *buf, double value,
-                                                       int precision) {
-  if (isnan(value)) {
-    std::memcpy(buf, "nan", 3);
-    return std::string_view(buf, 3);
-  }
-
-  if (isinf(value)) {
-    std::memcpy(buf, "inf", 3);
-    return std::string_view(buf, 3);
-  }
-
-  fmc_fxpt128_t x;
-  fmc_fxpt128_from_double(&x, value);
-  struct fmc_fxpt128_format_t format = {.precision = (int)precision};
-  auto sz = fmc_fxpt128_to_string_opt(buf, FMC_FXPT128_STR_SIZE, &x, &format);
-
-  return std::string_view(buf, sz);
-}
-
 inline std::string_view to_string_view_double(char *buf, double value,
                                               int precision) {
   if (!isfinite(value)) {
@@ -286,56 +265,26 @@ inline std::string_view to_string_view_double(char *buf, double value,
       memcpy(buf, rep.data(), rep.size());
       return std::string_view{buf, rep.size()};
     }
-  } else if (value >= 0.0) {
-    return to_string_view_double_unsigned(buf, value, precision);
   }
-  *buf = '-';
-  std::string_view view =
-      to_string_view_double_unsigned(buf + 1, -1.0 * value, precision);
-  return std::string_view(buf, view.size() + 1);
+
+  fmc_fxpt128_t x;
+  fmc_fxpt128_from_double(&x, value);
+  struct fmc_fxpt128_format_t format = {.precision = (int)precision};
+  auto sz = fmc_fxpt128_to_string_opt(buf, FMC_FXPT128_STR_SIZE, &x, &format);
+  if (sz == 2 && ((buf[0] == '-') & (buf[1] == '0')) ) {
+    sz = 1;
+    buf[0] = '0';
+    buf[1] = '\0';
+  }
+  return std::string_view(buf, sz);
 }
 
 inline std::pair<double, std::string_view>
 _from_string_view_double(const std::string_view &s) noexcept {
-  if (s.empty()) {
-    return {0.0, s.substr(0, 0)};
-  }
-  constexpr unsigned n = 18; // Max size numerical value
-  bool negative = s[0] == '-';
-  const auto se = negative ? std::string_view(s.data() + 1, s.size() - 1) : s;
-  unsigned long long sum = 0;
-  unsigned long long point_pos = 1; // > 1 indicates that point has been seen
-  unsigned i = 0;                   // num of characters (including period)
-  unsigned long long digit_count = 1;
-  for (auto it = se.rbegin(), e = se.rend(); it != e; ++it, ++i) {
-    if (i + 1 > n) {
-      return {0.0, s.substr(0, 0)};
-    }
-    const unsigned d = *it;
-    if (!::isdigit(d) && d != '.') {
-      return {0.0, s.substr(0, 0)};
-    }
-
-    if (d == '.') {
-      if (point_pos > 1) { // has it already been seen a point?
-        return {0.0, s.substr(0, 0)};
-      }
-      point_pos = digit_count;
-      if (point_pos == 1) {
-        return {0.0, s.substr(0, 0)};
-      }
-      continue;
-    }
-    sum += (d - '0') * digit_count;
-    digit_count =
-        digit_count * 10; // only increased if a digit was seen (not the period)
-  }
-
-  if (negative) {
-    return {-double(sum) / point_pos, s};
-  }
-
-  return {double(sum) / point_pos, s};
+  fmc_fxpt128_t x;
+  const char *end = s.data() + s.size();
+  fmc_fxpt128_from_string(&x, s.data(), &end);
+  return {fmc_fxpt128_to_double(&x), std::string_view(s.data(), end - s.data())};
 }
 
 } // namespace fmc
