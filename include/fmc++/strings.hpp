@@ -281,10 +281,14 @@ inline std::string_view to_string_view_double(char *buf, double value,
 
 inline std::pair<double, std::string_view>
 _from_string_view_double(const std::string_view &s) noexcept {
-  fmc_fxpt128_t x;
-  const char *end = s.data() + s.size();
-  fmc_fxpt128_from_string(&x, s.data(), &end);
-  return {fmc_fxpt128_to_double(&x), std::string_view(s.data(), end - s.data())};
+  if (s.empty())
+    return {0.0, std::string_view{}};
+  constexpr std::string_view::size_type LEN = 31;
+  char buf[LEN + 1] = {};
+  memcpy(buf, s.data(), std::min(s.size(), LEN));
+  char *endptr = {};
+  double res = strtod(buf, &endptr);
+  return {res, std::string_view{s.data(), uint64_t(endptr - buf)}};
 }
 
 } // namespace fmc
