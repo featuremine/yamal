@@ -21,6 +21,7 @@
 #include <fmc++/strings.hpp>
 #include <fmc/decimal128.h>
 #include <fmc/files.h>
+#include <fmc/fxpt128.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -111,8 +112,10 @@ inline bool cmp_file_init(cmp_file_t *cmp, const char *arg) {
   fmc_error_t *err;
   FILE *file = nullptr;
   auto pipe = fmc::ends_with_pipe(arg);
+  std::string name_str = std::string(pipe.second);
+  auto *name = name_str.c_str();
   if (pipe.first) {
-    file = fmc_popen(pipe.second.c_str(), "r", &err);
+    file = fmc_popen(name, "r", &err);
     if (!file) {
       return false;
     }
@@ -195,6 +198,45 @@ inline bool cmp_read_item(cmp_ctx_t *ctx, double *arg) {
 
 inline bool cmp_read_item(cmp_ctx_t *ctx, std::string *arg) {
   return cmp_read_string(ctx, *arg);
+}
+
+inline bool cmp_read_item(cmp_ctx_t *ctx, fmc_fxpt128_t *arg) {
+  cmp_object_t obj;
+  if (!cmp_read_object(ctx, &obj)) {
+    return false;
+  }
+  if (cmp_object_is_str(&obj)) {
+    char buf[FMC_FXPT128_STR_SIZE] = {0};
+    uint32_t sz = 0;
+    if (!cmp_object_as_str(&obj, &sz) || sz >= FMC_FXPT128_STR_SIZE) {
+      return false;
+    }
+    if (!cmp_object_to_str(ctx, &obj, buf, FMC_FXPT128_STR_SIZE)) {
+      return false;
+    }
+    const char *end = nullptr;
+    fmc_fxpt128_from_string(arg, buf, &end);
+    if (end != buf + strnlen(buf, FMC_FXPT128_STR_SIZE)) {
+      return false;
+    }
+    return true;
+  } else if (cmp_object_is_sinteger(&obj)) {
+    int64_t num = 0;
+    if (!cmp_object_as_sinteger(&obj, &num)) {
+      return false;
+    }
+    fmc_fxpt128_from_int(arg, num);
+    return true;
+  }
+  if (cmp_object_is_uinteger(&obj)) {
+    uint64_t num = 0;
+    if (!cmp_object_as_uinteger(&obj, &num)) {
+      return false;
+    }
+    fmc_fxpt128_from_int(arg, num);
+    return true;
+  }
+  return false;
 }
 
 inline bool cmp_read_item(cmp_ctx_t *ctx, fmc_decimal128_t *arg) {

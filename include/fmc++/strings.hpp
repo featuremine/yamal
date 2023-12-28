@@ -29,42 +29,38 @@
 #include <string>
 #include <utility>
 
+#include <fmc/fxpt128.h>
 #include <fmc/platform.h>
 
 namespace fmc {
 
 // Remove starting trailing blanks
-inline void ltrim(std::string &s) {
-  s.erase(s.begin(),
-          find_if(s.begin(), s.end(), [](int c) { return !isspace(c); }));
+inline std::string_view ltrim(std::string_view s) {
+  return s.substr(s.find_first_not_of("\t\n\v\f\r "));
 }
 
 // Remove ending trailing blanks
-inline void rtrim(std::string &s) {
-  s.erase(
-      find_if(s.rbegin(), s.rend(), [](int c) { return !isspace(c); }).base(),
-      s.end());
+inline std::string_view rtrim(std::string_view s) {
+  return s.substr(0, 1 + std::min(s.size(), s.find_last_not_of("\t\n\v\f\r ")));
 }
 
 // Remove starting and ending blanks
-inline void trim(std::string &s) {
-  ltrim(s);
-  rtrim(s);
+inline std::string_view trim(std::string_view s) { return ltrim(rtrim(s)); }
+
+inline std::tuple<std::string_view, std::string_view, std::string_view>
+split(std::string_view a, std::string_view sep) {
+  auto pos = a.find_first_of(sep);
+  if (pos >= a.size())
+    return {a, std::string_view(), std::string_view()};
+  return {a.substr(0, pos), a.substr(pos, 1), a.substr(pos + 1)};
 }
 
-// Return true is s ends with suffix.
-// This function emulates equivalent in C++20 (that will be a method
-// of string class)
-inline bool ends_with(const std::string &s, const std::string &suffix) {
-  return s.size() >= suffix.size() &&
-         0 == s.compare(s.size() - suffix.size(), suffix.size(), suffix);
+inline bool ends_with(std::string_view a, std::string_view b) {
+  return a.size() >= b.size() && a.substr(a.size() - b.size()) == b;
 }
 
-// Return true is s starts with prefix.
-// This function emulates equivalent in C++20 (that will be a method
-// of string class)
-inline bool starts_with(const std::string &s, const std::string &prefix) {
-  return s.size() >= prefix.size() && 0 == s.compare(0, prefix.size(), prefix);
+inline bool starts_with(std::string_view a, std::string_view b) {
+  return a.substr(0, b.size()) == b;
 }
 
 // Determines if name is a file name or a command to be executed and
@@ -75,20 +71,19 @@ inline bool starts_with(const std::string &s, const std::string &prefix) {
 // If the command is detected, then second contain the command to be
 // executed (without trailing blanks and '|'). Otherwise, second is a
 // file name.
-inline std::pair<bool, std::string> ends_with_pipe(std::string name) {
-  trim(name); // removes all trailing blanks
-  if (ends_with(name, "|")) {
-    return {true, name.erase(name.size() - 1, 1)}; // remove '|'
+inline std::pair<bool, std::string_view> ends_with_pipe(std::string_view name) {
+  if (auto sv = trim(name); ends_with(sv, "|")) {
+    return {true, sv.substr(0, sv.size() - 1)}; // remove '|'
   }
-  return {false, std::move(name)};
+  return {false, name};
 }
 
-inline std::pair<bool, std::string> begins_with_pipe(std::string name) {
-  trim(name); // removes all trailing blanks
-  if (starts_with(name, "|")) {
-    return {true, name.erase(0, 1)}; // remove '|'
+inline std::pair<bool, std::string_view>
+begins_with_pipe(std::string_view name) {
+  if (auto sv = trim(name); starts_with(sv, "|")) {
+    return {true, sv.substr(1)}; // remove '|'
   }
-  return {false, std::move(name)};
+  return {false, name};
 }
 
 template <class T>
@@ -253,96 +248,47 @@ inline std::string_view to_string_view_signed(char *buf, T value) {
   return std::string_view(buf, view.size() + 1);
 }
 
-inline std::string_view to_string_view_double_unsigned(char *buf, double value,
-                                                       size_t precision) {
-  if (isnan(value)) {
-    std::memcpy(buf, "nan", 3);
-    return std::string_view(buf, 3);
-  }
-
-  if (isinf(value)) {
-    std::memcpy(buf, "inf", 3);
-    return std::string_view(buf, 3);
-  }
-
-  int64_t factor = int64_t(pow(10, precision));
-  int64_t very_big_int = int64_t(round(value * factor));
-
-  const unsigned MAX_LEN = 21;
-  char tmp[MAX_LEN] = {'0'};
-  auto ptr = &tmp[MAX_LEN];
-  auto j = very_big_int;
-  int64_t count = precision;
-  auto trailing = true;
-  do {
-    if (!count--) {
-      *(--ptr) = '.';
-      continue;
-    }
-    auto digit = j % 10;
-    if (digit || !trailing || count == 0) {
-      *(--ptr) = digit + '0';
-      trailing = false;
-    }
-    j = j / 10;
-  } while (j != 0 || count >= -1);
-  auto sz = unsigned(&tmp[MAX_LEN] - ptr);
-  memcpy(buf, ptr, sz);
-  return std::string_view(buf, sz);
-}
-
 inline std::string_view to_string_view_double(char *buf, double value,
-                                              size_t precision) {
-  if (value >= 0.0) {
-    return to_string_view_double_unsigned(buf, value, precision);
+                                              int precision) {
+  if (!isfinite(value)) {
+    if (!isinf(value)) {
+      constexpr std::string_view rep{"nan"};
+      memcpy(buf, rep.data(), rep.size());
+      return std::string_view{buf, rep.size()};
+    }
+    if (value > 0.0) {
+      constexpr std::string_view rep{"inf"};
+      memcpy(buf, rep.data(), rep.size());
+      return std::string_view{buf, rep.size()};
+    } else {
+      constexpr std::string_view rep{"-inf"};
+      memcpy(buf, rep.data(), rep.size());
+      return std::string_view{buf, rep.size()};
+    }
   }
-  *buf = '-';
-  std::string_view view =
-      to_string_view_double_unsigned(buf + 1, -1.0 * value, precision);
-  return std::string_view(buf, view.size() + 1);
+
+  fmc_fxpt128_t x;
+  fmc_fxpt128_from_double(&x, value);
+  struct fmc_fxpt128_format_t format = {.precision = (int)precision};
+  auto sz = fmc_fxpt128_to_string_opt(buf, FMC_FXPT128_STR_SIZE, &x, &format);
+  if (sz == 2 && ((buf[0] == '-') & (buf[1] == '0'))) {
+    sz = 1;
+    buf[0] = '0';
+    buf[1] = '\0';
+  }
+  return std::string_view(buf, sz);
 }
 
 inline std::pair<double, std::string_view>
 _from_string_view_double(const std::string_view &s) noexcept {
-  if (s.empty()) {
-    return {0.0, s.substr(0, 0)};
-  }
-  constexpr unsigned n = 18; // Max size numerical value
-  bool negative = s[0] == '-';
-  const auto se = negative ? std::string_view(s.data() + 1, s.size() - 1) : s;
-  unsigned long long sum = 0;
-  unsigned long long point_pos = 1; // > 1 indicates that point has been seen
-  unsigned i = 0;                   // num of characters (including period)
-  unsigned long long digit_count = 1;
-  for (auto it = se.rbegin(), e = se.rend(); it != e; ++it, ++i) {
-    if (i + 1 > n) {
-      return {0.0, s.substr(0, 0)};
-    }
-    const unsigned d = *it;
-    if (!::isdigit(d) && d != '.') {
-      return {0.0, s.substr(0, 0)};
-    }
-
-    if (d == '.') {
-      if (point_pos > 1) { // has it already been seen a point?
-        return {0.0, s.substr(0, 0)};
-      }
-      point_pos = digit_count;
-      if (point_pos == 1) {
-        return {0.0, s.substr(0, 0)};
-      }
-      continue;
-    }
-    sum += (d - '0') * digit_count;
-    digit_count =
-        digit_count * 10; // only increased if a digit was seen (not the period)
-  }
-
-  if (negative) {
-    return {-double(sum) / point_pos, s};
-  }
-
-  return {double(sum) / point_pos, s};
+  if (s.empty())
+    return {0.0, std::string_view{}};
+  constexpr std::string_view::size_type LEN = 31;
+  char buf[LEN + 1] = {};
+  memcpy(buf, s.data(), std::min(s.size(), LEN));
+  char *endptr = {};
+  double res = strtod(buf, &endptr);
+  return {res, std::string_view{s.data(), uint64_t(endptr - buf)}};
 }
 
 } // namespace fmc

@@ -109,6 +109,7 @@ set(
     "${PROJECT_SOURCE_DIR}/src/fmc/config.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/config.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/decimal128.c"
+    "${PROJECT_SOURCE_DIR}/src/fmc/fxpt128.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/error.cpp"
     "${PROJECT_SOURCE_DIR}/src/fmc/extension.c"
     "${PROJECT_SOURCE_DIR}/src/fmc/files.cpp"
