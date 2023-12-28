@@ -20,8 +20,8 @@
 #include <cmp/cmp.h>
 #include <fmc++/strings.hpp>
 #include <fmc/decimal128.h>
-#include <fmc/fxpt128.h>
 #include <fmc/files.h>
+#include <fmc/fxpt128.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>

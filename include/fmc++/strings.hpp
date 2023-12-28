@@ -29,8 +29,8 @@
 #include <string>
 #include <utility>
 
-#include <fmc/platform.h>
 #include <fmc/fxpt128.h>
+#include <fmc/platform.h>
 
 namespace fmc {
 
@@ -271,7 +271,7 @@ inline std::string_view to_string_view_double(char *buf, double value,
   fmc_fxpt128_from_double(&x, value);
   struct fmc_fxpt128_format_t format = {.precision = (int)precision};
   auto sz = fmc_fxpt128_to_string_opt(buf, FMC_FXPT128_STR_SIZE, &x, &format);
-  if (sz == 2 && ((buf[0] == '-') & (buf[1] == '0')) ) {
+  if (sz == 2 && ((buf[0] == '-') & (buf[1] == '0'))) {
     sz = 1;
     buf[0] = '0';
     buf[1] = '\0';

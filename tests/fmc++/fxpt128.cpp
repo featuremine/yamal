@@ -31,87 +31,92 @@
 // C API
 
 TEST(fxpt128, from_to_double_frac) {
-    double phi1 = 161.80339887498948482045868343656;
-    fmc_fxpt128_t phi2;
-    fmc_fxpt128_from_double(&phi2, phi1);
+  double phi1 = 161.80339887498948482045868343656;
+  fmc_fxpt128_t phi2;
+  fmc_fxpt128_from_double(&phi2, phi1);
 
-    double base = 0.0;
-    fmc_fxpt128_t test = {0};
+  double base = 0.0;
+  fmc_fxpt128_t test = {0};
 
-    for (uint x = 0; x < 10000000ULL; ++x) {
-        fmc_fxpt128_t a;
-        fmc_fxpt128_from_double(&a, base);
-        ASSERT_EQ(base, fmc_fxpt128_to_double(&a));
-        base += phi1;
-        fmc_fxpt128_add(&test, &test, &phi2);
-    }
-    // verified with python
-    // >>> ((161 * (2**64) + 14820093436037169152) * 10000000) / (2**64)
-    // 1618033988.7498949
-    ASSERT_EQ(1618033988.7498949, fmc_fxpt128_to_double(&test));
+  for (uint x = 0; x < 10000000ULL; ++x) {
+    fmc_fxpt128_t a;
+    fmc_fxpt128_from_double(&a, base);
+    ASSERT_EQ(base, fmc_fxpt128_to_double(&a));
+    base += phi1;
+    fmc_fxpt128_add(&test, &test, &phi2);
+  }
+  // verified with python
+  // >>> ((161 * (2**64) + 14820093436037169152) * 10000000) / (2**64)
+  // 1618033988.7498949
+  ASSERT_EQ(1618033988.7498949, fmc_fxpt128_to_double(&test));
 }
 
 TEST(fxpt128, from_to_double_int) {
-    double phi1 = 161803.0;
-    fmc_fxpt128_t phi2;
-    fmc_fxpt128_from_double(&phi2, phi1);
+  double phi1 = 161803.0;
+  fmc_fxpt128_t phi2;
+  fmc_fxpt128_from_double(&phi2, phi1);
 
-    double base = 0.0;
-    fmc_fxpt128_t test = {0};
+  double base = 0.0;
+  fmc_fxpt128_t test = {0};
 
-    for (uint x = 0; x < 10000000ULL; ++x) {
-        fmc_fxpt128_t a;
-        fmc_fxpt128_from_double(&a, base);
-        ASSERT_EQ(base, fmc_fxpt128_to_double(&a));
-        ASSERT_EQ(base, fmc_fxpt128_to_double(&test));
-        base += phi1;
-        fmc_fxpt128_add(&test, &test, &phi2);
-    }
+  for (uint x = 0; x < 10000000ULL; ++x) {
+    fmc_fxpt128_t a;
+    fmc_fxpt128_from_double(&a, base);
+    ASSERT_EQ(base, fmc_fxpt128_to_double(&a));
+    ASSERT_EQ(base, fmc_fxpt128_to_double(&test));
+    base += phi1;
+    fmc_fxpt128_add(&test, &test, &phi2);
+  }
 }
 
 TEST(fxpt128, round) {
-    auto converter = [](double x1) {
-        fmc_fxpt128_t x2;
-        fmc_fxpt128_from_double(&x2, x1);
-        return x2;
-    };
+  auto converter = [](double x1) {
+    fmc_fxpt128_t x2;
+    fmc_fxpt128_from_double(&x2, x1);
+    return x2;
+  };
 
-    auto largest = converter(fmc_double_make(0, 1075, 0));
-    auto lbit1 = converter(1.0);
-    auto gbit1 = converter(1.0 / 2.0);
-    auto rbit1 = converter(1.0 / 4.0);
-    auto sbit1 = converter(1.0 / 8.0);
+  auto largest = converter(fmc_double_make(0, 1075, 0));
+  auto lbit1 = converter(1.0);
+  auto gbit1 = converter(1.0 / 2.0);
+  auto rbit1 = converter(1.0 / 4.0);
+  auto sbit1 = converter(1.0 / 8.0);
 
-    auto gen = [&](bool l, bool g, bool r, bool s, double base) {
-        fmc_fxpt128_t x;
-        fmc_fxpt128_copy(&x, &largest);
-        if (l) fmc_fxpt128_add(&x, &x, &lbit1);
-        if (g) fmc_fxpt128_add(&x, &x, &gbit1);
-        if (r) fmc_fxpt128_add(&x, &x, &rbit1);
-        if (s) fmc_fxpt128_add(&x, &x, &sbit1);
-        ASSERT_EQ(fmc_fxpt128_to_double(&x), base);
-    };
+  auto gen = [&](bool l, bool g, bool r, bool s, double base) {
+    fmc_fxpt128_t x;
+    fmc_fxpt128_copy(&x, &largest);
+    if (l)
+      fmc_fxpt128_add(&x, &x, &lbit1);
+    if (g)
+      fmc_fxpt128_add(&x, &x, &gbit1);
+    if (r)
+      fmc_fxpt128_add(&x, &x, &rbit1);
+    if (s)
+      fmc_fxpt128_add(&x, &x, &sbit1);
+    ASSERT_EQ(fmc_fxpt128_to_double(&x), base);
+  };
 
-    gen(0,0,0,0, 4503599627370496.0);
-    gen(0,0,0,1, 4503599627370496.0);
-    gen(0,0,1,0, 4503599627370496.0);
-    gen(0,0,1,1, 4503599627370496.0);
-    gen(0,1,0,0, 4503599627370496.0);
-    gen(0,1,0,1, 4503599627370497.0);
-    gen(0,1,1,0, 4503599627370497.0);
-    gen(0,1,1,1, 4503599627370497.0);
+  gen(0, 0, 0, 0, 4503599627370496.0);
+  gen(0, 0, 0, 1, 4503599627370496.0);
+  gen(0, 0, 1, 0, 4503599627370496.0);
+  gen(0, 0, 1, 1, 4503599627370496.0);
+  gen(0, 1, 0, 0, 4503599627370496.0);
+  gen(0, 1, 0, 1, 4503599627370497.0);
+  gen(0, 1, 1, 0, 4503599627370497.0);
+  gen(0, 1, 1, 1, 4503599627370497.0);
 
-    gen(1,0,0,0, 4503599627370497.0);
-    gen(1,0,0,1, 4503599627370497.0);
-    gen(1,0,1,0, 4503599627370497.0);
-    gen(1,0,1,1, 4503599627370497.0);
-    gen(1,1,0,0, 4503599627370498.0);
-    gen(1,1,0,1, 4503599627370498.0);
-    gen(1,1,1,0, 4503599627370498.0);
-    gen(1,1,1,1, 4503599627370498.0);
+  gen(1, 0, 0, 0, 4503599627370497.0);
+  gen(1, 0, 0, 1, 4503599627370497.0);
+  gen(1, 0, 1, 0, 4503599627370497.0);
+  gen(1, 0, 1, 1, 4503599627370497.0);
+  gen(1, 1, 0, 0, 4503599627370498.0);
+  gen(1, 1, 0, 1, 4503599627370498.0);
+  gen(1, 1, 1, 0, 4503599627370498.0);
+  gen(1, 1, 1, 1, 4503599627370498.0);
 }
 
-// NOTE: conversion from string to fxpt128 back to string is guarantied with up to 18 decimal digits
+// NOTE: conversion from string to fxpt128 back to string is guarantied with up
+// to 18 decimal digits
 TEST(fxpt128, string_fxpt_string_fxpt) {
   double phi1 = 161803398874989.48482045868343656;
   fmc_fxpt128_t phi2;
@@ -136,17 +141,19 @@ TEST(fxpt128, string_fxpt_string_fxpt) {
     end = nullptr;
     fmc_fxpt128_from_string(&test, buf, &end);
     ASSERT_EQ(end, buf + 2 * len + 1);
-    fmc_fxpt128_format_t opt = {.precision=len, .decimal=len};
+    fmc_fxpt128_format_t opt = {.precision = len, .decimal = len};
     fmc_fxpt128_to_string_opt(res, FMC_FXPT128_STR_SIZE, &test, &opt);
     ASSERT_STREQ(buf, res);
 
-    auto test2 = fmc::fxpt128::from_string_view(std::string_view{res, strlen(res)});
+    auto test2 =
+        fmc::fxpt128::from_string_view(std::string_view{res, strlen(res)});
     ASSERT_EQ(test, test2.first);
     base += phi1;
   }
 }
 
-// NOTE: conversion from string to fxpt128 back to string is guarantied with up to 18 decimal digits
+// NOTE: conversion from string to fxpt128 back to string is guarantied with up
+// to 18 decimal digits
 TEST(fxpt128, double_fxpt_double) {
   double phi = 161803398.87498948482045868343656;
   double base = 0.0;

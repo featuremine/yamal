@@ -56,7 +56,8 @@ struct fmc_fxpt128_t {
 // Type conversion
 FMMODFUNC void fmc_fxpt128_from_int(struct fmc_fxpt128_t *dst, FXPT128_S64 v);
 FMMODFUNC void fmc_fxpt128_from_double(struct fmc_fxpt128_t *dst, double v);
-FMMODFUNC void fmc_fxpt128_from_rprice(struct fmc_fxpt128_t *dst, const fmc_rprice_t *v);
+FMMODFUNC void fmc_fxpt128_from_rprice(struct fmc_fxpt128_t *dst,
+                                       const fmc_rprice_t *v);
 FMMODFUNC FXPT128_S64 fmc_fxpt128_to_int(const struct fmc_fxpt128_t *v);
 FMMODFUNC double fmc_fxpt128_to_double(const struct fmc_fxpt128_t *v);
 

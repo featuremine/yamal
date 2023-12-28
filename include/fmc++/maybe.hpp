@@ -19,8 +19,7 @@
 #include <optional>
 
 namespace fmc {
-template<typename T>
-class maybe : public std::optional<T> {
+template <typename T> class maybe : public std::optional<T> {
 public:
   maybe() = default;
   maybe(const T &x) : std::optional<T>(x) {}
@@ -33,12 +32,11 @@ public:
   maybe<T> &operator/=(const maybe<T> &rhs);
 };
 
-template<typename T>
-inline maybe<T> maybe<T>::operator-() const {
+template <typename T> inline maybe<T> maybe<T>::operator-() const {
   return this->has_value() ? maybe<T>(this->value()) : maybe<T>();
 }
 
-template<typename T>
+template <typename T>
 inline maybe<T> &maybe<T>::operator+=(const maybe<T> &rhs) {
   if (this->has_value() && rhs.has_value())
     this->emplace(this->value() + rhs.value());
@@ -47,7 +45,7 @@ inline maybe<T> &maybe<T>::operator+=(const maybe<T> &rhs) {
   return *this;
 }
 
-template<typename T>
+template <typename T>
 inline maybe<T> &maybe<T>::operator-=(const maybe<T> &rhs) {
   if (this->has_value() && rhs.has_value())
     this->emplace(this->value() - rhs.value());
@@ -56,7 +54,7 @@ inline maybe<T> &maybe<T>::operator-=(const maybe<T> &rhs) {
   return *this;
 }
 
-template<typename T>
+template <typename T>
 inline maybe<T> &maybe<T>::operator*=(const maybe<T> &rhs) {
   if (this->has_value() && rhs.has_value())
     this->emplace(this->value() * rhs.value());
@@ -65,7 +63,7 @@ inline maybe<T> &maybe<T>::operator*=(const maybe<T> &rhs) {
   return *this;
 }
 
-template<typename T>
+template <typename T>
 inline maybe<T> &maybe<T>::operator/=(const maybe<T> &rhs) {
   if (this->has_value() && rhs.has_value())
     this->emplace(this->value() / rhs.value());
@@ -74,62 +72,70 @@ inline maybe<T> &maybe<T>::operator/=(const maybe<T> &rhs) {
   return *this;
 }
 
-template<typename T>
+template <typename T>
 static inline maybe<T> operator+(const maybe<T> &lhs, const maybe<T> &rhs) {
-  return lhs.has_value() && rhs.has_value() ? maybe<T>(lhs.value() + rhs.value()) : maybe<T>();
+  return lhs.has_value() && rhs.has_value()
+             ? maybe<T>(lhs.value() + rhs.value())
+             : maybe<T>();
 }
 
-template<typename T>
+template <typename T>
 static inline maybe<T> operator-(const maybe<T> &lhs, const maybe<T> &rhs) {
-  return lhs.has_value() && rhs.has_value() ? maybe<T>(lhs.value() - rhs.value()) : maybe<T>();
+  return lhs.has_value() && rhs.has_value()
+             ? maybe<T>(lhs.value() - rhs.value())
+             : maybe<T>();
 }
 
-template<typename T>
+template <typename T>
 static inline maybe<T> operator*(const maybe<T> &lhs, const maybe<T> &rhs) {
-  return lhs.has_value() && rhs.has_value() ? maybe<T>(lhs.value() * rhs.value()) : maybe<T>();
+  return lhs.has_value() && rhs.has_value()
+             ? maybe<T>(lhs.value() * rhs.value())
+             : maybe<T>();
 }
 
-template<typename T>
+template <typename T>
 static inline maybe<T> operator/(const maybe<T> &lhs, const maybe<T> &rhs) {
-  return lhs.has_value() && rhs.has_value() ? maybe<T>(lhs.value() / rhs.value()) : maybe<T>();
+  return lhs.has_value() && rhs.has_value()
+             ? maybe<T>(lhs.value() / rhs.value())
+             : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator+(const maybe<T> &lhs, const U &rhs) {
   return lhs.has_value() ? maybe<T>(lhs.value() + rhs) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator-(const maybe<T> &lhs, const U &rhs) {
   return lhs.has_value() ? maybe<T>(lhs.value() - rhs) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator*(const maybe<T> &lhs, const U &rhs) {
   return lhs.has_value() ? maybe<T>(lhs.value() * rhs) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator/(const maybe<T> &lhs, const U &rhs) {
   return lhs.has_value() ? maybe<T>(lhs.value() / rhs) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator+(const U &lhs, const maybe<T> &rhs) {
   return rhs.has_value() ? maybe<T>(lhs + rhs.value()) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator-(const U &lhs, const maybe<T> &rhs) {
   return rhs.has_value() ? maybe<T>(lhs - rhs.value()) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator*(const U &lhs, const maybe<T> &rhs) {
   return rhs.has_value() ? maybe<T>(lhs * rhs.value()) : maybe<T>();
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 static inline maybe<T> operator/(const U &lhs, const maybe<T> &rhs) {
   return rhs.has_value() ? maybe<T>(lhs / rhs.value()) : maybe<T>();
 }
@@ -140,8 +146,12 @@ namespace std {
 template <typename T> struct numeric_limits<fmc::maybe<T>> {
   static const bool is_specialized = true;
 
-  static fmc::maybe<T> min() noexcept { return fmc::maybe<T>(numeric_limits<T>::min()); }
-  static fmc::maybe<T> max() noexcept { return fmc::maybe<T>(numeric_limits<T>::max()); }
+  static fmc::maybe<T> min() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::min());
+  }
+  static fmc::maybe<T> max() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::max());
+  }
 
   static const int digits = numeric_limits<T>::digits;
   static const int digits10 = numeric_limits<T>::digits10;
@@ -149,8 +159,12 @@ template <typename T> struct numeric_limits<fmc::maybe<T>> {
   static const bool is_integer = numeric_limits<T>::is_integer;
   static const bool is_exact = numeric_limits<T>::is_exact;
   static const int radix = numeric_limits<T>::radix;
-  static fmc::maybe<T> epsilon() noexcept { return fmc::maybe<T>(numeric_limits<T>::epsilon()); }
-  static fmc::maybe<T> round_error() { return fmc::maybe<T>(numeric_limits<T>::round_error()); }
+  static fmc::maybe<T> epsilon() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::epsilon());
+  }
+  static fmc::maybe<T> round_error() {
+    return fmc::maybe<T>(numeric_limits<T>::round_error());
+  }
 
   static const int min_exponent = numeric_limits<T>::min_exponent;
   static const int min_exponent10 = numeric_limits<T>::min_exponent10;
@@ -163,10 +177,18 @@ template <typename T> struct numeric_limits<fmc::maybe<T>> {
   static const float_denorm_style has_denorm = numeric_limits<T>::has_denorm;
   static const bool has_denorm_loss = numeric_limits<T>::has_denorm_loss;
 
-  static fmc::maybe<T> infinity() noexcept {return fmc::maybe<T>(numeric_limits<T>::infinity()); }
-  static fmc::maybe<T> quiet_NaN() noexcept {return fmc::maybe<T>(numeric_limits<T>::quiet_NaN()); }
-  static fmc::maybe<T> signaling_NaN() noexcept {return fmc::maybe<T>(numeric_limits<T>::signaling_NaN()); }
-  static fmc::maybe<T> denorm_min() noexcept {return fmc::maybe<T>(numeric_limits<T>::denorm_min()); }
+  static fmc::maybe<T> infinity() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::infinity());
+  }
+  static fmc::maybe<T> quiet_NaN() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::quiet_NaN());
+  }
+  static fmc::maybe<T> signaling_NaN() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::signaling_NaN());
+  }
+  static fmc::maybe<T> denorm_min() noexcept {
+    return fmc::maybe<T>(numeric_limits<T>::denorm_min());
+  }
 
   static const bool is_iec559 = numeric_limits<T>::is_iec559;
   static const bool is_bounded = numeric_limits<T>::is_bounded;
@@ -177,18 +199,15 @@ template <typename T> struct numeric_limits<fmc::maybe<T>> {
   static const float_round_style round_style = numeric_limits<T>::round_style;
 };
 
-template <typename T>
-inline bool isinf(const fmc::maybe<T> &x) {
+template <typename T> inline bool isinf(const fmc::maybe<T> &x) {
   return x.has_value() && isinf(x.value());
 }
 
-template <typename T>
-inline bool isfinite(const fmc::maybe<T> &x) {
+template <typename T> inline bool isfinite(const fmc::maybe<T> &x) {
   return x.has_value() && isfinite(x.value());
 }
 
-template <typename T>
-inline fmc::maybe<T> abs(const fmc::maybe<T> &x) {
+template <typename T> inline fmc::maybe<T> abs(const fmc::maybe<T> &x) {
   return x.has_value() ? fmc::maybe<T>(abs(x.value())) : fmc::maybe<T>();
 }
 
@@ -197,8 +216,7 @@ inline fmc::maybe<T> pow(const fmc::maybe<T> &x, uint64_t n) {
   return x.has_value() ? fmc::maybe<T>(pow(x.value(), n)) : fmc::maybe<T>();
 }
 
-template <typename T>
-inline bool isnan(const fmc::maybe<T> &x) {
+template <typename T> inline bool isnan(const fmc::maybe<T> &x) {
   return !x.has_value() || isnan(x.value());
 }
 
@@ -208,9 +226,9 @@ template <typename T> struct hash<fmc::maybe<T>> {
   }
 };
 
-template<typename T>
+template <typename T>
 struct is_floating_point<fmc::maybe<T>>
-     : std::integral_constant<bool, is_floating_point<T>::value> {};
+    : std::integral_constant<bool, is_floating_point<T>::value> {};
 
 } // namespace std
 
@@ -222,4 +240,3 @@ template <typename T> struct sided_initializer<fmc::maybe<T>> {
 };
 
 } // namespace fmc
-

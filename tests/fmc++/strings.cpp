@@ -11,9 +11,9 @@
 
 TEST(strings, str_to_double_digits) {
   ASSERT_EQ(fmc::from_string_view<double>("0.7660166666666666667").first,
-                   0.7660166666666666667);
+            0.7660166666666666667);
   ASSERT_EQ(fmc::from_string_view<double>("0.7660166666666667").second,
-                   "0.7660166666666667");
+            "0.7660166666666667");
   ASSERT_DOUBLE_EQ(fmc::from_string_view<double>("0.7660166666666667").first,
                    0.7660166666666667);
   ASSERT_DOUBLE_EQ(fmc::from_string_view<double>("0.766016666666667").first,
@@ -37,8 +37,9 @@ TEST(strings, str_to_double_digits) {
                    766016666666667);
   ASSERT_EQ(fmc::from_string_view<double>("766016666666667.7660166666666666667")
                 .second,
-                   "766016666666667.766016666666666");
-  ASSERT_DOUBLE_EQ(fmc::from_string_view<double>("12217.6043").first, 12217.6043);
+            "766016666666667.766016666666666");
+  ASSERT_DOUBLE_EQ(fmc::from_string_view<double>("12217.6043").first,
+                   12217.6043);
   ASSERT_DOUBLE_EQ(fmc::from_string_view<double>("73344.998").first, 73344.998);
   auto view = std::string_view("99164.1095");
   ASSERT_EQ(fmc::from_string_view<double>(view).second, view);

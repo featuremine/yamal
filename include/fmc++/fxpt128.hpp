@@ -116,9 +116,7 @@ fxpt128::upcast(const fmc_fxpt128_t &a) noexcept {
 
 inline fxpt128::operator double() const { return fmc_fxpt128_to_double(this); }
 
-inline fxpt128::operator int64_t() const {
-  return fmc_fxpt128_to_int(this);
-}
+inline fxpt128::operator int64_t() const { return fmc_fxpt128_to_int(this); }
 
 inline fxpt128::operator int() const { return (int)fmc_fxpt128_to_int(this); }
 
@@ -305,78 +303,92 @@ static inline bool operator!=(const fxpt128 &lhs, const fxpt128 &rhs) {
 
 } // namespace fmc
 
-
-static inline fmc_fxpt128_t operator|(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator|(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r |= rhs;
 }
 
-static inline fmc_fxpt128_t operator&(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator&(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r &= rhs;
 }
 
-static inline fmc_fxpt128_t operator^(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator^(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r ^= rhs;
 }
 
-static inline fmc_fxpt128_t operator+(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator+(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r += rhs;
 }
 
-static inline fmc_fxpt128_t operator-(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator-(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r -= rhs;
 }
 
-static inline fmc_fxpt128_t operator*(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator*(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r *= rhs;
 }
 
-static inline fmc_fxpt128_t operator*(const int64_t lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator*(const int64_t lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r((int64_t)lhs);
   return r *= rhs;
 }
 
-static inline fmc_fxpt128_t operator*(const uint64_t lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator*(const uint64_t lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs, 0);
   return r *= rhs;
 }
 
-static inline fmc_fxpt128_t operator*(const fmc_fxpt128_t &rhs, const uint64_t lhs) {
+static inline fmc_fxpt128_t operator*(const fmc_fxpt128_t &rhs,
+                                      const uint64_t lhs) {
   fmc::fxpt128 r(lhs, 0);
   return r *= rhs;
 }
 
-static inline fmc_fxpt128_t operator/(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator/(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r /= rhs;
 }
 
-static inline fmc_fxpt128_t operator/(const int32_t lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator/(const int32_t lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r((int64_t)lhs);
   return r /= rhs;
 }
 
-static inline fmc_fxpt128_t operator/(const int64_t lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator/(const int64_t lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r((int64_t)lhs);
   return r /= rhs;
 }
 
-static inline fmc_fxpt128_t operator/(const uint32_t lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator/(const uint32_t lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r((uint64_t)lhs, 0);
   return r /= rhs;
 }
 
-static inline fmc_fxpt128_t operator/(const uint64_t lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator/(const uint64_t lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r((uint64_t)lhs, 0);
   return r /= rhs;
 }
 
-static inline fmc_fxpt128_t operator%(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline fmc_fxpt128_t operator%(const fmc_fxpt128_t &lhs,
+                                      const fmc_fxpt128_t &rhs) {
   fmc::fxpt128 r(lhs);
   return r %= rhs;
 }
@@ -391,27 +403,33 @@ static inline fmc_fxpt128_t operator>>(const fmc_fxpt128_t &lhs, int amount) {
   return r >>= amount;
 }
 
-static inline bool operator<(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline bool operator<(const fmc_fxpt128_t &lhs,
+                             const fmc_fxpt128_t &rhs) {
   return fmc_fxpt128_cmp(&lhs, &rhs) < 0;
 }
 
-static inline bool operator>(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline bool operator>(const fmc_fxpt128_t &lhs,
+                             const fmc_fxpt128_t &rhs) {
   return fmc_fxpt128_cmp(&lhs, &rhs) > 0;
 }
 
-static inline bool operator<=(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline bool operator<=(const fmc_fxpt128_t &lhs,
+                              const fmc_fxpt128_t &rhs) {
   return fmc_fxpt128_cmp(&lhs, &rhs) <= 0;
 }
 
-static inline bool operator>=(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline bool operator>=(const fmc_fxpt128_t &lhs,
+                              const fmc_fxpt128_t &rhs) {
   return fmc_fxpt128_cmp(&lhs, &rhs) >= 0;
 }
 
-static inline bool operator==(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline bool operator==(const fmc_fxpt128_t &lhs,
+                              const fmc_fxpt128_t &rhs) {
   return lhs.lo == rhs.lo && lhs.hi == rhs.hi;
 }
 
-static inline bool operator!=(const fmc_fxpt128_t &lhs, const fmc_fxpt128_t &rhs) {
+static inline bool operator!=(const fmc_fxpt128_t &lhs,
+                              const fmc_fxpt128_t &rhs) {
   return lhs.lo != rhs.lo || lhs.hi != rhs.hi;
 }
 
@@ -527,17 +545,20 @@ template <> struct hash<fmc::fxpt128> {
   }
 };
 
-template<>
-struct is_floating_point<fmc::fxpt128>
-     : std::integral_constant<bool, true> {};
+template <>
+struct is_floating_point<fmc::fxpt128> : std::integral_constant<bool, true> {};
 
 } // namespace std
 
 namespace fmc {
 template <> struct sided_initializer<fmc::fxpt128> {
   static constexpr bool is_specialized = true;
-  static fmc::fxpt128 min() noexcept { return std::numeric_limits<fmc::fxpt128>::min(); }
-  static fmc::fxpt128 max() noexcept { return std::numeric_limits<fmc::fxpt128>::max(); }
+  static fmc::fxpt128 min() noexcept {
+    return std::numeric_limits<fmc::fxpt128>::min();
+  }
+  static fmc::fxpt128 max() noexcept {
+    return std::numeric_limits<fmc::fxpt128>::max();
+  }
 };
 
 static inline fxpt128 safe_add(const fxpt128 &lhs, const fxpt128 &rhs) {
@@ -553,4 +574,3 @@ static inline fxpt128 safe_sub(const fxpt128 &lhs, const fxpt128 &rhs) {
 }
 
 } // namespace fmc
-
