@@ -147,7 +147,7 @@ TEST(fxpt128, string_fxpt_string_fxpt) {
 
     auto test2 =
         fmc::fxpt128::from_string_view(std::string_view{res, strlen(res)});
-    ASSERT_EQ(test, test2.first);
+    ASSERT_EQ(fmc::fxpt128(test), test2.first);
     base += phi1;
   }
 }
