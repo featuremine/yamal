@@ -45,6 +45,20 @@ target_link_libraries(
 )
 add_test(NAME fmc_decimal128 COMMAND tests_fmc_decimal128)
 
+
+add_executable(
+    tests_fmc_fxpt128
+    "fxpt128.cpp"
+)
+target_link_libraries(
+    tests_fmc_fxpt128
+    PRIVATE
+    ytp
+    fmc++
+    gtest
+)
+add_test(NAME fmc_fxpt128 COMMAND tests_fmc_fxpt128)
+
 add_executable(
     tests_fmc_errorpp
     "error.cpp"
