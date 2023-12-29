@@ -545,9 +545,6 @@ template <> struct hash<fmc::fxpt128> {
   }
 };
 
-template <>
-struct is_floating_point<fmc::fxpt128> : std::integral_constant<bool, true> {};
-
 } // namespace std
 
 namespace fmc {
