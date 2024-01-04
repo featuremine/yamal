@@ -877,7 +877,8 @@ class api_mem_usage(unittest.TestCase):
                 reference = mem-fmem
             else:
                 curr = mem-fmem
-                self.assertLessEqual((reference - curr) / reference, 0.01)
+                print((curr - reference) / reference)
+                self.assertLessEqual((curr - reference) / reference, 0.01)
 
 if __name__ == '__main__':
     unittest.main()
