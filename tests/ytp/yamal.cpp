@@ -15,6 +15,7 @@
  * @see http://www.featuremine.com
  */
 
+#include <atomic>
 #include <random>
 #include <thread>
 
