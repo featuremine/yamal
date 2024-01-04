@@ -15,9 +15,9 @@
  * @see http://www.featuremine.com
  */
 
+#include <atomic>
 #include <random>
 #include <thread>
-#include <atomic>
 
 #include <ytp/yamal.h>
 
