@@ -494,7 +494,8 @@ static void ytp_sequence_peer_cb_wrapper(void *closure_, ytp_peer_t peer_id,
   peer.seq = seq->shared_from_this();
   peer.id = peer_id;
 
-  Py_XDECREF(PyObject_CallFunction(callback, "Os#", py_peer, name, Py_ssize_t(sz)));
+  Py_XDECREF(
+      PyObject_CallFunction(callback, "Os#", py_peer, name, Py_ssize_t(sz)));
 
   Py_XDECREF(py_peer);
 }
@@ -530,8 +531,8 @@ static void ytp_sequence_channel_cb_wrapper(void *closure_, ytp_peer_t peer_id,
   channel.seq = seq->shared_from_this();
   channel.id = channel_id;
 
-  Py_XDECREF(PyObject_CallFunction(callback, "OOKs#", py_channel, py_peer, time, name,
-                        Py_ssize_t(sz)));
+  Py_XDECREF(PyObject_CallFunction(callback, "OOKs#", py_channel, py_peer, time,
+                                   name, Py_ssize_t(sz)));
 
   Py_XDECREF(py_peer);
   Py_XDECREF(py_channel);
@@ -567,8 +568,8 @@ static void ytp_sequence_data_cb_wrapper(void *closure_, ytp_peer_t peer_id,
   channel.seq = seq->shared_from_this();
   channel.id = channel_id;
 
-  Py_XDECREF(PyObject_CallFunction(callback, "OOKy#", py_peer, py_channel, time, data,
-                        Py_ssize_t(sz)));
+  Py_XDECREF(PyObject_CallFunction(callback, "OOKy#", py_peer, py_channel, time,
+                                   data, Py_ssize_t(sz)));
 
   Py_XDECREF(py_peer);
   Py_XDECREF(py_channel);
@@ -613,8 +614,8 @@ static void ytp_sequence_prfx_cb_wrapper(void *closure_, ytp_peer_t peer_id,
   channel.seq = seq->shared_from_this();
   channel.id = channel_id;
 
-  Py_XDECREF(PyObject_CallFunction(callback, "OOKy#", py_peer, py_channel, time, data,
-                        Py_ssize_t(sz)));
+  Py_XDECREF(PyObject_CallFunction(callback, "OOKy#", py_peer, py_channel, time,
+                                   data, Py_ssize_t(sz)));
 
   Py_XDECREF(py_peer);
   Py_XDECREF(py_channel);
