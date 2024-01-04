@@ -17,6 +17,7 @@
 
 #include <random>
 #include <thread>
+#include <atomic>
 
 #include <ytp/yamal.h>
 
