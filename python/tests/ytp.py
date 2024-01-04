@@ -18,6 +18,8 @@ import tempfile
 from yamal import ytp
 import pathlib
 import unittest
+import psutil
+import gc
 
 
 def get_tempfile_name(some_id='ttt'):
@@ -825,6 +827,57 @@ class empty_file(unittest.TestCase):
         else:
             raise RuntimeError("Sequence open over empty file did not fail as expected")
 
+
+class api_mem_usage(unittest.TestCase):
+    def test_data_callbacks(self):
+
+        sequence_file = get_tempfile_name('api_mem_usage')
+
+        nchannels = 100
+        nreaders = 100
+        msgsz = 10
+        maxsz = 100 * 1024 * 1024
+        maxmsgs = (maxsz - 32) // 64
+        batchsz = maxmsgs // (10 * nchannels)
+
+        pr = psutil.Process()
+
+        msg = b"a" * msgsz
+
+        sequence = ytp.sequence(sequence_file)
+
+        producer = sequence.peer("producer")
+        self.assertNotEqual(producer.id(), 0)
+
+        channels = []
+        streams = []
+
+        for i in range(nchannels):
+            channels.append(producer.channel(0, f"channel{i}"))
+            self.assertNotEqual(channels[-1].id(), 0)
+            streams.append(producer.stream(channels[-1]))
+
+        def on_data(peer, channel, timestamp, data):
+            pass
+
+        for i in range(nreaders):
+            channels[i].data_callback(on_data)
+
+        reference = None
+
+        while os.stat(sequence_file).st_size < maxsz:
+            for i in range(batchsz):
+                for stream in streams:
+                    stream.write(0, msg)
+            while sequence.poll():
+                pass
+            mem = pr.memory_info().vms
+            fmem = os.stat(sequence_file).st_size
+            if reference is None:
+                reference = mem-fmem
+            else:
+                curr = mem-fmem
+                self.assertLessEqual((reference - curr) / reference, 0.01)
 
 if __name__ == '__main__':
     unittest.main()
