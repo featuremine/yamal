@@ -430,7 +430,10 @@ struct counter_outfile_handler {
   counter_outfile_handler() {
     char *file_path = std::getenv("FMC_COUNTER_PATH");
     if (file_path != NULL) {
-      outfile_.open(file_path, std::ofstream::out);
+      std::string file = file_path;
+      file += ".";
+      file += std::to_string(nanoseconds()());
+      outfile_.open(file.c_str(), std::ofstream::out);
       fmc_runtime_error_unless(outfile_.is_open());
     }
   }

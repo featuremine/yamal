@@ -128,20 +128,16 @@ TEST(fxpt128, string_fxpt_string_fxpt) {
   for (uint x = 0; x < 6000ULL; ++x) {
     char buf[FMC_FXPT128_STR_SIZE] = {0};
     char res[FMC_FXPT128_STR_SIZE] = {0};
-    uint64_t whole;
-    snprintf(buf, sizeof(buf), "%.0f", base);
-    sscanf(buf, "%" PRId64, &whole);
-    int len = strlen(buf);
-    buf[len] = '.';
-    strncpy(buf + len + 1, buf, len);
+    uint64_t whole = llround(base);
+    auto len = snprintf(buf, sizeof(buf), "%lu.%lu", whole, whole);
     const char *end = buf + len;
     fmc_fxpt128_from_string(&test, buf, &end);
     ASSERT_EQ(whole, test.hi);
 
     end = nullptr;
     fmc_fxpt128_from_string(&test, buf, &end);
-    ASSERT_EQ(end, buf + 2 * len + 1);
-    fmc_fxpt128_format_t opt = {.precision = len, .decimal = len};
+    ASSERT_EQ(end, buf + len);
+    fmc_fxpt128_format_t opt = {.precision = len / 2, .decimal = len / 2};
     fmc_fxpt128_to_string_opt(res, FMC_FXPT128_STR_SIZE, &test, &opt);
     ASSERT_STREQ(buf, res);
 

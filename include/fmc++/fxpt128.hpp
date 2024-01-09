@@ -540,8 +540,8 @@ isnan(T x) {
 
 template <> struct hash<fmc::fxpt128> {
   size_t operator()(const fmc::fxpt128 &k) const noexcept {
-    return fmc_hash_combine(std::hash<uint64_t>{}(*(uint64_t *)&k.hi),
-                            std::hash<uint64_t>{}(*(uint64_t *)&k.lo));
+    return fmc_hash_combine(std::hash<uint64_t>{}(k.hi),
+                            std::hash<uint64_t>{}(k.lo));
   }
 };
 
