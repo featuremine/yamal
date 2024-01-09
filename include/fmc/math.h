@@ -112,11 +112,11 @@ FMMODFUNC double fmc_remainder(double x);
  */
 #define fmc_double_make(mantissa, exp, sign)                                   \
   ({                                                                           \
-    double _res;                                                               \
-    *(uint64_t *)&_res = ((uint64_t)(mantissa) & ((1ull << 52ull) - 1ull)) |   \
+    union {double d; uint64_t i;} _res;                                        \
+    _res.i = ((uint64_t)(mantissa) & ((1ull << 52ull) - 1ull)) |               \
                          ((uint64_t)(exp) << 52ull) |                          \
                          ((uint64_t)(!!(sign)) << 63ull);                      \
-    _res;                                                                      \
+    _res.d;                                                                    \
   })
 
 /**
@@ -127,8 +127,8 @@ FMMODFUNC double fmc_remainder(double x);
  */
 #define fmc_double_mantissa(value)                                             \
   ({                                                                           \
-    double _val = (value);                                                     \
-    (*(uint64_t *)(&_val)) & ((1ull << 52ull) - 1ull);                         \
+    union {double d; uint64_t i;} _val; _val.d = (value);                      \
+    (_val.i) & ((1ull << 52ull) - 1ull);                                       \
   })
 
 /**
@@ -139,8 +139,8 @@ FMMODFUNC double fmc_remainder(double x);
  */
 #define fmc_double_exp(value)                                                  \
   ({                                                                           \
-    double _val = (value);                                                     \
-    (*(uint64_t *)(&_val) >> 52ll) & ((1ll << 11ll) - 1ll);                    \
+    union {double d; uint64_t i;} _val; _val.d = (value);                      \
+    (_val.i >> 52ll) & ((1ll << 11ll) - 1ll);                                  \
   })
 
 /**
@@ -151,8 +151,8 @@ FMMODFUNC double fmc_remainder(double x);
  */
 #define fmc_double_sign(value)                                                 \
   ({                                                                           \
-    double _val = (value);                                                     \
-    (*(uint64_t *)(&_val) >> 63ll);                                            \
+    union {double d; uint64_t i;} _val; _val.d = (value);                      \
+    (_val.i >> 63ll);                                                          \
   })
 
 /**
@@ -163,10 +163,9 @@ FMMODFUNC double fmc_remainder(double x);
  */
 #define fmc_double_setsign(value, sign)                                        \
   ({                                                                           \
-    double _val = (value);                                                     \
-    *(uint64_t *)&_val = (*(uint64_t *)&_val & ~(1ull << 63ull)) |             \
-                         ((uint64_t)((!!(sign))) << 63ull);                    \
-    _val;                                                                      \
+    union {double d; uint64_t i;} _val; _val.d = (value);                      \
+    _val.i = (_val.i & ~(1ull << 63ull)) | ((uint64_t)((!!(sign))) << 63ull);  \
+    _val.d;                                                                    \
   })
 
 #ifdef __cplusplus
