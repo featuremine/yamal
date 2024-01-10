@@ -450,9 +450,9 @@ template <class Record> struct counter_record {
 
   void stop() { nr_.stop(); }
 
+  double value() { return nr_.value(); }
   ~counter_record() {
-    counter_outfile_handler_.outfile_ << name_ << "=" << nr_.value()
-                                      << std::endl;
+    counter_outfile_handler_.outfile_ << name_ << "=" << value() << std::endl;
   }
   Record nr_;
   const char *name_;
