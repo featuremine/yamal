@@ -18,7 +18,7 @@ jobs:
     
     steps:
     - name: Publish release
-      uses: featuremine/actions/release@v2
+      uses: featuremine/actions/release@v3
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
         pypi_token: ${{ secrets.PYPI_API_TOKEN }}
