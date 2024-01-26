@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
   ytp_iterator_t it = nullptr;
   int64_t last = fmc_cur_time_ns();
 
-  fmc::counter::log_bucket buckets_;
+  fmc::counter::precision_sampler buckets_;
   uint64_t count = 0ULL;
   std::vector<double> percentiles{25.0, 50.0, 75.0, 90.0, 95.0, 99.0, 100.0};
 
