@@ -20,16 +20,11 @@
 
 namespace fmc {
 
-template <typename T>
-class pool_t {
-  public:
-  pool_t(size_t init_sz, size_t inc_sz)
-  : size_(inc_sz)
-  {
-    allocate(init_sz);
-  }
+template <typename T> class pool_t {
+public:
+  pool_t(size_t init_sz, size_t inc_sz) : size_(inc_sz) { allocate(init_sz); }
 
-  T * get() {
+  T *get() {
     if (curr_ == blocks_.back())
       allocate(size_);
     return --curr_;
@@ -40,7 +35,7 @@ class pool_t {
       delete[] head;
   }
 
-  private:
+private:
   void allocate(size_t sz) {
     curr_ = new T[sz]();
     blocks_.push_back(curr_);
@@ -48,7 +43,7 @@ class pool_t {
   }
 
   std::vector<T *> blocks_;
-  T* curr_ = nullptr;
+  T *curr_ = nullptr;
   size_t size_ = 0;
 };
 
