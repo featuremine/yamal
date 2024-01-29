@@ -660,7 +660,7 @@ static decFloat *decDivide(decFloat *result, const decFloat *dfl,
       /* (this is a special case of Quantize -- q.v. for commentary) */
       uByte *roundat;     /* -> re-round digit */
       uByte reround;      /* reround value */
-      *(num.msd - 1) = 0; /* in case of left carry, or make 0 */
+      *(bcdacc + 1 + (msuq - lsuq + 1) * 9 - quodigits - 1) = 0; /* in case of left carry, or make 0 */
       if (drop < length)
         roundat = num.lsd - drop + 1;
       else if (drop == length)
