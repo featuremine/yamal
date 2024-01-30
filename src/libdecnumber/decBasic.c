@@ -658,9 +658,10 @@ static decFloat *decDivide(decFloat *result, const decFloat *dfl,
     } else { /* round to nearest even [sigh] */
       /* round-to-nearest, in-place; msd is at or to right of bcdacc+1 */
       /* (this is a special case of Quantize -- q.v. for commentary) */
-      uByte *roundat;     /* -> re-round digit */
-      uByte reround;      /* reround value */
-      *(bcdacc + 1 + (msuq - lsuq + 1) * 9 - quodigits - 1) = 0; /* in case of left carry, or make 0 */
+      uByte *roundat; /* -> re-round digit */
+      uByte reround;  /* reround value */
+      *(bcdacc + 1 + (msuq - lsuq + 1) * 9 - quodigits - 1) =
+          0; /* in case of left carry, or make 0 */
       if (drop < length)
         roundat = num.lsd - drop + 1;
       else if (drop == length)
