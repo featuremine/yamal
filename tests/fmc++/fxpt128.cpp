@@ -129,7 +129,7 @@ TEST(fxpt128, string_fxpt_string_fxpt) {
     char buf[FMC_FXPT128_STR_SIZE] = {0};
     char res[FMC_FXPT128_STR_SIZE] = {0};
     uint64_t whole = llround(base);
-    auto len = snprintf(buf, sizeof(buf), "%lu.%lu", whole, whole);
+    auto len = snprintf(buf, sizeof(buf), "%" PRIu64 ".%" PRIu64, whole, whole);
     const char *end = buf + len;
     fmc_fxpt128_from_string(&test, buf, &end);
     ASSERT_EQ(whole, test.hi);
