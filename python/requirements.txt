@@ -1,3 +1,4 @@
 setuptools
 pkgconfig
 wheel
+psutil

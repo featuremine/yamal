@@ -222,9 +222,9 @@ static void *ytp_aux_thread(void *closure) {
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
     uint64_t ns = 10ull * 1000ll * 1000 + spec.tv_nsec;
-    spec.tv_nsec += ns % (1000ull * 1000ull * 1000ull);
+    spec.tv_nsec = ns % (1000ull * 1000ull * 1000ull);
     spec.tv_sec += ns >= (1000ull * 1000ull * 1000ull);
-    if (pthread_cond_timedwait(&yamal->cv_, &yamal->m_, &spec) == ETIMEDOUT) {
+    if (pthread_cond_timedwait(&yamal->cv_, &yamal->m_, &spec) == 0) {
       break;
     }
     mmlist_pages_allocation(yamal, &error);
