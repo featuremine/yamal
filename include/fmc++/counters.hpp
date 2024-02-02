@@ -430,7 +430,10 @@ struct counter_outfile_handler {
   counter_outfile_handler() {
     char *file_path = std::getenv("FMC_COUNTER_PATH");
     if (file_path != NULL) {
-      outfile_.open(file_path, std::ofstream::out);
+      std::string file = file_path;
+      file += ".";
+      file += std::to_string(nanoseconds()());
+      outfile_.open(file.c_str(), std::ofstream::out);
       fmc_runtime_error_unless(outfile_.is_open());
     }
   }
@@ -447,9 +450,9 @@ template <class Record> struct counter_record {
 
   void stop() { nr_.stop(); }
 
+  double value() { return nr_.value(); }
   ~counter_record() {
-    counter_outfile_handler_.outfile_ << name_ << "=" << nr_.value()
-                                      << std::endl;
+    counter_outfile_handler_.outfile_ << name_ << "=" << value() << std::endl;
   }
   Record nr_;
   const char *name_;
