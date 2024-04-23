@@ -216,9 +216,8 @@ fmc_cfg_node_spec yamal_run_spec[] = {
 
 int main(int argc, char **argv) {
 
-  try
-  {
-  
+  try {
+
     TCLAP::CmdLine cmd("FMC component loader", ' ', YTP_VERSION);
 
     TCLAP::ValueArg<std::string> mainArg(
@@ -226,16 +225,16 @@ int main(int argc, char **argv) {
         "main", "section");
     cmd.add(mainArg);
 
-    TCLAP::ValueArg<std::string> cfgArg("c", "config", "Configuration path", true,
-                                        "config.ini", "config_path");
+    TCLAP::ValueArg<std::string> cfgArg("c", "config", "Configuration path",
+                                        true, "config.ini", "config_path");
     cmd.add(cfgArg);
 
     TCLAP::ValueArg<std::string> moduleArg("m", "module", "Module name", false,
-                                          "module", "module");
+                                           "module", "module");
     cmd.add(moduleArg);
 
-    TCLAP::ValueArg<std::string> componentArg("o", "component", "Component name",
-                                              false, "component", "component");
+    TCLAP::ValueArg<std::string> componentArg(
+        "o", "component", "Component name", false, "component", "component");
     cmd.add(componentArg);
 
     TCLAP::SwitchArg schedArg("k", "sched",
@@ -243,13 +242,13 @@ int main(int argc, char **argv) {
     cmd.add(schedArg);
 
     TCLAP::ValueArg<int> affinityArg("a", "affinity",
-                                    "set the CPU affinity of the main process",
-                                    false, 0, "cpuid");
+                                     "set the CPU affinity of the main process",
+                                     false, 0, "cpuid");
     cmd.add(affinityArg);
 
     TCLAP::ValueArg<int> priorityArg(
-        "p", "priority", "set the priority of the main process (1-99)", false, 1,
-        "priority");
+        "p", "priority", "set the priority of the main process (1-99)", false,
+        1, "priority");
     cmd.add(priorityArg);
 
     TCLAP::ValueArg<int> auxArg("x", "auxiliary",
@@ -266,14 +265,14 @@ int main(int argc, char **argv) {
     fmc_error_t *err;
 
     fmc_runtime_error_unless((moduleArg.isSet() && componentArg.isSet()) ||
-                            (!moduleArg.isSet() && !componentArg.isSet()))
+                             (!moduleArg.isSet() && !componentArg.isSet()))
         << "Invalid combination of arguments. module and component must either "
-          "be provided through args or config.";
+           "be provided through args or config.";
 
     fmc_runtime_error_unless((jsonSwitch.getValue() && !mainArg.isSet()) ||
-                            (!jsonSwitch.getValue() && mainArg.isSet()))
+                             (!jsonSwitch.getValue() && mainArg.isSet()))
         << "Invalid combination of arguments. main section argument must be "
-          "provided only when ini config is used.";
+           "provided only when ini config is used.";
 
     fmc_reactor_init(&r);
 
@@ -302,36 +301,37 @@ int main(int argc, char **argv) {
     };
 
     auto load_config = [&](config_ptr &cfg, struct fmc_cfg_node_spec *type,
-                          const char *section) {
+                           const char *section) {
       fmc_error_t *err;
       if (jsonSwitch.getValue()) {
         auto buffer = read_file(cfgArg.getValue().c_str(), &err);
         if (section) {
           auto sub_buffer = nlohmann::json::parse(buffer)[section].dump();
           cfg = config_ptr(fmc_cfg_sect_parse_json(type, sub_buffer.data(),
-                                                  sub_buffer.size(), &err));
+                                                   sub_buffer.size(), &err));
         } else {
-          cfg = config_ptr(
-              fmc_cfg_sect_parse_json(type, buffer.data(), buffer.size(), &err));
+          cfg = config_ptr(fmc_cfg_sect_parse_json(type, buffer.data(),
+                                                   buffer.size(), &err));
         }
       } else {
         file_ptr config_file(cfgArg.getValue().c_str());
-        cfg = config_ptr(
-            fmc_cfg_sect_parse_ini_file(type, config_file.value, section, &err));
+        cfg = config_ptr(fmc_cfg_sect_parse_ini_file(type, config_file.value,
+                                                     section, &err));
       }
       fmc_runtime_error_unless(!err)
           << "Unable to load configuration file: " << fmc_error_msg(err);
     };
 
-    auto gen_component = [&sys, &load_config](const char *module_name,
-                                              const char *component_name,
-                                              const char *section,
-                                              struct fmc_component_input *inps) {
+    auto gen_component = [&sys, &load_config](
+                             const char *module_name,
+                             const char *component_name, const char *section,
+                             struct fmc_component_input *inps) {
       config_ptr cfg;
       fmc_error_t *err;
-      module_ptr module(fmc_component_module_get(&sys.value, module_name, &err));
+      module_ptr module(
+          fmc_component_module_get(&sys.value, module_name, &err));
       fmc_runtime_error_unless(!err) << "Unable to load module " << module_name
-                                    << ": " << fmc_error_msg(err);
+                                     << ": " << fmc_error_msg(err);
 
       auto type = fmc_component_module_type_get(module, component_name, &err);
       fmc_runtime_error_unless(!err)
@@ -368,9 +368,10 @@ int main(int argc, char **argv) {
               return;
             }
             fmc_runtime_error_unless(component_stack.find(name) ==
-                                    component_stack.end())
-                << "Unable to process provided configuration, cycle found while "
-                  "processing component "
+                                     component_stack.end())
+                << "Unable to process provided configuration, cycle found "
+                   "while "
+                   "processing component "
                 << name << ". Component graph must not contain any cycles.";
             component_stack.insert(name);
             auto modulename = val["module"].get<std::string>();
@@ -398,7 +399,8 @@ int main(int argc, char **argv) {
                 fmc_runtime_error_unless(
                     (inpout_name_it != inp.end() && inpindex_it == inp.end()) ||
                     (inpout_name_it == inp.end() && inpindex_it != inp.end()))
-                    << "Invalid combination of arguments for output of component "
+                    << "Invalid combination of arguments for output of "
+                       "component "
                     << inpcomponent << " please provide name or index.";
 
                 if (inpout_name_it != inp.end()) {
@@ -408,14 +410,14 @@ int main(int argc, char **argv) {
                   fmc_runtime_error_unless(!err)
                       << "Unable to obtain index of component: "
                       << fmc_error_msg(err);
-                  inps.push_back(
-                      fmc_component_input{components[inpcomponent.c_str()], idx});
+                  inps.push_back(fmc_component_input{
+                      components[inpcomponent.c_str()], idx});
                 } else {
                   auto index = inpindex_it->get<int64_t>();
                   fmc_runtime_error_unless(
                       (index >= 0) ||
                       ((size_t)index <
-                      fmc_component_out_sz(components[inpcomponent.c_str()])))
+                       fmc_component_out_sz(components[inpcomponent.c_str()])))
                       << "Index out of range for output of component " << name;
                   inps.push_back(fmc_component_input{
                       components[inpcomponent.c_str()], (size_t)index});
@@ -435,8 +437,9 @@ int main(int argc, char **argv) {
 
             auto comptype =
                 fmc_component_module_type_get(module, type.c_str(), &err);
-            fmc_runtime_error_unless(!err) << "Unable to get component type "
-                                          << type << ": " << fmc_error_msg(err);
+            fmc_runtime_error_unless(!err)
+                << "Unable to get component type " << type << ": "
+                << fmc_error_msg(err);
 
             cfg = config_ptr(fmc_cfg_sect_parse_json(
                 comptype->tp_cfgspec, config.data(), config.size(), &err));
@@ -444,8 +447,9 @@ int main(int argc, char **argv) {
             fmc_component *component =
                 fmc_component_new(&r, comptype, cfg.get(), &inps[0], &err);
 
-            fmc_runtime_error_unless(!err) << "Unable to load component " << name
-                                          << ": " << fmc_error_msg(err);
+            fmc_runtime_error_unless(!err)
+                << "Unable to load component " << name << ": "
+                << fmc_error_msg(err);
 
             components.emplace(name.c_str(), component);
             component_stack.erase(name);
@@ -477,13 +481,14 @@ int main(int argc, char **argv) {
             auto out_name = fmc_cfg_sect_item_get(input_sect, "name");
             auto index = fmc_cfg_sect_item_get(input_sect, "index");
 
-            fmc_runtime_error_unless(components.find(component->node.value.str) !=
-                                    components.end())
+            fmc_runtime_error_unless(
+                components.find(component->node.value.str) != components.end())
                 << "Unable to find component " << component->node.value.str
                 << " component has not been created. Please reorder your "
-                  "components appropriately.";
+                   "components appropriately.";
 
-            fmc_runtime_error_unless((out_name && !index) || (!out_name && index))
+            fmc_runtime_error_unless((out_name && !index) ||
+                                     (!out_name && index))
                 << "Invalid combination of arguments for output of component "
                 << out_name << " please provide name or index.";
 
@@ -500,7 +505,7 @@ int main(int argc, char **argv) {
               fmc_runtime_error_unless(
                   (index->node.value.int64 >= 0) ||
                   ((size_t)index->node.value.int64 <
-                  fmc_component_out_sz(components[component->node.value.str])))
+                   fmc_component_out_sz(components[component->node.value.str])))
                   << "Index out of range for output of component " << name;
               inps.push_back(
                   fmc_component_input{components[component->node.value.str],
@@ -511,9 +516,9 @@ int main(int argc, char **argv) {
         inps.push_back(fmc_component_input{nullptr, 0});
 
         components.emplace(name->node.value.str,
-                          gen_component(module->node.value.str,
-                                        type->node.value.str,
-                                        config->node.value.str, &inps[0]));
+                           gen_component(module->node.value.str,
+                                         type->node.value.str,
+                                         config->node.value.str, &inps[0]));
       }
     }
 
@@ -529,7 +534,8 @@ int main(int argc, char **argv) {
       int cpuid = affinityArg.getValue();
       fmc_set_affinity(threadid, cpuid, &err);
       fmc_runtime_error_unless(!err)
-          << "Unable to set current thread cpu affinity: " << fmc_error_msg(err);
+          << "Unable to set current thread cpu affinity: "
+          << fmc_error_msg(err);
 
       if (priorityArg.isSet()) {
         int priority = priorityArg.getValue();
@@ -544,9 +550,7 @@ int main(int argc, char **argv) {
     fmc_runtime_error_unless(!err)
         << "Unable to run reactor : " << fmc_error_msg(err);
 
-  }
-  catch(const std::exception& e)
-  {
+  } catch (const std::exception &e) {
     std::cerr << e.what() << '\n';
     return 1;
   }
