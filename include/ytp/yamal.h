@@ -382,8 +382,7 @@ FMMODFUNC void ytp_yamal_allocate(ytp_yamal_t *yamal, size_t sz,
  * @param[out] error out-parameter for error handling
  * @return yamal size
  */
-FMMODFUNC size_t ytp_yamal_used_size(ytp_yamal_t *yamal,
-                                     fmc_error_t **error);
+FMMODFUNC size_t ytp_yamal_used_size(ytp_yamal_t *yamal, fmc_error_t **error);
 
 #ifdef __cplusplus
 }
