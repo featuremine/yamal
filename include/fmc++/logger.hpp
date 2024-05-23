@@ -21,7 +21,7 @@ namespace fmc {
 struct logger_t {
   template <typename... Args> void info(Args &&...args) {
     out << '[';
-    out << std::chrono::system_clock::now().time_since_epoch();
+    out << std::chrono::duration_cast<fmc::time>(std::chrono::system_clock::now().time_since_epoch());
     out << ']';
     write(std::forward<Args>(args)...);
   }
