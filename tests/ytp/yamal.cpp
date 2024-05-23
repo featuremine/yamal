@@ -714,8 +714,7 @@ TEST(yamal, resizing_with_messages) {
 
   auto nmsgs = 10;
   for (auto i = 0; i < nmsgs; ++i) {
-    auto *msg =
-        (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+    auto *msg = (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(msg, nullptr);
     error = (fmc_error_t *)1;
@@ -742,7 +741,10 @@ TEST(yamal, resizing_with_messages) {
   {
     struct stat stat_data {};
     ASSERT_EQ(fstat(fd, &stat_data), 0);
-    ASSERT_EQ(stat_data.st_size, sizeof(ytp_hdr) + fmc_wordceil(sizeof(struct ytp_mmnode) + sizeof(test_msg)) * nmsgs );
+    ASSERT_EQ(stat_data.st_size,
+              sizeof(ytp_hdr) +
+                  fmc_wordceil(sizeof(struct ytp_mmnode) + sizeof(test_msg)) *
+                      nmsgs);
   }
 #endif
 

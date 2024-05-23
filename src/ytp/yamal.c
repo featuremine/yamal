@@ -703,8 +703,7 @@ bool ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error) {
   return hdr->closable == YTP_CLOSABLE;
 }
 
-bool ytp_yamal_prealloc(ytp_yamal_t *yamal, size_t sz,
-                        fmc_error_t **error) {
+bool ytp_yamal_prealloc(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
   if (yamal->readonly_) {
     FMC_ERROR_REPORT(error, "unable to preallocate a read only file");
     return false;
