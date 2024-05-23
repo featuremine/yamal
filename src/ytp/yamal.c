@@ -702,3 +702,53 @@ bool ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error) {
   }
   return hdr->closable == YTP_CLOSABLE;
 }
+
+bool ytp_yamal_prealloc(ytp_yamal_t *yamal, size_t sz,
+                        fmc_error_t **error) {
+  if (yamal->readonly_) {
+    FMC_ERROR_REPORT(error, "unable to preallocate a read only file");
+    return false;
+  }
+
+  if (pthread_mutex_lock(&yamal->pa_mutex_) != 0) {
+    FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
+    return false;
+  }
+
+  fmc_falloc(yamal->fd_, sz, error);
+  bool ret = !*error;
+
+  if (pthread_mutex_unlock(&yamal->pa_mutex_) != 0) {
+    FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
+    return false;
+  }
+
+  return ret;
+}
+
+bool ytp_yamal_trim(ytp_yamal_t *yamal, fmc_error_t **error) {
+  if (yamal->readonly_) {
+    FMC_ERROR_REPORT(error, "unable to preallocate a read only file");
+    return false;
+  }
+
+  struct ytp_hdr *hdr = ytp_yamal_header(yamal, error);
+  if (*error) {
+    return false;
+  }
+
+  if (pthread_mutex_lock(&yamal->pa_mutex_) != 0) {
+    FMC_ERROR_REPORT(error, "pthread_mutex_lock failed");
+    return false;
+  }
+
+  fmc_fresize(yamal->fd_, hdr->size, error);
+  bool ret = !*error;
+
+  if (pthread_mutex_unlock(&yamal->pa_mutex_) != 0) {
+    FMC_ERROR_REPORT(error, "pthread_mutex_unlock failed");
+    return false;
+  }
+
+  return ret;
+}

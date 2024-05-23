@@ -23,6 +23,7 @@
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc/alignment.h>
 #include <fmc/files.h>
 using namespace std;
 
@@ -618,6 +619,135 @@ TEST(yamal, closable_write) {
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
   fclose(fp);
+}
+
+TEST(yamal, resizing) {
+  fmc_error_t *error = nullptr;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_TRUE(fmc_fvalid(fd));
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 0);
+  }
+#endif
+
+  ASSERT_EQ(error, nullptr);
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  ASSERT_TRUE(ytp_yamal_prealloc(yamal, 3 * YTP_MMLIST_PAGE_SIZE, &error));
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 3 * YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  ASSERT_TRUE(ytp_yamal_trim(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, sizeof(ytp_hdr));
+  }
+#endif
+
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(yamal, resizing_with_messages) {
+  fmc_error_t *error = nullptr;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_TRUE(fmc_fvalid(fd));
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 0);
+  }
+#endif
+
+  ASSERT_EQ(error, nullptr);
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  ASSERT_TRUE(ytp_yamal_prealloc(yamal, 3 * YTP_MMLIST_PAGE_SIZE, &error));
+  ASSERT_EQ(error, nullptr);
+
+  auto nmsgs = 10;
+  for (auto i = 0; i < nmsgs; ++i) {
+    auto *msg =
+        (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+    ASSERT_EQ(error, nullptr);
+    ASSERT_NE(msg, nullptr);
+    error = (fmc_error_t *)1;
+    ASSERT_NE(ytp_yamal_commit(yamal, msg, 0, &error), nullptr);
+    ASSERT_EQ(error, nullptr);
+  }
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 3 * YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  ASSERT_TRUE(ytp_yamal_trim(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, sizeof(ytp_hdr) + fmc_wordceil(sizeof(struct ytp_mmnode) + sizeof(test_msg)) * nmsgs );
+  }
+#endif
+
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
 }
 
 GTEST_API_ int main(int argc, char **argv) {

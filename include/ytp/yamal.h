@@ -353,6 +353,26 @@ FMMODFUNC void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
 FMMODFUNC size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal,
                                          fmc_error_t **error);
 
+/**
+ * @brief Preallocates the desired file size
+ *
+ * @param[in] yamal
+ * @param[in] sz the size of the file
+ * @param[out] error out-parameter for error handling
+ * @return true if the file was resized, false otherwise
+ */
+FMMODFUNC bool ytp_yamal_prealloc(ytp_yamal_t *yamal, size_t sz,
+                                  fmc_error_t **error);
+
+/**
+ * @brief Resizes the yamal file to the size of the contained messages
+ *
+ * @param[in] yamal
+ * @param[out] error out-parameter for error handling
+ * @return true if the file was resized, false otherwise
+ */
+FMMODFUNC bool ytp_yamal_trim(ytp_yamal_t *yamal, fmc_error_t **error);
+
 #ifdef __cplusplus
 }
 #endif
