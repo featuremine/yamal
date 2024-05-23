@@ -55,11 +55,9 @@ struct yamal_t {
         (file_size_ + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
     auto required_pages =
         (sz_required + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
-    for (auto page = required_pages; page-- > allocated_pages;) {
-      ytp_yamal_allocate_page(yamal_, page, &error_);
-      fmc_runtime_error_unless(!error_) << "Unable to allocate page (" << name_
-                                        << "): " << fmc_error_msg(error_);
-    }
+    ytp_yamal_allocate_pages(yamal_, allocated_pages, required_pages, &error_);
+    fmc_runtime_error_unless(!error_) << "Unable to allocate page (" << name_
+                                      << "): " << fmc_error_msg(error_);
   }
 
   size_t size() {
