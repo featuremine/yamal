@@ -703,7 +703,8 @@ bool ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error) {
   return hdr->closable == YTP_CLOSABLE;
 }
 
-void ytp_yamal_allocate_pages(ytp_yamal_t *yamal, size_t first, size_t last, fmc_error_t **error) {
+void ytp_yamal_allocate_pages(ytp_yamal_t *yamal, size_t first, size_t last,
+                              fmc_error_t **error) {
   for (size_t page = last; page-- > first;) {
     ytp_yamal_allocate_page(yamal, page, error);
     if (*error)
@@ -712,7 +713,8 @@ void ytp_yamal_allocate_pages(ytp_yamal_t *yamal, size_t first, size_t last, fmc
 }
 
 void ytp_yamal_allocate(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
-  size_t required_pages = (sz + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
+  size_t required_pages =
+      (sz + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
   ytp_yamal_allocate_pages(yamal, 0, required_pages, error);
 }
 

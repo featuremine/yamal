@@ -744,8 +744,9 @@ TEST(yamal, resizing_with_messages) {
   auto nmsgs = 0;
   auto used_size = sizeof(ytp_hdr);
   auto msg_sz = fmc_wordceil(sizeof(struct ytp_mmnode) + sizeof(test_msg));
-  for (; used_size + msg_sz < YTP_MMLIST_PAGE_SIZE * 4 - YTP_MMLIST_PAGE_SIZE / 2;
-       ++nmsgs, used_size+=msg_sz) {
+  for (;
+       used_size + msg_sz < YTP_MMLIST_PAGE_SIZE * 4 - YTP_MMLIST_PAGE_SIZE / 2;
+       ++nmsgs, used_size += msg_sz) {
     auto *msg = (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(msg, nullptr);
