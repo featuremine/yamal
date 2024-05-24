@@ -853,6 +853,10 @@ TEST(yamal, used_size) {
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), ytp_yamal_reserved_size(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
   ytp_yamal_del(yamal, &error);
   ASSERT_EQ(error, nullptr);
 
