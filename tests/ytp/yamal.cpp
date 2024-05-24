@@ -825,6 +825,41 @@ TEST(yamal, resizing_with_messages) {
   ASSERT_EQ(error, nullptr);
 }
 
+TEST(yamal, used_size) {
+  fmc_error_t *error = nullptr;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_TRUE(fmc_fvalid(fd));
+
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+  auto *msg = ytp_yamal_reserve(yamal, YTP_MMLIST_PAGE_SIZE - sizeof(struct ytp_mmnode) - sizeof(struct ytp_hdr), &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(msg, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_NE(ytp_yamal_commit(yamal, msg, 0, &error), nullptr);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
