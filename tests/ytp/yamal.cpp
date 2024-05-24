@@ -840,7 +840,10 @@ TEST(yamal, used_size) {
   ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
   ASSERT_EQ(error, nullptr);
 
-  auto *msg = ytp_yamal_reserve(yamal, YTP_MMLIST_PAGE_SIZE - sizeof(struct ytp_mmnode) - sizeof(struct ytp_hdr), &error);
+  auto *msg = ytp_yamal_reserve(
+      yamal,
+      YTP_MMLIST_PAGE_SIZE - sizeof(struct ytp_mmnode) - sizeof(struct ytp_hdr),
+      &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(msg, nullptr);
 
@@ -853,7 +856,8 @@ TEST(yamal, used_size) {
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), ytp_yamal_reserved_size(yamal, &error));
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error),
+            ytp_yamal_reserved_size(yamal, &error));
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;

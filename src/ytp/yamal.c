@@ -722,6 +722,7 @@ size_t ytp_yamal_used_size(ytp_yamal_t *yamal, fmc_error_t **error) {
   size_t reserved = ytp_yamal_reserved_size(yamal, error);
   if (*error)
     return 0;
-  size_t reserved_pages = (reserved + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
+  size_t reserved_pages =
+      (reserved + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
   return reserved_pages * YTP_MMLIST_PAGE_SIZE;
 }
