@@ -266,6 +266,17 @@ FMMODFUNC void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
                                        fmc_error_t **error);
 
 /**
+ * @brief Allocates a range of pages
+ *
+ * @param[in] yamal
+ * @param[in] first page to allocate
+ * @param[in] last page to allocate
+ * @param[out] error out-parameter for error handling
+ */
+FMMODFUNC void ytp_yamal_allocate_pages(ytp_yamal_t *yamal, size_t first,
+                                        size_t last, fmc_error_t **error);
+
+/**
  * @brief Returns the reserved size
  *
  * @param[in] yamal
@@ -274,6 +285,26 @@ FMMODFUNC void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
  */
 FMMODFUNC size_t ytp_yamal_reserved_size(ytp_yamal_t *yamal,
                                          fmc_error_t **error);
+
+/**
+ * @brief Allocates the desired file size and memory
+ *
+ * @param[in] yamal
+ * @param[in] sz the size of the file
+ * @param[out] error out-parameter for error handling
+ * @return true if the file was resized, false otherwise
+ */
+FMMODFUNC void ytp_yamal_allocate(ytp_yamal_t *yamal, size_t sz,
+                                  fmc_error_t **error);
+
+/**
+ * @brief Returns the used size in bytes
+ *
+ * @param[in] yamal
+ * @param[out] error out-parameter for error handling
+ * @return yamal size
+ */
+FMMODFUNC size_t ytp_yamal_used_size(ytp_yamal_t *yamal, fmc_error_t **error);
 
 #ifdef __cplusplus
 }
