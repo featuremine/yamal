@@ -276,7 +276,6 @@ FMMODFUNC void ytp_yamal_allocate_page(ytp_yamal_t *yamal, size_t page,
 FMMODFUNC void ytp_yamal_allocate_pages(ytp_yamal_t *yamal, size_t first,
                                         size_t last, fmc_error_t **error);
 
-
 /**
  * @brief Returns the reserved size
  *

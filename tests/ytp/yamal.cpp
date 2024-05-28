@@ -657,8 +657,7 @@ TEST(yamal, resizing_with_messages) {
   ASSERT_EQ(error, nullptr);
 
   auto nmsgs = 0;
-  auto node_size = sizeof(std::atomic<size_t>) + 
-                   sizeof(std::atomic<size_t>) + 
+  auto node_size = sizeof(std::atomic<size_t>) + sizeof(std::atomic<size_t>) +
                    sizeof(std::atomic<size_t>);
   auto used_size = node_size;
   auto msg_sz = fmc_wordceil(node_size + sizeof(test_msg));
@@ -758,11 +757,11 @@ TEST(yamal, used_size) {
   ASSERT_EQ(error, nullptr);
 
   auto header_size = ytp_yamal_reserved_size(yamal, &error);
-  auto node_size = sizeof(std::atomic<size_t>) + 
-                   sizeof(std::atomic<size_t>) + 
+  auto node_size = sizeof(std::atomic<size_t>) + sizeof(std::atomic<size_t>) +
                    sizeof(std::atomic<size_t>);
 
-  auto *msg = ytp_yamal_reserve(yamal, YTP_MMLIST_PAGE_SIZE - node_size - header_size, &error);
+  auto *msg = ytp_yamal_reserve(
+      yamal, YTP_MMLIST_PAGE_SIZE - node_size - header_size, &error);
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(msg, nullptr);
 
@@ -775,7 +774,8 @@ TEST(yamal, used_size) {
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
-  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), ytp_yamal_reserved_size(yamal, &error));
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error),
+            ytp_yamal_reserved_size(yamal, &error));
   ASSERT_EQ(error, nullptr);
 
   error = (fmc_error_t *)1;
@@ -786,7 +786,6 @@ TEST(yamal, used_size) {
   fmc_fclose(fd, &error);
   ASSERT_EQ(error, nullptr);
 }
-
 
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
