@@ -22,18 +22,103 @@
 #include <deque>
 #include <string_view>
 
+#include <sys/stat.h>
+#include <poll.h>
+#include <linux/inotify.h>
+
+/* Size of buffer to use when reading inotify events */
+#define INOTIFY_BUFFER_SIZE 8192
+
+/* FANotify-like helpers to iterate events */
+#define IN_EVENT_DATA_LEN (sizeof(struct inotify_event))
+#define IN_EVENT_NEXT(event, length)            \
+  ((length) -= (event)->len,                    \
+   (struct inotify_event*)(((char *)(event)) +	\
+                           (event)->len))
+#define IN_EVENT_OK(event, length)                  \
+  ((long)(length) >= (long)IN_EVENT_DATA_LEN &&	    \
+   (long)(event)->len >= (long)IN_EVENT_DATA_LEN && \
+   (long)(event)->len <= (long)(length))
+
 struct yamal_t {
+
   yamal_t(const yamal_t &) = delete;
-  yamal_t(std::string name, double rate, size_t initial_sz)
-      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {
+  yamal_t(std::string name, double rate, size_t initial_sz, bool error_tolerance)
+      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate), pfd_(struct pollfd {.fd = -1}) {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
-    fmc_runtime_error_unless(!error_)
-        << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
+    if (error_) {
+      fmc_runtime_error_unless(!error_tolerance)
+          << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
+      std::cout
+          << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
+      return;
+    }
+
+    struct stat buf;
+    if (lstat(name_.c_str(), &buf)) {
+      fmc_runtime_error_unless(!error_tolerance)
+        << "Unable to retrieve file information (" << name_
+        << "): " << fmc_syserror_msg();
+      std::cout
+        << "Unable to retrieve file information (" << name_
+        << "): " << fmc_syserror_msg();
+      return;
+    } else if (S_ISLNK(buf.st_mode)) {
+      int pfd_.fd = inotify_init();
+      if (pfd_.fd < 0) {
+        // TODO: Handle error
+      }
+      wd_ = inotify_add_watch (pfd_.fd, name_.c_str(), IN_MODIFY);
+      if (wd_ < 0) {
+        // TODO: Handle error
+      }
+      pfd_.events = POLLIN;
+    }
 
     yamal_ = ytp_yamal_new_2(fd_, false, &error_);
-    fmc_runtime_error_unless(!error_)
+    if (error_) {
+      fmc_runtime_error_unless(!error_tolerance)
         << "Unable to create the ytp yamal (" << name_
         << "): " << fmc_error_msg(error_);
+      std::cout
+        << "Unable to create the ytp yamal (" << name_
+        << "): " << fmc_error_msg(error_);
+    }
+  }
+
+  void refresh_source() {
+    if (pfd_.fd == -1)
+      return;
+
+    if (poll (&pfd_, 1, -1) < 0)
+      {
+        fprintf (stderr,
+                  "Couldn't poll(): '%s'\n",
+                  strerror (errno));
+        exit (EXIT_FAILURE);
+      }
+
+    /* Inotify event received? */
+    if (pfd_.revents & POLLIN) {
+      char buffer[INOTIFY_BUFFER_SIZE];
+      size_t length;
+
+      /* Read from the FD. It will read all events available up to
+        * the given buffer size. */
+      if ((length = read (pfd_.fd,
+                          buffer,
+                          INOTIFY_BUFFER_SIZE)) > 0)
+        {
+          struct inotify_event *event;
+
+          event = (struct inotify_event *)buffer;
+          while (IN_EVENT_OK (event, length)) {
+            process_event(event);
+            event = IN_EVENT_NEXT (event, length);
+          }
+        }
+    }
+
   }
 
   ~yamal_t() {
@@ -48,6 +133,9 @@ struct yamal_t {
       fmc_runtime_error_unless(!error_)
           << "Unable to close the file descriptor: " << fmc_error_msg(error_);
     }
+
+    inotify_rm_watch (pfd_.fd, wd_);
+    close (pfd_.fd);
   }
 
   void allocate(size_t sz_required) {
@@ -77,6 +165,17 @@ struct yamal_t {
     return sz;
   }
 
+  bool valid() {
+    return yamal_ != nullptr;
+  }
+
+  void process_event(struct inotify_event * event) {
+    if (wd_ != event->wd_)
+      return;
+    if (!(event->mask & IN_MODIFY))
+      return;
+  }
+
   std::string name_;
   fmc_error_t *error_;
   fmc_fd fd_ = -1;
@@ -88,6 +187,8 @@ struct yamal_t {
   size_t prev_sz_ = 0;
   double rate_ = 0;
   size_t prev_allocs_ = 1;
+  int wd_;
+  struct pollfd pfd_;
 };
 
 struct alloc_time_model_t {
@@ -125,6 +226,7 @@ int main(int argc, char **argv) {
       cfgArg.getValue().c_str(), mainArg.getValue().c_str());
 
   std::deque<yamal_t> ytps;
+  bool error_tolerance = cfg.has("error_tolerance") ? cfg["error_tolerance"].get(fmc::typify<bool>()) : false;
 
   for (auto &&[index, ytp] : cfg["ytps"].to_a()) {
     auto &ytp_cfg = ytp.to_d();
@@ -136,7 +238,9 @@ int main(int argc, char **argv) {
             ? size_t(ytp_cfg["initial_size"].get(fmc::typify<unsigned>())) *
                   1024ull * 1024ull
             : size_t(0);
-    ytps.emplace_back(path.c_str(), initial_rate, initial_size);
+    ytps.emplace_back(path.c_str(), initial_rate, initial_size, error_tolerance);
+    if (!ytps.back().valid())
+      ytps.pop_back();
   }
 
   for (auto &ytp : ytps) {
@@ -188,6 +292,9 @@ int main(int argc, char **argv) {
                   << " Page allocated in " << delta_time << " ns (" << ytp.name_
                   << ")" << std::endl;
       }
+    }
+    for (auto &ytp : ytps) {
+      ytp.refresh_source();
     }
   }
 }
