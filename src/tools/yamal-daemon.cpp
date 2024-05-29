@@ -30,16 +30,20 @@
 /* Size of buffer to use when reading inotify events */
 #define INOTIFY_BUFFER_SIZE 8192
 
-/* FANotify-like helpers to iterate events */
-#define IN_EVENT_DATA_LEN (sizeof(struct inotify_event))
-#define IN_EVENT_NEXT(event, length)            \
-  ((length) -= (event)->len,                    \
-   (struct inotify_event*)(((char *)(event)) +	\
-                           (event)->len))
-#define IN_EVENT_OK(event, length)                  \
-  ((long)(length) >= (long)IN_EVENT_DATA_LEN &&	    \
-   (long)(event)->len >= (long)IN_EVENT_DATA_LEN && \
-   (long)(event)->len <= (long)(length))
+static int event_mask =
+  (IN_DONT_FOLLOW |   /* Dont follow symlink */
+   IN_ACCESS |        /* File accessed */
+   IN_ATTRIB |        /* File attributes changed */
+   IN_OPEN   |        /* File was opened */
+   IN_CLOSE_WRITE |   /* Writtable File closed */
+   IN_CLOSE_NOWRITE | /* Unwrittable File closed */
+   IN_CREATE |        /* File created in directory */
+   IN_DELETE |        /* File deleted in directory */
+   IN_DELETE_SELF |   /* Directory deleted */
+   IN_MODIFY |        /* File modified */
+   IN_MOVE_SELF |     /* Directory moved */
+   IN_MOVED_FROM |    /* File moved away from the directory */
+   IN_MOVED_TO);      /* File moved into the directory */
 
 struct yamal_t {
 
@@ -65,14 +69,19 @@ struct yamal_t {
         << "): " << fmc_syserror_msg();
       return;
     } else if (S_ISLNK(buf.st_mode)) {
+      std::cout<<"is a link"<<std::endl;
       pfd_.fd = inotify_init();
       if (pfd_.fd < 0) {
         // TODO: Handle error
+        std::cout<<"inotify_init error"<<std::endl;
       }
-      wd_ = inotify_add_watch (pfd_.fd, name_.c_str(), IN_MODIFY);
+      std::cout<<"inotify initialized"<<std::endl;
+      wd_ = inotify_add_watch (pfd_.fd, name_.c_str(), event_mask);
       if (wd_ < 0) {
         // TODO: Handle error
+        std::cout<<"inotify_add_watch error"<<std::endl;
       }
+      std::cout<<"added watch ("<<wd_<<") for file: "<<name_<<std::endl;
       pfd_.events = POLLIN;
     }
 
@@ -91,33 +100,35 @@ struct yamal_t {
     if (pfd_.fd == -1)
       return;
 
-    if (poll (&pfd_, 1, -1) < 0)
-      {
-        fprintf (stderr,
-                  "Couldn't poll(): '%s'\n",
-                  strerror (errno));
-        exit (EXIT_FAILURE);
-      }
+    // TODO: handle error
+    if (poll (&pfd_, 1, 0) < 0)
+      return;
 
     /* Inotify event received? */
     if (pfd_.revents & POLLIN) {
       char buffer[INOTIFY_BUFFER_SIZE];
       size_t length;
+      std::cout<<"Received update for "<<name_<<std::endl;
 
       /* Read from the FD. It will read all events available up to
         * the given buffer size. */
+      size_t offset = 0;
       if ((length = read (pfd_.fd,
                           buffer,
                           INOTIFY_BUFFER_SIZE)) > 0)
         {
           struct inotify_event *event;
-
-          event = (struct inotify_event *)buffer;
-          while (IN_EVENT_OK (event, length)) {
+          while (offset < length) {
+            event = (struct inotify_event *)buffer + offset;
+            std::cout<<"Name of event: "<<std::string_view(event->name, event->len)<<std::endl;
+            std::cout<<"cookie of event: "<<event->cookie<<std::endl;
+            std::cout<<"mask of event: "<<event->mask<<std::endl;
+            std::cout<<"wd of event: "<<event->wd<<std::endl;
             process_event(event);
-            event = IN_EVENT_NEXT (event, length);
+            offset += sizeof(struct inotify_event) + event->len;
           }
         }
+      std::cout<<"Processed "<<length<<" events"<<std::endl;
     }
 
   }
@@ -174,9 +185,41 @@ struct yamal_t {
   }
 
   void process_event(struct inotify_event * event) {
+    std::cout<<"Processing event"<<std::endl;
+
+    if (event->mask & IN_DONT_FOLLOW)
+      printf ("\tIN_DONT_FOLLOW\n");
+    if (event->mask & IN_ACCESS)
+      printf ("\tIN_ACCESS\n");
+    if (event->mask & IN_ATTRIB)
+      printf ("\tIN_ATTRIB\n");
+    if (event->mask & IN_OPEN)
+      printf ("\tIN_OPEN\n");
+    if (event->mask & IN_CLOSE_WRITE)
+      printf ("\tIN_CLOSE_WRITE\n");
+    if (event->mask & IN_CLOSE_NOWRITE)
+      printf ("\tIN_CLOSE_NOWRITE\n");
+    if (event->mask & IN_CREATE)
+      printf ("\tIN_CREATE\n");
+    if (event->mask & IN_DELETE)
+      printf ("\tIN_DELETE\n");
+    if (event->mask & IN_DELETE_SELF)
+      printf ("\tIN_DELETE_SELF\n");
+    if (event->mask & IN_MODIFY)
+      printf ("\tIN_MODIFY\n");
+    if (event->mask & IN_MOVE_SELF)
+      printf ("\tIN_MOVE_SELF\n");
+    if (event->mask & IN_MOVED_FROM)
+      printf ("\tIN_MOVED_FROM (cookie: %d)\n",
+              event->cookie);
+    if (event->mask & IN_MOVED_TO)
+      printf ("\tIN_MOVED_TO (cookie: %d)\n",
+              event->cookie);
+    fflush (stdout);
+
     if (wd_ != event->wd)
       return;
-    if (!(event->mask & IN_MODIFY))
+    if (!(event->mask & IN_ATTRIB))
       return;
     std::cout<<"Modified link"<<std::endl;
 
