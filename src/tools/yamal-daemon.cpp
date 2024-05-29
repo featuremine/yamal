@@ -135,8 +135,11 @@ struct yamal_t {
           << "Unable to close the file descriptor: " << fmc_error_msg(error_);
     }
 
-    inotify_rm_watch (pfd_.fd, wd_);
-    close (pfd_.fd);
+    if (pfd_.fd != -1) {
+      if (wd_ != -1)
+        inotify_rm_watch (pfd_.fd, wd_);
+      close (pfd_.fd);
+    }
   }
 
   void allocate(size_t sz_required) {
