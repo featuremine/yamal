@@ -175,6 +175,40 @@ struct yamal_t {
       return;
     if (!(event->mask & IN_MODIFY))
       return;
+    std::cout<<"Modified link"<<std::endl;
+
+    // Closing
+    if (yamal_) {
+      ytp_yamal_del(yamal_, &error_);
+      fmc_runtime_error_unless(!error_)
+          << "Unable to delete the ytp yamal: " << fmc_error_msg(error_);
+    }
+
+    if (fd_ != -1) {
+      fmc_fclose(fd_, &error_);
+      fmc_runtime_error_unless(!error_)
+          << "Unable to close the file descriptor: " << fmc_error_msg(error_);
+    }
+
+    // Reopening
+    fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
+    if (error_) {
+      fmc_runtime_error_unless(!error_tolerance_)
+          << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
+      std::cout
+          << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
+      return;
+    }
+    yamal_ = ytp_yamal_new_2(fd_, false, &error_);
+    if (error_) {
+      fmc_runtime_error_unless(!error_tolerance_)
+        << "Unable to create the ytp yamal (" << name_
+        << "): " << fmc_error_msg(error_);
+      std::cout
+        << "Unable to create the ytp yamal (" << name_
+        << "): " << fmc_error_msg(error_);
+    }
+
   }
 
   std::string name_;
@@ -188,8 +222,9 @@ struct yamal_t {
   size_t prev_sz_ = 0;
   double rate_ = 0;
   size_t prev_allocs_ = 1;
-  int wd_;
+  int wd_ = -1;
   struct pollfd pfd_;
+  bool error_tolerance_ = false;
 };
 
 struct alloc_time_model_t {
