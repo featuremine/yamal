@@ -24,7 +24,8 @@
 
 #include <sys/stat.h>
 #include <poll.h>
-#include <linux/inotify.h>
+#include <sys/inotify.h>
+#include <unistd.h>
 
 /* Size of buffer to use when reading inotify events */
 #define INOTIFY_BUFFER_SIZE 8192
@@ -44,7 +45,7 @@ struct yamal_t {
 
   yamal_t(const yamal_t &) = delete;
   yamal_t(std::string name, double rate, size_t initial_sz, bool error_tolerance)
-      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate), pfd_(struct pollfd {.fd = -1}) {
+      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate), pfd_((struct pollfd) {.fd = -1}) {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
     if (error_) {
       fmc_runtime_error_unless(!error_tolerance)
@@ -64,7 +65,7 @@ struct yamal_t {
         << "): " << fmc_syserror_msg();
       return;
     } else if (S_ISLNK(buf.st_mode)) {
-      int pfd_.fd = inotify_init();
+      pfd_.fd = inotify_init();
       if (pfd_.fd < 0) {
         // TODO: Handle error
       }
@@ -170,7 +171,7 @@ struct yamal_t {
   }
 
   void process_event(struct inotify_event * event) {
-    if (wd_ != event->wd_)
+    if (wd_ != event->wd)
       return;
     if (!(event->mask & IN_MODIFY))
       return;
