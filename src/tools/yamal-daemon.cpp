@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
           continue;
         if (stat(ytp.name_.c_str(), &pcurr))
           continue;
-        if (fdcurr.st_ino == pcurr.st_ino)
+        if (fdcurr.st_ino == pcurr.st_ino && fdcurr.st_dev == pcurr.st_dev)
           continue;
         ytp.dealloc();
         ytp.init();
