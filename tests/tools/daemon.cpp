@@ -99,7 +99,7 @@ TEST(daemon, state_transition)
         if (!streq(cur->link, next->link)) {
             if (cur->link && !cur->empty) {
                 printf("unlink %s\n", cur->link);
-                ASSERT_EQ(unlink(cur->name), 0);
+                ASSERT_EQ(unlink(cur->link), 0);
             }
             if (next->link && !next->empty) {
                 printf("create yamal file %s\n", next->link);
