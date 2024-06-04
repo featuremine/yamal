@@ -26,3 +26,9 @@ function(add_tools_test NAME)
 endfunction()
 
 add_tools_test("daemon")
+cmake_path(GET $<TARGET_FILE:yamal-daemon> PARENT_PATH DAEMON_DIR)
+set_tests_properties(
+    tools_daemon
+    PROPERTIES
+    ENVIRONMENT "PATH=${DAEMON_DIR}:$ENV{PATH}"
+)

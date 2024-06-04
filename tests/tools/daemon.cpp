@@ -21,7 +21,10 @@
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 #include <fmc/files.h>
+#include <fmc/process.h>
+
 #include <unistd.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -84,6 +87,15 @@ TEST(daemon, state_transition)
     size_t sz = 0;
     struct state *cur = &states[0];
     struct state *trans = transitions(&sz);
+
+    fmc_error_t *error = nullptr;
+
+    pid_t pid = fmc_exec("yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main", &error);
+    ASSERT_NE(pid, -1);
+    ASSERT_EQ(error, nullptr);
+
+    usleep(500000);
+
     for (size_t i = 0; i < sz; ++i) {
         struct state *next = &trans[i];
         printf("==============================================\n");
@@ -131,6 +143,17 @@ TEST(daemon, state_transition)
         cur = next;
     }
     free(trans);
+
+    kill(pid, SIGTERM);
+
+    int status = fmc_waitpid(pid, &error);
+    ASSERT_EQ(error, nullptr);
+    ASSERT_NE(status, -1);
+    ASSERT_EQ(WIFEXITED(status), true);
+    ASSERT_EQ(WEXITSTATUS(status), 0);
+
+    // ASSERT OUTPUT
+
 }
 
 GTEST_API_ int main(int argc, char **argv)
