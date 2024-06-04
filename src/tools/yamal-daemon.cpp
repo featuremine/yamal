@@ -22,10 +22,18 @@
 #include <deque>
 #include <string_view>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(std::string name, double rate, size_t initial_sz)
       : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {
+    init();
+  }
+
+  void init() {
     fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
     fmc_runtime_error_unless(!error_)
         << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
@@ -36,18 +44,24 @@ struct yamal_t {
         << "): " << fmc_error_msg(error_);
   }
 
-  ~yamal_t() {
+  void dealloc() {
     if (yamal_) {
       ytp_yamal_del(yamal_, &error_);
       fmc_runtime_error_unless(!error_)
           << "Unable to delete the ytp yamal: " << fmc_error_msg(error_);
+      yamal_ = nullptr;
     }
 
     if (fd_ != -1) {
       fmc_fclose(fd_, &error_);
       fmc_runtime_error_unless(!error_)
           << "Unable to close the file descriptor: " << fmc_error_msg(error_);
+      fd_ = -1;
     }
+  }
+
+  ~yamal_t() {
+    dealloc();
   }
 
   void allocate(size_t sz_required) {
@@ -146,6 +160,7 @@ int main(int argc, char **argv) {
 
   alloc_time_model_t alloc_time_model(3000000);
   int sleep_count = 0;
+  int64_t last_sym_upd = 0;
   while (run.load()) {
     if (sleep_count++ == 10000) {
       sleep_count = 0;
@@ -186,6 +201,21 @@ int main(int argc, char **argv) {
                   << " Page allocated in " << delta_time << " ns (" << ytp.name_
                   << ")" << std::endl;
       }
+    }
+    auto now = fmc_cur_time_ns();
+    if (now > last_sym_upd + std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count()) {
+      for (auto &ytp : ytps) {
+        struct stat fdcurr, pcurr;
+        if (fstat(ytp.fd_, &fdcurr))
+          continue;
+        if (stat(ytp.name_.c_str(), &pcurr))
+          continue;
+        if (fdcurr.st_ino == pcurr.st_ino)
+          continue;
+        ytp.dealloc();
+        ytp.init();
+      }
+      last_sym_upd = now;
     }
   }
 }

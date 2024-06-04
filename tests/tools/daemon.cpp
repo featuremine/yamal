@@ -21,6 +21,7 @@
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
 #include <fmc/files.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -66,6 +67,18 @@ struct state *transitions(size_t *size) {
     return trans;
 }
 
+void create_yamal_file(const char *name) {
+    fmc_error_t *error = nullptr;
+    int fd = fmc_fopen(name, fmc_fmode::READWRITE, &error);
+    ASSERT_EQ(error, nullptr);
+    ytp_yamal_t *ytp = ytp_yamal_new(fd, &error);
+    ASSERT_EQ(error, nullptr);
+    ytp_yamal_del(ytp, &error);
+    ASSERT_EQ(error, nullptr);
+    fmc_fclose(fd, &error);
+    ASSERT_EQ(error, nullptr);
+}
+
 TEST(daemon, state_transition)
 {
     size_t sz = 0;
@@ -86,26 +99,33 @@ TEST(daemon, state_transition)
         if (!streq(cur->link, next->link)) {
             if (cur->link && !cur->empty) {
                 printf("unlink %s\n", cur->link);
+                ASSERT_EQ(unlink(cur->name), 0);
             }
             if (next->link && !next->empty) {
                 printf("create yamal file %s\n", next->link);
+                create_yamal_file(next->link);
             }
         }
         if (!streq(cur->name, next->name)) {
             if (cur->name) {
                 printf("unlink %s\n", cur->name);
+                ASSERT_EQ(unlink(cur->name), 0);
             }
             if (next->name) {
                 if (next->link) {
                     printf("create link %s -> %s\n", next->name, next->link);
+                    ASSERT_EQ(symlink(next->link, next->name), 0);
                 } else {
                     printf("create yamal file %s\n", next->name);
+                    create_yamal_file(next->name);
                 }
             }
         } else {
             if (!cur->link && next->link) {
                 printf("unlink %s\n", cur->name);
+                ASSERT_EQ(unlink(cur->name), 0);
                 printf("create link %s -> %s\n", next->name, next->link);
+                ASSERT_EQ(symlink(next->link, next->name), 0);
             }
         }
         cur = next;
