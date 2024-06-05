@@ -90,6 +90,7 @@ TEST(daemon, state_transition)
 
     fmc_error_t *error = nullptr;
 
+    unlink("tmp.log");
     unlink("daemon.test.ytp");
     unlink("daemon.link.ytp");
     unlink("daemon.link2.ytp");
