@@ -90,12 +90,12 @@ TEST(daemon, state_transition)
 
     fmc_error_t *error = nullptr;
 
-    unlink("tmp.log");
+    unlink("daemon-state-transition.test.log");
     unlink("daemon.test.ytp");
     unlink("daemon.link.ytp");
     unlink("daemon.link2.ytp");
 
-    pid_t pid = fmc_exec("../../package/bin/yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main &> tmp.log", &error);
+    pid_t pid = fmc_exec("../../package/bin/yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main &> daemon-state-transition.test.log", &error);
     ASSERT_NE(pid, -1);
     ASSERT_EQ(error, nullptr);
 
@@ -115,7 +115,7 @@ TEST(daemon, state_transition)
 
         if (!streq(cur->link, next->link) || (!cur->empty ^ !next->empty)) {
             if (cur->link && !cur->empty) {
-                printf("unlink %s\n", cur->link);
+                printf("unlink %s %d\n", cur->link, __LINE__);
                 ASSERT_EQ(unlink(cur->link), 0);
             }
             if (next->link && !next->empty) {
@@ -125,7 +125,7 @@ TEST(daemon, state_transition)
         }
         if (!streq(cur->name, next->name) || (!cur->link ^ !next->link)) {
             if (cur->name) {
-                printf("unlink %s\n", cur->name);
+                printf("unlink %s %d\n", cur->name, __LINE__);
                 ASSERT_EQ(unlink(cur->name), 0);
             }
             if (next->name) {
@@ -139,14 +139,14 @@ TEST(daemon, state_transition)
             }
         } else {
             if (!streq(cur->link, next->link) && cur->name) {
-                printf("unlink %s\n", cur->name);
+                printf("unlink %s %d\n", cur->name, __LINE__);
                 ASSERT_EQ(unlink(cur->name), 0);
                 printf("create link %s -> %s\n", next->name, next->link);
                 ASSERT_EQ(symlink(next->link, next->name), 0);
             }
         }
         cur = next;
-        sleep(1);
+        sleep(4);
         int status;
         pid_t result = waitpid(pid, &status, WNOHANG);
         ASSERT_EQ(result, 0);
@@ -159,7 +159,7 @@ TEST(daemon, state_transition)
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(status, -1);
 
-    ASSERT_TRUE(fmc_run_base_vs_test_diff("../../../tests/tools/daemon-base.log", "tmp.log"));
+    ASSERT_TRUE(fmc_run_base_vs_test_diff("../../../tests/tools/daemon-base.log", "daemon-state-transition.test.log"));
 
 }
 

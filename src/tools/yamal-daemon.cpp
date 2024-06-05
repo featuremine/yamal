@@ -30,10 +30,11 @@
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(const std::string &name, size_t initial_sz, double &rate)
-      : rate_(rate) {
+      : name_(name), rate_(rate) {
     fmc_error_t *error = nullptr;
     fd_ = fmc_fopen(name.c_str(), fmc_fmode::MODIFY, &error);
     fmc_runtime_error_unless(!error) << fmc_error_msg(error);
+    std::cout << "opened file at " << name << std::endl;
     yamal_ = ytp_yamal_new_2(fd_, false, &error);
     fmc_runtime_error_unless(!error) << fmc_error_msg(error);
     prev_reserved_sz_ = reserved_size();
@@ -47,8 +48,10 @@ struct yamal_t {
     fmc_error_t *error = nullptr;
     if (yamal_)
       ytp_yamal_del(yamal_, &error);
-    if (fd_ != -1)
+    if (fd_ != -1) {
       fmc_fclose(fd_, &error);
+      std::cout << "closed yamal file " << name_ << std::endl;
+    }
   }
 
   size_t reserved_size() {
@@ -87,6 +90,7 @@ struct yamal_t {
   fmc_fd fd_ = -1;
   ytp_yamal_t *yamal_ = nullptr;
 
+  std::string name_;
   double &rate_;
   size_t cached_fsz_ = 0;
   size_t prev_time_ = 0;
@@ -99,9 +103,8 @@ struct yamal_handler_t {
   void init() {
     try {
       inst_ = std::make_unique<yamal_t>(name_, initial_sz_, rate_);
-      std::cerr<<"opened file at "<<name_<<std::endl;
     } catch(const std::exception& e) {
-      std::cerr << e.what() << std::endl;
+      std::cerr << "unable to create yamal file " << name_ << " with error: " << e.what() << std::endl;
     }
   }
   void reset() {
@@ -116,7 +119,6 @@ struct yamal_handler_t {
       return;
     if (inst_) {
       inst_.reset();
-      cout << "closed yamal file " << name_ << endl;
     }
     if (!nmres)
       return;
@@ -126,7 +128,6 @@ struct yamal_handler_t {
       cerr << "unable to create yamal file " << name_ << " with error: " << e.what() << endl;
       return;
     }
-    cout << "opened yamal file " << name_ << endl;
   }
   operator bool() {
     return (bool)inst_;
@@ -191,7 +192,7 @@ int main(int argc, char **argv) {
       try {
         handler->maybe_allocate();
       } catch(const std::exception& e) {
-        std::cerr << "closing yamal file due to exception: " << e.what() << std::endl; 
+        std::cerr << "closing yamal file " << handler.name_ << " due to exception: " << e.what() << std::endl; 
         handler.reset();
       }
     }
