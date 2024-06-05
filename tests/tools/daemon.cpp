@@ -35,9 +35,9 @@ struct state {
 } states[] = {
     /* 0 */ {NULL, NULL, false},
     /* 1 */ {"daemon.test.ytp", NULL, false},
-    /* 2 */ {"daemon.test.ytp", "daemon.link.ytp", false},
-    /* 3 */ {"daemon.test.ytp", "daemon.link.ytp", true},
-    /* 4 */ {"daemon.test.ytp", "daemon.link2.ytp", true},
+    /* 2 */ {"daemon.test.ytp", "daemon.link.ytp", true},
+    /* 3 */ {"daemon.test.ytp", "daemon.link.ytp", false},
+    /* 4 */ {"daemon.test.ytp", "daemon.link2.ytp", false},
 };
 
 unsigned tran_mtrx[4][5] = {
@@ -90,7 +90,11 @@ TEST(daemon, state_transition)
 
     fmc_error_t *error = nullptr;
 
-    pid_t pid = fmc_exec("../../package/bin/yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main", &error);
+    unlink("daemon.test.ytp");
+    unlink("daemon.link.ytp");
+    unlink("daemon.link2.ytp");
+
+    pid_t pid = fmc_exec("../../package/bin/yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main &> tmp.log", &error);
     ASSERT_NE(pid, -1);
     ASSERT_EQ(error, nullptr);
 
@@ -108,7 +112,7 @@ TEST(daemon, state_transition)
                next->link ? next->link : "NULL",
                next->empty ? "empty" : "");
 
-        if (!streq(cur->link, next->link)) {
+        if (!streq(cur->link, next->link) || (!cur->empty ^ !next->empty)) {
             if (cur->link && !cur->empty) {
                 printf("unlink %s\n", cur->link);
                 ASSERT_EQ(unlink(cur->link), 0);
@@ -118,7 +122,7 @@ TEST(daemon, state_transition)
                 create_yamal_file(next->link);
             }
         }
-        if (!streq(cur->name, next->name)) {
+        if (!streq(cur->name, next->name) || (!cur->link ^ !next->link)) {
             if (cur->name) {
                 printf("unlink %s\n", cur->name);
                 ASSERT_EQ(unlink(cur->name), 0);
@@ -133,7 +137,7 @@ TEST(daemon, state_transition)
                 }
             }
         } else {
-            if (!cur->link && next->link) {
+            if (!streq(cur->link, next->link) && cur->name) {
                 printf("unlink %s\n", cur->name);
                 ASSERT_EQ(unlink(cur->name), 0);
                 printf("create link %s -> %s\n", next->name, next->link);
@@ -141,6 +145,7 @@ TEST(daemon, state_transition)
             }
         }
         cur = next;
+        sleep(1);
     }
     free(trans);
 
