@@ -98,7 +98,7 @@ struct yamal_handler_t {
       : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {}
   void init() {
     try {
-      inst_ = std::make_unique<yamal_t>(name_, rate_, initial_sz_);
+      inst_ = std::make_unique<yamal_t>(name_, initial_sz_, rate_);
       std::cerr<<"opened file at "<<name_<<std::endl;
     } catch(const std::exception& e) {
       std::cerr << e.what() << std::endl;
@@ -121,7 +121,7 @@ struct yamal_handler_t {
     if (!nmres)
       return;
     try {
-      inst_ = std::make_unique<yamal_t>(name_, initial_sz_, rate_, atime_c_, atime_r_);
+      inst_ = std::make_unique<yamal_t>(name_, initial_sz_, rate_);
     } catch(const std::exception& e) {
       cerr << "unable to create yamal file " << name_ << " with error: " << e.what() << endl;
       return;
@@ -131,17 +131,12 @@ struct yamal_handler_t {
   operator bool() {
     return (bool)inst_;
   }
-  yamal_t &operator *() {
-    return *inst_.get();
-  }
   yamal_t *operator ->() {
     return inst_.get();
   }
   std::string name_;
   size_t initial_sz_ = 0;
   double rate_ = 0;
-  double atime_c_ = 0;
-  double atime_r_ = 0;
   std::unique_ptr<yamal_t> inst_;
 };
 
