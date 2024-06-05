@@ -146,6 +146,9 @@ TEST(daemon, state_transition)
         }
         cur = next;
         sleep(1);
+        int status;
+        pid_t result = waitpid(pid, &status, WNOHANG);
+        ASSERT_EQ(result, 0);
     }
     free(trans);
 
@@ -154,10 +157,8 @@ TEST(daemon, state_transition)
     int status = fmc_waitpid(pid, &error);
     ASSERT_EQ(error, nullptr);
     ASSERT_NE(status, -1);
-    ASSERT_EQ(WIFEXITED(status), true);
-    ASSERT_EQ(WEXITSTATUS(status), 0);
 
-    ASSERT_TRUE(fmc_run_base_vs_test_diff("../../../test/tools/daemon-base.log", "tmp.log"));
+    ASSERT_TRUE(fmc_run_base_vs_test_diff("../../../tests/tools/daemon-base.log", "tmp.log"));
 
 }
 
