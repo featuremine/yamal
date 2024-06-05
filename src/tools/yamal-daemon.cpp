@@ -29,70 +29,72 @@
 
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
-  yamal_t(const std::string &name, double rate, size_t initial_sz)
-      : initial_sz_(initial_sz), rate_(rate) {
-    fd_ = fmc_fopen(name.c_str(), fmc_fmode::MODIFY, &error_);
-    fmc_runtime_error_unless(!error_) << fmc_error_msg(error_);
-    yamal_ = ytp_yamal_new_2(fd_, false, &error_);
-    fmc_runtime_error_unless(!error_) << fmc_error_msg(error_);
-    prev_sz_ = size();
+  yamal_t(const std::string &name, size_t initial_sz, double &rate)
+      : rate_(rate) {
+    fmc_error_t *error = nullptr;
+    fd_ = fmc_fopen(name.c_str(), fmc_fmode::MODIFY, &error);
+    fmc_runtime_error_unless(!error) << fmc_error_msg(error);
+    yamal_ = ytp_yamal_new_2(fd_, false, &error);
+    fmc_runtime_error_unless(!error) << fmc_error_msg(error);
+    prev_reserved_sz_ = reserved_size();
     prev_time_ = fmc_cur_time_ns();
-    allocate(std::max(prev_sz_, initial_sz_));
-    file_size_ = fsize();
-  }
-
-  void update_rate() {
-    auto sz = size();
-    auto delta_sz = sz - prev_sz_;
-    prev_sz_ = sz;
-    auto now = fmc_cur_time_ns();
-    auto delta_time = now - prev_time_;
-    prev_time_ = now;
-    rate_ = std::max(rate_, double(delta_sz) / double(delta_time));
+    ytp_yamal_allocate(yamal_, std::max(prev_reserved_sz_, initial_sz), &error);
+    fmc_runtime_error_unless(!error) << fmc_error_msg(error);
+    cached_fsz_ = fsize();
   }
 
   ~yamal_t() {
+    fmc_error_t *error = nullptr;
     if (yamal_)
-      ytp_yamal_del(yamal_, &error_);
+      ytp_yamal_del(yamal_, &error);
     if (fd_ != -1)
-      fmc_fclose(fd_, &error_);
+      fmc_fclose(fd_, &error);
   }
 
-  void allocate(size_t sz_required, fmc_error_t **error) {
-    auto allocated_pages =
-        (file_size_ + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
-    auto required_pages =
-        (sz_required + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
-    ytp_yamal_allocate_pages(yamal_, allocated_pages, required_pages, error);
-  }
-
-  size_t size() {
-    auto sz = ytp_yamal_reserved_size(yamal_, &error_);
-    fmc_runtime_error_unless(!error_)
-        << "Unable to get reserved size: " << fmc_error_msg(error_);
+  size_t reserved_size() {
+    fmc_error_t *error = nullptr;
+    auto sz = ytp_yamal_reserved_size(yamal_, &error);
+    fmc_runtime_error_unless(!error) << fmc_error_msg(error);
     return sz;
   }
 
   size_t fsize() {
-    auto sz = fmc_fsize(fd_, &error_);
-    fmc_runtime_error_unless(!error_) << "Unable to get the ytp size: " << fmc_error_msg(error_);
+    fmc_error_t *error = nullptr;
+    auto sz = fmc_fsize(fd_, &error);
+    fmc_runtime_error_unless(!error) << fmc_error_msg(error);
     return sz;
   }
 
-  fmc_error_t *error_;
+  void maybe_allocate() {
+    fmc_error_t *error = nullptr;
+    auto sz = reserved_size();
+    auto delta_sz = sz - prev_reserved_sz_;
+    prev_reserved_sz_ = sz;
+    auto now = fmc_cur_time_ns();
+    auto delta_time = now - prev_time_;
+    if (delta_time <= 0)
+      return;
+    prev_time_ = now;
+    rate_ = std::max(rate_, double(delta_sz) / double(delta_time));
+    double projected = 2.0 * rate_ * 1000000000.0 + sz;
+    if (projected < cached_fsz_)
+      return;
+    ytp_yamal_allocate(yamal_, projected, &error);
+    cached_fsz_ = fsize();
+    fmc_runtime_error_unless(!error) << fmc_error_msg(error);
+  }
+
   fmc_fd fd_ = -1;
   ytp_yamal_t *yamal_ = nullptr;
 
-  size_t initial_sz_ = 0;
-  size_t file_size_ = 0;
+  double &rate_;
+  size_t cached_fsz_ = 0;
   size_t prev_time_ = 0;
-  size_t prev_sz_ = 0;
-  double rate_ = 0;
-  size_t prev_allocs_ = 1;
+  size_t prev_reserved_sz_ = 0;
 };
 
-struct yamal_ptr_t {
-  yamal_ptr_t(std::string name, double rate, size_t initial_sz)
+struct yamal_handler_t {
+  yamal_handler_t(std::string name, double rate, size_t initial_sz)
       : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {}
   void init() {
     try {
@@ -119,7 +121,7 @@ struct yamal_ptr_t {
     if (!nmres)
       return;
     try {
-      inst_ = std::make_unique<yamal_t>(name_, rate_, initial_sz_);
+      inst_ = std::make_unique<yamal_t>(name_, initial_sz_, rate_, atime_c_, atime_r_);
     } catch(const std::exception& e) {
       cerr << "unable to create yamal file " << name_ << " with error: " << e.what() << endl;
       return;
@@ -132,22 +134,15 @@ struct yamal_ptr_t {
   yamal_t &operator *() {
     return *inst_.get();
   }
+  yamal_t *operator ->() {
+    return inst_.get();
+  }
   std::string name_;
   size_t initial_sz_ = 0;
   double rate_ = 0;
+  double atime_c_ = 0;
+  double atime_r_ = 0;
   std::unique_ptr<yamal_t> inst_;
-};
-
-struct alloc_time_model_t {
-  alloc_time_model_t(size_t alloc_time) : alloc_time_(alloc_time) {}
-
-  int64_t compute(size_t current_sz, size_t delta_sz) { return alloc_time_; }
-
-  void adjust(size_t before_sz, size_t after_sz, int64_t delta_time) {
-    alloc_time_ = std::max(alloc_time_, delta_time);
-  }
-
-  int64_t alloc_time_;
 };
 
 static std::atomic<bool> run = true;
@@ -172,7 +167,7 @@ int main(int argc, char **argv) {
   auto cfg = fmc::configs::serialize::variant_map_load_ini_structured(
       cfgArg.getValue().c_str(), mainArg.getValue().c_str());
 
-  std::deque<yamal_ptr_t> ytps;
+  std::deque<yamal_handler_t> ytps;
 
   for (auto &&[index, ytp] : cfg["ytps"].to_a()) {
     auto &ytp_cfg = ytp.to_d();
@@ -187,57 +182,23 @@ int main(int argc, char **argv) {
     ytps.emplace_back(path.c_str(), initial_rate, initial_size);
   }
 
-  alloc_time_model_t alloc_time_model(3000000);
-  int sleep_count = 0;
-  int64_t last_sym_upd = 0;
+  int64_t handler_upd_time = 0;
   while (run.load()) {
-    if (sleep_count++ == 10000) {
-      sleep_count = 0;
-      for (auto &ytp_ptr : ytps) {
-        if (!ytp_ptr)
-          continue;
-        auto &ytp = *ytp_ptr;
-        ytp.update_rate();
-      }
-    }
-
-    int64_t alloc_time = 0;
-    for (auto &ytp_ptr : ytps) {
-      if (!ytp_ptr)
-        continue;
-      auto &ytp = *ytp_ptr;
-      auto current_fsz = ytp.fsize();
-      alloc_time += alloc_time_model.compute(
-          current_fsz, ytp.prev_allocs_ * YTP_MMLIST_PAGE_SIZE);
-    }
-    for (auto &ytp_ptr : ytps) {
-      if (!ytp_ptr)
-        continue;
-      auto &ytp = *ytp_ptr;
-      auto sz = ytp.size();
-      auto delta_sz = size_t(ytp.rate_ * double(alloc_time));
-      if (YTP_MMLIST_PREALLOC_SIZE + (delta_sz * 11 / 100) + sz +
-              (YTP_MMLIST_PAGE_SIZE * 5 / 100) >
-          ytp.file_size_) {
-        sleep_count = 0;
-        auto before_time = fmc_cur_time_ns();
-        ytp.allocate(ytp.file_size_ + YTP_MMLIST_PAGE_SIZE);
-        auto after_time = fmc_cur_time_ns();
-        auto delta_time = after_time - before_time;
-        alloc_time_model.adjust(ytp.file_size_, YTP_MMLIST_PAGE_SIZE,
-                                delta_time);
-        ytp.file_size_ += YTP_MMLIST_PAGE_SIZE;
-        std::cout << fmc::time(std::chrono::nanoseconds(fmc_cur_time_ns()))
-                  << " Page allocated in " << delta_time << " ns (" << ytp.name_
-                  << ")" << std::endl;
-      }
-    }
     auto now = fmc_cur_time_ns();
-    if (now > last_sym_upd + std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count()) {
-      for (auto &ytp_ptr : ytps) {
-        ytp_ptr.update();
+    if (now > handler_upd_time + 1000000000LL) {
+      for (auto &handler : ytps)
+        handler.update();
+      handler_upd_time = now;
+    }
+    for (auto &handler : ytps) {
+      if (!handler)
+        continue;
+      try {
+        handler->maybe_allocate();
+      } catch(const std::exception& e) {
+        std::cerr << "closing yamal file due to exception: " << e.what() << std::endl; 
+        handler.reset();
       }
-      last_sym_upd = now;
     }
   }
 }
