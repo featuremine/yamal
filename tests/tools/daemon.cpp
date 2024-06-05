@@ -157,7 +157,7 @@ TEST(daemon, state_transition)
     ASSERT_EQ(WIFEXITED(status), true);
     ASSERT_EQ(WEXITSTATUS(status), 0);
 
-    // ASSERT OUTPUT
+    ASSERT_TRUE(fmc_run_base_vs_test_diff("../../../test/tools/daemon-base.log", "tmp.log"));
 
 }
 

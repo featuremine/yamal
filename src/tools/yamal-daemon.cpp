@@ -26,15 +26,15 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(std::string name, double rate, size_t initial_sz)
       : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {
-    init();
-  }
-
-  void init() {
-    fd_ = fmc_fopen(name_.c_str(), fmc_fmode::READWRITE, &error_);
+    struct stat fdcurr;
+    fmc_runtime_error_unless(stat(name_.c_str(), &fdcurr) == 0)
+        << "Unable to obtain sfile stats";
+    fd_ = fmc_fopen(name_.c_str(), fmc_fmode::MODIFY, &error_);
     fmc_runtime_error_unless(!error_)
         << "Unable to open file " << name_ << ": " << fmc_error_msg(error_);
 
@@ -42,26 +42,24 @@ struct yamal_t {
     fmc_runtime_error_unless(!error_)
         << "Unable to create the ytp yamal (" << name_
         << "): " << fmc_error_msg(error_);
+    prev_sz_ = size();
+    prev_time_ = fmc_cur_time_ns();
+    allocate(std::max(prev_sz_, initial_sz_));
+    file_size_ = fsize();
   }
 
-  void dealloc() {
+  ~yamal_t() {
     if (yamal_) {
       ytp_yamal_del(yamal_, &error_);
       fmc_runtime_error_unless(!error_)
           << "Unable to delete the ytp yamal: " << fmc_error_msg(error_);
-      yamal_ = nullptr;
     }
 
     if (fd_ != -1) {
       fmc_fclose(fd_, &error_);
       fmc_runtime_error_unless(!error_)
           << "Unable to close the file descriptor: " << fmc_error_msg(error_);
-      fd_ = -1;
     }
-  }
-
-  ~yamal_t() {
-    dealloc();
   }
 
   void allocate(size_t sz_required) {
@@ -102,6 +100,48 @@ struct yamal_t {
   size_t prev_allocs_ = 1;
 };
 
+struct yamal_ptr_t {
+  yamal_ptr_t(std::string name, double rate, size_t initial_sz)
+      : name_(std::move(name)), initial_sz_(initial_sz), rate_(rate) {}
+  void init() {
+    try {
+      inst_ = std::make_unique<yamal_t>(name_, rate_, initial_sz_);
+      std::cerr<<"opened file at "<<name_<<std::endl;
+    } catch(const std::exception& e) {
+      std::cerr << e.what() << std::endl;
+    }
+  }
+  void reset() {
+    inst_.reset();
+  }
+  void update() {
+    if ((bool)inst_) {
+      struct stat fdcurr, pcurr;
+      if (fstat(inst_->fd_, &fdcurr)) {
+        std::cerr<<"closing file opened at "<<name_<<": file is no longer present"<<std::endl;
+        inst_.reset();
+        continue;
+      }
+      if (stat(inst_->name_.c_str(), &pcurr))
+        continue;
+      if (fdcurr.st_ino == pcurr.st_ino && fdcurr.st_dev == pcurr.st_dev)
+        return;
+      std::cerr<<"closing file opened at "<<name_<<": file was replaced"<<std::endl;
+    }
+    std::cerr<<"attempting to open file at "<<name_<<std::endl;
+  }
+  operator bool() {
+    return (bool)inst_;
+  }
+  yamal_t &operator *() {
+    return *inst_.get();
+  }
+  std::string name_;
+  size_t initial_sz_ = 0;
+  double rate_ = 0;
+  std::unique_ptr<yamal_t> inst_;
+};
+
 struct alloc_time_model_t {
   alloc_time_model_t(size_t alloc_time) : alloc_time_(alloc_time) {}
 
@@ -136,7 +176,7 @@ int main(int argc, char **argv) {
   auto cfg = fmc::configs::serialize::variant_map_load_ini_structured(
       cfgArg.getValue().c_str(), mainArg.getValue().c_str());
 
-  std::deque<yamal_t> ytps;
+  std::deque<yamal_ptr_t> ytps;
 
   for (auto &&[index, ytp] : cfg["ytps"].to_a()) {
     auto &ytp_cfg = ytp.to_d();
@@ -151,20 +191,16 @@ int main(int argc, char **argv) {
     ytps.emplace_back(path.c_str(), initial_rate, initial_size);
   }
 
-  for (auto &ytp : ytps) {
-    ytp.prev_sz_ = ytp.size();
-    ytp.prev_time_ = fmc_cur_time_ns();
-    ytp.allocate(std::max(ytp.prev_sz_, ytp.initial_sz_));
-    ytp.file_size_ = ytp.fsize();
-  }
-
   alloc_time_model_t alloc_time_model(3000000);
   int sleep_count = 0;
   int64_t last_sym_upd = 0;
   while (run.load()) {
     if (sleep_count++ == 10000) {
       sleep_count = 0;
-      for (auto &ytp : ytps) {
+      for (auto &ytp_ptr : ytps) {
+        if (!ytp_ptr)
+          continue;
+        auto &ytp = *ytp_ptr;
         auto sz = ytp.size();
         auto delta_sz = sz - ytp.prev_sz_;
         ytp.prev_sz_ = sz;
@@ -178,12 +214,18 @@ int main(int argc, char **argv) {
     }
 
     int64_t alloc_time = 0;
-    for (auto &ytp : ytps) {
+    for (auto &ytp_ptr : ytps) {
+      if (!ytp_ptr)
+        continue;
+      auto &ytp = *ytp_ptr;
       auto current_fsz = ytp.fsize();
       alloc_time += alloc_time_model.compute(
           current_fsz, ytp.prev_allocs_ * YTP_MMLIST_PAGE_SIZE);
     }
-    for (auto &ytp : ytps) {
+    for (auto &ytp_ptr : ytps) {
+      if (!ytp_ptr)
+        continue;
+      auto &ytp = *ytp_ptr;
       auto sz = ytp.size();
       auto delta_sz = size_t(ytp.rate_ * double(alloc_time));
       if (YTP_MMLIST_PREALLOC_SIZE + (delta_sz * 11 / 100) + sz +
@@ -204,16 +246,8 @@ int main(int argc, char **argv) {
     }
     auto now = fmc_cur_time_ns();
     if (now > last_sym_upd + std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count()) {
-      for (auto &ytp : ytps) {
-        struct stat fdcurr, pcurr;
-        if (fstat(ytp.fd_, &fdcurr))
-          continue;
-        if (stat(ytp.name_.c_str(), &pcurr))
-          continue;
-        if (fdcurr.st_ino == pcurr.st_ino && fdcurr.st_dev == pcurr.st_dev)
-          continue;
-        ytp.dealloc();
-        ytp.init();
+      for (auto &ytp_ptr : ytps) {
+        ytp_ptr.update();
       }
       last_sym_upd = now;
     }
