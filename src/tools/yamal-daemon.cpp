@@ -115,20 +115,25 @@ struct yamal_ptr_t {
     inst_.reset();
   }
   void update() {
-    if ((bool)inst_) {
-      struct stat fdcurr, pcurr;
-      if (fstat(inst_->fd_, &fdcurr)) {
-        std::cerr<<"closing file opened at "<<name_<<": file is no longer present"<<std::endl;
-        inst_.reset();
-        continue;
-      }
-      if (stat(inst_->name_.c_str(), &pcurr))
-        continue;
-      if (fdcurr.st_ino == pcurr.st_ino && fdcurr.st_dev == pcurr.st_dev)
-        return;
-      std::cerr<<"closing file opened at "<<name_<<": file was replaced"<<std::endl;
+    using namespace std;
+    struct stat fdstat, nmstat;
+    auto fdres = inst_ && fstat(inst_->fd_, &fdstat) == 0;
+    auto nmres = stat(name_.c_str(), &nmstat) == 0;
+    if (fdres && nmres && fdstat.st_dev == nmstat.st_dev && fdstat.st_ino == nmstat.st_ino)
+      return;
+    if (inst_) {
+      inst_.reset();
+      cout << "closed yamal file " << name_ << endl;
     }
-    std::cerr<<"attempting to open file at "<<name_<<std::endl;
+    if (!nmres)
+      return;
+    try {
+      inst_ = std::make_unique<yamal_t>(name_, rate_, initial_sz_);
+    } catch(const std::exception& e) {
+      cerr << "unable to create yamal file " << name_ << " with error: " << e.what() << endl;
+      return;
+    }
+    cout << "opened yamal file " << name_ << endl;
   }
   operator bool() {
     return (bool)inst_;
