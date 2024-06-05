@@ -90,7 +90,7 @@ TEST(daemon, state_transition)
 
     fmc_error_t *error = nullptr;
 
-    pid_t pid = fmc_exec("yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main", &error);
+    pid_t pid = fmc_exec("../../package/bin/yamal-daemon -c ../../../tests/tools/state_transition.cfg -s main", &error);
     ASSERT_NE(pid, -1);
     ASSERT_EQ(error, nullptr);
 
