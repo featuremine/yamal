@@ -122,7 +122,8 @@ TEST(daemon, state_transition) {
   const char basestr[] = "opened file at daemon.test.ytp\n"
                          "closed yamal file daemon.test.ytp\n";
   for (auto i = 0; i < 7; ++i) {
-    ASSERT_EQ(fmc_write(basefd, basestr, sizeof(basestr) - 1), sizeof(basestr) - 1);
+    ASSERT_EQ(fmc_write(basefd, basestr, sizeof(basestr) - 1),
+              sizeof(basestr) - 1);
   }
   fmc_fclose(basefd, &error);
   ASSERT_EQ(error, nullptr);
