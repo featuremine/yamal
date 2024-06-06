@@ -242,6 +242,12 @@ fmc_fd fmc_fopen(const char *path, fmc_fmode flags, fmc_error_t **error) {
     flag = O_RDWR | O_CREAT;
 #endif
   }
+  if ((flags & fmc_fmode::MODIFY) == fmc_fmode::MODIFY) {
+#if defined(FMC_SYS_WIN)
+#else
+    flag = O_RDWR;
+#endif
+  }
 #if defined(FMC_SYS_WIN)
   auto fd = CreateFile(path, flag, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
