@@ -41,7 +41,7 @@ pid_t fmc_exec(const char *cmd, fmc_error_t **err) {
 
   if (cpid == 0) {
     setpgid(0, 0);
-    execl("/bin/sh", "/bin/sh", "-c", cmd, (char *)NULL);
+    execl("/bin/bash", "/bin/bash", "-c", cmd, (char *)NULL);
     fprintf(stderr, "failed to execute %s with error: %s", cmd,
             strerror(errno));
     _exit(EXIT_FAILURE);
