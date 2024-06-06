@@ -20,7 +20,7 @@ function(add_tools_test NAME)
         tests_tools_${NAME}
         PUBLIC
         ytp
-        gtest
+        PkgConfig::GTEST
     )
     add_test(NAME tools_${NAME} COMMAND tests_tools_${NAME})
 endfunction()
