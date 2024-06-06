@@ -116,8 +116,7 @@ TEST(daemon, state_transition) {
   fmc_fclose(cfgfd, &error);
   ASSERT_EQ(error, nullptr);
 
-  fmc_fd basefd =
-      fmc_fopen("daemon-base.log", fmc_fmode::READWRITE, &error);
+  fmc_fd basefd = fmc_fopen("daemon-base.log", fmc_fmode::READWRITE, &error);
   ASSERT_EQ(error, nullptr);
   const char basestr[] = "opened file at daemon.test.ytp\n"
                          "closed yamal file daemon.test.ytp";
