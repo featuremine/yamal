@@ -84,8 +84,7 @@ void create_yamal_file(const char *name) {
 
 static pid_t pid = 0;
 
-static void sig_handler(int signo)
-{
+static void sig_handler(int signo) {
   if (pid != 0)
     killpg(pid, signo);
   exit(0);
@@ -108,9 +107,9 @@ TEST(daemon, state_transition) {
   signal(SIGABRT, sig_handler);
 
   pid = fmc_exec("../../package/bin/yamal-daemon -c "
-                       "../../../tests/tools/state_transition.cfg -s main > "
-                       "daemon-state-transition.test.log",
-                       &error);
+                 "../../../tests/tools/state_transition.cfg -s main > "
+                 "daemon-state-transition.test.log",
+                 &error);
   ASSERT_NE(pid, -1);
   ASSERT_EQ(error, nullptr);
 
