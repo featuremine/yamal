@@ -25,6 +25,7 @@
 
 #include <fmc/error.h>
 #include <fmc/platform.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C" {

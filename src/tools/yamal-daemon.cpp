@@ -28,6 +28,10 @@
 #include <deque>
 #include <string_view>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 struct yamal_t {
   yamal_t(const yamal_t &) = delete;
   yamal_t(const std::string &name, size_t initial_sz, double &rate)
