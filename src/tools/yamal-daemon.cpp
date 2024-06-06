@@ -84,7 +84,7 @@ struct yamal_t {
     double projected = rate_ * 1000000000.0 + prev_reserved_sz_;
     if (projected < cached_fsz_)
       return;
-    size_t desired = ceill(2.0 * rate_ * 1000000000.0 + prev_reserved_sz_);
+    size_t desired = ceill(5.0 * rate_ * 1000000000.0 + prev_reserved_sz_);
     ytp_yamal_allocate(yamal_, desired, &error);
     cached_fsz_ = fsize();
     fmc_runtime_error_unless(!error) << fmc_error_msg(error);
