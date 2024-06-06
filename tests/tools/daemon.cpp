@@ -103,7 +103,8 @@ TEST(daemon, state_transition) {
   unlink("daemon.link2.ytp");
   unlink("state_transition.cfg");
 
-  fmc_fd cfgfd = fmc_fopen("state_transition.cfg", fmc_fmode::READWRITE, &error);
+  fmc_fd cfgfd =
+      fmc_fopen("state_transition.cfg", fmc_fmode::READWRITE, &error);
   ASSERT_EQ(error, nullptr);
   const char cfgstr[] = "[main]\n"
                         "ytps=test_ytp,\n"
