@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
   auto cfg = fmc::configs::serialize::variant_map_load_ini_structured(
       cfgArg.getValue().c_str(), mainArg.getValue().c_str());
 
-  std::deque<yamal_t> ytps;
+  std::deque<yamal_handler_t> ytps;
 
   for (auto &&[index, ytp] : cfg["ytps"].to_a()) {
     auto &ytp_cfg = ytp.to_d();
