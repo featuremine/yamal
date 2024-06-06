@@ -39,6 +39,20 @@ typedef HANDLE fmc_tid;
 #endif
 
 /**
+ * @brief Executes a command in a shell
+ * @param error out-parameter for error handling
+ * @return pid_t child's process id
+ */
+pid_t fmc_exec(const char *cmd, fmc_error_t **err);
+
+/**
+ * @brief Waits for a given process to change status
+ * @param error out-parameter for error handling
+ * @return int process status
+ */
+int fmc_waitpid(pid_t pid, fmc_error_t **err);
+
+/**
  * @brief Returns the current thread id
  * @param error out-parameter for error handling
  * @return fmc_tid
