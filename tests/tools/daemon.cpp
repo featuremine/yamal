@@ -101,6 +101,19 @@ TEST(daemon, state_transition) {
   unlink("daemon.test.ytp");
   unlink("daemon.link.ytp");
   unlink("daemon.link2.ytp");
+  unlink("state_transition.cfg");
+
+  fmc_fd cfgfd = fmc_fopen("state_transition.cfg", fmc_fmode::READWRITE, &error);
+  ASSERT_EQ(error, nullptr);
+  const char cfgstr[] = "[main]\n"
+                        "ytps=test_ytp,\n"
+                        "[test_ytp]\n"
+                        "path=\"daemon.test.ytp\"\n"
+                        "rate=0\n"
+                        "initial_size=\"32\"";
+  ASSERT_EQ(fmc_write(cfgfd, cfgstr, sizeof(cfgstr)), sizeof(cfgstr));
+  fmc_fclose(cfgfd, &error);
+  ASSERT_EQ(error, nullptr);
 
   signal(SIGTERM, sig_handler);
   signal(SIGINT, sig_handler);
