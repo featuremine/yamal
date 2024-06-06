@@ -72,11 +72,11 @@ struct yamal_t {
     fmc_error_t *error = nullptr;
     auto sz = reserved_size();
     auto delta_sz = sz - prev_reserved_sz_;
-    prev_reserved_sz_ = sz;
     auto now = fmc_cur_time_ns();
     auto delta_time = now - prev_time_;
     if (delta_time <= 0)
       return;
+    prev_reserved_sz_ = sz;
     prev_time_ = now;
     rate_ = std::max(rate_, double(delta_sz) / double(delta_time));
     double projected = 2.0 * rate_ * 1000000000.0 + sz;
@@ -93,7 +93,7 @@ struct yamal_t {
   std::string name_;
   double &rate_;
   size_t cached_fsz_ = 0;
-  size_t prev_time_ = 0;
+  int64_t prev_time_ = 0;
   size_t prev_reserved_sz_ = 0;
 };
 
