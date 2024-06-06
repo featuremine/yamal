@@ -102,6 +102,7 @@ TEST(daemon, state_transition) {
   unlink("daemon.link.ytp");
   unlink("daemon.link2.ytp");
   unlink("state_transition.cfg");
+  unlink("daemon-base.log");
 
   fmc_fd cfgfd =
       fmc_fopen("state_transition.cfg", fmc_fmode::READWRITE, &error);
