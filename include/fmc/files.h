@@ -59,7 +59,8 @@ typedef enum {
   NONE = 0,
   READ = 2,
   WRITE = 4,
-  READWRITE = READ | WRITE
+  READWRITE = READ | WRITE,
+  MODIFY = 8
 } fmc_fmode;
 
 /**
