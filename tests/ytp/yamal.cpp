@@ -29,6 +29,7 @@
 
 #include <fmc++/fs.hpp>
 #include <fmc++/gtestwrap.hpp>
+#include <fmc/alignment.h>
 #include <fmc/files.h>
 #include <fmc/time.h>
 
@@ -533,6 +534,257 @@ TEST(yamal, commit_sublist) {
   fmc_fclose(fd, &error);
 
   ASSERT_EQ(total_processed, total_messages);
+}
+
+TEST(yamal, resizing) {
+  fmc_error_t *error = nullptr;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_TRUE(fmc_fvalid(fd));
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 0);
+  }
+#endif
+
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_allocate(yamal, 3 * YTP_MMLIST_PAGE_SIZE, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 3 * YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  ftruncate(fd, YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(errno, 0);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  // Verify we can create yamal object with file after resizing
+  error = (fmc_error_t *)1;
+  yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(yamal, resizing_with_messages) {
+  fmc_error_t *error = nullptr;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_TRUE(fmc_fvalid(fd));
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, 0);
+  }
+#endif
+
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE);
+  }
+#endif
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_allocate(yamal, 5 * YTP_MMLIST_PAGE_SIZE, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto nmsgs = 0;
+  auto node_size = sizeof(std::atomic<size_t>) + sizeof(std::atomic<size_t>) +
+                   sizeof(std::atomic<size_t>);
+  auto used_size = node_size;
+  auto msg_sz = fmc_wordceil(node_size + sizeof(test_msg));
+  for (;
+       used_size + msg_sz < YTP_MMLIST_PAGE_SIZE * 4 - YTP_MMLIST_PAGE_SIZE / 2;
+       ++nmsgs, used_size += msg_sz) {
+    auto *msg = (test_msg *)ytp_yamal_reserve(yamal, sizeof(test_msg), &error);
+    ASSERT_EQ(error, nullptr);
+    ASSERT_NE(msg, nullptr);
+    msg->index = nmsgs;
+    error = (fmc_error_t *)1;
+    ASSERT_NE(ytp_yamal_commit(yamal, msg, &error), nullptr);
+    ASSERT_EQ(error, nullptr);
+  }
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE * 4);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_LT(ytp_yamal_reserved_size(yamal, &error), YTP_MMLIST_PAGE_SIZE * 4);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_GT(ytp_yamal_reserved_size(yamal, &error), YTP_MMLIST_PAGE_SIZE * 3);
+  ASSERT_EQ(error, nullptr);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE * 5);
+  }
+#endif
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  ftruncate(fd, YTP_MMLIST_PAGE_SIZE * 4);
+  ASSERT_EQ(errno, 0);
+
+#if defined(FMC_SYS_WIN)
+#error "Unsupported test"
+#else
+  {
+    struct stat stat_data {};
+    ASSERT_EQ(fstat(fd, &stat_data), 0);
+    ASSERT_EQ(stat_data.st_size, YTP_MMLIST_PAGE_SIZE * 4);
+  }
+#endif
+
+  // Verify we can create yamal object with file after resizing
+  error = (fmc_error_t *)1;
+  yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+
+  auto it = ytp_yamal_begin(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  for (auto count = 0; count < nmsgs; ++count) {
+    ASSERT_FALSE(ytp_yamal_term(it));
+    size_t sz;
+    test_msg *data;
+    error = (fmc_error_t *)1;
+    ytp_yamal_read(yamal, it, &sz, (const char **)&data, &error);
+    ASSERT_EQ(error, nullptr);
+    ASSERT_EQ(sz, sizeof(test_msg));
+    ASSERT_EQ(data->index, count);
+    it = ytp_yamal_next(yamal, it, &error);
+  }
+  ASSERT_TRUE(ytp_yamal_term(it));
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
+}
+
+TEST(yamal, used_size) {
+  fmc_error_t *error = nullptr;
+  auto fd = fmc_ftemp(&error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_TRUE(fmc_fvalid(fd));
+
+  error = (fmc_error_t *)1;
+  auto *yamal = ytp_yamal_new_2(fd, false, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+  auto header_size = ytp_yamal_reserved_size(yamal, &error);
+  auto node_size = sizeof(std::atomic<size_t>) + sizeof(std::atomic<size_t>) +
+                   sizeof(std::atomic<size_t>);
+
+  auto *msg = ytp_yamal_reserve(
+      yamal, YTP_MMLIST_PAGE_SIZE - node_size - header_size, &error);
+  ASSERT_EQ(error, nullptr);
+  ASSERT_NE(msg, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_NE(ytp_yamal_commit(yamal, msg, &error), nullptr);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error), YTP_MMLIST_PAGE_SIZE);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ASSERT_EQ(ytp_yamal_used_size(yamal, &error),
+            ytp_yamal_reserved_size(yamal, &error));
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  ytp_yamal_del(yamal, &error);
+  ASSERT_EQ(error, nullptr);
+
+  error = (fmc_error_t *)1;
+  fmc_fclose(fd, &error);
+  ASSERT_EQ(error, nullptr);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
