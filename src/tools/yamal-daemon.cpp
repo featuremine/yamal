@@ -68,8 +68,7 @@ struct yamal_t {
     return sz;
   }
 
-  void maybe_allocate() {
-    fmc_error_t *error = nullptr;
+  void update_rate() {
     auto sz = reserved_size();
     auto delta_sz = sz - prev_reserved_sz_;
     auto now = fmc_cur_time_ns();
@@ -79,10 +78,15 @@ struct yamal_t {
     prev_reserved_sz_ = sz;
     prev_time_ = now;
     rate_ = std::max(rate_, double(delta_sz) / double(delta_time));
-    double projected = 2.0 * rate_ * 1000000000.0 + sz;
+  }
+
+  void maybe_allocate() {
+    fmc_error_t *error = nullptr;
+    double projected = rate_ * 1000000000.0 + prev_reserved_sz_;
     if (projected < cached_fsz_)
       return;
-    ytp_yamal_allocate(yamal_, projected, &error);
+    size_t desired = ceill(2.0 * rate_ * 1000000000.0 + prev_reserved_sz_);
+    ytp_yamal_allocate(yamal_, desired, &error);
     cached_fsz_ = fsize();
     fmc_runtime_error_unless(!error) << fmc_error_msg(error);
   }
@@ -179,13 +183,29 @@ int main(int argc, char **argv) {
   }
 
   int64_t handler_upd_time = 0;
+  int64_t rate_upd_time = 0;
   while (run.load()) {
     auto now = fmc_cur_time_ns();
     if (now > handler_upd_time + 1000000000LL) {
+      handler_upd_time = now;
       for (auto &handler : ytps)
         handler.update();
-      handler_upd_time = now;
     }
+
+    if (now > rate_upd_time + 10000000LL) {
+      rate_upd_time = now;
+      for (auto &handler : ytps) {
+        if (!handler)
+          continue;
+        try {
+          handler->update_rate();
+        } catch(const std::exception& e) {
+          std::cerr << "closing yamal file " << handler.name_ << " due to exception: " << e.what() << std::endl; 
+          handler.reset();
+        }
+      }
+    }
+
     for (auto &handler : ytps) {
       if (!handler)
         continue;
