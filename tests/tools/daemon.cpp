@@ -116,6 +116,19 @@ TEST(daemon, state_transition) {
   fmc_fclose(cfgfd, &error);
   ASSERT_EQ(error, nullptr);
 
+  fmc_fd basefd =
+      fmc_fopen("daemon-base.log", fmc_fmode::READWRITE, &error);
+  ASSERT_EQ(error, nullptr);
+  const char basestr[] = "opened file at daemon.test.ytp\n"
+                         "closed yamal file daemon.test.ytp";
+  for (auto i = 0; i < 7; ++i) {
+    if (i != 0)
+      ASSERT_EQ(fmc_write(basefd, "\n", 1), 1);
+    ASSERT_EQ(fmc_write(basefd, basestr, sizeof(basestr)), sizeof(basestr));
+  }
+  fmc_fclose(basefd, &error);
+  ASSERT_EQ(error, nullptr);
+
   signal(SIGTERM, sig_handler);
   signal(SIGINT, sig_handler);
   signal(SIGABRT, sig_handler);
@@ -183,7 +196,7 @@ TEST(daemon, state_transition) {
   ASSERT_EQ(error, nullptr);
   ASSERT_NE(status, -1);
 
-  ASSERT_TRUE(fmc_run_base_vs_test_diff("../../../tests/tools/daemon-base.log",
+  ASSERT_TRUE(fmc_run_base_vs_test_diff("daemon-base.log",
                                         "daemon-state-transition.test.log"));
 }
 
