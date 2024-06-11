@@ -49,7 +49,7 @@ jobs:
   build-macos:
     if: needs.utility.outputs.release-check == 'release'
     needs: utility
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v3
@@ -84,7 +84,7 @@ jobs:
       run: brew install pkg-config cmake googletest python doxygen
 
     - name: Install sphinx
-      run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
+      run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints --break-system-packages
 
     - name: Build ${{ github.event.repository.name }} with fm gcc
       uses: featuremine/actions/package/build@v3
