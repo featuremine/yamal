@@ -457,6 +457,9 @@ int main(int argc, char **argv) {
             cfg = config_ptr(fmc_cfg_sect_parse_json(
                 comptype->tp_cfgspec, config.data(), config.size(), &err));
 
+            fmc_runtime_error_unless(!err)
+                << "Unable to load configuration file: " << fmc_error_msg(err);
+
             fmc_component *component =
                 fmc_component_new(&r, comptype, cfg.get(), &inps[0], &err);
 
