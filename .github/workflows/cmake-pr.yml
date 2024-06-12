@@ -49,15 +49,18 @@ jobs:
   build-macos:
     if: needs.utility.outputs.release-check == 'release'
     needs: utility
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
     - name: Install dependencies
-      run: brew install pkg-config cmake googletest python doxygen
+      run: brew install pkg-config cmake googletest doxygen
 
     - name: Install sphinx
       run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
@@ -79,9 +82,12 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
     - name: Install dependencies
-      run: brew install pkg-config cmake googletest python doxygen
+      run: brew install pkg-config cmake googletest doxygen
 
     - name: Install sphinx
       run: pip3 install sphinx breathe sphinx_rtd_theme m2r mistune==0.8.4 sphinx-autodoc-typehints
@@ -107,14 +113,31 @@ jobs:
       with:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
 
-  test-pythons:
-    needs: [utility, build-manylinux, build-macos]
+  test-pythons-ubuntu:
+    needs: [utility, build-manylinux]
     if: needs.utility.outputs.release-check == 'release'
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-12]
         python_version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Test ${{ github.event.repository.name }} release for python version ${{ matrix.python_version }}
+        uses: featuremine/actions/package/test@v3
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          sudo: true
+
+  test-pythons-mac:
+    needs: [utility, build-macos]
+    if: needs.utility.outputs.release-check == 'release'
+    strategy:
+      matrix:
+        python_version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+    runs-on: macos-12
     steps:
       - uses: actions/setup-python@v4
         with:

@@ -702,3 +702,27 @@ bool ytp_yamal_closable(ytp_yamal_t *yamal, fmc_error_t **error) {
   }
   return hdr->closable == YTP_CLOSABLE;
 }
+
+void ytp_yamal_allocate_pages(ytp_yamal_t *yamal, size_t first, size_t last,
+                              fmc_error_t **error) {
+  for (size_t page = last; page-- > first;) {
+    ytp_yamal_allocate_page(yamal, page, error);
+    if (*error)
+      return;
+  }
+}
+
+void ytp_yamal_allocate(ytp_yamal_t *yamal, size_t sz, fmc_error_t **error) {
+  size_t required_pages =
+      (sz + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
+  ytp_yamal_allocate_pages(yamal, 0, required_pages, error);
+}
+
+size_t ytp_yamal_used_size(ytp_yamal_t *yamal, fmc_error_t **error) {
+  size_t reserved = ytp_yamal_reserved_size(yamal, error);
+  if (*error)
+    return 0;
+  size_t reserved_pages =
+      (reserved + YTP_MMLIST_PAGE_SIZE - 1) / YTP_MMLIST_PAGE_SIZE;
+  return reserved_pages * YTP_MMLIST_PAGE_SIZE;
+}
