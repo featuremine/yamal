@@ -114,7 +114,7 @@ jobs:
         gh_token: ${{ secrets.GITHUB_TOKEN }}
 
   test-pythons-ubuntu:
-    needs: [utility, build-manylinux, build-macos]
+    needs: [utility, build-manylinux]
     if: needs.utility.outputs.release-check == 'release'
     strategy:
       matrix:
@@ -132,7 +132,7 @@ jobs:
           sudo: true
 
   test-pythons-mac:
-    needs: [utility, build-manylinux, build-macos]
+    needs: [utility, build-macos]
     if: needs.utility.outputs.release-check == 'release'
     strategy:
       matrix:
