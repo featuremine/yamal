@@ -18,3 +18,4 @@ doc
 .vscode/*
 .DS_Store
 *.ytp
+.cache
