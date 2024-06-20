@@ -27,16 +27,6 @@
 
 namespace fmc {
 
-inline bool starts_with(std::string_view a, std::string_view b) {
-  if (a.size() < b.size())
-    return false;
-  for (auto i = 0; i < b.size(); ++i) {
-    if (std::tolower(a[i]) != std::tolower(b[i]))
-      return false;
-  }
-  return true;
-}
-
 class elasticsearch_client {
 public:
   elasticsearch_client() = default;
@@ -265,7 +255,7 @@ private:
     if (sz < 0)
       return {-1, std::string_view{}};
 
-    fmc_runtime_error_unless(starts_with(line, http))
+    fmc_runtime_error_unless(fmc::starts_with_case_insensitive(line, http))
         << "unexpected response: " << response_;
 
     int res = fmc::from_string_view<int>(line.substr(9)).first;
@@ -274,7 +264,7 @@ private:
     for (; line != "\r\n"sv; line = read_line(), cur += line.size()) {
       if (sz < 0)
         return {-1, std::string_view{}};
-      if (starts_with(line, keyword))
+      if (fmc::starts_with_case_insensitive(line, keyword))
         left =
             fmc::from_string_view<uint64_t>(line.substr(keyword.size())).first;
     }
