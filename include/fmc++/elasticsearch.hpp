@@ -25,7 +25,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-namespace conveyor {
+namespace fmc {
 
 inline bool starts_with(std::string_view a, std::string_view b) {
   if (a.size() < b.size())
@@ -304,4 +304,4 @@ private:
   std::string port_;
 };
 
-} // namespace conveyor
+} // namespace fmc
