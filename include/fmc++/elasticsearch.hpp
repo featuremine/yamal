@@ -22,11 +22,10 @@
 #include <arpa/inet.h>
 #include <errno.h> //For errno - the error number
 #include <netdb.h> //hostent
-#include <sys/socket.h>
-#include <unistd.h>
 #include <string>
 #include <string_view>
-
+#include <sys/socket.h>
+#include <unistd.h>
 
 namespace fmc {
 
@@ -144,8 +143,10 @@ public:
     return res;
   }
 
-  std::pair<int, std::string_view>
-  update(std::string_view index, std::string_view doc, std::string_view data, std::string_view method = "PUT") {
+  std::pair<int, std::string_view> update(std::string_view index,
+                                          std::string_view doc,
+                                          std::string_view data,
+                                          std::string_view method = "PUT") {
     char buf[32];
     request_.clear();
     request_.append(method);
