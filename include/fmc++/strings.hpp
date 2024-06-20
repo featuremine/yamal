@@ -63,7 +63,8 @@ inline bool starts_with(std::string_view a, std::string_view b) {
   return a.substr(0, b.size()) == b;
 }
 
-inline bool starts_with_case_insensitive(std::string_view a, std::string_view b) {
+inline bool starts_with_case_insensitive(std::string_view a,
+                                         std::string_view b) {
   if (a.size() < b.size())
     return false;
   for (auto i = 0; i < b.size(); ++i) {
