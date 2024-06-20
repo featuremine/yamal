@@ -41,13 +41,13 @@ inline bool starts_with(std::string_view a, std::string_view b) {
   return true;
 }
 
-class elasticsearch_client {
+class client {
 public:
-  elasticsearch_client() = default;
-  elasticsearch_client(std::string_view host, std::string_view port)
+  client() = default;
+  client(std::string_view host, std::string_view port)
       : host_(host), port_(port) {}
 
-  ~elasticsearch_client() { disconnect(); }
+  ~client() { disconnect(); }
 
   void set_address(std::string_view host, std::string_view port) {
     host_ = host;
