@@ -55,6 +55,23 @@ public:
       external = false;
     }
   }
+  bool init(int argc, const char **argv) {
+    if (!Py_IsInitialized()) {
+      PyStatus status;
+      PyConfig py_cfg;
+      py_cfg.isolated = 1;
+      PyConfig_InitIsolatedConfig(&py_cfg);
+      status = PyConfig_SetBytesArgv(&py_cfg, argc, (char * const*)argv);
+      if (PyStatus_Exception(status))
+        return false;
+      status = Py_InitializeFromConfig(&py_cfg);
+      PyConfig_Clear(&py_cfg);
+      return !PyStatus_Exception(status);
+    } else {
+      external = false;
+    }
+    return true;
+  }
   ~interpreter() {
     if (external)
       Py_FinalizeEx();
