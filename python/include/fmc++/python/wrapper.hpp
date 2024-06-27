@@ -62,8 +62,10 @@ public:
       py_cfg.isolated = 1;
       PyConfig_InitIsolatedConfig(&py_cfg);
       status = PyConfig_SetBytesArgv(&py_cfg, argc, (char * const*)argv);
-      if (PyStatus_Exception(status))
+      if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&py_cfg);
         return false;
+      }
       status = Py_InitializeFromConfig(&py_cfg);
       PyConfig_Clear(&py_cfg);
       return !PyStatus_Exception(status);
