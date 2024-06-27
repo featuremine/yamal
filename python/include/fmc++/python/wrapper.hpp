@@ -65,7 +65,7 @@ public:
       PyStatus status;
       PyConfig py_cfg __attribute__ ((__cleanup__(PyConfig_Clear)));
       PyConfig_InitPythonConfig(&py_cfg);
-      char * args[argc+1];
+      char *args[argc + 1];
       args[0] = (char *)argv[0];
       memcpy(&args[1], argv, argc * sizeof(*argv));
       status = PyConfig_SetBytesArgv(&py_cfg, argc + 1, args);
