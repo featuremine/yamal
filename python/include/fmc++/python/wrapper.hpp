@@ -49,7 +49,8 @@ public:
       PyPreConfig preconfig;
       PyPreConfig_InitPythonConfig(&preconfig);
       PyStatus status = Py_PreInitialize(&preconfig);
-      fmc_runtime_error_unless(!PyStatus_Exception(status)) << "Unable to preinitialize python";
+      fmc_runtime_error_unless(!PyStatus_Exception(status))
+          << "Unable to preinitialize python";
       PyImport_ExtendInittab(newtab);
     }
   }
@@ -63,15 +64,17 @@ public:
   void init(int argc, const char **argv) {
     if (!Py_IsInitialized()) {
       PyStatus status;
-      PyConfig py_cfg __attribute__ ((__cleanup__(PyConfig_Clear)));
+      PyConfig py_cfg __attribute__((__cleanup__(PyConfig_Clear)));
       PyConfig_InitPythonConfig(&py_cfg);
       char *args[argc + 1];
       args[0] = (char *)argv[0];
       memcpy(&args[1], argv, argc * sizeof(*argv));
       status = PyConfig_SetBytesArgv(&py_cfg, argc + 1, args);
-      fmc_runtime_error_unless(!PyStatus_Exception(status)) << "Unable to set argv for python interpreter";
+      fmc_runtime_error_unless(!PyStatus_Exception(status))
+          << "Unable to set argv for python interpreter";
       status = Py_InitializeFromConfig(&py_cfg);
-      fmc_runtime_error_unless(!PyStatus_Exception(status)) << "Unable to initialize python interpreter";
+      fmc_runtime_error_unless(!PyStatus_Exception(status))
+          << "Unable to initialize python interpreter";
     } else {
       external = false;
     }
