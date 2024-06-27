@@ -60,7 +60,10 @@ public:
       PyStatus status;
       PyConfig py_cfg;
       PyConfig_InitPythonConfig(&py_cfg);
-      status = PyConfig_SetBytesArgv(&py_cfg, argc, (char * const*)argv);
+      char * args[argc+1];
+      args[0] = (char *)argv[0];
+      memcpy(&args[1], argv, argc * sizeof(*argv));
+      status = PyConfig_SetBytesArgv(&py_cfg, argc + 1, args);
       if (PyStatus_Exception(status)) {
         PyConfig_Clear(&py_cfg);
         return false;
