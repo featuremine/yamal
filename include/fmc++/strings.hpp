@@ -67,7 +67,7 @@ inline bool starts_with_case_insensitive(std::string_view a,
                                          std::string_view b) {
   if (a.size() < b.size())
     return false;
-  for (auto i = 0; i < b.size(); ++i) {
+  for (auto i = 0UL; i < b.size(); ++i) {
     if (std::tolower(a[i]) != std::tolower(b[i]))
       return false;
   }
